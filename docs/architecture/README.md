@@ -1,5 +1,14 @@
 # Proposed architecture
 
+## W1 review draft
+
+The concrete [W1 system design](w1-system-design.md),
+[PostgreSQL model](w1-data-model.md), and
+[decision sheet](w1-review-decisions.md) are proposed for Davian Hernandez's
+review. They distinguish repository foundations and completed spike evidence
+from planned product behavior. They do not change accepted contracts or ADRs
+and do not authorize deployment or implementation.
+
 Kurier's architecture is a planning baseline. It should evolve when spikes,
 security review, or vertical-slice delivery provide better evidence.
 
