@@ -3,7 +3,7 @@
 ## W1 review draft
 
 The concrete [W1 system design](w1-system-design.md),
-[PostgreSQL model](w1-data-model.md), and
+[DynamoDB model](w1-data-model.md), and
 [decision sheet](w1-review-decisions.md) are proposed for Davian Hernandez's
 review. They distinguish repository foundations and completed spike evidence
 from planned product behavior. They do not change accepted contracts or ADRs
@@ -17,16 +17,18 @@ security review, or vertical-slice delivery provide better evidence.
 - A React and TypeScript web application presents request authoring, execution
   status, and sanitized evidence.
 - A Go API handles authenticated application requests and persists durable
-  metadata in PostgreSQL.
+  metadata in DynamoDB through proposed Lambda handlers.
 - A Go execution worker consumes queued jobs, performs remote API requests, and
   writes immutable, deliberately redacted evidence.
 - A Go local agent will execute requests that require access to a developer's
   machine or private network. A future MCP interface will expose only
   deliberately sanitized evidence to coding agents.
 
-The proposed production topology uses CloudFront for web delivery, ECS Fargate
-for the API and worker, RDS PostgreSQL for persistence, SQS for execution jobs,
-and S3 for larger immutable evidence artifacts. SST 4 with TypeScript is the
+The revised W1 topology uses CloudFront for web delivery, Go Lambda handlers
+behind HTTP API Gateway, DynamoDB metadata/protected envelopes, SQS execution
+wakeups, and private S3 sanitized evidence. It is recorded in
+[proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md), not
+deployed or runtime-tested. SST 4 with TypeScript is the
 selected infrastructure framework following the compute/frontend and database
 viability spikes. GitHub Actions is the proposed CI/CD entry point.
 

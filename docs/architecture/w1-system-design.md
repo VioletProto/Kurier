@@ -1,512 +1,450 @@
 # W1 system architecture and execution design
 
-Status: proposed for Davian Hernandez review, 2026-10-05. This is a design
-deliverable, not implemented behavior or deployment evidence. New settings,
-routes, tables, and topology below require review before implementation.
-Read alongside the [data model](w1-data-model.md) and
-[decision sheet and contract gaps](w1-review-decisions.md).
+Status: Lambda/DynamoDB revision direction authorized by Davian; detailed
+settings/protocols **proposed for Davian Hernandez's review**, 2026-10-05.
+Documentation only, not implemented/deployed behavior. See the
+[DynamoDB model](w1-data-model.md), [decision sheet](w1-review-decisions.md),
+and [proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md).
 
-Revision baseline: `c311e74` on `docs/w1-architecture-data-model`, with a clean
-working tree. All revised protocols and the
-[monthly cost comparison](w1-review-decisions.md#monthly-development-cost-estimate)
-remain **proposed for Davian Hernandez's review**. Accepted SST/Cognito and
-product security/retention decisions remain distinct. No linked contracts,
-Trello cards, capstone proposal, or accepted ADR are changed by this revision.
+## Sources and evidence boundary
 
-## Source baseline and repository evidence
+Revision baseline: `30ddbd8` on `docs/w1-architecture-data-model`, clean tree.
+Read root [AGENTS.md](../../AGENTS.md); no nested instructions found. Explicit
+feature-branch direction overrides the general codex-branch rule. Inspecting
+current services/configuration confirms product persistence/execution is not
+implemented. Preserve [accepted SST ADR 0001](../decisions/0001-sst-infrastructure-candidate.md)
+and [completed spike reports](../spikes/sst-viability.md) unchanged.
 
-All three linked sources were read through connected apps:
+Linked source contents were read for the original draft; this revision uses
+that recorded baseline and Davian's subsequent instructions, not a fresh claim
+that external contracts have changed:
 
-- [Architecture task](https://trello.com/c/jbm6BuxP/2-w1-finalize-architecture-and-data-model):
-  implementation-level diagrams, ownership, deletion, retention, migration
-  ownership; Davian acceptance is required for Done.
-- [API Contracts v0.1](https://docs.google.com/document/d/1KSfRYOb2UxmrIl8VoFjc3YP38-PMu7k_fM9wrVkEenM/edit):
-  proposed interfaces and agreed cross-cutting decisions; routes are not
-  implemented until code and tests exist.
-- [Working proposal](https://docs.google.com/document/d/1tatrrhqytTxAZxlrOnbSQRymmqjL2MmGq7Tdj0-1T60/edit):
-  MVP includes cloud execution, local execution, OpenAPI, workflows, and MCP.
+- [W1 task](https://trello.com/c/jbm6BuxP/2-w1-finalize-architecture-and-data-model).
+- [API contracts v0.1](https://docs.google.com/document/d/1KSfRYOb2UxmrIl8VoFjc3YP38-PMu7k_fM9wrVkEenM/edit).
+- [Working proposal](https://docs.google.com/document/d/1tatrrhqytTxAZxlrOnbSQRymmqjL2MmGq7Tdj0-1T60/edit).
 
-Repository inspected at `aab7d65`: root [AGENTS.md](../../AGENTS.md),
-[overview](README.md), [accepted SST ADR](../decisions/0001-sst-infrastructure-candidate.md),
-[both completed spike phases](../spikes/sst-viability.md), `sst.config.ts`,
-`compose.yml`, service entry points/tests, frontend, and verification scripts.
-No nested AGENTS.md was found. The starting tree was clean on `codex` with a
-GitHub remote. This draft uses `docs/w1-architecture-data-model`, following the
-task's explicit branch instruction over AGENTS.md's general `codex` rule.
+No Google Docs/Trello edits or state changes. Architecture remains pending
+review; API-contract review stays open. Proposal CDK and PostgreSQL/Fargate
+wording needs later synchronization. Neither old SQL design nor this new model
+is an accepted deployed contract.
 
-| Evidence                         | Actual boundary of what exists                                                                                                                           |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| React/Vite and three Go services | Landing page; API/worker health handlers; local agent binds loopback. No product auth, executor, MCP, or database integration.                           |
-| Docker Compose                   | PostgreSQL 17 local development definition, not evidence of product persistence.                                                                         |
-| Compute/frontend SST spike       | Observed Fargate, ALB, SQS send/receive, CloudFront/S3, redeploy, diff, state, teardown. No product worker consumption.                                  |
-| Database SST spike               | Observed private encrypted RDS PostgreSQL 17.10, exact-secret access, verified TLS, spike-only migration/CRUD, temporary non-root role, teardown.        |
-| Current cloud state              | Reports record removal of application stages; shared SST bootstrap and RDS service-linked role remained. This task did not query or mutate AWS.          |
-| Not tested by spikes             | Product authorization, sanitization, retries, retention, production egress, recovery/restore, rotation, Cognito, SSE, local polling, MCP, CI federation. |
+| Foundation                             | What is actually evidenced                                                                                              |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| React/Vite + Go API/worker/local-agent | Landing page and health/process foundations only; no product auth, executor, MCP or persistence                         |
+| Local Compose PostgreSQL 17            | Local configuration, not product DB integration; retained unchanged                                                     |
+| SST compute/static/SQS spike           | Fargate/ALB, queue access, static S3/CloudFront, redeploy/diff/state/teardown tested in isolation                       |
+| SST RDS spike                          | Private encrypted PG17.10, exact-secret access, verified TLS, spike migration/CRUD, non-root deployment role, teardown  |
+| Historical cloud inventory             | Reports record removed application resources and retained shared bootstrap; no live AWS audit in this revision          |
+| New serverless topology                | Lambda, HTTP API, DynamoDB product transactions, publication, IAM, costs/performance/restore **not deployed or tested** |
 
-## Proposed topology
+## Revised topology
 
-`F` means a local process foundation exists; `S` means an isolated spike proved
-that infrastructure capability and was removed; `P` means planned product work.
-A combined label does not mean the product integration was tested.
+F = local foundation, S = removed isolated spike capability, P = planned
+product behavior. Combined labels do not imply tested product integration.
 
 ```mermaid
 flowchart TB
-  subgraph Browser[User browser]
-    React["React custom auth and shared light/dark theme F/P"]
-  end
-  subgraph Device[Developer device]
-    Agent["Go local agent F/P"]
-    MCP["Go MCP server over stdio P"]
-    Coding["Coding agent"]
-    Private["Explicitly allowed localhost/private API"]
-    Coding --> MCP
-    Agent --> Private
-  end
-  subgraph AWS["AWS - SST selected; product topology proposed"]
-    Hosting["CloudFront and private static S3 S/P"]
-    Cognito["Cognito user pool P"]
-    ALB["HTTPS ALB S/P"]
-    subgraph VPC["VPC - private application and isolated database subnets P"]
-      API["Go API F/P"]
-      Worker["Go execution worker F/P"]
-      PG[("PostgreSQL: local definition / RDS S/P")]
-      Egress["NAT egress P"]
-      API --> PG
-      Worker --> PG
-      Worker --> Egress
-    end
-    SQS["SQS plus DLQ S/P"]
-    KMS["KMS protected-secret encryption P"]
-    SM["Secrets Manager runtime DB credentials S/P"]
-    Objects["Private S3 optional sanitized artifacts P"]
-    Monitor["CloudWatch logs S/P; metrics/alarms P"]
-    Hosting --> React
-    React --> Cognito
-    React --> ALB
-    ALB --> API
-    API -->|"outbox dispatcher: identifiers only"| SQS
-    SQS --> Worker
-    API --> KMS
-    Worker --> KMS
-    API --> SM
-    Worker --> SM
-    API --> Objects
-    Worker --> Objects
-    API --> Monitor
-    Worker --> Monitor
-    SQS --> Monitor
-    PG --> Monitor
-  end
-  Public["Allowed public HTTP/HTTPS API"]
-  Egress --> Public
-  Agent -->|"HTTPS poll and sanitized result submission"| ALB
-  MCP -->|"Authenticated read-only API; no secret access"| ALB
+  React["React custom auth and light/dark theme F/P"]
+  Cognito["Cognito P"]
+  Static["CloudFront + private static S3 S/P"]
+  Gateway["HTTP API Gateway P"]
+  API["Go Lambda API F/P"]
+  Control[("DynamoDB Control P")]
+  Protected[("DynamoDB Protected P")]
+  Dispatcher["Go outbox/maintenance Lambda P"]
+  Schedule["EventBridge Scheduler P"]
+  Queue["SQS + DLQ S/P"]
+  Worker["Go Lambda worker F/P"]
+  Evidence["Private sanitized evidence S3 P"]
+  KMS["KMS envelopes P"]
+  Secret["Secrets Manager HMAC root S/P"]
+  Monitor["CloudWatch + budget alerts P"]
+  Agent["Go local agent F/P"]
+  MCP["Local Go stdio MCP P"]
+  Public["Allowed public HTTP/HTTPS target"]
+  Local["Locally approved private/loopback target"]
+  Static --> React
+  React --> Cognito
+  React --> Gateway
+  Agent --> Gateway
+  MCP --> Gateway
+  Gateway --> API
+  API --> Control
+  API --> Protected
+  API --> Evidence
+  API --> KMS
+  API --> Secret
+  Schedule --> Dispatcher
+  Dispatcher --> Control
+  Dispatcher --> Queue
+  Queue --> Worker
+  Worker --> Control
+  Worker --> Protected
+  Worker --> KMS
+  Worker --> Evidence
+  Worker --> Public
+  Agent --> Local
+  API --> Monitor
+  Worker --> Monitor
+  Dispatcher --> Monitor
 ```
 
-The MCP server is a separate Go executable, initially alongside the local
-agent distribution with stdio transport. It calls the hosted API; it has no DB,
-SQS, KMS, or saved-secret access. The hosted API owns MCP invocation auditing.
-Remote MCP hosting and OAuth resource-server behavior are a later reviewed
-transport decision, not implied by this diagram.
+SST 4 remains selected. Proposed components: ApiGatewayV2, Function, Dynamo,
+Queue, Bucket, StaticSite and reviewed scheduler/KMS/Secrets Manager resources.
+[SST HTTP API](https://sst.dev/docs/component/aws/apigatewayv2/) and
+[Dynamo](https://sst.dev/docs/component/aws/dynamo/) document composition; verify
+exact installed-version options/generated IAM in a separately authorized task.
+Do not run SST diff/install/deploy here: first preview can mutate bootstrap.
 
-Keep bounded sanitized evidence in PostgreSQL for the first execution slice.
-CloudFront's private static S3 bucket contains compiled public assets only.
-Private artifact S3 is a planned extension if measured import/evidence volume
-requires it; it is not needed to launch bounded execution history. Avoid S3
-Object Lock because project deletion must remove pinned evidence too.
+Go uses aws-lambda-go and ARM64 provided.al2023 zip handlers, not an always-on
+HTTP server/container. API 256 MiB/10-second timeout; worker 512 MiB/90 seconds;
+maintenance 256 MiB/30 seconds; no provisioned concurrency. Cold starts and
+actual memory/latency require measurements. AWS documents
+[Go Lambda handlers](https://docs.aws.amazon.com/lambda/latest/dg/golang-handler.html).
+No customer-VPC attachment, NAT, ALB, RDS or dedicated public IPv4 allocations.
+Default Lambda networking reaches public endpoints; there is no stable outbound
+IP or customer security-group egress policy. Keep AWS SDK and untrusted HTTP
+transports separate. DNS/IP/redirect/metadata protections remain unchanged.
+[AWS Lambda networking](https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc-internet.html).
 
-### Authentication and ownership
+Private static assets are public through CloudFront OAC. Evidence is a separate
+private bucket, Block Public Access, TLS-only, SSE-S3, no Object Lock/versioning
+initially, no CloudFront caching or public/presigned evidence URLs. Authorized
+API reads proxy only published objects after checking owner/project/retention.
+No blanket 30-day S3 lifecycle: it would erase pins. Protected values use KMS
+application envelopes, never evidence bucket ciphertext as a secret store.
 
-Cognito remains the authentication provider beyond MVP. Use custom React
-registration, verification/resend, sign-in, reset request/confirmation, and
-sign-out screens sharing accessible light/dark theme components. The browser
-auth SDK talks to Cognito directly; Kurier never stores login passwords. Use
-a public app client without a client secret and a reviewed SRP-capable SDK
-configuration; SST owns the pool, independently of the frontend SDK.
+### Authentication, ownership and privilege
 
-The API verifies bearer **access** tokens against its configured pool and app
-client, then upserts the application user by `(issuer, sub)`. Email is neither
-a database key nor ownership identity. Never accept a body-supplied `userId` as
-authority. Resolve every project child through the authenticated user's
-project. Cross-user identifiers return `not_found`; nested paths must match the
-child's project. Jobs, environment, local agent, import operation, and workflow
-references must belong to that same owner and project.
+Cognito remains the provider beyond MVP; custom React signup/verification/
+sign-in/reset/sign-out screens share accessible light/dark components. Public
+client has no secret; credentials go directly to Cognito. API verifies access
+token signature, issuer, client_id, token_use=access, expiry and allowed scopes;
+reject ID tokens. HTTP API JWT authorizer can prefilter browser routes but does
+not replace application token-use/ownership checks. Local/MCP routes authenticate
+their separate opaque scoped credentials in the API; do not apply a Cognito-only
+JWT authorizer to those routes. Disabled user/project/credential state is checked
+on each request. See [verification recommendations](w1-review-decisions.md#authentication-and-email).
 
-Workers trust database-owned jobs, not message-supplied owner identifiers.
-MCP read tools and local poll/result endpoints use distinct credential scopes;
-agent execution credentials cannot read arbitrary history or invoke MCP.
-Ownership checks apply on each retrieval and result write, not only creation.
+User identity is verified issuer/sub, never email or request-supplied userId.
+Every resource is owner-authorized; projectId is a locator, not authority.
+GSI results are hydrated/rechecked. MCP is a separate read-only stdio executable
+calling an audited API bridge; no KMS/Protected/SQS/evidence-bucket permissions.
+Hosted API commits bounded audit records before returning tool data, failing
+closed if audit persistence fails. Remote MCP transport/OAuth is separate review.
 
-### Network and runtime privileges
+Separate least-privilege API, worker, outbox and cleanup roles. Worker has no
+public invoke URL; SQS event mapping invokes it. Outbox sends only one queue;
+worker cannot submit arbitrary new user plans. Cleanup can delete but not read
+Protected plaintext. Static site role cannot read evidence. Use GitHub OIDC and
+reviewed stage deployment roles; SST links carry resource metadata, not secrets.
 
-Propose an HTTPS ALB in public subnets, private Fargate API/worker tasks with
-NAT egress, and private RDS subnets with no internet route. API ingress only
-from ALB; worker has no public listener. RDS permits 5432 only from the API,
-worker, and one-shot migration task security groups. Use verified PostgreSQL
-TLS with maintained AWS CA roots and small connection pools, initially five
-connections per service replica. On-demand Fargate avoids Spot interruptions
-in the first execution demo. Single-AZ RDS is proposed for the development
-slice; commercial availability is a separate decision.
+### Secret boundary
 
-AWS documents both
-[public task and private/NAT egress options](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/networking-outbound.html).
-NAT removes direct task addressing but adds fixed and traffic costs; it does
-not enforce safe destinations. Public-IP tasks were tested only in the spike;
-using them in product requires an explicit alternative proposal. VPC endpoints
-can reduce AWS-service egress but cannot replace internet egress for arbitrary
-public API testing. Start with one NAT for the development stage, documenting
-its AZ dependency; production availability requires a separate cost review.
+Save reusable sensitive configuration only encrypted in Protected. Normal
+definitions return masks/refs, never recoverable values. Protect Authorization,
+Proxy-Authorization, cookies, recognized credential headers/query fields,
+marked JSON/text paths and interpolated/extracted sensitive values regardless
+of sensitive=false. No reveal endpoint. Plaintext exists only in authorized
+write/execution memory and local execution-only TLS envelopes. Never include
+secrets in logs, execution evidence, SQS, polling status, SSE, MCP or agent disk.
 
-The cheaper proposed alternative places one API and one worker Fargate task
-in public subnets with assigned public IPv4, removes NAT, and keeps RDS private.
-API ingress allows its application port only from the ALB security group;
-worker ingress is closed, including public health access. Restrict egress by
-role, PostgreSQL to the DB security group, and credential/DNS access to required
-runtime endpoints. Keep ECS Exec off; use container health checks for the worker.
-Public addresses increase the consequences of security-group mistakes and
-change on task replacement; they do not provide NAT's stable source address.
-Both topologies require identical application DNS/IP, redirect, proxy, metadata,
-size and timeout protections. This alternative is not acceptance of the spike
-network as production infrastructure.
+Freeze encrypted submission bindings separately from evidence. Current saved
+secret edits affect new submissions/reruns, not queued work, except explicit
+revocation/deletion. Dispatch checks live source state. Sanitize echoes in
+URL/headers/body/errors; propagate taint. Unsupported encoding/binary/path
+handling or sanitizer failure omits body with fixed safe diagnostics. Arbitrary
+secret transformations cannot be detected reliably: explicit user response-path
+marking and fail-closed supported encodings remain necessary.
 
-Separate API, worker, migration, and ECS execution roles. API sends SQS jobs;
-worker receives/deletes/changes visibility on one queue. Allow only stage DB
-credential-secret reads, stage KMS use, and needed bucket prefixes. Migration
-role has schema DDL; application roles do not. Disable ECS Exec and raw HTTP
-debug logs. SST links carry non-secret resource metadata, not decrypted user
-secrets. CI should use GitHub OIDC and reviewed stage-scoped deployment roles.
-
-### Sensitive data boundary
-
-Saved sensitive configuration is deliberately persisted **only encrypted** in
-the protected store. API ingestion replaces sensitive values with references
-before saving ordinary request/environment JSON. Recognized credential fields
-are protected even if the caller sets `sensitive: false`. UI reads return a
-mask and reference, never a recoverable value. No reveal endpoint is proposed.
-Names/descriptions/import examples also need validation against credential
-material; metadata is not a loophole for secrets.
-
-Plaintext is allowed transiently in authorized configuration writes and
-execution runtime memory. Encrypted submission bindings freeze queued secret
-values; these short-lived protected rows are distinct from captured evidence.
-Only authorized worker execution, or a leased local job's TLS runtime envelope,
-can decrypt them. Local polling must deliver execution configuration, including
-required secrets, to the explicitly paired user-controlled device. That
-necessary disclosure needs Davian's review of the job envelope; it is never
-included in SQS, evidence, SSE, MCP, logs, telemetry, or persisted agent files.
-The local agent must disable HTTP tracing and discard runtime values after use.
-
-Redact Authorization, Proxy-Authorization, Cookie, Set-Cookie, recognized
-credential headers/query fields, marked JSON paths/text fields, and resolved
-sensitive variables. Carry taint through interpolation and workflow extraction;
-mask the complete derived field if partial masking cannot be proved safe.
-Scrub secret echoes from headers/body/URLs and structured diagnostics. Validate
-JSON before path-based redaction. Unsupported encoding, binary content, or a
-sanitizer failure yields a fixed failure record with body omitted. Arbitrary
-transformations of secrets cannot be reliably detected; unknown sensitive
-response paths require explicit user marking. The HTTP/redaction prototype
-must prove supported encodings and fail-closed handling before persistence.
-
-## Proposed execution sequence
+## Execution sequence and dispatch
 
 ```mermaid
 sequenceDiagram
   participant UI as React
-  participant API as Go API
-  participant DB as PostgreSQL
+  participant API as Go Lambda API
+  participant DB as DynamoDB
   participant Q as SQS
-  participant W as Worker
-  participant T as Allowed destination
-  UI->>API: POST request execution with access token
-  API->>DB: Owner check, freeze plan and encrypted bindings, job + outbox + queued event
-  DB-->>API: Transaction committed
-  API-->>UI: 202 queued execution
-  API->>Q: Dispatcher sends identifier-only ExecutionJob
-  W->>Q: Long poll
-  W->>DB: Claim job with lease and fencing token
-  W->>DB: Read frozen plan and protected bindings
-  W->>W: Authorize, decrypt, resolve, validate destination
-  W->>DB: Commit running event and dispatch intent
-  W->>T: One bounded HTTP request
-  T-->>W: Status, headers, bounded body
-  W->>W: Extract and encrypt runtime values, sanitize and validate, discard raw buffers
-  W->>DB: Atomic snapshot + runtime bindings + step/run state + next job/outbox + terminal event
-  W->>Q: Delete message only after commit
-  UI->>API: Authenticated SSE with last event ID
-  API-->>UI: Minimal status events, fetch sanitized record separately
+  participant W as Lambda worker
+  participant T as Allowed target
+  participant S as Private S3
+  UI->>API: Authenticated submit with revisions/idempotency
+  API->>DB: Transaction: gate + frozen job/bindings + durable OUT
+  DB-->>API: Committed
+  API-->>UI: 202 execution identity
+  API->>Q: Outbox Lambda sends identifiers
+  Q->>W: At-least-once invocation
+  W->>DB: Conditional claim and pre-dispatch intent
+  W->>T: One bounded HTTP operation
+  T-->>W: Bounded response
+  W->>W: Extract/encrypt, sanitize, discard raw buffers
+  W->>DB: Register upload ticket/byte reservation
+  W->>S: Conditional PUT sanitized object
+  W->>DB: Atomic manifest + outputs + state + receipt + successor OUT
+  DB-->>W: Committed and handler returns success
+  UI->>API: Immediate-return status polling
+  API-->>UI: Version/status and evidence fetched separately
 ```
 
-1. Submission is a database transaction: authorize all resources, read a
-   consistent request/environment revision, freeze ordered non-secret fields,
-   selected operation/schema, assertions, limits, and redaction policy version.
-   Copy selected saved-secret ciphertext into execution-scoped protected
-   bindings. Create job, execution identity, queued event, and transactional
-   outbox. Return 202 only after commit; queue-send failure is recoverable by
-   the dispatcher. Reject missing secrets or invalid configuration before
-   accepting where possible. API retries with the same proposed idempotency
-   key and identical payload return the same execution; mismatched payload
-   returns conflict. HMAC the canonical payload, including secret-reference
-   identities, without recording raw submitted credentials.
-2. The dispatcher sends the existing identifier-only ExecutionJob shape.
-   Treat message `attempt` as advisory; DB attempt count and owner/target are
-   authoritative. SQS is a wake-up mechanism, not the durable request payload.
-   Database-based local polling claims local jobs; do not consume cloud SQS
-   messages for local execution. Outbox publication is at least once.
-3. Claim with an atomic row update/lock, lease deadline, and monotonic fencing
-   token. Competing deliveries cannot claim an active job. A terminal job is
-   acknowledged without performing HTTP. Verify live project, owner, target,
-   credential state, and protected bindings again. API edits never cause a
-   worker to reload the mutable request or environment.
-4. Resolve the frozen plan with submission-time secret copies, in memory.
-   A normal secret edit affects later submissions and reruns, not this job.
-   Deleting a secret/environment/request revokes its queued bindings and fails
-   pending execution clearly. Emergency secret revocation blocks pending
-   use, including copied ciphertext. Rotation of encryption keys does not
-   change the target credential value. Record only non-secret reference IDs
-   and redacted fields in evidence.
-5. Transition to running and persist dispatch intent before external HTTP.
-   Validate destination at connect time; enforce [proposed limits](w1-review-decisions.md).
-   No automatic retries of received 4xx/5xx, timeouts, or ambiguous network
-   errors. A user rerun creates a new execution. HTTP 400–599 always means
-   failed and preserves exact status and sanitized response; no response means
-   null `httpStatus`. Propose completed for accepted 2xx/3xx unless assertions
-   or validation policy fail; disabled redirects leave 3xx visible.
-6. Extract workflow values from the bounded raw response **before** sanitizing
-   and discarding it; encrypt runtime values separately. Atomic finalization
-   inserts one sanitized immutable snapshot, terminal job/event and retention,
-   plus workflow outputs, state and next scheduling intent where applicable.
-   Destroy current-job protected bindings; keep run bindings needed by later
-   steps until run termination. Enforce fencing and unique execution/run-step
-   keys. Local duplicates acknowledge a retained acceptance receipt, not an
-   expired live lease; no duplicate overwrites evidence or advances twice.
-7. Acknowledgment happens after commit. If it fails, delivery repeats and finds
-   a terminal job. Retry internal pre-dispatch DB/KMS/queue failures with
-   exponential jitter, initially 1/2/4 seconds capped at 30 seconds, at most
-   five claims. Start cloud SQS visibility/DB lease at 120 seconds; cloud workers
-   renew every 30 seconds during finalization. Local leases use the fixed
-   120-second window below, with no extension route. Queue long poll is 20 seconds. DLQ after
-   five receives, queue retention four days, DLQ fourteen days. A reconciler
-   fails stalled queued jobs after ten minutes, cleans bindings, and handles
-   exhausted jobs; acknowledge/ignore old identifiers for deleted projects.
+Submission returns 202 only after a transaction checks project/source revisions
+and saves frozen non-secret plan/schema/limits/redaction policy, encrypted
+bindings, execution/job, idempotency receipt and cloud OUT. Editing mutable
+definitions cannot alter the queued job. Same owner/project idempotency key and
+canonical input returns original identity within seven days; mismatch 409.
+Do not persist literal keys/input credentials or public secret fingerprints.
 
-[SQS at-least-once delivery](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html)
-requires database idempotency even with visibility leases.
-[Visibility renewal](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html)
-and [long polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)
-are supported service mechanisms; the numeric settings here are Kurier proposals.
+Outbox Lambda queries due OUT candidates, conditionally claims a short delivery
+lease under the project gate, sends identifiers, then marks published. Crash
+after send/before marking repeats notification, not HTTP. Minute scheduler plus
+durable due index/cursors recovers queue outages; proposed backoff 1/2/4 seconds
+to 60, failed publication retained, alert after ten minutes. No DB Streams
+dependency or 24-hour stream replay assumption. Never drop an OUT after a
+fixed retry count. Expired/deleted/terminal jobs can be acknowledged safely.
 
-### External side effects and crashes
+Cloud jobs: queued -> claimed with random lease/fence, deadline now+120 seconds.
+Validate project/source state, decrypt/prepare, check destination, then commit
+claimed -> running and dispatchIntentAt **before** HTTP. Claim failures before
+intent can return to queued on expiry with a new fence, maximum five claims.
+Any possibly committed intent is read back before proceeding; if uncertainty
+cannot be resolved, do not dispatch. running may transition only to terminal,
+never queued. One upstream HTTP attempt per job; no automatic replay after
+timeout/network ambiguity/4xx/5xx. Inspect/disable Go transport retries and
+reused connections for MVP. Exactly-once external effects cannot be promised.
 
-Database idempotency cannot guarantee exactly-once execution at another API.
-After dispatch intent is committed, a worker crash could mean the request was
-sent but the response was lost. On lease expiry, propose finalizing a failed
-`execution_outcome_unknown` snapshot with no invented response rather than
-automatically sending again. This can report unknown even if a crash occurred
-just before send. A live worker holding a sanitized response may retry its
-final DB commit within the lease; it must not resend HTTP. Reject late writes
-after fencing changes. Inspect Go transport retry behavior and avoid reusable
-connections for the MVP executor so automatic transport retry cannot bypass
-this rule. Target-specific idempotency keys are future opt-in work.
+Standard SQS batch size one, on-demand pollers, worker event mapping max
+concurrency two, reserved worker concurrency two. Visibility **540 seconds**
+(six times 90-second Lambda timeout), zero batching window, redrive after five
+receives, queue four-day/DLQ fourteen-day retention. DB lease and SQS visibility
+are different clocks. Worker finalization must finish before its 90-second
+invocation/120-second lease; no heartbeat extension initially. Automatic SQS
+retry only wakes the state machine. A pre-intent abandoned claim may retry;
+post-intent expiry finalizes failed execution_outcome_unknown without new HTTP.
+[AWS SQS/Lambda configuration](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-configure.html).
 
-### Local poll is the durable dispatch boundary
+HTTP 400–599 is Failed with exact status and sanitized response. No response
+means null httpStatus; assertions/required extraction/supported validation
+failure also fail. Propose 2xx/3xx completed unless those checks fail; redirects
+off. Queued jobs older than ten minutes fail safely before dispatch. Unknown
+lease reconciliation uses the same terminal transaction and skips successors.
 
-**Proposed default: commit dispatch intent before returning an executable local
-job.** No separate start route is proposed. Intent means HTTP **may** have been
-sent, not proof it was sent. Lost polls can therefore produce false unknown
-outcomes; this conservative behavior avoids replay.
+Recovery finalization is an explicit exception to **first client result** lease
+authorization, not a late result acceptance path. The trusted reconciler
+conditions running intent + expired deadline + expected fence, increments the
+fence and registers its own small safe-failure upload ticket under the project
+gate. It publishes unknown only with that recovery fence and no accepted local
+receipt; original worker/agent uploads now fail fencing. It may clear a matching
+credential activeJob even if that credential is revoked. Reconciler crashes are
+resumed from durable recovery ownership/ticket without target HTTP. A queued
+timeout/source-revocation failure uses the same internal safe-finalization path
+without live client credentials or decrypting removed bindings.
 
-In one poll transaction, authenticate/lock the credential, then lock the project
-and optional run using the [shared lock order](w1-data-model.md#shared-locking-and-retention-transactions).
-Verify live owner/project/credential and eligible queued work. Set
-`queued -> running`, increment fence, create random `lease_id` and nonce hash,
-set `lease_deadline = grant_time + 120s`, `execute_not_after = grant_time + 30s`,
-and `dispatch_intent_at = grant_time`. Append execution.running and update
-workflow step/run state where applicable. Commit before returning configuration
-and nonce; recheck revocation before disclosure where possible. Failure to
-deliver/decrypt the envelope after commit must not clear dispatch intent.
+### Local polling is the durable dispatch boundary
 
-The agent executes at most once per received `(jobId, leaseId, fence)` in its
-current process, starts before executeNotAfter, and derives a conservative local
-deadline from serverTime/remaining duration. It never restores executable jobs
-from disk after restart. Repeated polls cannot return an already dispatched
-job again; return empty/busy while that agent's one job remains unresolved.
+No start route: **commit dispatch intent before returning executable work**.
+Poll is immediate-return. Transaction checks live original credential/slot,
+project/source state, optional run/step and queued job. Set queued -> running,
+increment fence, save random leaseId/nonceHash, dispatchIntentAt, executeNotAfter
+=grant+30 seconds and deadline=grant+120 seconds; update anchor/run/step/event
+and credential activeJob. Commit before returning execution-only configuration,
+nonce/serverTime/deadlines. Recheck revocation before disclosure where possible.
+Lost response/decryption failure cannot clear committed intent.
 
-| Failure boundary                                                          | Durable state and recovery                                                                                                                                                         |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Server dies/transaction rolls back before poll commit                     | Job stays queued; no executable envelope was returned, so a later poll may claim.                                                                                                  |
-| Commit succeeds but poll response is lost, or commit outcome is uncertain | Agent sends no HTTP without a complete response. Server reads job state; committed intent stays running and is never reassigned.                                                   |
-| Agent crashes after receipt but before send, or executeNotAfter passes    | Intent remains ambiguous. At lease expiry finalize failed execution_outcome_unknown, with no replacement lease or HTTP retry.                                                      |
-| Agent crashes during/after HTTP or loses result buffer                    | Same unknown finalization; no cloud fallback or reassignment.                                                                                                                      |
-| Agent retains result but upload acknowledgment is lost                    | Retry the same upload packet, never HTTP, under the receipt protocol below.                                                                                                        |
-| Lease expires without accepted result                                     | Reconciler locks/fences and finalizes unknown once; late original results cannot replace it.                                                                                       |
-| Credential revoked                                                        | Serialize against poll/upload, fence pending leases, destroy bindings, and reject future poll/results including acknowledgment retries. Already delivered HTTP cannot be recalled. |
+At most one unresolved lease per agent. Repeated polls return empty/busy, never
+the previously granted executable envelope. Agent uses conservative remaining
+duration, starts once before executeNotAfter, never restores executable jobs
+from disk after restart, and retains a result packet only in memory for upload
+retry. Agent must not send HTTP on an incomplete response or ambiguous grant.
 
-Poll includes leaseId/fence, executeNotAfter, deadline, serverTime and runtime
-configuration. The nonce is stored only as a hash. Revocation after response
-can race device execution: server access stops immediately, but an offline
-device may still use a delivered secret/authorization. Unknown reconciliation
-uses the workflow finalization transaction to fail the step and skip successors.
+| Failure boundary                                                 | Transition/recovery                                                                        |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Poll transaction rolls back before response                      | Remains queued; later grant is safe                                                        |
+| Commit succeeds, response lost or commit uncertain               | Running intent stays; read back server state, no regrant                                   |
+| Crash before/after target send, lost result, start window missed | At deadline finalize unknown once; no automatic replay/cloud fallback                      |
+| Result commit ACK lost                                           | Retry identical upload, never target HTTP                                                  |
+| Credential revoked/expired                                       | Credential state denies all poll/upload/ACK; bounded job fencing follows, even if GSI lags |
+| Lease expires versus result race                                 | One conditioned terminal transaction wins; late response cannot replace unknown            |
+
+Revocation first updates credential/version under the account slot protocol.
+Grant/result transactions condition that same credential state/version; queued
+work then drains through durable maintenance, not a giant multi-project
+transaction. Revocation can fence access immediately but cannot recall HTTP or
+a secret already delivered to an offline paired device.
 
 ### Local result creation versus duplicate acknowledgment
 
-Authenticate the currently valid **original** agent credential and owner/project
-on every upload, then check a retained acceptance receipt before applying live
-lease checks. The project-owned receipt (PK job_id, unique execution_id) stores
-accepted lease ID/fence, credential ID, nonce hash, canonicalization version,
-HMAC key ID/digest and acceptedAt. It stores no body or extraction values and
-cascades with execution cleanup/project deletion. Keep its digest key until
-all receipts needing it expire.
+Authenticate the currently valid original credential and active owned project,
+then transactionally read the retained receipt before live lease checks. First
+result requires running job, matching lease/fence/nonce, unexpired deadline and
+valid original credential. Publication/finalization inserts immutable receipt
+and SNAP in the same transaction. Never reopen/overwrite terminal executions.
 
-The **first** upload requires matching live lease/fence/nonce, unexpired lease,
-running job, active project and valid credential. Atomically insert snapshot
-and receipt, terminal metadata/event/retention, and any workflow advancement.
-Server completion/receipt times are generated once. If commit acknowledgment
-is lost, resolve by querying the receipt rather than executing HTTP again.
+Identical accepted duplicate may return original minimal 200 acknowledgment
+**after lease expiry**, using original credential and retained accepted lease/
+fence/nonceHash. This grants ACK only, not a new write. Different digest/lease
+409; revoked/expired credential 401, including identical retries; replacement
+credential cannot inherit authority. Deleted project/cleaned receipt 404. No
+receipt plus expired/fenced lease or unknown terminal 409. Keep receipt and HMAC
+key while evidence remains, including pins; authorization rechecked on every ACK.
 
-An **accepted duplicate** needs the same currently authorized credential and
-retained lease identity/nonce, but does not need an unexpired lease or an active
-job fence. These authorize acknowledgment only. Identical canonical digest
-returns 200 with the original minimal receipt, without evidence writes, events,
-variables or next jobs. Different digest or lease identity returns 409 conflict.
-Revoked/expired credentials return 401 even for identical packets; replacement
-tokens cannot inherit receipt authority. Deleted project/execution/receipt
-returns not_found. No receipt plus expired/fenced lease returns conflict,
-whether or not reconciliation has run. Unknown terminal snapshots have no
-accepted-upload receipt; late uploads never reopen or overwrite them.
+Canonicalize validated normalized DTO with RFC 8785, private HMAC-SHA-256 with
+domain/schema/job/lease identity. Reject duplicate JSON keys, unknown fields,
+unsafe/nonfinite numbers/unsupported encodings. Version null/absent/default
+normalization; object key order/formatting insignificant, array order and body
+text significant. Include agent timings and extracted runtime values, exclude
+server timestamps/encryption randomness. No public fingerprint of sensitive
+values. Compare duplicate packets under the accepted canonicalization version,
+not a new sanitizer or recovered historical secrets. Dedicated TLS runtime-value
+envelope is protected on receipt; agent pre-extracts before redaction. Server
+cannot independently verify masked sensitive extraction: explicit trusted-agent
+boundary. Local result payload cap 4 MiB includes encoding/envelope overhead.
 
-Propose RFC 8785 canonical JSON of the validated submitted DTO, authenticated
-with HMAC-SHA-256 over a domain separator, schema version, job/lease identity
-and content. Reject duplicate keys, nonfinite/unsafe numbers, unknown fields
-and unsupported encodings. Define null/absent/default normalization in the
-versioned DTO. Object whitespace/key order is immaterial; array order and body
-text remain significant. Include agent timing and all extracted runtime values;
-exclude server timestamps and server-generated random encryption nonces. The
-private receipt HMAC is separate from the sanitized evidence hash and avoids
-persisting public fingerprints of potentially sensitive values. Further server
-redaction occurs once before snapshot persistence; duplicate comparison needs
-neither old job secrets nor a newly changed sanitizer. The agent retains a
-sanitized packet only in memory for retry; protected extracted values are also
-memory-only, sent over TLS in a dedicated runtime-value write envelope.
+## Atomic workflow advancement
 
-### Reruns and workflows
+Run creation transaction freezes all <=10 plans/source/schema/extraction rules
+and encrypted input bundle, creates all step identities but **only first job**.
+Steps pending -> queued -> running -> completed/failed; run queued -> running
+-> completed/failed. Failure marks untouched successors skipped. Deterministic
+run/position job IDs and conditional puts prevent a second execution per step.
 
-Reruns copy historical non-secret replay configuration into a **new** job.
-They resolve stored logical secret references against the current protected
-store and capture new encrypted bindings. They do not decrypt a historical
-snapshot or recover old secrets. A missing/revoked secret fails explicitly;
-never silently choose another environment or a similarly named credential.
-After request/environment deletion, non-secret history is readable and a rerun
-is possible only when every required live secret reference remains available.
+After response, while raw bounded buffers still exist: evaluate supported
+assertions/schema, extract required typed values and sensitivity provenance,
+encrypt immutable producer-step output bundle, prepare next exact input refs,
+sanitize evidence/diagnostics, then discard raw buffers. Extracting later from
+redacted evidence would lose required values. All KMS/S3 work occurs outside
+the transaction; local uploads supply memory-only extracted values over TLS.
+Missing/invalid output fails the step; no successor. Encryption/publication
+failure cannot advance a run or silently drop its variables.
 
-At workflow-run submission freeze all step plans and encrypted step-secret bindings, environment configuration,
-extraction rules, assertions, and schema associations. Execute steps in order;
-stop on HTTP, assertion, or configured validation failure. Extracted values
-stay run-scoped, tainted when sensitive. To resume safely between jobs, persist
-only encrypted protected runtime bindings and delete them at run termination;
-ordinary run JSON contains masks/references. Each executed step gets the same
-immutable snapshot shape. Skipped steps have no invented execution. Changing
-the workflow or request during a run cannot alter its frozen steps.
+One TransactWriteItems with expected project/run/job/source/credential versions:
 
-### Atomic workflow finalization and advancement
+1. Require active owner/project, running intent, live first-result lease/fence
+   (or separately conditioned internal recovery ownership/fence), current step,
+   source eligibility for successful advancement and registered uploaded ticket.
+2. Conditional Put SNAP manifest and local receipt; update job/anchor/step,
+   RET/event, settle publication ticket/reservation accounting.
+   For local completion clear the credential's matching activeJob slot in the
+   same transaction. A lost result acknowledgment cannot keep the agent busy
+   forever; retained receipt still permits ACK retry, not repeated execution.
+3. If continuing, Put immutable encrypted OUTPUT#position bundle, bound to
+   producer/run. Queue next step and conditional Put deterministic next job/
+   anchor/protected bindings/OUT (or local candidate). Advance run/version and
+   reference exact output versions, never latest-value resolution.
+4. If terminal, assign immutable normal run expiry, mark <=9 skipped steps,
+   delete <=10 encrypted runtime bundles/initial inputs/current binding and
+   decrement inflight count. If continuing, remove only finished job bindings;
+   retain outputs still needed by later steps. Output preparation at final
+   step is evaluated but need not persist a immediately-deleted bundle.
+5. Commit all-or-nothing. No volatile callback or separate step status commit
+   advances the run. No SQS send within the transaction.
 
-**Proposed:** run creation freezes every step and protected binding and creates
-only the first execution/job in one transaction. Step states are
-`pending -> queued -> running -> completed|failed`; untouched successors become
-skipped on failure. Run goes `queued -> running -> completed|failed`. Every
-created job has one execution, unique by run_step_id; skipped steps have none.
+Before commit: rollback exposes neither pointer nor outputs/successor. Live
+process may retry prepared finalization within lease **without HTTP**. Crash
+losing buffers leaves intent; reconciler publishes safe unknown failure and no
+successor; preuploaded body becomes orphan. After commit: read terminal/receipt
+on uncertain ACK; exact variables and OUT survive, dispatcher recovers next
+notification. Duplicate finalizers cannot republish/update outputs or advance
+twice. Publication versus orphan cleanup shares ticket and project versions.
+See [bounded transaction budgets](w1-data-model.md#bounded-transactions-and-workflow-limits).
 
-Prepare finalization in memory before taking DB locks: parse bounded raw response,
-evaluate assertions/validation and required extraction rules, carry sensitivity
-taint, encrypt extracted values into immutable run-binding versions, sanitize
-snapshot/error/diagnostics, and prepare next-step protected bindings and plan
-references. **Extract before discarding raw buffers** because sanitization may
-mask values needed later. No raw buffers or plaintext extractions enter logs,
-evidence, queues or ordinary run JSON. Local agents perform extraction before
-redaction and submit protected runtime values through the dedicated envelope;
-the server validates/encrypts them rather than trying to recover them from a
-redacted body. Unverifiable sensitive extraction is a trusted-agent limitation,
-not a claim of server replay verification.
+Rerun creates new execution from frozen non-secret replay configuration and
+**current** stable saved-secret references. Missing/revoked/deleted source fails
+explicitly; never recover historical secrets or choose a similarly named value.
 
-Missing required extraction, invalid path/type, failed assertion/HTTP/contract,
-or inability to prepare secure bindings fails the step and skips later steps.
-Precompute crypto/KMS work outside the DB transaction, bounded by the lease;
-carry prepared ciphertext and expected run/job versions into finalization.
-No network/KMS call is made while holding the finalization locks.
+## S3 publication, orphans and project deletion
 
-In **one PostgreSQL transaction**, using the shared lock order:
+Objects use unique `stage/projects/<id>/evidence/<execution>/<ticket>.json`
+keys; no user names/URLs. Conditional PUT If-None-Match prevents overwrite,
+checksum is of sanitized content, server verifies key/bytes against ticket.
+Bounded single PUT only, no multipart/presigned uploads initially.
+[S3 conditional writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html).
 
-1. Recheck active project, valid local credential if applicable, matching fence,
-   unexpired first-result lease, running step/job, expected run version and
-   eligibility/non-revocation of prepared next-step bindings. Reject stale
-   preparation; reprepare without HTTP replay while lease permits, or finalize
-   a fixed safe failure when secure advancement is unavailable.
-2. Insert the immutable execution snapshot and local acceptance receipt if
-   applicable; set job/step terminal state, retention and terminal event.
-3. For a successful step, insert encrypted extraction versions with provenance
-   `(run_id, producer_step_id, variable_name)`. Reference exact versions in the
-   next frozen plan, never a mutable latest-value lookup at worker dispatch.
-4. If another step remains, change it pending -> queued, create its unique
-   execution/job, install prepared protected bindings, and insert cloud outbox
-   intent or a database-pollable local job. Increment run version/current step.
-   Do not send SQS or deliver an executable local job inside this transaction.
-5. For the last successful step, set run completed; on failure set run failed,
-   record failed position and mark successors skipped. Set normal run expiry
-   once, delete all runtime/unused step bindings on terminal run. Delete only
-   the completed job's bindings if the run continues. Commit all or nothing.
+Before every PUT (including retries), register an UPLOAD ticket in a gate/job-
+guarded transaction with exact key, writer/fence, deletionEpoch, byte quota
+reservation and write deadline. Never upload then register. Subsequent PUT
+attempts require active parent/current ticket/live lease; same immutable key
+is safe to retry only after resolving upload/commit uncertainty. S3 encryption
+does not make an unpublished object authorized: API only follows committed
+SNAP pointers after current authorization, never lists/reads tickets for users.
 
-Before commit, failure leaves no visible partial snapshot/variables/next job.
-A live process may retry the same prepared transaction within its valid lease,
-without resending HTTP. A process crash that loses the response before commit
-leaves dispatch intent; reconciliation finalizes unknown/failed and schedules
-no successor. After commit, a lost acknowledgment or crash is resolved from
-terminal state/receipt; the committed next job and encrypted versions survive.
-The outbox dispatcher retries publication, and local polling discovers committed
-local jobs. Duplicate wakeups/step-finalizers cannot bypass unique run-step keys
-or fencing, and a terminal duplicate never applies outputs or scheduling again.
-Unknown commit outcomes must be read back before another transaction attempt.
+Successful PUT followed by finalization atomically marks ticket published and
+inserts SNAP. Crash before PUT leaves a ticket without object; after PUT/before
+commit leaves inaccessible sanitized orphan. Lost PUT response retains ticket
+until outcome settled. Orphan sweeper first transactionally fences expired
+pending ticket to orphan/deleting under gate/job conditions, then deletes exact
+key, verifies absence and settles accounting. Publication loses if cleanup
+fenced ticket first; published ticket cannot be orphan-cleaned. Never delete an
+object based on a lagging GSI or missing manifest alone. Reconcile by strong
+base reads. Cleanup must not release reserved bytes while a PUT may still land.
 
-The reconciler, ordinary worker and local upload route use this same
-finalization procedure; no separately committed step-state update or volatile
-callback is allowed to advance the run.
+Project deletion is proposed **202 + deletion-operation status**, not current
+contract's synchronous 204:
 
-### Deletion and storage coordination
+1. One transaction changes P/META active -> deleting, increments version/epoch,
+   writes permanent minimal deletion ledger and durable drain WORK. Ledger key
+   is outside P (`LEDGER#stage/PROJECT#id`); retain a minimal P/META tombstone
+   too. Immediately
+   deny normal reads/claims/pins/submissions/publication. Already authorized
+   response bytes/HTTP side effects cannot be recalled.
+2. Drain jobs/OUT and protected data in bounded transactions, stop/fence writers,
+   delete all referenced/unreferenced objects by strong project-prefix listing
+   and tickets, and remove children from both tables. Pins never block deletion.
+   Preserve tickets/work/tombstone until settled, not delete the evidence prefix
+   once and assume success. Handler max lifetimes/deadlines bound new _attempts_,
+   but a timed-out remote S3 PUT is still an uncertain outcome.
+3. A writer that checked active **before** tombstone can PUT **after** deletion
+   begins. Its publication transaction fails state/epoch; ticket remains visible
+   to deletion drain, writer attempts immediate deletion, drain repeats exact-key
+   deletion and prefix sweep after writer quiescence. Permanent tombstone means
+   late uploads can never become accessible. No client presigned capability
+   survives deletion; runtime IAM only permits reviewed application writers.
+4. Claim physical completion only after writers quiesce, all tickets (including
+   uncertain PUT outcomes) settle, both tables have no children, and prefix is
+   empty. A lease timeout or one successful HEAD/empty LIST alone is **not proof**
+   an in-flight PUT cannot finish later. Unresolved PUT keeps deletion draining
+   and alerts for reviewed investigation; do not falsely report complete.
+   Keep permanent tombstone and low-frequency residual-prefix sweeps even after
+   completion to catch late objects. Internal deletion status is owned metadata;
+   no evidence leaks through it. Proposed minimal ledger survives backup restore.
 
-Project deletion dominates pinning, leases, and all associations. Mark project
-deleting under lock, deny new reads/writes/claims, revoke bindings, and fence
-in-flight jobs; then delete all project rows in a single transaction for the
-bounded PostgreSQL MVP. A request already sent cannot be undone. Late worker
-or local-agent results cannot recreate a deleted project.
+Same ticket protocol covers sanitized import objects.
+For import PUTs the guard is preparing import revision + project gate, rather
+than a running execution lease; tickets still reserve exact keys/bytes and
+publish only through the guarded ready manifest.
+No Object Lock/indefinite version retention. If versioning is later enabled,
+deletion must remove every
+version and delete marker and costs must include them. Seven-day DB backups
+and bootstrap backups may retain data separately; project-safe restore and
+residual policy require review. Project deletion is immediate authorization
+revocation plus eventual physical deletion, not an atomic cross-service erasure.
 
-Pin/unpin, execution cleanup, workflow-summary cleanup and project deletion
-share the [project-first locking protocol](w1-data-model.md#shared-locking-and-retention-transactions).
-Workflow context remains while any step is pinned or still available, without
-copying response bodies. Last unpin after normal run expiry makes both expired
-evidence and unprotected context logically unavailable at that commit; cleanup
-later removes rows under the same locks. No operation can repin expired evidence
-or resurrect deleted context. A deleting project overrides every pin.
+## Immediate-return polling and monitoring
 
-If S3 artifacts are introduced, first fence writes and complete outstanding
-bounded writes, then delete every object/version under the project prefix,
-then cascade DB rows. Track retryable cleanup in a deletion job; report 204
-only when active-store deletion is complete. This requires a reviewed async
-deletion response if completion exceeds the HTTP budget. Do not rely on a
-fixed bucket lifecycle that could erase pinned evidence. Restoring backups
-must reapply project-deletion tombstones before serving traffic. Propose
-seven-day DB backups and document the residual backup lifetime honestly;
-instant physical erasure from backups is not established by this design.
+Propose replacing SSE and 20-second local long-polls with GET status/batch and
+immediate 200 status or 204 no local work. Browser polls every two seconds while
+its execution is active (light-budget default ten seconds), jitter ±20%; idle
+visible project every 30 seconds, hidden tab pauses. Stop at terminal/deleted/
+expired status, sign-out, component disposal; abort outstanding requests. One
+in-flight request/client; refresh first page on reconnect and fetch terminal
+evidence once. No token in query strings, no response caching. Versions allow
+client deduplication; no promise of observing every transient event.
 
-## Monitoring and release checks
+Local agent idle polling ten seconds, back off after repeated empty responses
+to 30 then 60 seconds; user-triggered pending local job resets to ten. During
+execution one job only, no job polling until terminal upload or lease resolution.
+Network/429/5xx exponential jitter 1/2/4 to 60 seconds, honor Retry-After; 401
+stops until re-pair/login, 404 clears deleted project. Browser refresh token once
+on 401 then stop on failure. Do not retry HTTP target when poll/upload fails.
+Expected status delay roughly one poll interval plus request latency; local idle
+dispatch can take up to 60 seconds plus index propagation. Queue OUT scheduling
+can add up to one minute plus index lag. These are targets, not SLAs; review
+presentation latency and bill higher polling if needed. HTTP API max integration
+timeout is [30 seconds](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html);
+Lambda-held SSE/long polls would bill waiting time and are not in this budget.
 
-CloudWatch receives fixed diagnostic categories, request/execution IDs, status,
-duration, and bounded counts only. Exclude full URLs, body/query/header values,
-tokens, raw errors, and variable values. Expose Prometheus-compatible counters
-and histograms internally; no external Prometheus service is needed initially.
-Avoid user/project/execution IDs as metric labels. Propose alarms for DLQ > 0,
-queue age > 120 seconds, stalled leases, sanitizer failures, deletion failures,
-API 5xx rate > 5% over five minutes with a minimum 20 requests, and DB storage
-below 20%. Proposed application log retention is 14 days.
-
-Before each product slice, verify cross-user authorization, marked and echoed
-secret exclusion, project-deletion races, duplicate delivery, frozen submission
-behavior, immutable finalization, pin/cleanup races, and interrupted execution
-semantics. The existing spikes do not satisfy these product tests.
+Monitor queue age/DLQ, errors/throttles/duration, unknown outcomes, OUT lag,
+publication/orphan/deletion backlog and logical/physical retained bytes. Use
+safe structured logs (14-day retention), built-in service metrics initially,
+three standard alarms and no high-cardinality custom metrics/tracing. Budget
+alerts/quotas are [proposed only](w1-review-decisions.md#budgets-and-application-quotas).
+Future runtime/fault/race/restore tests are listed in the decision sheet and
+must precede exposing these untested protocols.
