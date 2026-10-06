@@ -118,6 +118,13 @@ application envelopes, never evidence bucket ciphertext as a secret store.
 
 ### Authentication, ownership and privilege
 
+The separately authorized [users/projects slice](users-projects-contract.md)
+implements a local HTTP adapter with verified fixture-token/DynamoDB Local
+integration tests. It preserves `/healthz`, fails closed on missing runtime
+Cognito configuration and has no production fixture bypass. Empty-project
+cleanup is a runnable local command only; full cross-store cleanup and hosted
+authentication/IAM/GSI propagation remain unvalidated. See [local setup](../development/local-ownership.md).
+
 Cognito remains the provider beyond MVP; custom React signup/verification/
 sign-in/reset/sign-out screens share accessible light/dark components. Public
 client has no secret; credentials go directly to Cognito. API verifies access

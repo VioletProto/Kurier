@@ -98,3 +98,11 @@ decision sheet remain requirements, not completed tests. Synchronization is
 documentation-only. Begin a local users/projects ownership slice only after
 separate implementation authorization. No full schema migration, executor,
 deployment or AWS mutation is authorized by acceptance.
+
+Subsequent authorization: Davian accepted the focused users/projects packet
+and authorized its local implementation. [Slice contract](../architecture/users-projects-contract.md)
+and [local validation boundaries](../development/local-ownership.md) record
+the exact accepted interfaces and actual DynamoDB Local tests. This does not
+accept later wire/library proposals or authorize cloud deployment, full-schema
+migration, Cognito provisioning, executor or AWS mutation. SST decision and
+historical spike evidence remain unchanged.

@@ -46,3 +46,19 @@ jobs:
           cache-dependency-path: ${{ matrix.service }}/go.mod
       - run: go test ./...
       - run: go vet ./...
+
+  ownership-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          cache-dependency-path: services/api/go.sum
+      - run: docker compose -f compose.dynamodb.yml up -d
+      - run: go test -race -tags=integration -count=1 ./...
+        working-directory: services/api
+        env:
+          KURIER_DYNAMODB_TEST_ENDPOINT: http://127.0.0.1:8000
+      - if: always()
+        run: docker compose -f compose.dynamodb.yml down

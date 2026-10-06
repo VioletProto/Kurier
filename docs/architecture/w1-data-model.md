@@ -310,8 +310,11 @@ Import deletion preserves captured schema/hash. Saved definitions survive histor
 cleanup. Already delivered secrets cannot be recalled.
 
 See [S3/project deletion](w1-system-design.md#s3-publication-orphans-and-project-deletion).
-Keep a minimal permanent P/META tombstone: opaque project/owner ID, deletion
-epoch/timestamps only, no names/configuration/evidence. Never reuse project UUIDs.
+Keep a minimal permanent P/META tombstone: opaque project/owner ID, schema/type,
+coordination version/deletion epoch, initiating version, operation ID and safe
+state/timestamps, no names/configuration/evidence/listing attributes. These
+users/projects wire/coordination fields are now separately accepted in
+[the slice contract](users-projects-contract.md). Never reuse project UUIDs.
 All children/pins/secrets/bundles/receipts/imports/audits/objects drain; account
 credentials remain for other projects during normal operation. Accepted seven-day
 PITR/on-demand backup residual differs from active deletion; individual projects

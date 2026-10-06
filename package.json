@@ -26,7 +26,8 @@
     "sst:state:list:db": "sst state list --stage db-viability",
     "test": "npm run test --workspaces --if-present",
     "verify": "npm run format:check && npm run lint && npm run test && npm run build && npm run verify:go",
-    "verify:go": "set -e; for service in services/api services/worker services/local-agent infra/spikes/sst-viability/service infra/spikes/sst-db-viability/service; do (cd \"$service\" && go test ./... && go vet ./...); done"
+    "verify:go": "set -e; for service in services/api services/worker services/local-agent infra/spikes/sst-viability/service infra/spikes/sst-db-viability/service; do (cd \"$service\" && go test ./... && go vet ./...); done",
+    "test:ownership:integration": "cd services/api && go test -race -tags=integration -count=1 ./..."
   },
   "devDependencies": {
     "prettier": "^3.6.2",

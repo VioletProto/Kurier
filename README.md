@@ -4,8 +4,8 @@ Kurier is an agent-ready API testing and debugging platform. Its core goal is
 to produce immutable, sanitized API-execution evidence that developers and
 coding agents can inspect safely.
 
-This repository currently contains a minimal foundation, not a product
-implementation.
+This repository contains the first local users/projects DynamoDB ownership
+slice and minimal foundations for later services. It is not a deployed product.
 
 ## Repository layout
 
@@ -32,12 +32,11 @@ docker compose up -d postgres
 npm run dev
 ```
 
-Run a Go service from another terminal:
-
-```sh
-cd services/api
-go run .
-```
+PostgreSQL above is the historical local/spike foundation, not the accepted
+product store. The API now requires the separate DynamoDB Local setup and
+explicit runtime authentication configuration. Follow [local ownership setup,
+cleanup and tests](docs/development/local-ownership.md); no Cognito provisioning
+or production authentication bypass is included.
 
 The API defaults to `http://localhost:8080`, the worker health server to
 `http://localhost:8081`, and the local agent to `http://localhost:8082`.
@@ -56,6 +55,16 @@ docker compose config --quiet
 
 `npm run verify` runs all formatting checks, linting, tests, builds, Go tests,
 and Go vet checks in one command.
+
+For the actual DynamoDB Local integration suite:
+
+```sh
+docker compose -f compose.dynamodb.yml up -d
+KURIER_DYNAMODB_TEST_ENDPOINT=http://127.0.0.1:8000 npm run test:ownership:integration
+```
+
+The integration tag fails when the local endpoint is absent; it is not part of
+ordinary unit-only `npm run verify`. CI includes a separate integration job.
 
 ## SST viability configuration
 
@@ -98,5 +107,7 @@ See [the architecture overview](docs/architecture/README.md) and
 [the SST viability spike](docs/spikes/sst-viability.md).
 [ADR 0002](docs/decisions/0002-serverless-persistence-topology.md) records the
 accepted serverless MVP baseline (`1fba942`), not implemented/deployed behavior.
+The [accepted users/projects contract](docs/architecture/users-projects-contract.md)
+records the subsequently authorized local subset, not hosted validation.
 See the [acceptance and synchronization record](docs/architecture/w1-acceptance-sync.md)
 for external-document updates and remaining proposed interface choices.

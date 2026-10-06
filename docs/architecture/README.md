@@ -66,9 +66,17 @@ delivery recover failure/uncertainty without extra jobs or automatic HTTP replay
 
 ## Current state
 
-Only local process foundations and isolated, removable infrastructure-spike
-definitions exist today; no Kurier AWS stage remains deployed. PostgreSQL is
+The separately authorized [users/projects local slice](users-projects-contract.md)
+now implements seven routes, verified-identity ownership, conditional DynamoDB
+Local writes and resumable empty-project cleanup. See [setup/tests](../development/local-ownership.md).
+It is a local HTTP adapter, not a Lambda deployment or full cross-store cascade.
+Actual Local integration tests do not establish Cognito/IAM/GSI propagation or
+AWS recovery semantics. Other product components remain planned.
+
+Local process foundations and isolated, removable infrastructure-spike
+definitions remain; no deployment was performed by the ownership task. PostgreSQL is
 available through Docker Compose, while an isolated Fargate spike proved
 private RDS PostgreSQL connectivity, secure credential delivery, TLS, and a
 versioned migration. Product services are not connected to PostgreSQL yet.
-Queueing, evidence storage, authentication, and redaction remain future work.
+Queueing, evidence storage, cloud authentication/email setup and redaction
+remain future work; fixture token verification is not cloud authentication.

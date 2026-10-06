@@ -3,8 +3,9 @@
 Davian Hernandez accepted baseline commit `1fba942` and its documented defaults
 on 2026-10-06. [ADR 0002](../decisions/0002-serverless-persistence-topology.md)
 is **Accepted**; SST ADR 0001 and historical spike evidence remain unchanged.
-This work authorizes documentation synchronization only, not product code,
-deployment, AWS mutations or full schema migration.
+The original architecture acceptance authorized documentation synchronization
+only, not product code, deployment, AWS mutations or full schema migration.
+The subsequently authorized local users/projects implementation is recorded below.
 
 ## Sources read and synchronized in place
 
@@ -37,6 +38,27 @@ synchronizing them. No Trello membership was changed.
 
 ## Accepted synchronization details
 
+### Subsequent focused users/projects acceptance
+
+Davian accepted the [users/projects packet](users-projects-contract.md) and
+authorized a dedicated local implementation branch from this documentation
+baseline. The live API contracts now record project version/ETag, quoted
+If-Match with **428 missing / 412 stale**, validation/error mapping, lazy verified
+identity provisioning, GSI1 pagination, no automatic creation retries, safe
+deletionOperation DTO/minimal tombstone fields and initiating-version repeat
+DELETE. Full both-table/S3 cleanup remains planned; local empty-project cleanup
+only is authorized and implemented. Setup/tests and unvalidated cloud behaviors
+are [explicit](../development/local-ownership.md).
+
+The overall contract-review card remains **Doing**. Its existing description is
+preserved; an acceptance checklist supersedes only the users/projects Proposed
+labels. The connector rejected a long description update and its separate
+comment server required reconnection, so the supported checklist surface was
+used without replacing unrelated card content. Workflow extraction, OpenAPI
+libraries, local-result schemas and other later interfaces remain proposed,
+not prerequisites. The capstone proposal, other cards, accepted SST decision
+and historical spikes are unchanged by this task.
+
 Project-scoped execution/rerun/agent-result/workflow-run locators replace global
 opaque-ID lookups. Collection limits/cursors, seven-day Idempotency-Key receipts,
 frozen configuration/revision checks, encrypted current-secret reruns and the
@@ -63,7 +85,8 @@ are not product routes. No executable repository OpenAPI exists yet.
 
 ## New wire recommendations — proposed for Davian Hernandez's review
 
-These resolve previously unspecified spellings/shapes, not accepted architecture
+Except for the subsequently accepted users/projects entries explicitly marked
+below, these resolve previously unspecified spellings/shapes, not accepted architecture
 guarantees. Do not implement them until reviewed; the contracts carry the same
 proposed recommendations. Library prototypes remain separate authorized work.
 
@@ -71,9 +94,9 @@ proposed recommendations. Library prototypes remain separate authorized work.
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | History            | `GET /api/v1/projects/{projectId}/executions?requestId=<frozen-id>&status=failed&limit=25&cursor=...`; frozen filter does not require a surviving live request.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Status             | `GET /api/v1/projects/{projectId}/executions/{executionId}/status`; `POST /api/v1/projects/{projectId}/execution-status` with `{executionIds: [...]}` (<=25). Return `{items:[{executionId,status,version,retention}],serverTime}`; deleted/expired IDs have per-item unavailable markers without existence disclosure across owners.                                                                                                                                                                                                                                                                                                                                                                                  |
-| Revision writes    | `If-Match: "<revision>"` for PATCH/DELETE; missing precondition 428, stale 409. Submission body adds `requestRevision` and nullable `environmentRevision`; Idempotency-Key conflicts 409, expired receipt is not safe to blindly retry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Revision writes    | Projects now accepted: `If-Match: "<version>"`, 428 missing, 412 stale; see [slice contract](users-projects-contract.md). Other definition revisions/submission fields remain proposed; submission idempotency conflicts remain 409.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Sensitive fields   | Read `{name,enabled,sensitive:true,masked:true,secretRef}`; write uses `secretWrite:{action:"set",value}` / `{action:"preserve",secretRef}` / `{action:"remove"}` / `{action:"secretRef",secretRef}`. Non-sensitive writes retain `value`. No raw `value` on sensitive reads. URL/query/header locators and JSON body RFC 6901 pointers identify sensitive paths; text body is wholly sensitive or non-sensitive, not arbitrary string offsets.                                                                                                                                                                                                                                                                        |
-| Deletion           | `GET /api/v1/projects/{projectId}/deletion-operations/{operationId}` with `{operationId,projectId,state,startedAt,completedAt,retryAfterSeconds}`; states `accepted/deleting/waiting_uploads/completed/failed_retryable`. Only the owner may read safe operation metadata through the tombstone; no project data access. Repeated DELETE returns the same operation; completion means active-store physical cleanup, not erased backups.                                                                                                                                                                                                                                                                               |
+| Deletion           | Operation GET/DTO, minimal tombstone metadata and initiating-version repeat DELETE are now accepted in [the slice contract](users-projects-contract.md). Full cross-store cleanup remains planned; local implementation completes empty projects only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Workflow CRUD      | GET collection/detail, PATCH and DELETE under `/api/v1/projects/{projectId}/workflows[/{workflowId}]`; revision preconditions; run body `{workflowRevision,target,environmentId,environmentRevision,localAgentId}` with per-step overrides frozen. Each step `{requestId,requestRevision,environmentId,environmentRevision,target,extract:[{name,path,sensitive}],assertions:[]}`.                                                                                                                                                                                                                                                                                                                                     |
 | Extraction grammar | JSON-path subset: root `$`, dot properties and nonnegative array indexes only; no wildcards, recursive descent, filters or evaluation. Exactly one primitive value/output, missing/type mismatch fails step. Select and test the library separately; escaping/property-name rules must be finalized with examples before acceptance.                                                                                                                                                                                                                                                                                                                                                                                   |
 | Import             | POST returns 202 `{importId,state:"preparing",detectedVersion,warnings:[]}`; GET reports preparing/ready/failed and unsupported features; bounded readiness publication. Propose initial OpenAPI 3.0.x subset with local refs and explicit rejection of unsupported 3.1 features, subject to parser/JSON Schema prototype review; no library accepted yet.                                                                                                                                                                                                                                                                                                                                                             |
@@ -82,9 +105,10 @@ proposed recommendations. Library prototypes remain separate authorized work.
 | Queue              | Fixed `{projectId,jobId,outboxId}` for both fast and scheduled sends; all authority/configuration/generation comes from the strongly checked database. No advisory authority/userId.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Readiness/errors   | Keep public `/healthz` foundation separate; propose private `/ready` with bounded safe readiness and 200/503. Define capture codes `upstream_http_error`, `execution_timeout`, `upstream_network_error`, `response_limit_exceeded`, `assertion_failed`, `schema_failed`, `extraction_failed`, `dispatch_unknown`, `recovery_interrupted`; they are stored outcomes, not API upstream status forwarding.                                                                                                                                                                                                                                                                                                                |
 
-No new product feature, expanded request storage, remote MCP transport,
+Beyond the separately accepted users/projects packet above, no new product
+feature, expanded request storage, remote MCP transport,
 immediate universal JWT revocation or stronger backup deletion policy is accepted
-here. The shape recommendations remain proposed even where behavior is accepted.
+here. The remaining shape recommendations stay proposed even where behavior is accepted.
 
 ## Validation and handoff
 

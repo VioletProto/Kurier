@@ -314,21 +314,21 @@ is Accepted. The [acceptance/synchronization record](w1-acceptance-sync.md)
 records fresh external reads, completed edits, Trello scope and concrete new
 wire recommendations. Historical draft findings are now resolved as follows:
 
-| Source/route/schema                  | Synchronization recorded                                                                                                                                                                                                                    |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Proposal technology/deployment/W2/W9 | SST/Lambda/HTTP API/DynamoDB/private S3 replace CDK/Fargate/RDS product plans. infra/README is corrected; historical spikes remain unchanged.                                                                                               |
-| Architecture/contract cards          | Architecture acceptance and documentation completion; contract review remains Doing for genuinely new wire/library proposals. Only Davian-authorized cards changed.                                                                         |
-| Ownership/collections                | Project-scoped execution/job/result/rerun/run routes; 25/100 cursors, bounded filters and eventual reconciliation; config/body limits and recovery conditions.                                                                              |
-| Sensitive writes                     | Masked stable refs, set/preserve/remove/reference semantics, no ordinary raw reads; exact discriminated DTO/path shape is newly proposed.                                                                                                   |
-| Submission/queue                     | Idempotency-Key/seven-day receipt, expected revisions, immutable frozen plan, identifier-only duplicate notification, bounded fast send; failure never undoes 202.                                                                          |
-| Evidence/history/reruns              | Mutable status/RET separate from immutable capture; nullable live/frozen IDs, checksum/omission/schema/unknown/status; GET failed upstream evidence 200; current stable secrets only.                                                       |
-| Polling                              | SSE removed; immediate status/batch, versions/serverTime, stop/backoff/2/10/30/60-second profiles; exact route spellings newly proposed.                                                                                                    |
-| Local protocol                       | Credential identity, 204 empty/busy, intent-before-response, deadlines/fencing/no start route/regrant; retained duplicate ACK versus live first-upload authorization and revocation. Canonical DTO proposed separately.                     |
-| Workflows                            | Bounded frozen sequential plans, revisions/source/target/provenance/skipped states, atomic output/snapshot/step/run/receipt/successor transaction. CRUD DTO and extraction grammar newly proposed.                                          |
-| Pin/context                          | Accepted project-scoped PUT/DELETE, idempotent 200 RET; original expiry/no grace, five-second margin, shared CAS cleanup protocol/context without expired bodies.                                                                           |
-| Deletion/recovery                    | Accepted 202 drain, immediate denial, uncertain/late PUT fencing, normal tombstone/backup residual; actual restore timestamps/warning/reconciliation/unavailable evidence, no restored HTTP replay. Exact operation GET/state DTO proposed. |
-| Imports/MCP                          | Ready-only staged imports/operation refs, local refs/warnings; distinct read-only stdio MCP token/audit bridge, no Protected/KMS. Dialect/library and wire proposals remain review inputs.                                                  |
-| Health/errors                        | /healthz actual foundation response; no product claim for spike routes. /ready exposure and exact capture/error-code list newly proposed; Retry-After and upstream-status distinction recorded.                                             |
+| Source/route/schema                  | Synchronization recorded                                                                                                                                                                                                                                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proposal technology/deployment/W2/W9 | SST/Lambda/HTTP API/DynamoDB/private S3 replace CDK/Fargate/RDS product plans. infra/README is corrected; historical spikes remain unchanged.                                                                                                                             |
+| Architecture/contract cards          | Architecture acceptance and documentation completion; contract review remains Doing for genuinely new wire/library proposals. Only Davian-authorized cards changed.                                                                                                       |
+| Ownership/collections                | Project-scoped execution/job/result/rerun/run routes; 25/100 cursors, bounded filters and eventual reconciliation; config/body limits and recovery conditions.                                                                                                            |
+| Sensitive writes                     | Masked stable refs, set/preserve/remove/reference semantics, no ordinary raw reads; exact discriminated DTO/path shape is newly proposed.                                                                                                                                 |
+| Submission/queue                     | Idempotency-Key/seven-day receipt, expected revisions, immutable frozen plan, identifier-only duplicate notification, bounded fast send; failure never undoes 202.                                                                                                        |
+| Evidence/history/reruns              | Mutable status/RET separate from immutable capture; nullable live/frozen IDs, checksum/omission/schema/unknown/status; GET failed upstream evidence 200; current stable secrets only.                                                                                     |
+| Polling                              | SSE removed; immediate status/batch, versions/serverTime, stop/backoff/2/10/30/60-second profiles; exact route spellings newly proposed.                                                                                                                                  |
+| Local protocol                       | Credential identity, 204 empty/busy, intent-before-response, deadlines/fencing/no start route/regrant; retained duplicate ACK versus live first-upload authorization and revocation. Canonical DTO proposed separately.                                                   |
+| Workflows                            | Bounded frozen sequential plans, revisions/source/target/provenance/skipped states, atomic output/snapshot/step/run/receipt/successor transaction. CRUD DTO and extraction grammar newly proposed.                                                                        |
+| Pin/context                          | Accepted project-scoped PUT/DELETE, idempotent 200 RET; original expiry/no grace, five-second margin, shared CAS cleanup protocol/context without expired bodies.                                                                                                         |
+| Deletion/recovery                    | Accepted 202 denial/drain, late-upload fencing and restore exception. The users/projects operation DTO and repeat-delete/tombstone fields are subsequently accepted in [the slice contract](users-projects-contract.md); only local empty-project cleanup is implemented. |
+| Imports/MCP                          | Ready-only staged imports/operation refs, local refs/warnings; distinct read-only stdio MCP token/audit bridge, no Protected/KMS. Dialect/library and wire proposals remain review inputs.                                                                                |
+| Health/errors                        | /healthz unchanged; users/projects API error mappings now accepted in the slice contract. Product /ready exposure and execution capture-code enumeration remain proposed; Retry-After and upstream-status distinctions are preserved.                                     |
 
 All existing architecture defaults (including key retention, table/index/action
 limits, quota profiles, PITR/backup/rotation, pin decisionTime, HTTP secret
@@ -358,6 +358,13 @@ Review the [recovery procedure](w1-system-design.md#backup-restore-and-recovery-
 no restore or runtime tests were run here.
 
 ## Smallest next implementation task
+
+The focused users/projects packet and its local implementation have now been
+separately authorized. [Accepted interfaces](users-projects-contract.md) and
+[Local tests/limitations](../development/local-ownership.md) record that slice.
+The paragraph below is the historical first-slice recommendation, not a claim
+that the full protocol's future tests have run. Later extraction/import/result
+choices remain proposed and are not users/projects prerequisites.
 
 After design acceptance and contract synchronization: **local users/projects
 DynamoDB ownership slice**. Add only identity/user/project codecs and conditional
