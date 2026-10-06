@@ -43,6 +43,25 @@ The local agent is a separate trust boundary: it should bind locally by
 default, require explicit authorization, and reveal the minimum information
 needed by the hosted platform.
 
+## Restore, limits and dispatch boundaries
+
+Davian selected the MVP recovery exception: restoring an earlier point may
+lose later changes and restore later-deleted projects/items. Show actual restore
+timestamp(s) and this warning; deletion does not survive every restore. No
+independently preserved anti-resurrection deletion journal. Normal access denial,
+upload fencing, tombstones and orphan cleanup remain. Before reopening reconcile
+Control, Protected and S3; missing evidence is unavailable, not fabricated.
+Restored queued/running work and OUT must not automatically replay HTTP; require
+deliberate new submissions/reruns under the proposed recovery gate.
+
+Proposed size defaults are 64 KiB complete saved request configuration, 64 KiB
+complete frozen execution configuration and independent 64 KiB resolved body;
+2 MiB response wire-read and decompressed bounds, and 4 MiB complete encoded
+evidence/API/local-upload caps. All configuration fields/serialization count.
+No large request-body S3 subsystem in MVP. Proposed fast SQS notification after
+durable commit improves cloud dispatch opportunity; durable OUT and scheduled
+delivery recover failure/uncertainty without extra jobs or automatic HTTP replay.
+
 ## Current state
 
 Only local process foundations and isolated, removable infrastructure-spike

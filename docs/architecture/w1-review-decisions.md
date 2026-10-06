@@ -1,7 +1,7 @@
 # W1 review decisions, costs and contract gaps
 
 Status: serverless revision direction authorized; unresolved settings **proposed
-for Davian Hernandez's review**, 2026-10-05. See [system design](w1-system-design.md),
+for Davian Hernandez's review**, 2026-10-06. See [system design](w1-system-design.md),
 [DynamoDB model](w1-data-model.md) and [proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md).
 Architecture remains pending review; API-contract card remains open. No Google
 Docs/Trello synchronization, deployment or product implementation is authorized.
@@ -25,19 +25,19 @@ Docs/Trello synchronization, deployment or product implementation is authorized.
 
 ## Monthly development cost estimate
 
-Official prices checked **2026-10-05**, USD, **us-east-2**, US CloudFront viewers.
+Official prices checked **2026-10-06**, USD, **us-east-2**, US CloudFront viewers.
 No AWS credentials/account billing queries or mutations. Ohio Lambda/request/
 DynamoDB/HTTP API rates were read from official regional catalogs during the
-preceding investigation; official service pages/technical constraints were
-rechecked for this revision. No credits, account free-tier allowances, savings
+preceding investigation and rechecked for this revision; public reference links
+and restore/transaction constraints were also checked. No credits, account free-tier allowances, savings
 plans, reservations or discounts subtracted. Built-in no-charge service features
 are distinguished from eligibility-based free tiers. No deployments exist to
 measure this product workload: all usage below is an explicit forecast.
 
 Retain the earlier **approximately $3.10/month** light screening estimate.
 Detailed accounting including always-on scheduled maintenance and bootstrap
-allowances refines it to **$3.17/month**. This is neither actual billed usage nor
-a $5 hard cap. Heavy use is **$14.20/month**, including one KMS rotation.
+allowances refines it to **$3.17/month**, including the fast-notification allowance. This is neither actual billed usage nor
+a $5 hard cap. Heavy use is **$14.14/month**, including one KMS rotation.
 
 ### Workload and storage assumptions
 
@@ -49,13 +49,13 @@ a $5 hard cap. Heavy use is **$14.20/month**, including one KMS rotation.
 | Polling                                    | One browser + one agent, four h/day × 22 days, ten-second base; <=63,360 base polls, other calls in 80k | Two browsers + one agent, eight h/day × 22 days: two-second active browser/ten-second agent, <=696,960 if continuously active; backoff/stops modeled to fit 600k total |
 | Maintenance/outbox/cleanup                 | 50,000 invocations at 20 ms/256 MiB, including empty schedules                                          | 50,000 at 100 ms/256 MiB; batched retries/cleanup work                                                                                                                 |
 | Replicas/operating hours                   | No allocated replicas/provisioned concurrency; stage available 730 h; worker max concurrency 2          | Same; enough total capacity but not a benchmark                                                                                                                        |
-| Worker body                                | Average 10 KiB request/100 KiB sanitized response                                                       | Average 100 KiB request/1 MiB sanitized response; cap 2 MiB                                                                                                            |
+| Worker body                                | Average 10 KiB request/100 KiB sanitized response                                                       | Average 32 KiB resolved request body/1 MiB sanitized response; cap 64 KiB request and 2 MiB decompressed response                                                      |
 | Average DDB base/index storage             | 0.07 GB Control+Protected / 0.03 GB all three indexes                                                   | 0.6 GB base / 0.4 GB indexes                                                                                                                                           |
 | S3 evidence retained                       | Approximately 0.1 GB 30-day body population, minimal pins                                               | 20 GB total: about 10 GB rolling bodies + 10 GB accumulated pins/orphans/import allowance                                                                              |
 | Other S3 storage                           | 0.2 GB static assets + versioned SST state/assets                                                       | 1 GB static/bootstrap versions/assets                                                                                                                                  |
-| Backups                                    | Seven-day PITR on base tables + one short-lived on-demand backup totaling 0.07 GB-month                 | Same with 0.6 GB-month backup; historical unlimited snapshots excluded                                                                                                 |
+| Backups                                    | Seven-day PITR on base tables + one on-demand backup totaling 0.07 GB-month, expiring after seven days  | Same with 0.6 GB-month backup, seven-day on-demand backup expiry; historical unlimited snapshots excluded                                                              |
 | Logs                                       | 0.1 GB ingest, 0.05 GB-month storage, 0.1 GB query                                                      | 2 GB ingest, 0.8 GB-month storage, 2 GB query; 14-day retention                                                                                                        |
-| Delivery/egress                            | Static 1 GB/20k HTTPS; separate API/worker 1 GB                                                         | Static 5 GB/100k HTTPS; separate API 20 GB + worker target-request egress 1 GB                                                                                         |
+| Delivery/egress                            | Static 1 GB/20k HTTPS; separate API/worker 1 GB                                                         | Static 5 GB/100k HTTPS; separate API 20 GB + worker target-request egress 0.4 GB                                                                                       |
 | Secrets/crypto                             | One fresh KMS key, 10k operations; one service HMAC-root secret, 1k reads                               | One key with first rotation, 100k operations; one root secret, 10k reads                                                                                               |
 | Bootstrap ECR residual                     | Allowance 0.1 GB existing shared images                                                                 | Allowance 0.5 GB; zip Lambda needs no new product ECR                                                                                                                  |
 
@@ -63,7 +63,28 @@ Billed durations include initialization/processing; values are assumptions,
 not measured warm/cold latency. Lambda total GB-seconds: light
 `1000×5×0.5 + 80000×0.05×0.25 + 50000×0.02×0.25 = 3750`;
 heavy `10000×30×0.5 + 600000×0.1×0.25 + 50000×0.1×0.25 = 166250`.
-Invocations: 131k / 660k. No durable-function/provisioned-poller premium.
+Invocations: 131k / 660k. Add one fast-send opportunity per cloud job, 50 ms
+average billed duration (unmeasured), 80% in 256 MiB API submission handlers and
+20% in 512 MiB successor handlers: `N×0.05×(0.8×0.25+0.2×0.5)`
+= 15 / 150 additional GB-seconds, total **3765 / 166400**. Incremental to baseline
+durations, not another Lambda invocation. At the proposed two-second send
+deadline that opportunity mix costs about $0.008/$0.080 compute instead of
+$0.0002/$0.002, excluding unrelated execution time. Skip sends lacking time.
+SQS allowances already include 1k/10k additional fast notifications and scheduled
+duplicates; no extra DDB transaction marks OUT published on the fast path.
+No double-counted notification charge or provisioned-poller premium.
+
+Heavy body traffic is `10000×32 KiB = 327680000 bytes`; assume another 4 KiB
+request-line/headers per execution (40960000 bytes). Round combined traffic up
+to a **0.4 priced-GB allowance**, replacing 1 GB. Unchanged 20 GB API result
+delivery makes 20.4 GB/$1.836 rather than 21 GB/$1.89. Static delivery is separate.
+Retained bodies remain 1 MiB average/20 GB population. DDB units/index/storage,
+OUT retries, cleanup/logs/bootstrap and backups remain explicit conservative
+budgets (including stage-generation checks), not automatically proportional to
+request-body bytes. On-demand backups rotate weekly with seven-day expiry,
+approximately one retained full base-table copy over the month, hence the
+unchanged 0.07/0.6 GB-month backup-storage allowances. Recovery exercises and
+transient restored tables remain outside steady-state totals, not zero-cost.
 
 DDB **billable units**, not raw API-call counts: light 0.20m WRUs = 0.12m
 transactional base units + 0.08m normal index units; heavy 3m = 2m transactional
@@ -98,11 +119,11 @@ Everything else is U, including retained index/body/bootstrap storage.
 | Secrets Manager F/U    | [Pricing](https://aws.amazon.com/secrets-manager/pricing/): one $0.40 secret + $0.05/10k reads × 1k / 10k                                                              |     $0.41 |      $0.45 |
 | Cognito U              | [Lite](https://aws.amazon.com/cognito/pricing/): $0.0055/MAU × 2 / 5, charge all users                                                                                 |     $0.01 |      $0.03 |
 | SES U                  | [Pricing](https://aws.amazon.com/ses/pricing/): $0.10/1k emails × 100 / 1000, plus $0.12/GB × 0.002 / 0.02                                                             |     $0.01 |      $0.10 |
-| API/worker egress U    | [Transfer pricing example](https://aws.amazon.com/vpc/pricing/): $0.09/GB × 1 / 21; static CloudFront separate                                                         |     $0.09 |      $1.89 |
+| API/worker egress U    | [Transfer pricing example](https://aws.amazon.com/vpc/pricing/): $0.09/GB × 1 / 20.4; static CloudFront separate                                                       |     $0.09 |      $1.84 |
 | Route 53 F             | [Pricing](https://aws.amazon.com/route53/pricing/): one $0.50 zone, CloudFront/API Gateway alias queries have no query charge                                          |     $0.50 |      $0.50 |
 | Shared bootstrap ECR U | [Pricing](https://aws.amazon.com/ecr/pricing/): $0.10/GB-month × 0.1 / 0.5; S3 bootstrap already included above                                                        |     $0.01 |      $0.05 |
 | Scheduler U            | [EventBridge Scheduler](https://aws.amazon.com/eventbridge/pricing/): $1/m invocations × (43800 minute + 730 hourly)                                                   |     $0.04 |      $0.04 |
-| **Monthly total**      | Light $3.16937025 / heavy $14.19510775 before rounding                                                                                                                 | **$3.17** | **$14.20** |
+| **Monthly total**      | Light $3.169570251 / heavy $14.14310776 before rounding                                                                                                                | **$3.17** | **$14.14** |
 
 S3 heavy PUT/LIST count includes 10k evidence uploads, retries/import/static
 writes and 2k orphan/deletion listings. GET count includes authorized evidence
@@ -125,7 +146,7 @@ AWS Budgets are a no-charge feature, not a credit/free-tier assumption.
 [AWS Budgets pricing](https://aws.amazon.com/aws-cost-management/aws-budgets/pricing/).
 
 KMS first and second rotations each add $1/month; light after those rotations
-becomes $4.17 then $5.17. Heavy second rotation becomes $15.20. Do not disable
+becomes $4.17 then $5.17. Heavy second rotation becomes $15.14. Do not disable
 needed rotation to preserve the target. Pins are indefinite until deletion but
 capacity is finite: additional pinned bodies cost storage every month. At
 10,000 executions averaging 60 billed seconds, worker compute adds $2/month
@@ -144,15 +165,15 @@ Billing/alerts lag and do not stop spend. Admission quotas reduce expected use,
 not unauthenticated API traffic, scheduler/poller charges or malicious request
 costs. Public development access should be invite-only initially.
 
-| Guard                               | Light default                                                                        | Reviewed heavier profile                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| Executions including workflow steps | 1k/stage/calendar month, 100/user/day                                                | 10k/month, 1000/user/day                                               |
-| HTTP time                           | 30 s default, 60 s max; worker 90 s                                                  | Same                                                                   |
-| Concurrency                         | 2 cloud stage, 1 unresolved local/credential; API reserved 5; maintenance reserved 1 | Same until measured                                                    |
-| Polling                             | >=10 s/client, one in flight; server <=6 polls/min/credential, idle backoff to 60 s  | Active browser >=2 s, <=30 polls/min; local remains ten-second minimum |
-| Retained evidence quota             | 1 GiB/project, 2 GiB/stage, pins consume same quota                                  | 10 GiB/project, 25 GiB/stage                                           |
-| Definition/workflow sizes           | Model's entity/80-action/2 MiB transaction caps                                      | Same, not silently raised                                              |
-| Capture/upload                      | 1 MiB request, 2 MiB response, 64 KiB upstream headers, 4 MiB encoded local result   | Same                                                                   |
+| Guard                               | Light default                                                                                                                                             | Reviewed heavier profile                                               |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Executions including workflow steps | 1k/stage/calendar month, 100/user/day                                                                                                                     | 10k/month, 1000/user/day                                               |
+| HTTP time                           | 30 s default, 60 s max; worker 90 s                                                                                                                       | Same                                                                   |
+| Concurrency                         | 2 cloud stage, 1 unresolved local/credential; API reserved 5; maintenance reserved 1                                                                      | Same until measured                                                    |
+| Polling                             | >=10 s/client, one in flight; server <=6 polls/min/credential, idle backoff to 60 s                                                                       | Active browser >=2 s, <=30 polls/min; local remains ten-second minimum |
+| Retained evidence quota             | 1 GiB/project, 2 GiB/stage, pins consume same quota                                                                                                       | 10 GiB/project, 25 GiB/stage                                           |
+| Definition/workflow sizes           | Model's entity/80-action/2 MiB transaction caps                                                                                                           | Same, not silently raised                                              |
+| Capture/upload                      | 64 KiB complete saved/frozen config each and resolved body; 2 MiB wire/decompressed response separately, 64 KiB headers, 4 MiB complete encoded envelopes | Same                                                                   |
 
 Stage quota item `PK=STAGE#id/SK=QUOTA` joins admission/storage transactions,
 with version/conditional counters; project gate owns per-project counters.
@@ -182,6 +203,22 @@ Later redirects require full checks each hop and stripped cross-origin secrets.
 Local agent default allowlist loopback only; private ports/hosts need explicit
 local configuration; metadata endpoints remain blocked. Public API abuse still
 needs quotas. Protected values over plaintext HTTP need explicit confirmation.
+
+**Proposed MVP size defaults:** complete serialized saved request configuration
+<=64 KiB; complete serialized frozen configuration per execution <=64 KiB;
+resolved outbound body <=64 KiB. Configuration totals include URL, headers,
+query fields, body descriptors, references, policies/schema and serialization
+overhead, not only body text. Reject invalid saved writes and oversize frozen
+plans before accepting submission. Independently resolve/interpolate and bound
+outbound body before HTTP on cloud/local execution: template size alone is not
+sufficient. Large request-body storage/S3 body indirection is outside MVP.
+Future increases require item/transaction/transport/memory review.
+
+Response has **two independent limits**: wire bytes read <=2 MiB and body after
+decompression <=2 MiB. Abort overrun, classify capture Failed and report explicit
+omission/limit metadata with observed HTTP status where available. Never retain
+a silently truncated success or extract workflow variables from oversize response.
+Compression cannot evade the decompressed cap.
 
 Request timeout covers connect/TLS/body; DNS 2 s, connect/TLS 5 s within total,
 response header 10 s, response header cap 64 KiB. Disable streaming/infinite
@@ -252,7 +289,21 @@ deletion remains draining until uncertainty resolved, never completes from one
 empty listing. Race orphan sweeper against publication: exactly one winner, no
 published body erased as orphan. Late object after sweep is caught by ticket/
 residual prefix sweeper. Drain >100 child items with restart/cursor loss; no
-protected data/pins left. Restore deletion ledger before opening restored data.
+protected data/pins left. Recovery tests restore an earlier point, show a
+later-deleted item reappearing with actual timestamp/warning, and verify no
+universal deletion-survival promise. Missing/corrupt S3 evidence is unavailable,
+not fabricated; missing Protected inputs quarantined. Restore queued/claimed/
+running work/stale SQS: zero automatic target HTTP, stopped runs/suppressed OUT,
+old agent results rejected; deliberate new-generation submission can execute.
+Partial cross-table transaction records cannot open an unreconciled stage.
+
+Fast-dispatch future tests: lose SendMessage ACK, fail/throttle/timeout send,
+race scheduled OUT, crash after send. Original committed 202/identity remains;
+one job, duplicate notifications, at most one target HTTP. Repeated idempotent
+submission never creates a job. Successor commit near deadline skips fast send;
+durable OUT recovers. Test 64 KiB saved/frozen boundaries including overhead;
+valid template expanding to >64 KiB fails before HTTP. Test separate 2 MiB wire/
+decompression overruns, Failed omission metadata and 4 MiB encoded caps.
 Lost result DB acknowledgment is resolved by reading receipt, never HTTP replay.
 
 ## Contract gaps and synchronization after review
@@ -260,32 +311,53 @@ Lost result DB acknowledgment is resolved by reading receipt, never HTTP replay.
 Findings use the original v0.1 source baseline. Do **not** update Google Docs,
 Trello, proposal or accepted ADR during this revision. After agreement:
 
-| Source/route/schema                  | Exact synchronization needed                                                                                                                                                                                                                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Proposal technology/deployment/W2/W9 | Replace stale CDK with accepted SST; replace Fargate/RDS/PostgreSQL topology with reviewed Lambda/DDB/S3 design, including current app users keyed to Cognito; preserve historical spikes. Fix stale infra/README framework wording in that later task.                                                       |
-| Architecture/contract review cards   | Attach approved design/ADR/settings and new acceptance criteria; keep architecture pending until accepted, contract card open until affected schemas agreed. No Done/card move here.                                                                                                                          |
-| Resource routes/ownership            | Add reviewed project scope to execution/job/rerun/pin/result paths or query parameters; no opaque-ID global locator. Define 25/100 cursor collections and bounded filters/eventual list reconciliation.                                                                                                       |
-| KeyValueField/sensitive writes       | Add set/preserve/remove/secretRef semantics, masked reads and sensitive URL/body paths; literal mask is not a credential. Exclude raw secrets from ordinary returned definitions.                                                                                                                             |
-| Submit/queue                         | Add Idempotency-Key/revision checks/frozen plans/limits; identifier-only queue, advisory attempt, no user authority in message. Document seven-day submission retry window.                                                                                                                                   |
-| Execution summary/record             | Separate mutable status/version/RET from immutable manifest/body; nullable deleted live links versus frozen source IDs, body omission/checksum/schema version, unknown outcome, exact upstream status. GET returns 200 failed evidence for upstream 404/500.                                                  |
-| Project history/reruns               | Add project history with frozen request filter; reruns capture current stable secret refs and fail if missing, no historical secret recovery.                                                                                                                                                                 |
-| SSE/status                           | Replace SSE proposal with immediate-return status/batch polling, version/serverTime, 2/10/30/60 s policy, stop/retry rules and latency expectations. Do not silently keep an implemented SSE promise—none exists.                                                                                             |
-| Agent token/poll/result              | Map localAgentId to credential ID, immediate 204 empty, intent-before-response, leaseId/fence/nonce/start deadline/serverTime, busy behavior and no start route/regrant. Define canonical DTO/crypto envelope/4 MiB cap and original-credential ACK after lease expiry; 200/401/404/409 and revocation races. |
-| Workflow definitions/runs            | Add CRUD/revision, ordered 2–10 steps/extraction grammar, environment/target selection, exact output provenance, skipped states, limits and atomic successor scheduling; local sensitive extraction trust limitation.                                                                                         |
-| Pin/unpin/context                    | Proposed PUT/DELETE project-scoped execution pin, idempotent 200 RET; original expiry/no grace, expired pin rejection, context protection and sibling evidenceExpired; no TTL race.                                                                                                                           |
-| DELETE project 204                   | Propose 202 deletion-operation resource: immediate denial, durable drains, pending uncertain uploads, terminal physical completion, minimal tombstone/backup residual. Exact GET operation route and response states require review.                                                                          |
-| Imports/operation association        | Specify supported dialect/library, local refs only, sanitization/warnings, request operation association, staged import readiness instead of claiming atomic 100-operation insertion.                                                                                                                         |
-| MCP                                  | Define distinct token pairing/revocation and audited invocation bridge, read-only tools/cursors; no Protected/KMS access; remote transport separate.                                                                                                                                                          |
-| Health/error envelopes               | Reconcile current foundation /healthz with /health and /ready contracts; spike routes are not product routes. Review assertion/schema/3xx/unknown/omission codes and polling Retry-After.                                                                                                                     |
+| Source/route/schema                  | Exact synchronization needed                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proposal technology/deployment/W2/W9 | Replace stale CDK with accepted SST; replace Fargate/RDS/PostgreSQL topology with reviewed Lambda/DDB/S3 design, including current app users keyed to Cognito; preserve historical spikes. Fix stale infra/README framework wording in that later task.                                                                                        |
+| Architecture/contract review cards   | Attach approved design/ADR/settings and new acceptance criteria; keep architecture pending until accepted, contract card open until affected schemas agreed. No Done/card move here.                                                                                                                                                           |
+| Resource routes/ownership            | Add reviewed project scope to execution/job/rerun/pin/result paths or query parameters; no opaque-ID global locator. Define 25/100 cursor collections and bounded filters/eventual list reconciliation; complete 64 KiB config/body limits and recovery generation checks.                                                                     |
+| KeyValueField/sensitive writes       | Add set/preserve/remove/secretRef semantics, masked reads and sensitive URL/body paths; literal mask is not a credential. Exclude raw secrets from ordinary returned definitions.                                                                                                                                                              |
+| Submit/queue                         | Add Idempotency-Key/revision checks/frozen plans/limits; identifier-only queue, advisory attempt, no user authority in message. Document seven-day submission retry window and bounded post-commit notification; queue-send failures do not undo 202.                                                                                          |
+| Execution summary/record             | Separate mutable status/version/RET from immutable manifest/body; nullable deleted live links versus frozen source IDs, body omission/checksum/schema version, unknown outcome, exact upstream status. GET returns 200 failed evidence for upstream 404/500.                                                                                   |
+| Project history/reruns               | Add project history with frozen request filter; reruns capture current stable secret refs and fail if missing, no historical secret recovery.                                                                                                                                                                                                  |
+| SSE/status                           | Replace SSE proposal with immediate-return status/batch polling, version/serverTime, 2/10/30/60 s policy, stop/retry rules and latency expectations. Do not silently keep an implemented SSE promise—none exists.                                                                                                                              |
+| Agent token/poll/result              | Map localAgentId to credential ID, immediate 204 empty, intent-before-response, leaseId/fence/nonce/start deadline/serverTime, busy behavior and no start route/regrant. Define canonical DTO/crypto envelope/4 MiB cap and original-credential ACK after lease expiry; 200/401/404/409 and revocation races.                                  |
+| Workflow definitions/runs            | Add CRUD/revision, ordered 2–10 steps/extraction grammar, environment/target selection, exact output provenance, skipped states, limits and atomic successor scheduling; local sensitive extraction trust limitation.                                                                                                                          |
+| Pin/unpin/context                    | Proposed PUT/DELETE project-scoped execution pin, idempotent 200 RET; original expiry/no grace, expired pin rejection, context protection and sibling evidenceExpired; no TTL race.                                                                                                                                                            |
+| DELETE project 204                   | Propose 202 deletion-operation resource: immediate denial, durable drains, pending uncertain uploads, terminal physical completion, normal-operation tombstone/backup residual and selected restore exception; actual timestamp/warning, no universal deletion-survival promise. Exact GET operation route and response states require review. |
+| Imports/operation association        | Specify supported dialect/library, local refs only, sanitization/warnings, request operation association, staged import readiness instead of claiming atomic 100-operation insertion.                                                                                                                                                          |
+| MCP                                  | Define distinct token pairing/revocation and audited invocation bridge, read-only tools/cursors; no Protected/KMS access; remote transport separate.                                                                                                                                                                                           |
+| Health/error envelopes               | Reconcile current foundation /healthz with /health and /ready contracts; spike routes are not product routes. Review assertion/schema/3xx/unknown/omission codes and polling Retry-After.                                                                                                                                                      |
 
 Remaining review choices: server decisionTime/five-second near-expiry pin margin
-(DynamoDB has no transaction NOW), async deletion/backup residual/minimal permanent ledger,
+(DynamoDB has no transaction NOW), async deletion coordination/tombstone retention and backup duration details,
 the three-index/two-table design and project/stage contention, ten-step/bundle/
 import limits, receipt canonical DTO and HMAC key retention, supported extraction
 grammar/OpenAPI dialect, HTTP secret confirmation, active polling latency,
 budget/profile quotas, seven-day PITR plus short-lived backup policy and annual
-KMS rotation. Direction approval does not accept all of these defaults or
+KMS rotation, complete 64 KiB sizing, recovery-generation handling and bounded
+fast-notification defaults. The recovery exception itself is **Davian-selected**,
+not an unresolved anti-resurrection decision. Direction approval does not accept all of these defaults or
 authorize infrastructure implementation. ADR 0002 remains Proposed.
+
+## Davian-selected restore policy and backup residuals
+
+**Selected 2026-10-06:** earlier restoration may restore later-deleted projects/
+items and lose later changes. Report actual Control/Protected restore timestamp(s)
+and warn that later changes may be lost and later deletions may reappear.
+No independently preserved deletion journal solely to block resurrection.
+Normal active-store denial, dispatch/upload fencing, tombstones and orphan
+cleanup remain; backups are not project-selectively erased. Seven-day PITR/
+on-demand retention remains a proposed operational default.
+
+Before reopening reconcile Control, Protected and S3 under a closed recovering
+stage. Missing evidence is unavailable without rewriting immutable capture;
+do not invent bodies or infer a complete cross-store snapshot. All restored
+nonterminal jobs/OUT are suppressed/failed recovery_interrupted regardless of
+restored intent; new generation and deliberate submissions/reruns are required
+for external HTTP. Invalidate old agent/MCP credentials pending re-pairing.
+Review the [recovery procedure](w1-system-design.md#backup-restore-and-recovery-exception);
+no restore or runtime tests were run here.
 
 ## Smallest next implementation task
 
@@ -301,6 +373,9 @@ semantics under expressly authorized AWS test resources.
 
 ## Documentation validation scope
 
+Revision baseline is `0fd9194`; validation below concerns the 2026-10-06
+documentation-only revision, not runtime recovery/dispatch implementation.
+
 Completed documentation/repository checks for this revision:
 
 - Prettier formatted the five changed Markdown files. `GOCACHE=/tmp/kurier-w1-go-build
@@ -310,13 +385,16 @@ npm run verify` passed repository formatting/gofmt checks, ESLint, Vitest
 - `docker compose config --quiet` and `git diff --check` passed. Compose remains
   the existing local PostgreSQL foundation, not validation of DynamoDB.
 - Mermaid parser passed all three diagrams (topology, sequence, logical ERD).
-  Balanced fences and 25 internal file/heading links passed across five files.
+  Balanced fences and 27 internal file/heading links passed across five files.
   Parser validation is not visual layout review or runtime execution.
-- All 34 public external AWS/SST/IANA links returned HTTP 200 (redirects allowed),
+- All 35 public external AWS/SST/IANA links returned HTTP 200 (redirects allowed),
   including regional catalogs. Three authenticated Trello/Google source URLs
   were not revalidated; their contents were read for the original baseline,
   and none was edited in this revision.
-- Independent arithmetic recomputed $3.16937025 light and $14.19510775 heavy
+- Re-read public Ohio price catalogs and checked Lambda ARM duration/requests,
+  HTTP API calls and DynamoDB write/read/storage/PITR rates on 2026-10-06.
+  This was anonymous pricing research, not an AWS account/resource operation.
+- Independent arithmetic recomputed $3.169570251 light and $14.14310776 heavy
   from the stated unrounded inputs. Usage/cold-start/storage/bootstrap allowances
   remain unmeasured and price availability does not prove a deployed bill.
 

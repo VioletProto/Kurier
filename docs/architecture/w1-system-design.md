@@ -1,14 +1,14 @@
 # W1 system architecture and execution design
 
 Status: Lambda/DynamoDB revision direction authorized by Davian; detailed
-settings/protocols **proposed for Davian Hernandez's review**, 2026-10-05.
+settings/protocols **proposed for Davian Hernandez's review**, 2026-10-06.
 Documentation only, not implemented/deployed behavior. See the
 [DynamoDB model](w1-data-model.md), [decision sheet](w1-review-decisions.md),
 and [proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md).
 
 ## Sources and evidence boundary
 
-Revision baseline: `30ddbd8` on `docs/w1-architecture-data-model`, clean tree.
+Revision baseline: `0fd9194` on `docs/w1-architecture-data-model`, clean tree.
 Read root [AGENTS.md](../../AGENTS.md); no nested instructions found. Explicit
 feature-branch direction overrides the general codex-branch rule. Inspecting
 current services/configuration confirms product persistence/execution is not
@@ -69,6 +69,7 @@ flowchart TB
   Agent --> Gateway
   MCP --> Gateway
   Gateway --> API
+  API -->|"best-effort post-commit notification P"| Queue
   API --> Control
   API --> Protected
   API --> Evidence
@@ -135,7 +136,8 @@ closed if audit persistence fails. Remote MCP transport/OAuth is separate review
 
 Separate least-privilege API, worker, outbox and cleanup roles. Worker has no
 public invoke URL; SQS event mapping invokes it. Outbox sends only one queue;
-worker cannot submit arbitrary new user plans. Cleanup can delete but not read
+worker can send only the identifier notification for a committed successor,
+never submit arbitrary new user plans. Cleanup can delete but not read
 Protected plaintext. Static site role cannot read evidence. Use GitHub OIDC and
 reviewed stage deployment roles; SST links carry resource metadata, not secrets.
 
@@ -157,6 +159,27 @@ handling or sanitizer failure omits body with fixed safe diagnostics. Arbitrary
 secret transformations cannot be detected reliably: explicit user response-path
 marking and fail-closed supported encodings remain necessary.
 
+## Proposed MVP size boundaries
+
+Measure the **complete serialized saved request configuration** and **complete
+serialized frozen configuration per execution** independently: each <=64 KiB,
+including URL, headers, query fields, body descriptors, references, redaction/
+schema metadata and serialization overhead. Reject invalid/oversize saved writes;
+reject an oversize assembled frozen plan before accepting submission. Protected
+bundles remain separately bounded and counted toward item/transaction/memory
+limits. No large request-body S3 store or indirect body reference in MVP.
+
+After interpolation/secret/workflow resolution, independently require outbound
+body <=64 KiB before any target HTTP, on cloud and local execution. Recheck
+resolved URL/headers/query under transport limits; an allowed stored template
+cannot bypass the resolved-body bound. Response: separate <=2 MiB **wire-read**
+and <=2 MiB **after decompression** limits; exceeding either is a Failed capture
+with explicit omission metadata, observed status if available and no oversized
+body persistence/extraction. Retain <=4 MiB complete encoded evidence/API/local
+result envelopes, counting JSON escaping/base64/metadata. Sanitize safely and
+omit as required to fit the envelope. Limit increases require review of full
+DynamoDB item/transaction, HTTP API/Lambda transport and memory/CPU budgets.
+
 ## Execution sequence and dispatch
 
 ```mermaid
@@ -171,8 +194,9 @@ sequenceDiagram
   UI->>API: Authenticated submit with revisions/idempotency
   API->>DB: Transaction: gate + frozen job/bindings + durable OUT
   DB-->>API: Committed
-  API-->>UI: 202 execution identity
-  API->>Q: Outbox Lambda sends identifiers
+  API->>Q: Bounded best-effort identifier notification after commit
+  API-->>UI: 202 committed execution identity even if send fails
+  Note over API,Q: Scheduled outbox dispatcher recovers or duplicates notification
   Q->>W: At-least-once invocation
   W->>DB: Conditional claim and pre-dispatch intent
   W->>T: One bounded HTTP operation
@@ -192,6 +216,34 @@ bindings, execution/job, idempotency receipt and cloud OUT. Editing mutable
 definitions cannot alter the queued job. Same owner/project idempotency key and
 canonical input returns original identity within seven days; mismatch 409.
 Do not persist literal keys/input credentials or public secret fingerprints.
+
+### Proposed fast notification after commit
+
+After the durable submission transaction commits, attempt **one** immediate
+best-effort SendMessage with the same identifier-only payload as OUT. Propose
+a two-second operation deadline, SDK retries disabled on this fast path, and
+skip unless remaining handler time exceeds that deadline plus one second for
+response/cleanup. No background/unawaited send after Lambda returns. Read back
+an uncertain DB commit before any send; unresolved submission commit follows
+the idempotency/read-back protocol, not queue-failure rollback.
+
+Send success, failure, timeout or uncertainty cannot reject a committed
+execution, generate another job or erase its OUT. Return the original 202/
+identity (or the existing identity on idempotent retry). The fast path deliberately
+does **not** mark OUT published: scheduled delivery may send a duplicate even
+after success, avoiding an extra publication transaction on the critical path.
+The scheduled dispatcher and fast path may race; identical payloads/identities
+and DB claim/fencing mean neither duplicate can authorize a second HTTP attempt.
+Deletion/recovery may race a send: consumer gate/generation checks reject stale
+identifiers. Schedule delivery remains the durable fallback.
+
+Use the same opportunity after committing a workflow successor, in worker or
+local-result API handler, only when time permits. Skip fast send if finalization
+used the remaining budget; never trade snapshot/ACK correctness for latency.
+Local jobs remain pollable, not SQS-dispatched. Aim for queue notification within
+two seconds of commit when the fast path is available and SQS is healthy;
+cold starts, throttling, worker concurrency, polling and failures prevent a
+latency guarantee. Fast-send races/retries do not change upstream retry policy.
 
 Outbox Lambda queries due OUT candidates, conditionally claims a short delivery
 lease under the project gate, sends identifiers, then marks published. Crash
@@ -342,7 +394,9 @@ process may retry prepared finalization within lease **without HTTP**. Crash
 losing buffers leaves intent; reconciler publishes safe unknown failure and no
 successor; preuploaded body becomes orphan. After commit: read terminal/receipt
 on uncertain ACK; exact variables and OUT survive, dispatcher recovers next
-notification. Duplicate finalizers cannot republish/update outputs or advance
+notification. A committing handler may attempt the same bounded fast notification
+for its successor; lost ACK/repeated notification still cannot advance twice.
+Duplicate finalizers cannot republish/update outputs or advance
 twice. Publication versus orphan cleanup shares ticket and project versions.
 See [bounded transaction budgets](w1-data-model.md#bounded-transactions-and-workflow-limits).
 
@@ -380,9 +434,9 @@ Project deletion is proposed **202 + deletion-operation status**, not current
 contract's synchronous 204:
 
 1. One transaction changes P/META active -> deleting, increments version/epoch,
-   writes permanent minimal deletion ledger and durable drain WORK. Ledger key
-   is outside P (`LEDGER#stage/PROJECT#id`); retain a minimal P/META tombstone
-   too. Immediately
+   writes durable drain WORK; retain a minimal P/META tombstone for normal
+   deletion/upload coordination. No independently preserved deletion journal is
+   required solely to prevent resurrection after restore. Immediately
    deny normal reads/claims/pins/submissions/publication. Already authorized
    response bytes/HTTP side effects cannot be recalled.
 2. Drain jobs/OUT and protected data in bounded transactions, stop/fence writers,
@@ -404,7 +458,8 @@ contract's synchronous 204:
    and alerts for reviewed investigation; do not falsely report complete.
    Keep permanent tombstone and low-frequency residual-prefix sweeps even after
    completion to catch late objects. Internal deletion status is owned metadata;
-   no evidence leaks through it. Proposed minimal ledger survives backup restore.
+   no evidence leaks through it. Tombstone protection applies to the active stage;
+   an earlier backup may predate it and restore that deleted project.
 
 Same ticket protocol covers sanitized import objects.
 For import PUTs the guard is preparing import revision + project gate, rather
@@ -413,9 +468,79 @@ publish only through the guarded ready manifest.
 No Object Lock/indefinite version retention. If versioning is later enabled,
 deletion must remove every
 version and delete marker and costs must include them. Seven-day DB backups
-and bootstrap backups may retain data separately; project-safe restore and
-residual policy require review. Project deletion is immediate authorization
-revocation plus eventual physical deletion, not an atomic cross-service erasure.
+and bootstrap backups may retain data separately. Project deletion is immediate
+authorization revocation plus eventual physical deletion in normal operation,
+not an atomic cross-service or backup erasure. The recovery exception below
+does not weaken active-store fencing, orphan cleanup or access denial.
+
+## Backup restore and recovery exception
+
+**Davian-selected MVP policy, 2026-10-06:** restoring an earlier point may
+restore projects/items deleted after that point. This is acceptable for MVP;
+deletion does **not** survive every backup restore. Communicate actual restored
+UTC timestamp(s), not just requested time, and warn: "Changes after this point
+may be lost; deletions after this point may reappear." Include table-specific
+times if Control and Protected differ, recovery completion time and evidence
+availability report. S3 is not automatically rolled back with DynamoDB.
+
+Propose seven-day PITR plus a rotating weekly on-demand backup; residuals
+exist until their backup retention ends, and are not project-selectively erased.
+The backup expiry is seven days (about one live copy), not unlimited snapshots. No
+independent cross-restore deletion journal is required. Keep normal-operation
+project tombstones/tickets for coordination, but restoring their earlier state
+can remove them. Present this warning in restore runbooks and user-visible
+stage recovery notice, not as an unqualified permanent-deletion promise.
+
+Before reopening, a **proposed recovery procedure** must:
+
+1. Close ingress for product writes/polls/uploads, disable queue consumers and
+   both fast/scheduled notifications and drain old handlers before cutover.
+   Restore Control/Protected to operator-selected compatible points in new
+   tables. Record each actual restore time. Review IAM, indexes, PITR and SST
+   resource adoption; restoration does not imply ready operational configuration.
+2. Create a fresh random stage recoveryGeneration in STAGE/META, state=recovering;
+   all new jobs/OUT/tickets carry it. Consumer, local grant, upload, finalization
+   and notification paths require active stage and matching generation in their
+   conditions. Old queued SQS identifiers cannot select valid restored work.
+   Do not reuse rolled-back numeric fences as cross-restore identity.
+3. Reconcile Control references to Protected bundles, ownership, source versions,
+   job/step/run relationships, pin counters, reservations and S3 tickets/manifests.
+   Same-time restores are not assumed to preserve every multi-item/table
+   transaction boundary. Quarantine inconsistent records and missing encrypted
+   inputs; no plaintext fallback or silently changed credentials.
+4. Suppress all restored OUT and terminalize **every restored nonterminal job**,
+   including queued/claimed/running and unstarted workflow successors, as
+   operational failed recovery_interrupted. Fence original leases, clear active
+   credential slots, stop their runs/skip pending successors and remove protected
+   runtime/input bindings through bounded reconciled transactions. Do not turn a
+   restored queued job into a fresh executable job: it may have sent HTTP after
+   the restore point even if its restored dispatch intent is absent. Retain
+   historical terminal snapshots unchanged; never invent a target response for
+   interrupted work. Require a deliberate new submission/rerun/new identity with
+   current saved secrets. Normal pre-dispatch retries apply only to new-generation
+   jobs, not restored work. Invalidate old local/MCP credentials for re-pairing;
+   stale devices/results cannot regain authority through rolled-back revocation.
+5. Check every published S3 pointer exists and matches checksum/size; mark
+   missing/corrupt evidence as unavailable in separate mutable availability
+   metadata, never fabricate body or rewrite captured outcome/hash. A restored
+   deleted project can therefore reappear with unavailable history because S3
+   deletion was not reversed. Objects without a valid restored manifest/ticket
+   are inaccessible until classified for orphan/deletion cleanup. Pause destructive
+   sweeps until this inventory is reconciled; resume tombstoned deletion drains
+   only after matching writers/tickets are settled.
+6. Recompute quota/retention/context counters from reconciled authoritative
+   records; expire by original dates, not restore time. Complete an operator
+   checklist confirming no eligible old-generation job/OUT remains, current
+   permissions and storage policies are correct, and warnings/timestamps are
+   published. Then set stage active for **new** work and enable consumers/
+   notifications. Recovery record here is a stage status report, not an
+   independently preserved deletion journal.
+
+[AWS PITR restore guidance](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/pointintimerecovery_restores.html)
+describes restore to new tables; [transaction documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/transaction-apis.html)
+warns of partial transactional propagation in backups. Recovery cannot guarantee
+that already issued external effects are undone. No restore/runbook execution
+is authorized or performed by this draft.
 
 ## Immediate-return polling and monitoring
 
@@ -435,8 +560,9 @@ Network/429/5xx exponential jitter 1/2/4 to 60 seconds, honor Retry-After; 401
 stops until re-pair/login, 404 clears deleted project. Browser refresh token once
 on 401 then stop on failure. Do not retry HTTP target when poll/upload fails.
 Expected status delay roughly one poll interval plus request latency; local idle
-dispatch can take up to 60 seconds plus index propagation. Queue OUT scheduling
-can add up to one minute plus index lag. These are targets, not SLAs; review
+dispatch can take up to 60 seconds plus index propagation. Healthy cloud fast
+notification targets two seconds post-commit; fallback OUT scheduling can add
+up to one minute plus index lag, backoff and throttling. These are targets, not SLAs; review
 presentation latency and bill higher polling if needed. HTTP API max integration
 timeout is [30 seconds](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html);
 Lambda-held SSE/long polls would bill waiting time and are not in this budget.

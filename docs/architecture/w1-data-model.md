@@ -1,7 +1,7 @@
 # W1 DynamoDB data model
 
 Status: revised direction authorized; implementation details **proposed for
-Davian Hernandez's review**, 2026-10-05. Replaces the proposed PostgreSQL model,
+Davian Hernandez's review**, 2026-10-06. Replaces the proposed PostgreSQL model,
 not deployed data. See [system design](w1-system-design.md),
 [review decisions](w1-review-decisions.md), and
 [proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md).
@@ -36,39 +36,60 @@ All items are Control unless marked Protected. References are logical, **not
 foreign keys**. The shared transaction protocol enforces same-project/live
 references. Historical IDs remain strings after definition deletion.
 
-| Entity                   | PK / SK                                    | Required data and constraints                                                                                                                          |
-| ------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| User                     | U / META                                   | issuer/sub, disabled, version, safe display metadata; no passwords/tokens                                                                              |
-| Agent/MCP credential     | U / CRED#id                                | type, tokenHash, expiry/revokedAt/version; agent activeJob/lease slot; capability scope                                                                |
-| Project gate             | P / META                                   | ownerId, active/deleting/deleted state, version/deletionEpoch, storageReservedBytes, inflightCount, safe name                                          |
-| Submission receipt       | P / IDEM#purpose#keyDigest                 | private normalized-input HMAC, execution/run ID, seven-day retry window; conditional unique put, explicit expiry                                       |
-| Request                  | P / REQ#id                                 | revision, ordered query/header arrays, typed body, secret refs/redaction rules, optional operation refs; <=64 KiB                                      |
-| Environment              | P / ENV#id                                 | revision, ordered unique-name variable descriptors, secret refs; <=32 KiB                                                                              |
-| Saved secret             | P / SECRET#id (Protected)                  | scope/source revision, locator, ciphertext envelope, revoked flag; <=8 KiB plaintext, <=16 KiB envelope                                                |
-| Import manifest          | P / IMPORT#id                              | preparing/ready/deleting state, revision, sanitized S3 pointer/hash, dialect/warnings; <=100 operations, <=2 MiB source                                |
-| Operation                | P / OP#importId#operationId                | method/path, source operationId, local schema refs; <=32 KiB bundle; no remote refs                                                                    |
-| Workflow                 | P / WF#id                                  | revision, ordered steps, request IDs, extraction/assertion rules; 2–10 steps, <=64 KiB total                                                           |
-| Run                      | P / RUN#id                                 | frozen non-secret plans/source revisions, state/version, currentPosition/failedPosition, completedAt/normalExpiresAt, pinnedCount/availableCount       |
-| Run step                 | P / RUN#id#STEP#00                         | pending/queued/running/completed/failed/skipped, exact input-binding refs, execution ID, safe outcome/evidenceExpired                                  |
-| Run input/runtime bundle | P / RUN#id#INPUTS or OUTPUT#00 (Protected) | encrypted initial inputs or immutable producer-step output version/provenance; <=32 KiB envelope each                                                  |
-| Execution anchor         | P / EXEC#id                                | frozen non-secret plan/source revisions, runId/position, jobId, submittedAt, state/version; <=64 KiB                                                   |
-| Job                      | P / JOB#id                                 | executionId/target, queued/claimed/running/completed/failed, attempts/fence, leaseId/nonceHash/credentialId, dispatchIntentAt/executeNotAfter/deadline |
-| Job bindings             | P / JOB#id#BINDINGS (Protected)            | <=32 KiB encrypted submission-time bundle; exact source IDs/revisions                                                                                  |
-| Snapshot manifest        | P / EXEC#id#SNAP                           | insert-only safe summary, S3 key/checksum/bytes, evidence version, outcome/exact nullable httpStatus, completedAt, replay secret refs                  |
-| Retention                | P / EXEC#id#RET                            | version, pinned/pinnedAt, immutable normalExpiresAt=completedAt+30 days, cleanupState live/deleting                                                    |
-| Local result receipt     | P / JOB#id#RECEIPT                         | original credential, accepted lease/fence/nonceHash, canonicalizationVersion, HMAC keyId/digest, acceptedAt; insert-only, no payload                   |
-| Status event             | P / EXEC#id#EVENT#0001                     | sequence/safe transition, <=10 per execution, no bodies/variables                                                                                      |
-| Outbox                   | P / OUT#jobId                              | stable identifier-only message, dueAt, attempts, delivery lease/version, publishedAt                                                                   |
-| Upload ticket            | P / UPLOAD#id                              | writer execution/lease/fence, deletionEpoch, exact S3 key, byte reservation/write deadline, pending/published/orphan/deleting/settled                  |
-| Maintenance work         | P / WORK#kind#id                           | deletion/revocation/cleanup cursor/version/dueAt; no raw payload                                                                                       |
-| MCP audit                | P / AUDIT#time#id, or U for account-only   | credential/tool, sanitized bounded inputs/outcome; account-only expiry 90 days                                                                         |
+| Entity                   | PK / SK                                    | Required data and constraints                                                                                                                            |
+| ------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User                     | U / META                                   | issuer/sub, disabled, version, safe display metadata; no passwords/tokens                                                                                |
+| Agent/MCP credential     | U / CRED#id                                | type, tokenHash, expiry/revokedAt/version; agent activeJob/lease slot; capability scope                                                                  |
+| Project gate             | P / META                                   | ownerId, active/deleting/deleted state, version/deletionEpoch, storageReservedBytes, inflightCount, safe name                                            |
+| Submission receipt       | P / IDEM#purpose#keyDigest                 | private normalized-input HMAC, execution/run ID, seven-day retry window; conditional unique put, explicit expiry                                         |
+| Request                  | P / REQ#id                                 | revision, ordered query/header arrays, typed body, secret refs/redaction rules, optional operation refs; complete configuration <=64 KiB, item <=128 KiB |
+| Environment              | P / ENV#id                                 | revision, ordered unique-name variable descriptors, secret refs; <=32 KiB                                                                                |
+| Saved secret             | P / SECRET#id (Protected)                  | scope/source revision, locator, ciphertext envelope, revoked flag; <=8 KiB plaintext, <=16 KiB envelope                                                  |
+| Import manifest          | P / IMPORT#id                              | preparing/ready/deleting state, revision, sanitized S3 pointer/hash, dialect/warnings; <=100 operations, <=2 MiB source                                  |
+| Operation                | P / OP#importId#operationId                | method/path, source operationId, local schema refs; <=32 KiB bundle; no remote refs                                                                      |
+| Workflow                 | P / WF#id                                  | revision, ordered steps, request IDs, extraction/assertion rules; 2–10 steps, <=64 KiB total                                                             |
+| Run                      | P / RUN#id                                 | frozen non-secret plans/source revisions, state/version, currentPosition/failedPosition, completedAt/normalExpiresAt, pinnedCount/availableCount         |
+| Run step                 | P / RUN#id#STEP#00                         | pending/queued/running/completed/failed/skipped, exact input-binding refs, execution ID, safe outcome/evidenceExpired                                    |
+| Run input/runtime bundle | P / RUN#id#INPUTS or OUTPUT#00 (Protected) | encrypted initial inputs or immutable producer-step output version/provenance; <=32 KiB envelope each                                                    |
+| Execution anchor         | P / EXEC#id                                | frozen non-secret plan/source revisions, runId/position, jobId, submittedAt, state/version; complete frozen configuration <=64 KiB, item <=128 KiB       |
+| Job                      | P / JOB#id                                 | executionId/target, queued/claimed/running/completed/failed, attempts/fence, leaseId/nonceHash/credentialId, dispatchIntentAt/executeNotAfter/deadline   |
+| Job bindings             | P / JOB#id#BINDINGS (Protected)            | <=32 KiB encrypted submission-time bundle; exact source IDs/revisions                                                                                    |
+| Snapshot manifest        | P / EXEC#id#SNAP                           | insert-only safe summary, S3 key/checksum/bytes, evidence version, outcome/exact nullable httpStatus, completedAt, replay secret refs                    |
+| Retention                | P / EXEC#id#RET                            | version, pinned/pinnedAt, immutable normalExpiresAt=completedAt+30 days, cleanupState live/deleting                                                      |
+| Local result receipt     | P / JOB#id#RECEIPT                         | original credential, accepted lease/fence/nonceHash, canonicalizationVersion, HMAC keyId/digest, acceptedAt; insert-only, no payload                     |
+| Status event             | P / EXEC#id#EVENT#0001                     | sequence/safe transition, <=10 per execution, no bodies/variables                                                                                        |
+| Outbox                   | P / OUT#jobId                              | stable identifier-only message, dueAt, attempts, delivery lease/version, publishedAt                                                                     |
+| Upload ticket            | P / UPLOAD#id                              | writer execution/lease/fence, deletionEpoch, exact S3 key, byte reservation/write deadline, pending/published/orphan/deleting/settled                    |
+| Maintenance work         | P / WORK#kind#id                           | deletion/revocation/cleanup cursor/version/dueAt; no raw payload                                                                                         |
+| MCP audit                | P / AUDIT#time#id, or U for account-only   | credential/tool, sanitized bounded inputs/outcome; account-only expiry 90 days                                                                           |
 
 Account/stage items outside project partitions: `PK=STAGE#id/SK=QUOTA`
 holds versioned monthly admission, inflight and byte reservation counters;
-`PK=LEDGER#stage/SK=PROJECT#id` holds permanent minimal project deletion epoch/
-timestamp/owner for safe restores. Ledger writes join the initial tombstone
-transaction; the ledger has no user configuration/evidence. Account mutation
-and global quota guards count toward transaction budgets below.
+`PK=STAGE#id/SK=META` holds active/recovering state, fresh recoveryGeneration
+and actual restore timestamp(s)/reconciliation status. Jobs, OUT, leases and
+upload tickets carry generation; admission/dispatch/publication conditions
+check current active generation. Stage guards count toward action budgets.
+No separate independently preserved deletion journal is required. P/META
+tombstones remain for normal deletion coordination, not guaranteed across restore.
+
+Mutable evidence availability is separate from immutable SNAP: RET has
+evidenceAvailability=available/unavailable_missing/unavailable_corrupt.
+Restored historical manifests keep captured outcome/checksum untouched; no
+missing S3 body is fabricated. Availability does not extend normal retention.
+Restored jobs have operational recovery_interrupted failure metadata without
+invented upstream response. Terminal history need not match current generation
+to be read after reconciliation; old-generation work can never dispatch.
+
+Saved-request and per-execution frozen configurations each have a complete
+serialized <=64 KiB cap, including URL/headers/query/body descriptors/references/
+policy/schema/serialization overhead. This is separate from item and protected
+bundle caps. Reject invalid saved writes and oversize frozen submission plans.
+Resolved outbound body independently <=64 KiB after interpolation; validate
+before any target HTTP. Wire-read and decompressed response caps each 2 MiB;
+exceeding either fails capture with omission metadata. Complete encoded
+evidence/API/local-upload cap stays 4 MiB. No external large-request-body store
+or S3 request-body references in MVP. Future increases require review of item,
+transaction, transport, memory/CPU limits.
 
 S3 evidence is sanitized typed JSON/text, not a DynamoDB body blob. Ordered
 arrays preserve duplicates; exact supported non-secret body text is distinct
@@ -141,7 +162,11 @@ review. Internal messages include projectId as locator, never ownership proof.
 
 GSI2 has one due-kind per item: JOB local-queued or lease-reconcile, OUT publish,
 RET execution-cleanup, RUN summary-cleanup, UPLOAD orphan-check, WORK drain.
-Transitions replace/remove due keys atomically. GSI absence never proves no
+Transitions replace/remove due keys atomically. A committing handler may issue
+one bounded best-effort identical identifier notification immediately after
+cloud submission/successor commit. OUT stays durable/unpublished until scheduled
+publication, so fast and scheduled sends may duplicate but never create jobs.
+Queue uncertainty never rolls back committed acceptance. GSI absence never proves no
 work exists. Durable outbox/work items plus minute/hourly schedulers recover
 missed discovery; parent deletion uses base queries. Project/run counters and
 bounded base reads, not an index query count, determine deletion eligibility.
@@ -162,6 +187,9 @@ prepare outside DB, commit or re-read/revalidate using fresh time and jitter.
 This is optimistic per-project serialization instead of FOR UPDATE. Never
 retry HTTP on conflict. Only drain transactions allow state=deleting with the
 matching deletionEpoch/version. Credential checks/updates join where required.
+Require STAGE/META active with matching recoveryGeneration on execution
+admission/claims/grants/publication/OUT delivery. Operator-only reconciler paths
+may mutate under state=recovering while product dispatch remains disabled.
 Normalize by table/PK/SK: combine each item's changes into **one** action;
 ConditionCheck plus Update on the same item is invalid. No external I/O in DB.
 
@@ -284,9 +312,30 @@ See [S3/project deletion](w1-system-design.md#s3-publication-orphans-and-project
 Keep a minimal permanent P/META tombstone: opaque project/owner ID, deletion
 epoch/timestamps only, no names/configuration/evidence. Never reuse project UUIDs.
 All children/pins/secrets/bundles/receipts/imports/audits/objects drain; account
-credentials remain for other projects. Proposed seven-day PITR residual differs
-from active deletion; restore replays the deletion ledger before serving data.
-Backups cannot erase individual projects selectively.
+credentials remain for other projects during normal operation. Proposed seven-day
+PITR/on-demand backup residual differs from active deletion; individual projects
+cannot be selectively erased from those copies.
+
+**Davian-selected recovery exception:** an earlier restore can bring back later
+deleted projects/items and lose later changes. P/META tombstones may themselves
+roll back; no claim that deletion survives every restore and no independent
+deletion journal solely for anti-resurrection. Communicate actual UTC restore
+times for both tables and the rollback/deletion warning. Reconcile Control,
+Protected and current private S3 before opening stage ingress/dispatch. Mark
+missing/corrupt S3 evidence unavailable outside SNAP; quarantine broken references
+and encrypted inputs, rebuild counters, never invent response bodies.
+
+Before reopening, assign a fresh recoveryGeneration and suppress every restored
+OUT. Fence/terminalize restored queued/claimed/running jobs and unstarted
+successors as recovery_interrupted; stop affected runs, clear lease/credential
+slots and remove unusable runtime bundles in bounded guarded transactions.
+A restored queued plan may already have executed after its restore timestamp,
+so even absent restored intent cannot justify automatic HTTP. Only deliberate
+new submissions/reruns create executable new-generation work. Deny old local
+credentials/results pending re-pairing; old SQS identifiers/generations remain
+non-executable. Retain historical terminal SNAP/receipts without rewriting them.
+The [restore procedure](w1-system-design.md#backup-restore-and-recovery-exception)
+defines readiness checks and normal-operation deletion cleanup continuation.
 
 Davian owns future versioned entity codecs/data-change tools; SST owns reviewed
 table/index/IAM/PITR definitions. Use additive schemaVersion readers, conditional

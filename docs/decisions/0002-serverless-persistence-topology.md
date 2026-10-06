@@ -2,6 +2,7 @@
 
 - Status: **Proposed for Davian Hernandez's review**
 - Date: 2026-10-05
+- Revised: 2026-10-06; restore exception selected by Davian, other details Proposed
 - Scope: W1 design direction, not deployment or implementation authorization
 
 ## Context
@@ -40,10 +41,34 @@ polling rather than holding Lambda SSE/long-poll invocations. Protocols, limits
 and contract changes are detailed in the [system design](../architecture/w1-system-design.md)
 and [data model](../architecture/w1-data-model.md).
 
+Davian selected the MVP restore exception: earlier restoration may restore
+later-deleted projects/items and lose later changes. Communicate actual
+Control/Protected restore timestamps and that warning; deletion does not survive
+every backup restore. No independently preserved deletion journal solely for
+anti-resurrection. Normal active-store denial, upload fencing, tombstones and
+orphan cleanup remain. Reconcile Control/Protected/S3 before reopening: missing
+evidence is unavailable, never fabricated. Proposed recovery generation and
+closed-stage procedure suppress restored queued/running work/OUT; require
+deliberate new submissions/reruns, never automatic external HTTP replay.
+
+Propose complete saved request and per-execution frozen configuration caps
+64 KiB each (all fields/serialization), independent resolved outbound body cap
+64 KiB, response wire-read/decompressed caps 2 MiB each, and existing complete
+encoded evidence/API/local-upload cap 4 MiB. Reject invalid saved configuration
+and oversized resolved input before HTTP; oversized response is Failed with
+omission metadata. No S3 large-request-body subsystem in MVP. Future increases
+require item/transaction/transport/memory review.
+
+Propose one bounded immediate best-effort identifier-only SQS notification after
+submission/successor commit, with durable OUT/scheduled delivery as recovery.
+Send failure/uncertainty does not undo acceptance or create another job. Identical
+scheduled/fast duplicates obey existing claim/fencing; latency targets are not
+guarantees. Detailed defaults remain for final review.
+
 ## Consequences and alternatives
 
 - Refined light forecast $3.17/month (approximately $3.10 screening estimate),
-  heavy 10k/30-second execution forecast $14.20 including one KMS rotation.
+  heavy 10k/30-second execution forecast $14.14 including one KMS rotation.
   [Assumptions/rates](../architecture/w1-review-decisions.md#monthly-development-cost-estimate)
   are not measured usage or hard caps. Pins, rotation and abuse can exceed $5.
 - DynamoDB requires explicit indexes, owner/reference conditions, item/action
@@ -62,7 +87,9 @@ and [data model](../architecture/w1-data-model.md).
 
 This ADR is Proposed, not a replacement for accepted SST ADR 0001. Davian must
 review table/index/protocol limits, polling policy, asynchronous project deletion,
-backup residual/tombstone policy, budgets/quotas and crypto/receipt details.
+backup duration/normal-operation tombstone details, size/fast-notification
+limits, recovery handling, budgets/quotas and crypto/receipt details. The restore
+exception is Davian-selected, not pending a new anti-resurrection decision.
 After agreement synchronize proposal's stale CDK and Fargate/PostgreSQL wording,
 API contracts and Trello as enumerated in the decision sheet; do not update them
 now. Begin only a separately authorized local users/projects ownership slice.
