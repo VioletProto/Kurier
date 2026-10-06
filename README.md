@@ -95,5 +95,8 @@ for local development only. Never store real credentials in the repository.
 ## Architecture
 
 See [the architecture overview](docs/architecture/README.md) and
-[the SST viability spike](docs/spikes/sst-viability.md). The proposed design
-is a planning baseline and may change as the team gathers evidence.
+[the SST viability spike](docs/spikes/sst-viability.md).
+[ADR 0002](docs/decisions/0002-serverless-persistence-topology.md) records the
+accepted serverless MVP baseline (`1fba942`), not implemented/deployed behavior.
+See the [acceptance and synchronization record](docs/architecture/w1-acceptance-sync.md)
+for external-document updates and remaining proposed interface choices.

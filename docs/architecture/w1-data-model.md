@@ -1,14 +1,15 @@
 # W1 DynamoDB data model
 
-Status: revised direction authorized; implementation details **proposed for
-Davian Hernandez's review**, 2026-10-06. Replaces the proposed PostgreSQL model,
+Status: **Accepted by Davian Hernandez**, 2026-10-06, baseline `1fba942`,
+including documented defaults. Replaces the earlier PostgreSQL model,
 not deployed data. See [system design](w1-system-design.md),
 [review decisions](w1-review-decisions.md), and
-[proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md).
+[accepted ADR 0002](../decisions/0002-serverless-persistence-topology.md).
+New wire/library choices are distinguished in the [acceptance record](w1-acceptance-sync.md).
 
 ## Tables, keys and ownership
 
-Propose two DynamoDB Standard on-demand tables in one region/stage: `Control`
+Use two DynamoDB Standard on-demand tables in one region/stage: `Control`
 for non-secret metadata and `Protected` for encrypted values. Both have string
 PK/SK. Transactions span both tables. No global tables, DAX, LSIs or provisioned
 capacity initially. Protected has no indexes or stream. API, execution,
@@ -156,7 +157,7 @@ lease/pin/readiness/deletion. Discovery requires strong base reads and condition
 | Project deletion                    | Strong Query P in both tables; S3 ListObjectsV2 prefix    | Tombstone/drain cursor; no GSI completeness assumption                      |
 | MCP audit                           | Base Query P/U, AUDIT# prefix                             | Owner/scope/logical expiry                                                  |
 
-Opaque IDs alone cannot locate partitions: proposed execution/job routes carry
+Opaque IDs alone cannot locate partitions: accepted execution/job routes carry
 projectId in path/query. No global unowned resource locator. This needs contract
 review. Internal messages include projectId as locator, never ownership proof.
 
@@ -210,7 +211,7 @@ ClientRequestToken window does not replace retained application receipts.
 
 ## Bounded transactions and workflow limits
 
-Proposed application caps: **80 actions, 2 MiB aggregate, 128 KiB/item**, with
+Accepted application caps: **80 actions, 2 MiB aggregate, 128 KiB/item**, with
 lower entity caps above. Count serialized items, attribute names, envelope
 expansion and condition actions before acceptance; reject oversize before HTTP.
 Workflow: 2–10 sequential steps, no loops/branches, eight outputs/step,
@@ -253,11 +254,11 @@ finalization is never silently split. Account deletion is not an MVP route.
 Time predicates use a validated server decisionTime, refreshed for every new
 CAS attempt and recorded with the operation. DynamoDB has no transaction NOW()
 predicate: do not claim millisecond-precise wall-clock expiry at remote commit.
-Propose denying new pins within five seconds of expiry to absorb ordinary
+Deny new pins within five seconds of expiry to absorb ordinary
 clock/latency uncertainty; resolve uncertain commits before changing decisionTime.
 Authorization for a pin is evaluated at that decisionTime; cleanup ordering is
-still enforced by gate/RET conditions. This timing boundary needs Davian's
-review and slow-commit/clock-skew tests. Ordinary reads apply current logical
+still enforced by gate/RET conditions. This accepted timing boundary requires
+future slow-commit/clock-skew tests. Ordinary reads apply current logical
 expiry; a physically retained expired record is not otherwise available.
 
 Pin/unpin, execution cleanup, summary cleanup and project deletion use the same
@@ -312,7 +313,7 @@ See [S3/project deletion](w1-system-design.md#s3-publication-orphans-and-project
 Keep a minimal permanent P/META tombstone: opaque project/owner ID, deletion
 epoch/timestamps only, no names/configuration/evidence. Never reuse project UUIDs.
 All children/pins/secrets/bundles/receipts/imports/audits/objects drain; account
-credentials remain for other projects during normal operation. Proposed seven-day
+credentials remain for other projects during normal operation. Accepted seven-day
 PITR/on-demand backup residual differs from active deletion; individual projects
 cannot be selectively erased from those copies.
 

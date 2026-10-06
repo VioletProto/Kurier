@@ -1,27 +1,28 @@
 # W1 review decisions, costs and contract gaps
 
-Status: serverless revision direction authorized; unresolved settings **proposed
-for Davian Hernandez's review**, 2026-10-06. See [system design](w1-system-design.md),
-[DynamoDB model](w1-data-model.md) and [proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md).
-Architecture remains pending review; API-contract card remains open. No Google
-Docs/Trello synchronization, deployment or product implementation is authorized.
+Status: **Accepted by Davian Hernandez**, 2026-10-06, baseline `1fba942`,
+including documented defaults. See [system design](w1-system-design.md),
+[DynamoDB model](w1-data-model.md) and [accepted ADR 0002](../decisions/0002-serverless-persistence-topology.md).
+Acceptance/source synchronization is recorded in [the handoff](w1-acceptance-sync.md).
+Genuinely new wire/library choices remain proposed; contract-review stays open.
+Deployment, product implementation and AWS mutations are not authorized.
 
 ## Decision sheet
 
 | Choice            | Recommendation/status                                                                 | Reason                                              | Material tradeoff                                                           |
 | ----------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------- |
 | Infrastructure    | SST 4 **accepted**, ADR 0001 unchanged                                                | Historical spikes support framework selection       | Bootstrap/state costs and reviewed deployment IAM remain                    |
-| Revised direction | Go ARM Lambda + HTTP API + SQS + DynamoDB + private S3; direction approved for draft  | Removes always-on compute/network/database baseline | New persistence and invocation behavior untested; no stable outbound IP     |
-| Tables/indexes    | Proposed Control/Protected, Standard on-demand, three sparse KEYS_ONLY Control GSIs   | Isolates crypto store; explicit access patterns     | No SQL FKs/joins; index lag/read amplification; gate contention             |
-| Integrity         | Proposed gate CAS + bounded cross-table transactions + immutable S3 manifests/tickets | Preserves reviewed atomic state boundaries          | Objects cannot join a DynamoDB transaction; orphan/deletion reconciliation  |
-| Status delivery   | Proposed immediate polling, ten-second light default/two-second active option         | Avoids Lambda billing for held connections          | Notifications delayed; replaces draft SSE contract                          |
-| Local dispatch    | Proposed intent before poll response, 30-second start/120-second lease                | Durable knowledge of possible HTTP dispatch         | Lost poll can produce conservative unknown; no replay                       |
-| Local receipt     | Proposed retained canonical private HMAC/lease identity                               | ACK retries after successful commit/expired lease   | Key retention; credential revocation still denies ACK                       |
-| Workflow          | Proposed sequential 2–10 steps, one atomic finalization/successor transaction         | Bounds action/byte limits                           | No branching/loops; oversized input rejected                                |
-| Deletion          | Proposed immediate access denial + 202 resumable operation                            | Honest cross-store cleanup and late-PUT handling    | Changes DELETE 204 contract; physical completion may await uncertain writes |
-| Secrets           | Proposed per-stage KMS AES-GCM envelopes, no reveal                                   | Authorized reuse without evidence disclosure        | KMS outages/cost/rotation; local device receives required runtime values    |
-| Retention         | Agreed 30-day unpinned; pins until project deletion. Conditional protocol proposed    | Metadata independent of immutable evidence          | No native TTL for authoritative history; pinned growth requires quotas      |
-| Auth              | Cognito and shared-theme screens **agreed**; Lite/15-minute tokens proposed           | Keep login credentials outside app store            | Offline JWT revocation delay and email-flow checks                          |
+| Revised direction | Go ARM Lambda + HTTP API + SQS + DynamoDB + private S3; accepted baseline 1fba942     | Removes always-on compute/network/database baseline | New persistence and invocation behavior untested; no stable outbound IP     |
+| Tables/indexes    | Accepted Control/Protected, Standard on-demand, three sparse KEYS_ONLY Control GSIs   | Isolates crypto store; explicit access patterns     | No SQL FKs/joins; index lag/read amplification; gate contention             |
+| Integrity         | Accepted gate CAS + bounded cross-table transactions + immutable S3 manifests/tickets | Preserves reviewed atomic state boundaries          | Objects cannot join a DynamoDB transaction; orphan/deletion reconciliation  |
+| Status delivery   | Accepted immediate polling, ten-second light default/two-second active option         | Avoids Lambda billing for held connections          | Notifications delayed; replaces draft SSE contract                          |
+| Local dispatch    | Accepted intent before poll response, 30-second start/120-second lease                | Durable knowledge of possible HTTP dispatch         | Lost poll can produce conservative unknown; no replay                       |
+| Local receipt     | Accepted retained canonical private HMAC/lease identity                               | ACK retries after successful commit/expired lease   | Key retention; credential revocation still denies ACK                       |
+| Workflow          | Accepted sequential 2–10 steps, one atomic finalization/successor transaction         | Bounds action/byte limits                           | No branching/loops; oversized input rejected                                |
+| Deletion          | Accepted immediate access denial + 202 resumable operation                            | Honest cross-store cleanup and late-PUT handling    | Changes DELETE 204 contract; physical completion may await uncertain writes |
+| Secrets           | Accepted per-stage KMS AES-GCM envelopes, no reveal                                   | Authorized reuse without evidence disclosure        | KMS outages/cost/rotation; local device receives required runtime values    |
+| Retention         | Agreed 30-day unpinned; pins until project deletion. Conditional protocol accepted    | Metadata independent of immutable evidence          | No native TTL for authoritative history; pinned growth requires quotas      |
+| Auth              | Cognito and shared-theme screens **agreed**; Lite/15-minute tokens accepted           | Keep login credentials outside app store            | Offline JWT revocation delay and email-flow checks                          |
 
 ## Monthly development cost estimate
 
@@ -67,7 +68,7 @@ Invocations: 131k / 660k. Add one fast-send opportunity per cloud job, 50 ms
 average billed duration (unmeasured), 80% in 256 MiB API submission handlers and
 20% in 512 MiB successor handlers: `N×0.05×(0.8×0.25+0.2×0.5)`
 = 15 / 150 additional GB-seconds, total **3765 / 166400**. Incremental to baseline
-durations, not another Lambda invocation. At the proposed two-second send
+durations, not another Lambda invocation. At the accepted two-second send
 deadline that opportunity mix costs about $0.008/$0.080 compute instead of
 $0.0002/$0.002, excluding unrelated execution time. Skip sends lacking time.
 SQS allowances already include 1k/10k additional fast notifications and scheduled
@@ -157,7 +158,7 @@ or directly comparable workloads. No hard cap/guaranteed savings claim.
 
 ## Budgets and application quotas
 
-**Proposed only; do not configure AWS.** Stage-scoped cost allocation plus
+**Accepted design defaults; do not configure AWS.** Stage-scoped cost allocation plus
 account-wide visibility for unattributed/shared bootstrap charges. Light alerts
 at actual $3/$4/$5 and forecast >$5; heavy profile at $10/$15 and forecast >$20.
 Owner email notification, weekly review, no automatic destructive budget actions.
@@ -204,7 +205,7 @@ Local agent default allowlist loopback only; private ports/hosts need explicit
 local configuration; metadata endpoints remain blocked. Public API abuse still
 needs quotas. Protected values over plaintext HTTP need explicit confirmation.
 
-**Proposed MVP size defaults:** complete serialized saved request configuration
+**Accepted MVP size defaults:** complete serialized saved request configuration
 <=64 KiB; complete serialized frozen configuration per execution <=64 KiB;
 resolved outbound body <=64 KiB. Configuration totals include URL, headers,
 query fields, body descriptors, references, policies/schema and serialization
@@ -225,7 +226,7 @@ response header 10 s, response header cap 64 KiB. Disable streaming/infinite
 responses, raw HTTP tracing and hidden Go retries. Bound decompression/JSON
 depth/regex/assertion CPU and redact omissions/errors. HTTP API 30 s timeout
 and Lambda synchronous 6 MiB event limit mean base64/envelope overhead counts;
-local result 4 MiB wire cap is conservative, must be tested before acceptance.
+local result 4 MiB wire cap is conservative, must be runtime-tested before exposure.
 Also cap the complete serialized evidence object/API reply at 4 MiB, counting
 JSON escaping/base64 and headers/envelope. Omit oversized body fields with
 explicit metadata before PUT/publication; a 2 MiB raw-body cap alone cannot
@@ -236,7 +237,7 @@ only decoded body bytes.
 
 KMS symmetric stage key, fresh per-binding data key and AES-256-GCM nonce;
 envelopes in Protected only, no plaintext fallback. Review known-answer/tamper/
-context tests and narrowly scoped KMS IAM. Annual key-material rotation proposed;
+context tests and narrowly scoped KMS IAM. Annual key-material rotation accepted;
 saved credential-value changes affect future submissions/reruns, not frozen jobs
 unless revoked. Replacement-key rewrap is a reviewed versioned background change;
 retain old keys/root-HMAC versions while pins/receipts/backups need them. No DB
@@ -246,7 +247,7 @@ Manager. [Envelope encryption](https://docs.aws.amazon.com/kms/latest/developerg
 
 ## Authentication and email
 
-Propose Cognito Lite explicitly, public SRP-capable app client, 15-minute access
+Use Cognito Lite explicitly, public SRP-capable app client, 15-minute access
 tokens, one-day rotating refresh session, browser memory storage (not
 localStorage), reauthenticate after reload. Go verifies RS256/key type/kid,
 configured issuer/client_id, token_use=access, exp/issuance with 60-second clock
@@ -261,7 +262,7 @@ credential/user; revoked original token denies even accepted-upload ACKs. Pairin
 requires Cognito-authenticated owner. MCP stdio transport/read-only audited
 bridge initially; remote OAuth/intended-recipient behavior is not implied.
 
-SES-backed Cognito email proposed for public signup. Verify regional compatibility,
+SES-backed Cognito email accepted for public signup. Verify regional compatibility,
 sender identity, DKIM/SPF/DMARC, sandbox/production quotas, bounce/complaint
 handling and delivery before presentation. Test signup/verify/resend cooldown,
 reset/expired codes, generic enumeration-resistant errors and real independent
@@ -306,39 +307,36 @@ valid template expanding to >64 KiB fails before HTTP. Test separate 2 MiB wire/
 decompression overruns, Failed omission metadata and 4 MiB encoded caps.
 Lost result DB acknowledgment is resolved by reading receipt, never HTTP replay.
 
-## Contract gaps and synchronization after review
+## Contract synchronization and remaining review
 
-Findings use the original v0.1 source baseline. Do **not** update Google Docs,
-Trello, proposal or accepted ADR during this revision. After agreement:
+Davian accepted baseline `1fba942`, including documented defaults; ADR 0002
+is Accepted. The [acceptance/synchronization record](w1-acceptance-sync.md)
+records fresh external reads, completed edits, Trello scope and concrete new
+wire recommendations. Historical draft findings are now resolved as follows:
 
-| Source/route/schema                  | Exact synchronization needed                                                                                                                                                                                                                                                                                                                   |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Proposal technology/deployment/W2/W9 | Replace stale CDK with accepted SST; replace Fargate/RDS/PostgreSQL topology with reviewed Lambda/DDB/S3 design, including current app users keyed to Cognito; preserve historical spikes. Fix stale infra/README framework wording in that later task.                                                                                        |
-| Architecture/contract review cards   | Attach approved design/ADR/settings and new acceptance criteria; keep architecture pending until accepted, contract card open until affected schemas agreed. No Done/card move here.                                                                                                                                                           |
-| Resource routes/ownership            | Add reviewed project scope to execution/job/rerun/pin/result paths or query parameters; no opaque-ID global locator. Define 25/100 cursor collections and bounded filters/eventual list reconciliation; complete 64 KiB config/body limits and recovery generation checks.                                                                     |
-| KeyValueField/sensitive writes       | Add set/preserve/remove/secretRef semantics, masked reads and sensitive URL/body paths; literal mask is not a credential. Exclude raw secrets from ordinary returned definitions.                                                                                                                                                              |
-| Submit/queue                         | Add Idempotency-Key/revision checks/frozen plans/limits; identifier-only queue, advisory attempt, no user authority in message. Document seven-day submission retry window and bounded post-commit notification; queue-send failures do not undo 202.                                                                                          |
-| Execution summary/record             | Separate mutable status/version/RET from immutable manifest/body; nullable deleted live links versus frozen source IDs, body omission/checksum/schema version, unknown outcome, exact upstream status. GET returns 200 failed evidence for upstream 404/500.                                                                                   |
-| Project history/reruns               | Add project history with frozen request filter; reruns capture current stable secret refs and fail if missing, no historical secret recovery.                                                                                                                                                                                                  |
-| SSE/status                           | Replace SSE proposal with immediate-return status/batch polling, version/serverTime, 2/10/30/60 s policy, stop/retry rules and latency expectations. Do not silently keep an implemented SSE promise—none exists.                                                                                                                              |
-| Agent token/poll/result              | Map localAgentId to credential ID, immediate 204 empty, intent-before-response, leaseId/fence/nonce/start deadline/serverTime, busy behavior and no start route/regrant. Define canonical DTO/crypto envelope/4 MiB cap and original-credential ACK after lease expiry; 200/401/404/409 and revocation races.                                  |
-| Workflow definitions/runs            | Add CRUD/revision, ordered 2–10 steps/extraction grammar, environment/target selection, exact output provenance, skipped states, limits and atomic successor scheduling; local sensitive extraction trust limitation.                                                                                                                          |
-| Pin/unpin/context                    | Proposed PUT/DELETE project-scoped execution pin, idempotent 200 RET; original expiry/no grace, expired pin rejection, context protection and sibling evidenceExpired; no TTL race.                                                                                                                                                            |
-| DELETE project 204                   | Propose 202 deletion-operation resource: immediate denial, durable drains, pending uncertain uploads, terminal physical completion, normal-operation tombstone/backup residual and selected restore exception; actual timestamp/warning, no universal deletion-survival promise. Exact GET operation route and response states require review. |
-| Imports/operation association        | Specify supported dialect/library, local refs only, sanitization/warnings, request operation association, staged import readiness instead of claiming atomic 100-operation insertion.                                                                                                                                                          |
-| MCP                                  | Define distinct token pairing/revocation and audited invocation bridge, read-only tools/cursors; no Protected/KMS access; remote transport separate.                                                                                                                                                                                           |
-| Health/error envelopes               | Reconcile current foundation /healthz with /health and /ready contracts; spike routes are not product routes. Review assertion/schema/3xx/unknown/omission codes and polling Retry-After.                                                                                                                                                      |
+| Source/route/schema                  | Synchronization recorded                                                                                                                                                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proposal technology/deployment/W2/W9 | SST/Lambda/HTTP API/DynamoDB/private S3 replace CDK/Fargate/RDS product plans. infra/README is corrected; historical spikes remain unchanged.                                                                                               |
+| Architecture/contract cards          | Architecture acceptance and documentation completion; contract review remains Doing for genuinely new wire/library proposals. Only Davian-authorized cards changed.                                                                         |
+| Ownership/collections                | Project-scoped execution/job/result/rerun/run routes; 25/100 cursors, bounded filters and eventual reconciliation; config/body limits and recovery conditions.                                                                              |
+| Sensitive writes                     | Masked stable refs, set/preserve/remove/reference semantics, no ordinary raw reads; exact discriminated DTO/path shape is newly proposed.                                                                                                   |
+| Submission/queue                     | Idempotency-Key/seven-day receipt, expected revisions, immutable frozen plan, identifier-only duplicate notification, bounded fast send; failure never undoes 202.                                                                          |
+| Evidence/history/reruns              | Mutable status/RET separate from immutable capture; nullable live/frozen IDs, checksum/omission/schema/unknown/status; GET failed upstream evidence 200; current stable secrets only.                                                       |
+| Polling                              | SSE removed; immediate status/batch, versions/serverTime, stop/backoff/2/10/30/60-second profiles; exact route spellings newly proposed.                                                                                                    |
+| Local protocol                       | Credential identity, 204 empty/busy, intent-before-response, deadlines/fencing/no start route/regrant; retained duplicate ACK versus live first-upload authorization and revocation. Canonical DTO proposed separately.                     |
+| Workflows                            | Bounded frozen sequential plans, revisions/source/target/provenance/skipped states, atomic output/snapshot/step/run/receipt/successor transaction. CRUD DTO and extraction grammar newly proposed.                                          |
+| Pin/context                          | Accepted project-scoped PUT/DELETE, idempotent 200 RET; original expiry/no grace, five-second margin, shared CAS cleanup protocol/context without expired bodies.                                                                           |
+| Deletion/recovery                    | Accepted 202 drain, immediate denial, uncertain/late PUT fencing, normal tombstone/backup residual; actual restore timestamps/warning/reconciliation/unavailable evidence, no restored HTTP replay. Exact operation GET/state DTO proposed. |
+| Imports/MCP                          | Ready-only staged imports/operation refs, local refs/warnings; distinct read-only stdio MCP token/audit bridge, no Protected/KMS. Dialect/library and wire proposals remain review inputs.                                                  |
+| Health/errors                        | /healthz actual foundation response; no product claim for spike routes. /ready exposure and exact capture/error-code list newly proposed; Retry-After and upstream-status distinction recorded.                                             |
 
-Remaining review choices: server decisionTime/five-second near-expiry pin margin
-(DynamoDB has no transaction NOW), async deletion coordination/tombstone retention and backup duration details,
-the three-index/two-table design and project/stage contention, ten-step/bundle/
-import limits, receipt canonical DTO and HMAC key retention, supported extraction
-grammar/OpenAPI dialect, HTTP secret confirmation, active polling latency,
-budget/profile quotas, seven-day PITR plus short-lived backup policy and annual
-KMS rotation, complete 64 KiB sizing, recovery-generation handling and bounded
-fast-notification defaults. The recovery exception itself is **Davian-selected**,
-not an unresolved anti-resurrection decision. Direction approval does not accept all of these defaults or
-authorize infrastructure implementation. ADR 0002 remains Proposed.
+All existing architecture defaults (including key retention, table/index/action
+limits, quota profiles, PITR/backup/rotation, pin decisionTime, HTTP secret
+confirmation, polling, complete size caps and fast notification) are accepted.
+Acceptance does not establish AWS correctness or measured usage. Only previously
+unspecified wire details/libraries remain proposed for Davian's review. See the
+concrete proposal table in the acceptance record; contract review is not Done
+until those affected schemas are agreed and checked.
 
 ## Davian-selected restore policy and backup residuals
 
@@ -348,7 +346,7 @@ and warn that later changes may be lost and later deletions may reappear.
 No independently preserved deletion journal solely to block resurrection.
 Normal active-store denial, dispatch/upload fencing, tombstones and orphan
 cleanup remain; backups are not project-selectively erased. Seven-day PITR/
-on-demand retention remains a proposed operational default.
+on-demand retention is an accepted operational default.
 
 Before reopening reconcile Control, Protected and S3 under a closed recovering
 stage. Missing evidence is unavailable without rewriting immutable capture;
@@ -373,10 +371,12 @@ semantics under expressly authorized AWS test resources.
 
 ## Documentation validation scope
 
-Revision baseline is `0fd9194`; validation below concerns the 2026-10-06
-documentation-only revision, not runtime recovery/dispatch implementation.
+The list below records historical documentation validation of accepted baseline
+`1fba942` (revision from `0fd9194`), not the external synchronization or runtime
+recovery/dispatch implementation. Current synchronization checks are recorded
+in [the acceptance handoff](w1-acceptance-sync.md#validation-and-handoff).
 
-Completed documentation/repository checks for this revision:
+Completed documentation/repository checks for that baseline revision:
 
 - Prettier formatted the five changed Markdown files. `GOCACHE=/tmp/kurier-w1-go-build
 npm run verify` passed repository formatting/gofmt checks, ESLint, Vitest

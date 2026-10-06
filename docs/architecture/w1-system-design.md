@@ -1,32 +1,33 @@
 # W1 system architecture and execution design
 
-Status: Lambda/DynamoDB revision direction authorized by Davian; detailed
-settings/protocols **proposed for Davian Hernandez's review**, 2026-10-06.
+Status: **Accepted by Davian Hernandez**, 2026-10-06, baseline `1fba942`,
+including its documented defaults. New synchronization choices remain proposed
+in the [acceptance record](w1-acceptance-sync.md).
 Documentation only, not implemented/deployed behavior. See the
 [DynamoDB model](w1-data-model.md), [decision sheet](w1-review-decisions.md),
-and [proposed ADR 0002](../decisions/0002-serverless-persistence-topology.md).
+and [accepted ADR 0002](../decisions/0002-serverless-persistence-topology.md).
 
 ## Sources and evidence boundary
 
-Revision baseline: `0fd9194` on `docs/w1-architecture-data-model`, clean tree.
+Acceptance synchronization baseline: `1fba942` on
+`docs/w1-architecture-data-model`, initially clean tree. The prior design
+revision from `0fd9194` is preserved in Git history.
 Read root [AGENTS.md](../../AGENTS.md); no nested instructions found. Explicit
 feature-branch direction overrides the general codex-branch rule. Inspecting
 current services/configuration confirms product persistence/execution is not
 implemented. Preserve [accepted SST ADR 0001](../decisions/0001-sst-infrastructure-candidate.md)
 and [completed spike reports](../spikes/sst-viability.md) unchanged.
 
-Linked source contents were read for the original draft; this revision uses
-that recorded baseline and Davian's subsequent instructions, not a fresh claim
-that external contracts have changed:
+The current external documents and authorized Kurier cards were read before
+editing in place; unrelated content and native structure were preserved:
 
 - [W1 task](https://trello.com/c/jbm6BuxP/2-w1-finalize-architecture-and-data-model).
 - [API contracts v0.1](https://docs.google.com/document/d/1KSfRYOb2UxmrIl8VoFjc3YP38-PMu7k_fM9wrVkEenM/edit).
 - [Working proposal](https://docs.google.com/document/d/1tatrrhqytTxAZxlrOnbSQRymmqjL2MmGq7Tdj0-1T60/edit).
 
-No Google Docs/Trello edits or state changes. Architecture remains pending
-review; API-contract review stays open. Proposal CDK and PostgreSQL/Fargate
-wording needs later synchronization. Neither old SQL design nor this new model
-is an accepted deployed contract.
+See the acceptance record for synchronized sections and remaining proposed
+wire/library choices and unassigned-card gaps. This is
+an accepted design, not a deployed or runtime-tested product.
 
 | Foundation                             | What is actually evidenced                                                                                              |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -90,7 +91,7 @@ flowchart TB
   Dispatcher --> Monitor
 ```
 
-SST 4 remains selected. Proposed components: ApiGatewayV2, Function, Dynamo,
+SST 4 remains selected. Accepted components: ApiGatewayV2, Function, Dynamo,
 Queue, Bucket, StaticSite and reviewed scheduler/KMS/Secrets Manager resources.
 [SST HTTP API](https://sst.dev/docs/component/aws/apigatewayv2/) and
 [Dynamo](https://sst.dev/docs/component/aws/dynamo/) document composition; verify
@@ -159,7 +160,7 @@ handling or sanitizer failure omits body with fixed safe diagnostics. Arbitrary
 secret transformations cannot be detected reliably: explicit user response-path
 marking and fail-closed supported encodings remain necessary.
 
-## Proposed MVP size boundaries
+## Accepted MVP size boundaries
 
 Measure the **complete serialized saved request configuration** and **complete
 serialized frozen configuration per execution** independently: each <=64 KiB,
@@ -217,10 +218,10 @@ definitions cannot alter the queued job. Same owner/project idempotency key and
 canonical input returns original identity within seven days; mismatch 409.
 Do not persist literal keys/input credentials or public secret fingerprints.
 
-### Proposed fast notification after commit
+### Accepted fast notification after commit
 
 After the durable submission transaction commits, attempt **one** immediate
-best-effort SendMessage with the same identifier-only payload as OUT. Propose
+best-effort SendMessage with the same identifier-only payload as OUT. Use
 a two-second operation deadline, SDK retries disabled on this fast path, and
 skip unless remaining handler time exceeds that deadline plus one second for
 response/cleanup. No background/unawaited send after Lambda returns. Read back
@@ -248,7 +249,7 @@ latency guarantee. Fast-send races/retries do not change upstream retry policy.
 Outbox Lambda queries due OUT candidates, conditionally claims a short delivery
 lease under the project gate, sends identifiers, then marks published. Crash
 after send/before marking repeats notification, not HTTP. Minute scheduler plus
-durable due index/cursors recovers queue outages; proposed backoff 1/2/4 seconds
+durable due index/cursors recovers queue outages; accepted backoff 1/2/4 seconds
 to 60, failed publication retained, alert after ten minutes. No DB Streams
 dependency or 24-hour stream replay assumption. Never drop an OUT after a
 fixed retry count. Expired/deleted/terminal jobs can be acknowledged safely.
@@ -275,7 +276,7 @@ post-intent expiry finalizes failed execution_outcome_unknown without new HTTP.
 
 HTTP 400–599 is Failed with exact status and sanitized response. No response
 means null httpStatus; assertions/required extraction/supported validation
-failure also fail. Propose 2xx/3xx completed unless those checks fail; redirects
+failure also fail. Use 2xx/3xx completed unless those checks fail; redirects
 off. Queued jobs older than ten minutes fail safely before dispatch. Unknown
 lease reconciliation uses the same terminal transaction and skips successors.
 
@@ -430,8 +431,8 @@ fenced ticket first; published ticket cannot be orphan-cleaned. Never delete an
 object based on a lagging GSI or missing manifest alone. Reconcile by strong
 base reads. Cleanup must not release reserved bytes while a PUT may still land.
 
-Project deletion is proposed **202 + deletion-operation status**, not current
-contract's synchronous 204:
+Project deletion is accepted **202 + deletion-operation status**, replacing
+the original contract's synchronous 204:
 
 1. One transaction changes P/META active -> deleting, increments version/epoch,
    writes durable drain WORK; retain a minimal P/META tombstone for normal
@@ -483,7 +484,7 @@ may be lost; deletions after this point may reappear." Include table-specific
 times if Control and Protected differ, recovery completion time and evidence
 availability report. S3 is not automatically rolled back with DynamoDB.
 
-Propose seven-day PITR plus a rotating weekly on-demand backup; residuals
+Use seven-day PITR plus a rotating weekly on-demand backup; residuals
 exist until their backup retention ends, and are not project-selectively erased.
 The backup expiry is seven days (about one live copy), not unlimited snapshots. No
 independent cross-restore deletion journal is required. Keep normal-operation
@@ -491,7 +492,7 @@ project tombstones/tickets for coordination, but restoring their earlier state
 can remove them. Present this warning in restore runbooks and user-visible
 stage recovery notice, not as an unqualified permanent-deletion promise.
 
-Before reopening, a **proposed recovery procedure** must:
+Before reopening, the **accepted recovery procedure** must:
 
 1. Close ingress for product writes/polls/uploads, disable queue consumers and
    both fast/scheduled notifications and drain old handlers before cutover.
@@ -544,7 +545,7 @@ is authorized or performed by this draft.
 
 ## Immediate-return polling and monitoring
 
-Propose replacing SSE and 20-second local long-polls with GET status/batch and
+Replace SSE and 20-second local long-polls with GET status/batch and
 immediate 200 status or 204 no local work. Browser polls every two seconds while
 its execution is active (light-budget default ten seconds), jitter ±20%; idle
 visible project every 30 seconds, hidden tab pauses. Stop at terminal/deleted/
@@ -571,6 +572,6 @@ Monitor queue age/DLQ, errors/throttles/duration, unknown outcomes, OUT lag,
 publication/orphan/deletion backlog and logical/physical retained bytes. Use
 safe structured logs (14-day retention), built-in service metrics initially,
 three standard alarms and no high-cardinality custom metrics/tracing. Budget
-alerts/quotas are [proposed only](w1-review-decisions.md#budgets-and-application-quotas).
+alerts/quotas are [accepted design defaults](w1-review-decisions.md#budgets-and-application-quotas), not configured AWS resources.
 Future runtime/fault/race/restore tests are listed in the decision sheet and
 must precede exposing these untested protocols.
