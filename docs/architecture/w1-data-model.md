@@ -5,6 +5,10 @@ schema specification, not SQL migrations. Names are internal snake_case;
 HTTP fields remain lower camelCase and opaque string IDs. See the
 [system design](w1-system-design.md) and [review decisions](w1-review-decisions.md).
 
+Revised from `c311e74`. Dispatch receipts, versioned workflow outputs and the
+locking protocol below are **proposed for Davian Hernandez's review**; no schema
+has been migrated or executor implemented.
+
 ## ERD
 
 The diagram shows durable ownership and principal relationships. Nullable live
@@ -35,6 +39,7 @@ erDiagram
   executions ||--o{ execution_events : reports
   execution_jobs ||--o{ job_secret_bindings : freezes_protected_values
   execution_jobs ||--o| execution_outbox : publishes_cloud_job
+  execution_jobs ||--o| local_result_receipts : accepts_upload_once
   workflows ||--|{ workflow_steps : orders
   workflows o|--o{ workflow_runs : live_association
   workflow_runs ||--|{ workflow_run_steps : freezes_steps
@@ -108,6 +113,10 @@ erDiagram
     text status
     bigint fence
     timestamptz dispatch_intent_at
+    uuid lease_id
+    bytea lease_nonce_hash
+    timestamptz execute_not_after
+    timestamptz lease_deadline
   }
   job_secret_bindings {
     uuid job_id PK,FK
@@ -145,6 +154,19 @@ erDiagram
     timestamptz published_at
     integer publish_attempts
   }
+  local_result_receipts {
+    uuid job_id PK,FK
+    uuid project_id FK
+    uuid execution_id FK,UK
+    uuid accepted_lease_id
+    bigint accepted_fence
+    uuid original_credential_id
+    bytea accepted_nonce_hash
+    text canonicalization_version
+    text hmac_key_id
+    bytea submission_hmac
+    timestamptz accepted_at
+  }
   workflows {
     uuid id PK
     uuid project_id FK
@@ -165,6 +187,9 @@ erDiagram
     uuid live_workflow_id FK
     jsonb frozen_configuration
     text status
+    bigint version
+    integer current_step_position
+    timestamptz expires_at
   }
   workflow_run_steps {
     uuid id PK
@@ -176,7 +201,9 @@ erDiagram
   }
   workflow_runtime_bindings {
     uuid run_id PK,FK
+    uuid producer_step_id PK,FK
     text variable_name PK
+    uuid binding_id UK
     uuid project_id FK
     bytea ciphertext
     bytea wrapped_data_key
@@ -255,7 +282,7 @@ pool identity handling proved before relying on it.
 | `environments`              | Name, revision, `variables jsonb` ordered array; unique enabled variable names within each environment validated on write; secret references replace protected values.                                                                                                                                                                                                    | Mutable; absence means no environment rather than implicit default.                                                                                                                                     |
 | `protected_secrets`         | Stable ID, nullable owning request/environment links with at most one set, binding locator, value revision, ciphertext, nonce/tag, wrapped data key, key ARN, algorithm/version, revoked_at. No plaintext or plaintext fingerprint.                                                                                                                                       | Project-level secrets may have neither child link. Request/environment-scoped rows cascade on child deletion; project secrets survive child deletion. Unique binding locator within the selected scope. |
 | `executions`                | Submitted timestamp, nullable live request/environment/run-step links, nullable `rerun_of_id` SET NULL within project. Captured source IDs/names belong in frozen plan/snapshot, not these live links. Unique non-null run-step association.                                                                                                                              | History anchor owned directly by project. Child-definition deletion clears live associations only.                                                                                                      |
-| `execution_jobs`            | UNIQUE execution_id; target cloud/local; local credential ID when local; status queued/running/completed/failed; frozen_plan, plan schema version/hash, owner-scoped idempotency key/hash, attempt_count, lease_owner/deadline, fence, dispatch_intent_at, started_at/completed_at.                                                                                       | Operational mutable state; plan immutable after enqueue; lease/status updated by narrow procedures. Terminal state cannot reopen.                                                                       |
+| `execution_jobs`            | UNIQUE execution_id; target cloud/local; local credential ID when local; status queued/running/completed/failed; frozen_plan, plan schema version/hash, owner-scoped idempotency key/hash, attempt_count, lease_owner/id/nonce hash/deadline, execute_not_after, fence, dispatch_intent_at, started_at/completed_at.                                                      | Operational mutable state; plan immutable after enqueue; lease/status updated by narrow procedures. Terminal state cannot reopen.                                                                       |
 | `job_secret_bindings`       | PK(job_id, binding_path), source secret ID/revision, encrypted value copied at submission, crypto metadata as above. Source ID is a logical reference, not a cascade FK.                                                                                                                                                                                                  | Runtime-only protected payload; deleted at terminalization or source revocation. Never selected by evidence readers.                                                                                    |
 | `execution_snapshots`       | PK execution_id; evidence version, frozen source IDs/names, target, sanitized resolved request/response, error, timing, assertions, validation results, schema hash/version, redaction version, replay_configuration, sanitized evidence hash. outcome completed/failed; http_status NULL or 100–599; duration_ms >= 0; completed_at NOT NULL >= started_at when present. | Insert once. No UPDATE permission or mutable retention fields. Source identifiers inside the payload are historical strings, not live FKs.                                                              |
 | `execution_retention`       | PK execution_id; pinned default false, pinned_at/by nullable, expires_at nullable until terminal; version for concurrency. At terminal CHECK: pinned implies expires_at NULL, otherwise completed_at + 30 days maintained by procedure.                                                                                                                                   | Mutable retention, independent of snapshot. Pin/unpin never edits evidence.                                                                                                                             |
@@ -265,9 +292,9 @@ pool identity handling proved before relying on it.
 | `openapi_operations`        | Import FK, method/path_template, optional document operationId, schema_bundle JSONB/hash; UNIQUE(import_id, method, path_template). Document operationId uniqueness checked when provided.                                                                                                                                                                                | Immutable operation version. A request's operation link may change; a queued execution captures the schema bundle.                                                                                      |
 | `workflows`                 | Name, revision, stop_on_failure default true.                                                                                                                                                                                                                                                                                                                             | Mutable definition, direct project child.                                                                                                                                                               |
 | `workflow_steps`            | Workflow FK, request FK, positive position, rules JSONB for extraction/expected status/property assertions; UNIQUE(workflow_id, position) deferrable for reordering.                                                                                                                                                                                                      | Request FK RESTRICT; API deletion first removes affected step rows and marks the workflow invalid if fewer than two remain. Workflow deletion cascades definition steps.                                |
-| `workflow_runs`             | Nullable live workflow FK, frozen configuration/revision, status queued/running/completed/failed, failed_step_position, timing, explicit history expires_at.                                                                                                                                                                                                              | Immutable configuration, mutable orchestration. Project-owned; workflow deletion clears live link.                                                                                                      |
-| `workflow_run_steps`        | Run FK, positive position, frozen non-secret plan, status pending/running/completed/failed/skipped, safe assertion/extraction summaries; UNIQUE(run_id, position).                                                                                                                                                                                                        | Frozen steps independent of live definitions. Execution association through executions.run_step_id; no circular mandatory FK.                                                                           |
-| `workflow_runtime_bindings` | PK(run_id, variable_name), encrypted current value and taint flag/crypto metadata. Non-secret extracted values may also use this store for predictable protection.                                                                                                                                                                                                        | Deleted at terminal run, failed lease, or project deletion. Never in run-history outputs.                                                                                                               |
+| `workflow_runs`             | Nullable live workflow FK, frozen configuration/revision, status queued/running/completed/failed, failed_step_position, timing, version/current_step_position, normal history expires_at.                                                                                                                                                                                 | Immutable configuration, mutable orchestration. Project-owned; workflow deletion clears live link.                                                                                                      |
+| `workflow_run_steps`        | Run FK, positive position, frozen non-secret plan, status pending/queued/running/completed/failed/skipped, safe assertion/extraction summaries; UNIQUE(run_id, position).                                                                                                                                                                                                 | Frozen steps independent of live definitions. Execution association through executions.run_step_id; no circular mandatory FK.                                                                           |
+| `workflow_runtime_bindings` | PK(run_id, producer_step_id, variable_name), immutable encrypted extraction version, taint/type/crypto metadata. Next plans reference exact producer versions; all extracted values use protected storage.                                                                                                                                                                | Inserted atomically with successful step finalization; deleted only at terminal run or project deletion. Never in run-history outputs.                                                                  |
 | `local_agent_credentials`   | User FK, opaque credential ID, SHA-256 digest of 256-bit random token, name, created/expires/revoked/last_seen timestamps. Token type prefix supports routing, not authority. UNIQUE token_hash.                                                                                                                                                                          | Raw token returned once. Partial UNIQUE(user_id) WHERE revoked_at IS NULL; expired predecessor revoked transactionally before replacement.                                                              |
 | `mcp_credentials`           | Same random-token hash model, user FK, expiry/revocation, scope read:evidence only.                                                                                                                                                                                                                                                                                       | Separate from agent execution tokens; proposed stdio authentication route needed. Multiple clients allowed.                                                                                             |
 | `mcp_audit_records`         | User FK; nullable project and credential FKs; tool name, bounded correlation ID, safe target ID/type, outcome allowed/denied/error, timestamp, duration. No raw tool arguments or returned evidence.                                                                                                                                                                      | Append only. Project-scoped rows cascade at project deletion; unscoped listing/denied calls retain no project content. Credential deletion SET NULL.                                                    |
@@ -280,6 +307,34 @@ eligible, create its execution/job and transfer/re-encrypt bindings atomically;
 skipped steps get no execution. Destroy unused bindings on run termination,
 source revocation, or project deletion. Index `(project_id, source_secret_id)`.
 This prevents later-step secrets from silently changing during a run.
+
+Prepare ciphertext/rewrapping before opening the finalization transaction, then
+install the prepared next-job bindings atomically after checking run version and
+fence. There is no KMS/network call while holding finalization locks. Runtime
+binding versions have a same-project/run producer-step FK with cascade, an
+index `(project_id, run_id, producer_step_id)`, and no UPDATE capability. Resolve
+variable overrides at advancement by selecting the latest **completed producer**
+in frozen step order, then store exact version references in the next plan.
+Plaintext extraction is never part of a snapshot; protected values are carried
+in the local upload's dedicated execution-runtime envelope if executed locally.
+
+Add UNIQUE(project_id, run_id, id) to run steps and a matching composite producer
+FK on runtime bindings so provenance cannot point to a step from another run.
+Every binding also has an opaque unique binding_id for crypto context/version
+references; user-controlled variable names never enter plaintext KMS context.
+Reject duplicate output variable names within one step's frozen extraction rules.
+
+`local_result_receipts` has project/job/execution cascade FKs; UNIQUE execution_id
+and PK job_id enforce one accepted upload. Require the job/execution pair to
+match via a composite unique key/FK. Accepted lease/fence/nonce hash, original
+credential ID, HMAC key/version/digest and acceptedAt are insert-only. Original
+credential ID is captured metadata, not a mutable live FK. Digest keys remain
+available until receipts referencing them are cleaned up (including pins).
+No payload, extracted value or secret fingerprint is kept in a receipt. The
+receipt HMAC authenticates canonical submission bytes, separately from the
+sanitized evidence hash. The [upload protocol](w1-system-design.md#local-result-creation-versus-duplicate-acknowledgment)
+defines acknowledgment after lease expiry and denial after credential revocation.
+Unknown-outcome reconciler records do not create accepted-upload receipts.
 
 `executions.run_step_id` uses same-project SET NULL on step deletion so run
 summary cleanup cannot remove pinned execution evidence. The job's live local
@@ -346,6 +401,8 @@ OpenAPI 3.x support.
   `(target, status, created_at)` for agent claims; UNIQUE scoped submission
   idempotency key where present. Include project FK index independently.
 - Outbox: partial `(next_publish_at, job_id) WHERE published_at IS NULL`.
+- Receipts: unique execution/job keys; `(hmac_key_id)` for key-retirement checks;
+  direct project FK index. Keep until execution cleanup, not just lease expiry.
 - Retention: partial `(expires_at, execution_id) WHERE pinned = false`.
 - Protected bindings: `(project_id, source_secret_id)` for revocation;
   protected secret owner/scope indexes and uniqueness on locator. No ciphertext
@@ -363,6 +420,28 @@ use revision compare-and-swap; submission reads/locks a consistent revision
 set. Workflow reorder/delete is atomic. Proposed owner-scoped idempotency keys
 live on jobs until history deletion; after expiration replay is not guaranteed.
 
+Add step state `queued` to the proposed pending/running/terminal/skipped CHECK.
+Add a partial UNIQUE(local_credential_id) for running local jobs to enforce one
+unresolved lease per agent; poll checks this under the credential lock and
+returns empty/busy until terminalization. A local claim requires a non-null
+valid credential association even though historical live links may be nulled.
+`workflow_runs.version` and current_step_position change only in the locked
+advancement transaction. UNIQUE executions.run_step_id and UNIQUE jobs.execution_id
+prohibit multiple job identities per step. A run's `expires_at` is its immutable
+normal summary expiry, assigned once at run termination; pin protection is
+derived from linked execution_retention rows, not an independently updated
+counter or an extension to that normal deadline.
+
+Poll commits running state, lease identity/nonce hash, executeNotAfter and
+dispatch intent together before executable delivery. Finalization commits
+snapshot, accepted local receipt where applicable, output binding versions,
+step/job/event/retention state, run advancement and next execution/job/outbox
+in one transaction. Skipped successors have no execution rows. At final run
+termination destroy runtime/unused step bindings in that same transaction.
+Ordinary pre-terminal lease loss is not permission to discard variables for
+later steps; only terminal run finalization deletes them. Unknown lease outcome
+fails the step/run through the same procedure, rather than rescheduling HTTP.
+
 ## Immutability, retention, and deletion
 
 Revoke UPDATE on execution_snapshots and add a defensive reject-update trigger.
@@ -372,15 +451,75 @@ immutability prevents edits, not authorized removal. Execution identity and
 frozen plans are also write-protected after submission. Mutable live links,
 jobs, run progress, and retention occupy separate tables.
 
-Hourly cleanup locks eligible retention rows in batches of 500 using
-`FOR UPDATE SKIP LOCKED`, rechecks pinned/expiry under the same lock, and
-deletes the execution anchor (cascading snapshots, jobs, bindings, outbox,
-events, and retention). Pin/unpin acquires that lock too. A cleanup winner
-makes a concurrent pin return not_found; a pin winner blocks cleanup. UI
-reads filter expired unpinned records immediately even if deletion awaits the
-next batch. Queue/running jobs have no result expiry; stalled-job finalization
-gives failed results a completedAt and normal 30-day expiry. Saved definitions
-and secrets are never execution-cleanup targets.
+Hourly cleanup discovers up to 500 candidate IDs without child-row locks, then
+uses the shared parent-first protocol below. Never lock a retention candidate
+before its project/run. Delete an eligible execution anchor, cascading snapshot,
+job, receipt, bindings, outbox, events and retention. Reads filter expired
+unpinned records immediately, including receipts unavailable through ordinary
+evidence reads. Queue/running jobs have no result expiry; stalled-job
+finalization gives failed results completedAt and the normal 30-day expiry.
+Saved definitions and secrets are never execution-cleanup targets.
+
+### Shared locking and retention transactions
+
+**Proposed for review:** serialize all product state mutations within a project
+using `projects FOR UPDATE`. This deliberately trades per-project write
+concurrency for straightforward MVP correctness. No external I/O is allowed
+inside these transactions. Ordinary authorized reads need not take these locks.
+Read evidence/context from one consistent MVCC view and apply logical expiry;
+generic table writes cannot bypass the gated procedures.
+Use one global order, never upgrade a previously acquired weaker lock:
+
+1. Original local credential FOR UPDATE, only for poll/upload/revocation.
+2. Project rows FOR UPDATE, ascending UUID for multi-project operations.
+3. Workflow-run rows FOR UPDATE, ascending UUID.
+4. Run-step rows FOR UPDATE, ordered by run ID, position, then UUID.
+5. Execution anchors FOR UPDATE, ascending UUID.
+6. Retention rows FOR UPDATE, ascending execution UUID.
+7. Job rows FOR UPDATE, ascending UUID; then receipt/event/outbox/binding writes.
+
+Pre-discover identities with unlocked reads, acquire parents, then revalidate
+relationships/state under locks; retry discovery if relationships changed.
+Acquire sets at each level in that order, not repeated child-first loops.
+Credential revocation locks its credential first, then affected projects/runs
+in sorted order, fences pending jobs and destroys bindings; project deletion
+does not revoke account credentials shared with other projects. If locking
+many projects becomes costly, keep the credential revoked while fencing is
+completed in ordered transactions; every execution path must still reject it.
+
+Cleanup uses SKIP LOCKED on **project gates**, then locks relevant descendants
+in order, rechecks all predicates and uses one fresh server clock value after
+acquiring locks for expiry decisions. Do not use stale transaction-start time
+after waiting. Batches are capped at 500 deletions, grouped by project/run;
+rollback/retry a group on lock timeout. PostgreSQL recommends consistent lock
+ordering to avoid deadlocks; see
+[explicit locking](https://www.postgresql.org/docs/17/explicit-locking.html).
+
+| Operation                | Checks and writes in its transaction                                                                                                                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pin                      | Lock project/run/step/execution/retention in order; require terminal, still-available evidence and required live workflow context. Set pinned=true, expiry=NULL and pin metadata. Existing pin is idempotent. Run protection is derived under the same gate.       |
+| Unpin                    | Same locks; set pinned=false and original completedAt+30 days. If last pin and normal run expiry passed, context becomes eligible only when no other available step needs it; there is no new 30-day grace period. Return retention metadata from this commit.     |
+| Execution cleanup        | Same locks; recheck terminal, unpinned and expired. Clear the run step's live evidence reference and set safe evidenceExpired summary, then delete execution/receipt/body. Preserve required run context without copied bodies.                                    |
+| Workflow-summary cleanup | Lock project/run/steps and linked anchors/retention in order; require terminal run, normal run expiry passed, no pinned steps and no still-available step evidence. Delete only summary/step rows, clearing nullable links; never delete a pinned body indirectly. |
+| Project deletion         | Lock project first, then affected descendants in order; mark deleting, deny writes/claims, fence pending jobs and cascade every project child, including pins, receipts, runs and secrets. Commit before reporting active-store deletion complete.                 |
+
+The project gate stabilizes the linked-retention query; a separate pinned-count
+cache is unnecessary. Run context is effectively retained while any step is
+pinned **or still available**, even if its normal deadline has passed. It
+contains frozen non-secret step order/IDs and safe outcome/assertion summaries,
+not response copies, extracted values or runtime ciphertext. Expired unpinned
+bodies are hidden immediately and cleaned independently while context remains.
+
+Concurrent pin and cleanup linearize at the gated expiry/state recheck. A pin
+on still-eligible evidence that commits first protects its context/body; cleanup
+rechecks and skips it. If evidence/context has expired or cleanup wins deletion,
+pin returns not_found and cannot resurrect rows. Summary cleanup cannot observe
+zero pins midway through a pin transaction. On last unpin after normal run
+expiry, expired body and otherwise-unneeded context become logically unavailable
+at commit; either cleanup ordering later yields the same result. Another
+still-available step continues to protect context, but does not protect the
+expired unpinned body. Project deletion wins by denying later mutation and
+deleting everything regardless of pinning. Snapshots never change in these races.
 
 | Deletion trigger                              | Preserve                                                                                                            | Remove or revoke                                                                                                                                                                                           |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -393,7 +532,8 @@ and secrets are never execution-cleanup targets.
 
 For workflow history, propose unpinned run summaries expire 30 days after run
 completedAt too. A run with any pinned step execution retains its safe run/step
-summaries until the last pin is removed or project deletion. Expired unpinned
+summaries until the last pin is removed, no other available step requires them,
+and normal run expiry has passed, or until project deletion. Expired unpinned
 step bodies still disappear; references must report expiration. This prevents
 workflow storage from bypassing execution retention and requires an explicit
 contract addition. Do not cascade execution deletion to a whole workflow run

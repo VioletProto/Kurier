@@ -6,6 +6,13 @@ routes, tables, and topology below require review before implementation.
 Read alongside the [data model](w1-data-model.md) and
 [decision sheet and contract gaps](w1-review-decisions.md).
 
+Revision baseline: `c311e74` on `docs/w1-architecture-data-model`, with a clean
+working tree. All revised protocols and the
+[monthly cost comparison](w1-review-decisions.md#monthly-development-cost-estimate)
+remain **proposed for Davian Hernandez's review**. Accepted SST/Cognito and
+product security/retention decisions remain distinct. No linked contracts,
+Trello cards, capstone proposal, or accepted ADR are changed by this revision.
+
 ## Source baseline and repository evidence
 
 All three linked sources were read through connected apps:
@@ -150,6 +157,18 @@ can reduce AWS-service egress but cannot replace internet egress for arbitrary
 public API testing. Start with one NAT for the development stage, documenting
 its AZ dependency; production availability requires a separate cost review.
 
+The cheaper proposed alternative places one API and one worker Fargate task
+in public subnets with assigned public IPv4, removes NAT, and keeps RDS private.
+API ingress allows its application port only from the ALB security group;
+worker ingress is closed, including public health access. Restrict egress by
+role, PostgreSQL to the DB security group, and credential/DNS access to required
+runtime endpoints. Keep ECS Exec off; use container health checks for the worker.
+Public addresses increase the consequences of security-group mistakes and
+change on task replacement; they do not provide NAT's stable source address.
+Both topologies require identical application DNS/IP, redirect, proxy, metadata,
+size and timeout protections. This alternative is not acceptance of the spike
+network as production infrastructure.
+
 Separate API, worker, migration, and ECS execution roles. API sends SQS jobs;
 worker receives/deletes/changes visibility on one queue. Allow only stage DB
 credential-secret reads, stage KMS use, and needed bucket prefixes. Migration
@@ -210,8 +229,8 @@ sequenceDiagram
   W->>DB: Commit running event and dispatch intent
   W->>T: One bounded HTTP request
   T-->>W: Status, headers, bounded body
-  W->>W: Sanitize and validate, discard raw buffers
-  W->>DB: Atomic snapshot + terminal status/event + retention, delete protected bindings
+  W->>W: Extract and encrypt runtime values, sanitize and validate, discard raw buffers
+  W->>DB: Atomic snapshot + runtime bindings + step/run state + next job/outbox + terminal event
   W->>Q: Delete message only after commit
   UI->>API: Authenticated SSE with last event ID
   API-->>UI: Minimal status events, fetch sanitized record separately
@@ -252,17 +271,20 @@ sequenceDiagram
    failed and preserves exact status and sanitized response; no response means
    null `httpStatus`. Propose completed for accepted 2xx/3xx unless assertions
    or validation policy fail; disabled redirects leave 3xx visible.
-6. Sanitize before any persistence or telemetry. Atomic finalization inserts
-   exactly one immutable snapshot, updates the mutable job to terminal,
-   initializes 30-day retention, appends terminal event, and destroys protected
-   bindings. Enforce fencing token and unique execution snapshot key. A
-   snapshot conflict accepts only an identical sanitized result hash; a
-   different result is rejected, never overwrites evidence.
+6. Extract workflow values from the bounded raw response **before** sanitizing
+   and discarding it; encrypt runtime values separately. Atomic finalization
+   inserts one sanitized immutable snapshot, terminal job/event and retention,
+   plus workflow outputs, state and next scheduling intent where applicable.
+   Destroy current-job protected bindings; keep run bindings needed by later
+   steps until run termination. Enforce fencing and unique execution/run-step
+   keys. Local duplicates acknowledge a retained acceptance receipt, not an
+   expired live lease; no duplicate overwrites evidence or advances twice.
 7. Acknowledgment happens after commit. If it fails, delivery repeats and finds
    a terminal job. Retry internal pre-dispatch DB/KMS/queue failures with
    exponential jitter, initially 1/2/4 seconds capped at 30 seconds, at most
-   five claims. Start SQS visibility/DB lease at 120 seconds; renew every
-   30 seconds during finalization. Queue long poll is 20 seconds. DLQ after
+   five claims. Start cloud SQS visibility/DB lease at 120 seconds; cloud workers
+   renew every 30 seconds during finalization. Local leases use the fixed
+   120-second window below, with no extension route. Queue long poll is 20 seconds. DLQ after
    five receives, queue retention four days, DLQ fourteen days. A reconciler
    fails stalled queued jobs after ten minutes, cleans bindings, and handles
    exhausted jobs; acknowledge/ignore old identifiers for deleted projects.
@@ -286,6 +308,86 @@ after fencing changes. Inspect Go transport retry behavior and avoid reusable
 connections for the MVP executor so automatic transport retry cannot bypass
 this rule. Target-specific idempotency keys are future opt-in work.
 
+### Local poll is the durable dispatch boundary
+
+**Proposed default: commit dispatch intent before returning an executable local
+job.** No separate start route is proposed. Intent means HTTP **may** have been
+sent, not proof it was sent. Lost polls can therefore produce false unknown
+outcomes; this conservative behavior avoids replay.
+
+In one poll transaction, authenticate/lock the credential, then lock the project
+and optional run using the [shared lock order](w1-data-model.md#shared-locking-and-retention-transactions).
+Verify live owner/project/credential and eligible queued work. Set
+`queued -> running`, increment fence, create random `lease_id` and nonce hash,
+set `lease_deadline = grant_time + 120s`, `execute_not_after = grant_time + 30s`,
+and `dispatch_intent_at = grant_time`. Append execution.running and update
+workflow step/run state where applicable. Commit before returning configuration
+and nonce; recheck revocation before disclosure where possible. Failure to
+deliver/decrypt the envelope after commit must not clear dispatch intent.
+
+The agent executes at most once per received `(jobId, leaseId, fence)` in its
+current process, starts before executeNotAfter, and derives a conservative local
+deadline from serverTime/remaining duration. It never restores executable jobs
+from disk after restart. Repeated polls cannot return an already dispatched
+job again; return empty/busy while that agent's one job remains unresolved.
+
+| Failure boundary                                                          | Durable state and recovery                                                                                                                                                         |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server dies/transaction rolls back before poll commit                     | Job stays queued; no executable envelope was returned, so a later poll may claim.                                                                                                  |
+| Commit succeeds but poll response is lost, or commit outcome is uncertain | Agent sends no HTTP without a complete response. Server reads job state; committed intent stays running and is never reassigned.                                                   |
+| Agent crashes after receipt but before send, or executeNotAfter passes    | Intent remains ambiguous. At lease expiry finalize failed execution_outcome_unknown, with no replacement lease or HTTP retry.                                                      |
+| Agent crashes during/after HTTP or loses result buffer                    | Same unknown finalization; no cloud fallback or reassignment.                                                                                                                      |
+| Agent retains result but upload acknowledgment is lost                    | Retry the same upload packet, never HTTP, under the receipt protocol below.                                                                                                        |
+| Lease expires without accepted result                                     | Reconciler locks/fences and finalizes unknown once; late original results cannot replace it.                                                                                       |
+| Credential revoked                                                        | Serialize against poll/upload, fence pending leases, destroy bindings, and reject future poll/results including acknowledgment retries. Already delivered HTTP cannot be recalled. |
+
+Poll includes leaseId/fence, executeNotAfter, deadline, serverTime and runtime
+configuration. The nonce is stored only as a hash. Revocation after response
+can race device execution: server access stops immediately, but an offline
+device may still use a delivered secret/authorization. Unknown reconciliation
+uses the workflow finalization transaction to fail the step and skip successors.
+
+### Local result creation versus duplicate acknowledgment
+
+Authenticate the currently valid **original** agent credential and owner/project
+on every upload, then check a retained acceptance receipt before applying live
+lease checks. The project-owned receipt (PK job_id, unique execution_id) stores
+accepted lease ID/fence, credential ID, nonce hash, canonicalization version,
+HMAC key ID/digest and acceptedAt. It stores no body or extraction values and
+cascades with execution cleanup/project deletion. Keep its digest key until
+all receipts needing it expire.
+
+The **first** upload requires matching live lease/fence/nonce, unexpired lease,
+running job, active project and valid credential. Atomically insert snapshot
+and receipt, terminal metadata/event/retention, and any workflow advancement.
+Server completion/receipt times are generated once. If commit acknowledgment
+is lost, resolve by querying the receipt rather than executing HTTP again.
+
+An **accepted duplicate** needs the same currently authorized credential and
+retained lease identity/nonce, but does not need an unexpired lease or an active
+job fence. These authorize acknowledgment only. Identical canonical digest
+returns 200 with the original minimal receipt, without evidence writes, events,
+variables or next jobs. Different digest or lease identity returns 409 conflict.
+Revoked/expired credentials return 401 even for identical packets; replacement
+tokens cannot inherit receipt authority. Deleted project/execution/receipt
+returns not_found. No receipt plus expired/fenced lease returns conflict,
+whether or not reconciliation has run. Unknown terminal snapshots have no
+accepted-upload receipt; late uploads never reopen or overwrite them.
+
+Propose RFC 8785 canonical JSON of the validated submitted DTO, authenticated
+with HMAC-SHA-256 over a domain separator, schema version, job/lease identity
+and content. Reject duplicate keys, nonfinite/unsafe numbers, unknown fields
+and unsupported encodings. Define null/absent/default normalization in the
+versioned DTO. Object whitespace/key order is immaterial; array order and body
+text remain significant. Include agent timing and all extracted runtime values;
+exclude server timestamps and server-generated random encryption nonces. The
+private receipt HMAC is separate from the sanitized evidence hash and avoids
+persisting public fingerprints of potentially sensitive values. Further server
+redaction occurs once before snapshot persistence; duplicate comparison needs
+neither old job secrets nor a newly changed sanitizer. The agent retains a
+sanitized packet only in memory for retry; protected extracted values are also
+memory-only, sent over TLS in a dedicated runtime-value write envelope.
+
 ### Reruns and workflows
 
 Reruns copy historical non-secret replay configuration into a **new** job.
@@ -305,6 +407,68 @@ ordinary run JSON contains masks/references. Each executed step gets the same
 immutable snapshot shape. Skipped steps have no invented execution. Changing
 the workflow or request during a run cannot alter its frozen steps.
 
+### Atomic workflow finalization and advancement
+
+**Proposed:** run creation freezes every step and protected binding and creates
+only the first execution/job in one transaction. Step states are
+`pending -> queued -> running -> completed|failed`; untouched successors become
+skipped on failure. Run goes `queued -> running -> completed|failed`. Every
+created job has one execution, unique by run_step_id; skipped steps have none.
+
+Prepare finalization in memory before taking DB locks: parse bounded raw response,
+evaluate assertions/validation and required extraction rules, carry sensitivity
+taint, encrypt extracted values into immutable run-binding versions, sanitize
+snapshot/error/diagnostics, and prepare next-step protected bindings and plan
+references. **Extract before discarding raw buffers** because sanitization may
+mask values needed later. No raw buffers or plaintext extractions enter logs,
+evidence, queues or ordinary run JSON. Local agents perform extraction before
+redaction and submit protected runtime values through the dedicated envelope;
+the server validates/encrypts them rather than trying to recover them from a
+redacted body. Unverifiable sensitive extraction is a trusted-agent limitation,
+not a claim of server replay verification.
+
+Missing required extraction, invalid path/type, failed assertion/HTTP/contract,
+or inability to prepare secure bindings fails the step and skips later steps.
+Precompute crypto/KMS work outside the DB transaction, bounded by the lease;
+carry prepared ciphertext and expected run/job versions into finalization.
+No network/KMS call is made while holding the finalization locks.
+
+In **one PostgreSQL transaction**, using the shared lock order:
+
+1. Recheck active project, valid local credential if applicable, matching fence,
+   unexpired first-result lease, running step/job, expected run version and
+   eligibility/non-revocation of prepared next-step bindings. Reject stale
+   preparation; reprepare without HTTP replay while lease permits, or finalize
+   a fixed safe failure when secure advancement is unavailable.
+2. Insert the immutable execution snapshot and local acceptance receipt if
+   applicable; set job/step terminal state, retention and terminal event.
+3. For a successful step, insert encrypted extraction versions with provenance
+   `(run_id, producer_step_id, variable_name)`. Reference exact versions in the
+   next frozen plan, never a mutable latest-value lookup at worker dispatch.
+4. If another step remains, change it pending -> queued, create its unique
+   execution/job, install prepared protected bindings, and insert cloud outbox
+   intent or a database-pollable local job. Increment run version/current step.
+   Do not send SQS or deliver an executable local job inside this transaction.
+5. For the last successful step, set run completed; on failure set run failed,
+   record failed position and mark successors skipped. Set normal run expiry
+   once, delete all runtime/unused step bindings on terminal run. Delete only
+   the completed job's bindings if the run continues. Commit all or nothing.
+
+Before commit, failure leaves no visible partial snapshot/variables/next job.
+A live process may retry the same prepared transaction within its valid lease,
+without resending HTTP. A process crash that loses the response before commit
+leaves dispatch intent; reconciliation finalizes unknown/failed and schedules
+no successor. After commit, a lost acknowledgment or crash is resolved from
+terminal state/receipt; the committed next job and encrypted versions survive.
+The outbox dispatcher retries publication, and local polling discovers committed
+local jobs. Duplicate wakeups/step-finalizers cannot bypass unique run-step keys
+or fencing, and a terminal duplicate never applies outputs or scheduling again.
+Unknown commit outcomes must be read back before another transaction attempt.
+
+The reconciler, ordinary worker and local upload route use this same
+finalization procedure; no separately committed step-state update or volatile
+callback is allowed to advance the run.
+
 ### Deletion and storage coordination
 
 Project deletion dominates pinning, leases, and all associations. Mark project
@@ -312,6 +476,14 @@ deleting under lock, deny new reads/writes/claims, revoke bindings, and fence
 in-flight jobs; then delete all project rows in a single transaction for the
 bounded PostgreSQL MVP. A request already sent cannot be undone. Late worker
 or local-agent results cannot recreate a deleted project.
+
+Pin/unpin, execution cleanup, workflow-summary cleanup and project deletion
+share the [project-first locking protocol](w1-data-model.md#shared-locking-and-retention-transactions).
+Workflow context remains while any step is pinned or still available, without
+copying response bodies. Last unpin after normal run expiry makes both expired
+evidence and unprotected context logically unavailable at that commit; cleanup
+later removes rows under the same locks. No operation can repin expired evidence
+or resurrect deleted context. A deleting project overrides every pin.
 
 If S3 artifacts are introduced, first fence writes and complete outstanding
 bounded writes, then delete every object/version under the project prefix,
