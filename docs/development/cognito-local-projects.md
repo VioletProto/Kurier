@@ -34,7 +34,11 @@ domain, custom sender or hosted product resources are added.
 `aws-amplify` 6.22.1 / Auth 6.21.1 supports SRP and
 `GetTokensFromRefreshToken`. AWS's [refresh API](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-refresh-token.html)
 works with rotation enabled or disabled. A rotating token keeps the original
-session's remaining lifetime. `ALLOW_REFRESH_TOKEN_AUTH` is deliberately absent.
+session's remaining lifetime. The ten-second rotation grace period allows SDK
+retries when a refresh response is lost, at the cost of accepting the previous
+refresh token during that brief window; it does not extend the one-day session.
+See AWS's [retry grace configuration](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RefreshTokenRotationType.html).
+`ALLOW_REFRESH_TOKEN_AUTH` is deliberately absent.
 All SDK session storage uses shared memory before any authentication call;
 reload requires sign-in. Concurrent refreshes share one promise. An in-flight
 refresh settles before sign-out clears storage; generation checks deny its late
@@ -54,8 +58,12 @@ This session observed account `747336059622`, non-root `davian-admin`, an existi
 version-5 Ohio bootstrap with state/asset buckets and ECR registry. No auth
 pool existed before this task. Deployment created pool `us-east-2_qTDZQT1FE` and
 public client `5jg9sb38i6ae9c0adm5rtdfkno`; readback confirmed Essentials, SRP only,
-no client secret, 15-minute access/ID tokens, one-day rotating refresh with zero
-grace, revocation/enumeration protection and the default branded email sender.
+no client secret, 15-minute access/ID tokens, one-day rotating refresh,
+revocation/enumeration protection and the default branded email sender. The
+initial zero-second rotation grace was subsequently increased to ten seconds
+for refresh retry reliability; SST deployment and AWS client readback confirmed
+the ten-second setting. A lost refresh response was not fault-injected against
+live Cognito.
 The existing version-5 bootstrap was reused. SST added
 `/sst/passphrase/kurier/dev-auth` (SecureString) and app/stage state/link objects
 in its existing state bucket. No new IAM/custom SES resources were planned. Do not modify historical spike stages or unrelated resources.

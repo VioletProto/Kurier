@@ -68,8 +68,11 @@ guarantees. Documented baseline defaults are accepted; runtime validation remain
 
 ## Consequences and alternatives
 
-- Refined light forecast $3.17/month (approximately $3.10 screening estimate),
-  heavy 10k/30-second execution forecast $14.14 including one KMS rotation.
+- Current refined light forecast $3.19/month; heavy 10k/30-second execution
+  forecast $14.19 including one KMS rotation. These incorporate the subsequently
+  accepted Cognito Essentials tier with one-day rotating refresh. The original
+  Lite baseline was $3.17/$14.14 (approximately $3.10 light screening estimate)
+  and remains historical evidence.
   [Assumptions/rates](../architecture/w1-review-decisions.md#monthly-development-cost-estimate)
   are not measured usage or hard caps. Pins, rotation and abuse can exceed $5.
 - DynamoDB requires explicit indexes, owner/reference conditions, item/action

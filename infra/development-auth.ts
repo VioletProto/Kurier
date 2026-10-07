@@ -67,7 +67,9 @@ export async function createDevelopmentAuth() {
         };
         args.refreshTokenRotation = {
           feature: "ENABLED",
-          retryGracePeriodSeconds: 0,
+          // Allow SDK retries after a rotated-token response is lost. The old
+          // token remains usable briefly; the one-day session is not extended.
+          retryGracePeriodSeconds: 10,
         };
         args.enableTokenRevocation = true;
         args.preventUserExistenceErrors = "ENABLED";

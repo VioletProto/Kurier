@@ -68,6 +68,7 @@ describe("development auth resource configuration", () => {
         callbackUrls: [],
         refreshTokenRotation: {
           feature: "ENABLED",
+          retryGracePeriodSeconds: 10,
         },
       });
     },
