@@ -204,10 +204,43 @@ The Vivaldi test project was renamed at version 1, deletion accepted at version 
 and operator cleanup completed. Independent inspection confirmed a deleted
 minimal tombstone at version 4 with the name removed. Davian confirmed deletion in Vivaldi and password-reset email/code confirmation
 followed by successful new-password sign-in. Davian then forced an SDK refresh inside Vivaldi and confirmed success without
-printing tokens. Live resend/invalid-or-expired-code tests and natural
-15-minute/one-day expiry boundaries remain unverified. The Essentials decision is accepted. Delivery/code entry requires
+printing tokens. The subsequent live checks below distinguish invalid codes
+from genuinely expired codes and natural access-token refresh from one-day
+session expiry. The Essentials decision is accepted. Delivery/code entry requires
 Davian's inbox participation. Custom SES/domain verification and public email
 production readiness are explicitly deferred by the development sender choice.
+
+### Live authentication follow-up (2026-10-07)
+
+Davian performed these checks in Vivaldi against the deployed development pool
+and running local app, entering all passwords/codes only in the browser/inbox.
+At his request, both original test users were deleted from the development
+Cognito pool; AWS readback confirmed an empty pool before restarting signup.
+Local application records were not deleted by that Cognito-only cleanup.
+
+| Check                                                           | Actual result                                                                                                    |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Signup email and verification screen                            | Passed with a fresh inbox alias.                                                                                 |
+| Verification resend                                             | Passed: button disabled for the 60-second countdown; replacement email arrived.                                  |
+| Wrong verification code                                         | Passed: clear “The code is invalid or expired. Request a new code and try again.” error; code remained editable. |
+| Correction with replacement verification code                   | Passed: returned to sign-in with “Email verified. Sign in to continue.”                                          |
+| Reset email and screen                                          | Passed: email arrived and new-password screen appeared.                                                          |
+| Wrong reset code                                                | Passed: same clear code error; code/password remained editable.                                                  |
+| Reset correction                                                | Passed: real reset code/new password accepted; subsequent new-password sign-in succeeded.                        |
+| Natural 15-minute access-token refresh and project operations   | Passed: automatic SDK refresh event at 901 seconds; project creation and detail loading succeeded afterward.     |
+| Sign-out clears project data and returns to sign-in             | Passed: returned to sign-in; project list and details disappeared.                                               |
+| Reload while signed in clears project data and requires sign-in | Passed: after re-sign-in and opening the project, reload returned to sign-in and removed project list/details.   |
+| Genuinely expired verification/reset codes                      | Pending; wrong-code tests do not establish expiration behavior.                                                  |
+| One-day refresh/session expiry                                  | Pending; a fifteen-minute access-token check does not establish this boundary.                                   |
+
+For the natural-refresh check, a Console listener observed only Amplify `signedIn`
+and `tokenRefresh` event names and reported elapsed seconds/counts. It did not
+read/log tokens or force refresh. Davian kept the page open beyond fifteen
+minutes with the fifteen-minute access/ID and one-day refresh lifetimes unchanged,
+reported the automatic refresh at 901 seconds, then created and opened
+“Natural refresh check” successfully. These are developer-observed live results,
+not an agent-controlled Vivaldi session or a test of one-day session expiry.
+No additional AWS resources or token-lifetime changes were needed.
 
 A standalone `tsc` over SST imports fails inside generated SST platform types
 and the historical spike's root Pulumi module resolution; it is not a successful
@@ -232,4 +265,5 @@ The Google Docs proposal and API contracts were edited in place and read back:
 Essentials replaces Lite, default development email is distinguished from future
 custom SES readiness, and forecasts are $3.19/$14.19. Trello authentication and
 project cards/checklists record verified progress and retain incomplete live
-resend/code checks. The overall contract-review card remains Doing.
+genuinely expired-code and one-day session-expiry checks. The overall
+contract-review card remains Doing.

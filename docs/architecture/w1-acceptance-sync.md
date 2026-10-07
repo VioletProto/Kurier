@@ -169,6 +169,12 @@ password-reset email/code/new-password sign-in in Vivaldi. Independent local
 inspection verified user provisioning, rename version 1, deletion acceptance
 and name-free completed tombstone. All repository checks and race-enabled
 DynamoDB Local/Chromium fixture integration passed. The project card is Done;
-the Cognito card retains remaining live resend/expired-code checks. Davian also
-confirmed a genuine forced Cognito SDK refresh succeeded inside Vivaldi, with
-no tokens printed. Natural token/session expiry boundaries remain untested.
+the Cognito card retains genuinely expired-code and one-day session-expiry checks.
+Davian also confirmed a genuine forced Cognito SDK refresh succeeded in Vivaldi.
+Subsequent live checks confirmed resend delivery with a disabled 60-second
+cooldown, clear wrong verification/reset code errors with successful correction,
+and automatic refresh at 901 seconds followed by successful project creation
+and detail loading. Sign-out and reload while signed in each returned to sign-in
+and removed project list/details. Tokens were not printed and lifetimes were
+not shortened. Invalid-code and fifteen-minute refresh results do not establish
+genuinely expired-code or one-day session-expiry behavior; those remain pending.
