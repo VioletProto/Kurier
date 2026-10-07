@@ -121,3 +121,56 @@ describe("API origin validation", () => {
     expect(() => validateApiUrl(url)).toThrow();
   });
 });
+
+describe("saved request client outcomes", () => {
+  const configuration = {
+    name: "Public",
+    method: "GET" as const,
+    url: "https://example.com",
+    headers: [],
+    queryParameters: [],
+    body: null,
+    operationRef: null,
+  };
+  it("treats incomplete acknowledged creation as uncertain without retry", async () => {
+    const transport = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: { request: { requestId: "r", revision: 0 } },
+        }),
+        { status: 201, headers: { ETag: '"0"' } },
+      ),
+    );
+    await expect(
+      new Api(vi.fn().mockResolvedValue("fixture"), transport).createRequest(
+        "p",
+        configuration,
+      ),
+    ).rejects.toBeInstanceOf(UncertainWrite);
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+  it("sends explicit clearing and the request revision, and never replays stale writes", async () => {
+    const transport = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ error: { code: "precondition_failed" } }),
+          { status: 412 },
+        ),
+      );
+    await expect(
+      new Api(vi.fn().mockResolvedValue("fixture"), transport).patchRequest(
+        "p",
+        "r",
+        { headers: [], body: null },
+        '"7"',
+      ),
+    ).rejects.toBeInstanceOf(ApiError);
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(transport.mock.calls[0][1]).toMatchObject({
+      method: "PATCH",
+      body: JSON.stringify({ headers: [], body: null }),
+      headers: { "If-Match": '"7"' },
+    });
+  });
+});

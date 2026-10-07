@@ -36,6 +36,10 @@ func s(v string) types.AttributeValue { return &types.AttributeValueMemberS{Valu
 func n(v int64) types.AttributeValue  { return &types.AttributeValueMemberN{Value: fmt.Sprint(v)} }
 func encode(r record) (map[string]types.AttributeValue, error) {
 	item, err := attributevalue.MarshalMap(r)
+	if err == nil && (r.Kind == "request" || r.Kind == "requestTombstone") {
+		item["revision"] = n(r.Revision)
+		delete(item, "version")
+	}
 	if err == nil && r.Operation != nil {
 		item["initiatingVersion"] = n(r.InitiatingVersion)
 	}
@@ -57,7 +61,7 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if err != nil || r.State != "active" || r.RecoveryGeneration == "" || !r.LocalEmptyProjectsOnly {
+	if err != nil || r.State != "active" || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
 		return record{}, unavailable()
 	}
 	return r, nil
@@ -146,7 +150,14 @@ func pause(ctx context.Context, attempt int) error {
 	}
 }
 func (st *Store) stageGuard(stage record) types.TransactWriteItem {
-	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.table), Key: key(stage.PK, "META"), ConditionExpression: aws.String("#state = :active AND recoveryGeneration = :gen AND localEmptyProjectsOnly = :yes"), ExpressionAttributeNames: map[string]string{"#state": "state"}, ExpressionAttributeValues: map[string]types.AttributeValue{":active": s("active"), ":gen": s(stage.RecoveryGeneration), ":yes": &types.AttributeValueMemberBOOL{Value: true}}}}
+	mode := "localEmptyProjectsOnly = :yes"
+	values := map[string]types.AttributeValue{":active": s("active"), ":gen": s(stage.RecoveryGeneration), ":yes": &types.AttributeValueMemberBOOL{Value: true}}
+	if stage.SavedRequestsSchemaVersion == 1 {
+		mode = "savedRequestsSchemaVersion = :requests"
+		delete(values, ":yes")
+		values[":requests"] = n(1)
+	}
+	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.table), Key: key(stage.PK, "META"), ConditionExpression: aws.String("#state = :active AND recoveryGeneration = :gen AND " + mode), ExpressionAttributeNames: map[string]string{"#state": "state"}, ExpressionAttributeValues: values}}
 }
 func (st *Store) userGuard(u record) types.TransactWriteItem {
 	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.table), Key: key(u.PK, "META"), ConditionExpression: aws.String("#version = :v AND (attribute_not_exists(disabled) OR disabled = :no)"), ExpressionAttributeNames: map[string]string{"#version": "version"}, ExpressionAttributeValues: map[string]types.AttributeValue{":v": n(u.Version), ":no": &types.AttributeValueMemberBOOL{Value: false}}}}
@@ -156,9 +167,9 @@ func (st *Store) put(r record, condition string, values map[string]types.Attribu
 	return types.TransactWriteItem{Put: &types.Put{TableName: aws.String(st.table), Item: item, ConditionExpression: aws.String(condition), ExpressionAttributeValues: values}}, err
 }
 func (st *Store) transact(ctx context.Context, actions []types.TransactWriteItem) error {
-	// This slice has at most four small items, far below the accepted 80/2MiB
-	// application budget. Later entities must implement their own byte budgets.
-	if len(actions) > 4 {
+	// CRUD uses four actions; cleanup uses at most 20 key-only deletes plus
+	// stage/gate/checkpoint. Configuration stays <=64 KiB; below 80/2MiB budget.
+	if len(actions) > 24 {
 		return errors.New("slice transaction budget exceeded")
 	}
 	_, err := st.db.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{TransactItems: actions, ClientRequestToken: aws.String(newID())})
@@ -394,6 +405,14 @@ func (st *Store) CleanupProject(ctx context.Context, projectID string) (Deletion
 	work, err := st.get(ctx, r.PK, workKey)
 	if err != nil || work.Kind != "deletionWork" {
 		return DeletionOperation{}, unavailable()
+	}
+	var more bool
+	r, more, err = st.drainRequests(ctx, r, stage, work)
+	if err != nil {
+		return DeletionOperation{}, err
+	}
+	if more {
+		return *r.Operation, conflict()
 	}
 	result, err := st.db.Query(ctx, &dynamodb.QueryInput{TableName: aws.String(st.table), KeyConditionExpression: aws.String("PK = :pk"), ExpressionAttributeValues: map[string]types.AttributeValue{":pk": s(r.PK)}, ConsistentRead: aws.Bool(true), ProjectionExpression: aws.String("PK, SK"), Limit: aws.Int32(3)})
 	if err != nil {

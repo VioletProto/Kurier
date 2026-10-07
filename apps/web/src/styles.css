@@ -180,3 +180,34 @@ footer {
     gap: 0;
   }
 }
+.requests {
+  margin-block: 1rem;
+}
+.request-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: end;
+  padding-block: 0.5rem;
+}
+.request-field label {
+  flex: 1 1 10rem;
+}
+.request-field input[type="checkbox"],
+.requests input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+.requests textarea,
+.requests select {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  color: inherit;
+  background: var(--panel);
+}
+.requests textarea {
+  font-family: monospace;
+  resize: vertical;
+}

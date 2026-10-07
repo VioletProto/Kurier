@@ -221,3 +221,16 @@ still later work. Gateway-native errors outside Go can differ from shared
 application envelopes; application status/error contracts remain unchanged.
 
 See [cloud setup and separately recorded validation](../development/aws-users-projects.md).
+
+## Saved-request continuation (2026-10-07)
+
+The [accepted saved-request slice](saved-requests-contract.md) extends the
+development API/Control table while retaining the routes/ownership/version and
+project deletion semantics above. Request mutations advance the project gate;
+clients must refresh project versions before rename/deletion. Cleanup now drains
+recognized schema-1 REQ requests/tombstones through durable bounded WORK cursors
+before the same strong empty-partition proof. Unknown children remain pending.
+The explicit savedRequestsSchemaVersion=1 capability replaces the historical
+empty-project-only restriction; it never authorizes unsupported children or
+Protected/S3 cleanup. Earlier empty-project test evidence above is historical.
+See [deployment and validation](../development/saved-requests.md).

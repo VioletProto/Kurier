@@ -39,6 +39,18 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 	a.mux.HandleFunc("PATCH /api/v1/projects/{projectId}", a.protected(a.rename))
 	a.mux.HandleFunc("DELETE /api/v1/projects/{projectId}", a.protected(a.delete))
 	a.mux.HandleFunc("GET /api/v1/projects/{projectId}/deletion-operations/{operationId}", a.protected(a.operation))
+	for _, route := range []struct {
+		pattern string
+		handler endpoint
+	}{
+		{"POST /api/v1/projects/{projectId}/requests", a.createRequest},
+		{"GET /api/v1/projects/{projectId}/requests", a.listRequests},
+		{"GET /api/v1/projects/{projectId}/requests/{requestId}", a.detailRequest},
+		{"PATCH /api/v1/projects/{projectId}/requests/{requestId}", a.patchRequest},
+		{"DELETE /api/v1/projects/{projectId}/requests/{requestId}", a.deleteRequest},
+	} {
+		a.mux.HandleFunc(route.pattern, a.protected(route.handler))
+	}
 	return a, nil
 }
 func (a *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +92,9 @@ func (a *Server) protected(next endpoint) http.HandlerFunc {
 func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+	_ = encoder.Encode(data)
 }
 func success(w http.ResponseWriter, status int, data any) {
 	writeJSON(w, status, map[string]any{"data": data})

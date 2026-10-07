@@ -34,32 +34,36 @@ type DeletionOperation struct {
 // record is internal storage, never a response DTO. Omitted fields are removed
 // when the project becomes a minimal tombstone.
 type record struct {
-	PK                     string             `dynamodbav:"PK"`
-	SK                     string             `dynamodbav:"SK"`
-	Kind                   string             `dynamodbav:"kind"`
-	SchemaVersion          int                `dynamodbav:"schemaVersion"`
-	UserID                 string             `dynamodbav:"userId,omitempty"`
-	Issuer                 string             `dynamodbav:"issuer,omitempty"`
-	Subject                string             `dynamodbav:"sub,omitempty"`
-	Disabled               bool               `dynamodbav:"disabled,omitempty"`
-	DisplayName            string             `dynamodbav:"displayName,omitempty"`
-	OwnerID                string             `dynamodbav:"ownerId,omitempty"`
-	ProjectID              string             `dynamodbav:"projectId,omitempty"`
-	Name                   string             `dynamodbav:"name,omitempty"`
-	Version                int64              `dynamodbav:"version"`
-	State                  string             `dynamodbav:"state,omitempty"`
-	CreatedAt              string             `dynamodbav:"createdAt,omitempty"`
-	UpdatedAt              string             `dynamodbav:"updatedAt,omitempty"`
-	DeletionEpoch          int64              `dynamodbav:"deletionEpoch,omitempty"`
-	InitiatingVersion      int64              `dynamodbav:"initiatingVersion,omitempty"`
-	Operation              *DeletionOperation `dynamodbav:"deletionOperation,omitempty"`
-	LPK                    string             `dynamodbav:"LPK,omitempty"`
-	LSK                    string             `dynamodbav:"LSK,omitempty"`
-	DPK                    string             `dynamodbav:"DPK,omitempty"`
-	DSK                    string             `dynamodbav:"DSK,omitempty"`
-	MaintenanceCursor      map[string]string  `dynamodbav:"maintenanceCursor,omitempty"`
-	RecoveryGeneration     string             `dynamodbav:"recoveryGeneration,omitempty"`
-	LocalEmptyProjectsOnly bool               `dynamodbav:"localEmptyProjectsOnly,omitempty"`
+	RequestID                  string             `dynamodbav:"requestId,omitempty"`
+	Revision                   int64              `dynamodbav:"revision,omitempty"`
+	ConfigurationJSON          string             `dynamodbav:"configurationJSON,omitempty"`
+	SavedRequestsSchemaVersion int                `dynamodbav:"savedRequestsSchemaVersion,omitempty"`
+	PK                         string             `dynamodbav:"PK"`
+	SK                         string             `dynamodbav:"SK"`
+	Kind                       string             `dynamodbav:"kind"`
+	SchemaVersion              int                `dynamodbav:"schemaVersion"`
+	UserID                     string             `dynamodbav:"userId,omitempty"`
+	Issuer                     string             `dynamodbav:"issuer,omitempty"`
+	Subject                    string             `dynamodbav:"sub,omitempty"`
+	Disabled                   bool               `dynamodbav:"disabled,omitempty"`
+	DisplayName                string             `dynamodbav:"displayName,omitempty"`
+	OwnerID                    string             `dynamodbav:"ownerId,omitempty"`
+	ProjectID                  string             `dynamodbav:"projectId,omitempty"`
+	Name                       string             `dynamodbav:"name,omitempty"`
+	Version                    int64              `dynamodbav:"version"`
+	State                      string             `dynamodbav:"state,omitempty"`
+	CreatedAt                  string             `dynamodbav:"createdAt,omitempty"`
+	UpdatedAt                  string             `dynamodbav:"updatedAt,omitempty"`
+	DeletionEpoch              int64              `dynamodbav:"deletionEpoch,omitempty"`
+	InitiatingVersion          int64              `dynamodbav:"initiatingVersion,omitempty"`
+	Operation                  *DeletionOperation `dynamodbav:"deletionOperation,omitempty"`
+	LPK                        string             `dynamodbav:"LPK,omitempty"`
+	LSK                        string             `dynamodbav:"LSK,omitempty"`
+	DPK                        string             `dynamodbav:"DPK,omitempty"`
+	DSK                        string             `dynamodbav:"DSK,omitempty"`
+	MaintenanceCursor          map[string]string  `dynamodbav:"maintenanceCursor,omitempty"`
+	RecoveryGeneration         string             `dynamodbav:"recoveryGeneration,omitempty"`
+	LocalEmptyProjectsOnly     bool               `dynamodbav:"localEmptyProjectsOnly,omitempty"`
 }
 
 func (r record) user() User { return User{r.UserID, r.DisplayName, r.CreatedAt} }

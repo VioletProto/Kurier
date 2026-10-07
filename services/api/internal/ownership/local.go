@@ -60,7 +60,7 @@ func InitLocal(ctx context.Context, client *dynamodb.Client, table, stage string
 	if err = dynamodb.NewTableExistsWaiter(client).Wait(ctx, &dynamodb.DescribeTableInput{TableName: aws.String(table)}, 30*time.Second); err != nil {
 		return err
 	}
-	item, err := encode(record{PK: "STAGE#" + stage, SK: "META", Kind: "stage", SchemaVersion: 1, State: "active", RecoveryGeneration: newID(), LocalEmptyProjectsOnly: true})
+	item, err := encode(record{PK: "STAGE#" + stage, SK: "META", Kind: "stage", SchemaVersion: 1, State: "active", RecoveryGeneration: newID(), SavedRequestsSchemaVersion: 1})
 	if err != nil {
 		return err
 	}

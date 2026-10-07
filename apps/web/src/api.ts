@@ -1,4 +1,39 @@
 import { auth, SessionExpired } from "./auth";
+export interface RequestField {
+  name: string;
+  value: string;
+  enabled: boolean;
+  sensitive: false;
+}
+export interface RequestBody {
+  type: "text" | "json";
+  text: string;
+  sensitive: false;
+}
+export interface RequestConfiguration {
+  name: string;
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  url: string;
+  queryParameters: RequestField[];
+  headers: RequestField[];
+  body: RequestBody | null;
+  operationRef: null;
+}
+export interface SavedRequest extends RequestConfiguration {
+  requestId: string;
+  projectId: string;
+  revision: number;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface RequestDetail {
+  request: SavedRequest;
+  etag: string;
+}
+export interface RequestPage {
+  items: SavedRequest[];
+  nextCursor: string | null;
+}
 export interface User {
   userId: string;
   displayName: string;
@@ -34,16 +69,20 @@ export class ApiError extends Error {
   ) {
     super(
       status === 412
-        ? "Project changed. Refresh its details before submitting again."
+        ? "This resource changed. Refresh its details before submitting again."
         : status === 404
-          ? "This project is no longer available."
+          ? "This resource is no longer available."
           : status === 403
             ? "Your account cannot access this resource."
             : status === 409
               ? "Another change is in progress. Refresh before submitting again."
               : status === 429
                 ? "Too many requests. Wait before trying again."
-                : "The API could not complete this request.",
+                : status === 413
+                  ? "Complete saved configuration is limited to 64 KiB, including all fields and JSON overhead."
+                  : status === 400 && code === "validation_failed"
+                    ? "Check the request fields. Use public HTTP(S), public headers/query and valid text/JSON. Credentials and sensitive data cannot be saved."
+                    : "The API could not complete this request.",
     );
   }
 }
@@ -227,6 +266,124 @@ export class Api {
     } catch {
       throw new UncertainWrite();
     }
+  }
+  private requestPath(projectId: string, requestId?: string) {
+    return (
+      "/api/v1/projects/" +
+      encodeURIComponent(projectId) +
+      "/requests" +
+      (requestId ? "/" + encodeURIComponent(requestId) : "")
+    );
+  }
+  private async savedResponse(response: Response): Promise<RequestDetail> {
+    const saved = (await response.json()).data?.request;
+    const etag = response.headers.get("ETag");
+    if (
+      !saved ||
+      typeof saved.requestId !== "string" ||
+      typeof saved.projectId !== "string" ||
+      typeof saved.name !== "string" ||
+      !["GET", "POST", "PUT", "PATCH", "DELETE"].includes(saved.method) ||
+      typeof saved.url !== "string" ||
+      typeof saved.createdAt !== "string" ||
+      typeof saved.updatedAt !== "string" ||
+      !Array.isArray(saved.headers) ||
+      !Array.isArray(saved.queryParameters) ||
+      ![...saved.headers, ...saved.queryParameters].every(
+        (field: RequestField) =>
+          field &&
+          typeof field.name === "string" &&
+          typeof field.value === "string" &&
+          typeof field.enabled === "boolean" &&
+          field.sensitive === false,
+      ) ||
+      saved.operationRef !== null ||
+      (saved.body !== null &&
+        (!saved.body ||
+          !["text", "json"].includes(saved.body.type) ||
+          typeof saved.body.text !== "string" ||
+          saved.body.sensitive !== false)) ||
+      !Number.isSafeInteger(saved.revision) ||
+      saved.revision < 0 ||
+      etag !== `"${saved.revision}"`
+    )
+      throw new Error(
+        "Incomplete request response. Refresh before submitting again.",
+      );
+    return { request: saved, etag };
+  }
+  async listRequests(
+    projectId: string,
+    cursor?: string,
+    signal?: AbortSignal,
+  ): Promise<RequestPage> {
+    return (
+      await (
+        await this.request(
+          this.requestPath(projectId) +
+            "?limit=25" +
+            (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data;
+  }
+  async requestDetail(
+    projectId: string,
+    requestId: string,
+    signal?: AbortSignal,
+  ) {
+    return this.savedResponse(
+      await this.request(
+        this.requestPath(projectId, requestId),
+        "GET",
+        undefined,
+        undefined,
+        signal,
+      ),
+    );
+  }
+  async createRequest(projectId: string, configuration: RequestConfiguration) {
+    const response = await this.request(
+      this.requestPath(projectId),
+      "POST",
+      JSON.stringify(configuration),
+    );
+    try {
+      return await this.savedResponse(response);
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async patchRequest(
+    projectId: string,
+    requestId: string,
+    configuration: Partial<RequestConfiguration>,
+    etag: string,
+  ) {
+    const response = await this.request(
+      this.requestPath(projectId, requestId),
+      "PATCH",
+      JSON.stringify(configuration),
+      etag,
+    );
+    try {
+      return await this.savedResponse(response);
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async deleteRequest(projectId: string, requestId: string, etag: string) {
+    const response = await this.request(
+      this.requestPath(projectId, requestId),
+      "DELETE",
+      undefined,
+      etag,
+    );
+    if (response.status !== 204) throw new UncertainWrite();
   }
   async operation(op: Deletion, signal?: AbortSignal): Promise<Deletion> {
     return (

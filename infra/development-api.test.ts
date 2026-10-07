@@ -99,7 +99,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(8);
+    expect(resources.filter((r) => r.route)).toHaveLength(13);
     const http = resources.find((r) => r.name === "DevelopmentHttpApi")!;
     expect(http.args.cors).toBe(false);
     expect(http.api.corsConfiguration).toBeUndefined();

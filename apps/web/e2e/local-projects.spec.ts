@@ -85,6 +85,116 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   await expect(
     details.getByRole("heading", { name: "Concurrent rename" }),
   ).toBeVisible();
+  const requests = page.getByRole("region", { name: "Saved requests" });
+  await expect(
+    requests.getByText(/64 KiB applies to the complete saved configuration/),
+  ).toBeVisible();
+  await requests
+    .getByRole("button", { name: "New request", exact: true })
+    .click();
+  await requests
+    .getByLabel("Request name", { exact: true })
+    .fill("Public browser request");
+  await requests
+    .getByLabel("Public request URL")
+    .fill("https://example.com/public");
+  await requests.getByLabel("Method", { exact: true }).selectOption("POST");
+  await requests
+    .getByRole("button", { name: "Add header", exact: true })
+    .click();
+  await requests.getByLabel("Header name 1").fill("Accept");
+  await requests.getByLabel("Header value 1").fill("application/json");
+  await requests.getByLabel("Body type").selectOption("json");
+  await requests.getByLabel("Public request body").fill('{ "public": true }');
+  await requests
+    .getByRole("checkbox", { name: /All fields contain public data/ })
+    .check();
+  await requests
+    .getByRole("button", { name: "Create request", exact: true })
+    .click();
+  await expect(
+    requests.getByRole("heading", { name: "Edit request (revision 0)" }),
+  ).toBeVisible();
+  await expect(
+    details.getByRole("button", { name: "Delete project", exact: true }),
+  ).toBeDisabled();
+  await requests.getByRole("button", { name: "Remove header 1" }).click();
+  await requests.getByLabel("Body type").selectOption("none");
+  await requests
+    .getByRole("checkbox", { name: /All fields contain public data/ })
+    .check();
+  await requests.getByRole("button", { name: "Save request changes" }).click();
+  await expect(
+    requests.getByRole("heading", { name: "Edit request (revision 1)" }),
+  ).toBeVisible();
+  await requests
+    .getByRole("button", { name: "Refresh request details" })
+    .click();
+  await expect(requests.getByLabel("Body type")).toHaveValue("none");
+  await expect(requests.getByLabel("Header name 1")).toHaveCount(0);
+  // Commit a request edit while deliberately losing its response. Do not replay.
+  let requestWrites = 0;
+  await page.route(
+    backend + "/api/v1/projects/" + id + "/requests/*",
+    async (route) => {
+      if (route.request().method() !== "PATCH") return route.continue();
+      requestWrites++;
+      await route.fetch();
+      await route.abort("failed");
+    },
+  );
+  await requests
+    .getByLabel("Request name", { exact: true })
+    .fill("Committed request edit");
+  await requests
+    .getByRole("checkbox", { name: /All fields contain public data/ })
+    .check();
+  await requests.getByRole("button", { name: "Save request changes" }).click();
+  await expect(
+    requests.getByRole("button", { name: "Save request changes" }),
+  ).toBeDisabled();
+  await expect(
+    requests.getByLabel("Request name", { exact: true }),
+  ).toHaveValue("Committed request edit");
+  expect(requestWrites).toBe(1);
+  await page.unroute(backend + "/api/v1/projects/" + id + "/requests/*");
+  await requests
+    .getByRole("button", { name: "Refresh request details" })
+    .click();
+  await expect(
+    requests.getByRole("heading", { name: "Edit request (revision 2)" }),
+  ).toBeVisible();
+  await requests
+    .getByRole("button", { name: "Delete request", exact: true })
+    .click();
+  await requests
+    .getByRole("button", { name: "Confirm request deletion" })
+    .click();
+  await expect(
+    requests.getByText("Request deleted.", { exact: true }),
+  ).toBeVisible();
+  // Keep one live request plus the individual tombstone for project cleanup.
+  await requests
+    .getByRole("button", { name: "New request", exact: true })
+    .click();
+  await requests
+    .getByLabel("Request name", { exact: true })
+    .fill("Cascade browser request");
+  await requests
+    .getByLabel("Public request URL")
+    .fill("https://example.com/public");
+  await requests
+    .getByRole("checkbox", { name: /All fields contain public data/ })
+    .check();
+  await requests
+    .getByRole("button", { name: "Create request", exact: true })
+    .click();
+  await expect(
+    requests.getByRole("heading", { name: "Edit request (revision 0)" }),
+  ).toBeVisible();
+  await details
+    .getByRole("button", { name: "Refresh details", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Delete project", exact: true })
     .click();

@@ -646,7 +646,7 @@ func TestIntegrationUncertainCreationIsNotRetriedAndDeletionReadsBack(t *testing
 	if err != nil || repeated.OperationID != op.OperationID || wrapped.calls != 3 {
 		t.Fatal("repeat delete changed operation")
 	}
-	if err = i.store.transact(ctx, make([]types.TransactWriteItem, 5)); err == nil || wrapped.calls != 3 {
+	if err = i.store.transact(ctx, make([]types.TransactWriteItem, 25)); err == nil || wrapped.calls != 3 {
 		t.Fatal("slice transaction budget not enforced before I/O")
 	}
 }
