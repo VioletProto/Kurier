@@ -36,7 +36,8 @@
     "test:infra": "vitest run --config infra/vitest.config.ts",
     "sst:diff:api": "node scripts/sst-auth.mjs diff dev-api",
     "sst:deploy:api": "node scripts/sst-auth.mjs deploy dev-api",
-    "dev:cloud": "node scripts/local-dev.mjs cloud-web"
+    "dev:cloud": "node scripts/local-dev.mjs cloud-web",
+    "test:aws:integration": "node scripts/aws-integration.mjs"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

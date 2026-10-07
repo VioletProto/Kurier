@@ -47,11 +47,11 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 	}
 	st := NewStore(db, table, "dev-api")
 	auth := newAuthFixture(t)
-	alice, err := st.ResolveUser(ctx, verified(t, auth, "aws-alice-"+newID()))
+	alice, err := st.ResolveUser(ctx, verified(t, auth, "alice"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	bob, err := st.ResolveUser(ctx, verified(t, auth, "aws-bob-"+newID()))
+	bob, err := st.ResolveUser(ctx, verified(t, auth, "bob"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,6 +88,14 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 			}
 		}
 	})
+	fixture := &integration{client: db, store: st, auth: auth, alice: alice, bob: bob}
+	fixture.server, err = NewServer(st, auth.verifier, []byte(strings.Repeat("fixture-only", 3)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// exercise uses alice/bob token subjects, matching the fixture users here.
+	projects = append(projects, exerciseSavedRequests(t, fixture)...)
+	projects = nil // shared exercise completed its projects
 	for n := 0; n < 3; n++ {
 		p, e := st.CreateProject(ctx, alice.UserID, "AWS fixture")
 		if e != nil {
@@ -233,7 +241,18 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 	// Leave durable work for the actual minute scheduler/Lambda role.
 	// No manual invocation/cleanup can satisfy this check.
 	scheduled := projects[1]
-	if _, err = st.DeleteProject(ctx, alice.UserID, scheduled.ProjectID, 0); err != nil {
+	live, err := st.CreateRequest(ctx, alice.UserID, scheduled.ProjectID, publicConfiguration())
+	if err != nil {
+		t.Fatal(err)
+	}
+	removed, err := st.CreateRequest(ctx, alice.UserID, scheduled.ProjectID, publicConfiguration())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = st.DeleteRequest(ctx, alice.UserID, scheduled.ProjectID, removed.RequestID, 0); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = st.DeleteProject(ctx, alice.UserID, scheduled.ProjectID, 3); err != nil {
 		t.Fatal(err)
 	}
 	started := time.Now()
@@ -246,7 +265,13 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 			if gate.Operation == nil || gate.Operation.State != "completed" || gate.Name != "" {
 				t.Fatal("invalid scheduled tombstone")
 			}
-			t.Logf("actual scheduled Lambda completed deletion in %s", time.Since(started))
+			if _, e := st.get(ctx, "P#"+scheduled.ProjectID, "REQ#"+live.RequestID); !errors.As(e, &ae) || ae.Status != 404 {
+				t.Fatal("scheduled Lambda did not drain live request")
+			}
+			if _, e := st.get(ctx, "P#"+scheduled.ProjectID, "REQ#"+removed.RequestID); !errors.As(e, &ae) || ae.Status != 404 {
+				t.Fatal("scheduled Lambda did not drain request tombstone")
+			}
+			t.Logf("actual scheduled Lambda drained live request and request tombstone in %s", time.Since(started))
 			break
 		}
 		if time.Since(started) > 90*time.Second {

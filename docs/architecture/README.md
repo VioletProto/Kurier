@@ -91,3 +91,21 @@ only. Davian authorized Cognito default email for development; custom SES
 public-signup readiness remains future work. Davian accepted Essentials with one-day rotating refresh after AWS's
 Lite/rotation feature conflict was verified. See the guide
 for current cloud/email validation gaps; fixture tests are not real Cognito.
+
+## Saved requests continuation
+
+Davian accepted the [saved-request contract](saved-requests-contract.md) on
+2026-10-07, including partial PATCH clearing/whole-collection replacement.
+The authorized public-only request slice implements five additional routes and
+React authoring in the existing development API/Control resources. Credentials
+and user-designated secrets fail closed until encrypted storage/reference
+eligibility exists. Complete normalized saved configuration remains <=64 KiB.
+Request revision CAS and project gate CAS protect writes/deletion.
+
+The explicit savedRequestsSchemaVersion=1 stage capability replaces the legacy
+empty-project-only marker without resetting recovery generation. Scheduled
+cleanup drains recognized requests/tombstones in resumable bounded transactions,
+preserves unknown children and retains the strong whole-partition completion
+proof. Local and actual AWS integration passed; genuine browser status is
+recorded separately in [the development guide](../development/saved-requests.md).
+Execution, Protected, workflows and full cross-store cleanup remain planned.

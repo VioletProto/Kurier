@@ -84,3 +84,36 @@ func TestHTTPAPIV2AdapterRetainsBodyQueryETagAndRejectsMalformedInput(t *testing
 		t.Fatal("invalid URL did not fail safely")
 	}
 }
+
+func TestProxySavedConfigurationTransportAndResponseBounds(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		payload, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(payload)
+	})
+	proxy := proxyHTTPV2(handler)
+	event := events.APIGatewayV2HTTPRequest{Version: "2.0", RawPath: "/api/v1/projects/project/requests", Body: strings.Repeat("<", 128*1024)}
+	event.RequestContext.HTTP.Method = "POST"
+	response, err := proxy(context.Background(), event)
+	if err != nil || response.StatusCode != 200 || !response.IsBase64Encoded {
+		t.Fatal("accepted transport not supported")
+	}
+	decoded, err := base64.StdEncoding.DecodeString(response.Body)
+	if err != nil || string(decoded) != event.Body {
+		t.Fatal("response changed")
+	}
+	event.Body = base64.StdEncoding.EncodeToString([]byte(event.Body))
+	event.IsBase64Encoded = true
+	response, err = proxy(context.Background(), event)
+	if err != nil || response.StatusCode != 200 {
+		t.Fatal("base64 transport rejected")
+	}
+	event.Body = base64.StdEncoding.EncodeToString([]byte(strings.Repeat("x", 128*1024+1)))
+	response, err = proxy(context.Background(), event)
+	if err != nil || response.StatusCode != 413 {
+		t.Fatal("decoded transport bound not enforced")
+	}
+}

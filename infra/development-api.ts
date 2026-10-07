@@ -84,7 +84,7 @@ export async function createDevelopmentApi() {
         version: { N: "0" },
         state: { S: "active" },
         recoveryGeneration: { S: "dev-api-initial-v1" },
-        localEmptyProjectsOnly: { BOOL: true },
+        savedRequestsSchemaVersion: { N: "1" },
       }),
     },
     { ignoreChanges: ["item"] },
@@ -104,6 +104,7 @@ export async function createDevelopmentApi() {
   ];
   const environment = {
     KURIER_STAGE: "dev-api",
+    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "1",
     KURIER_CONTROL_TABLE: control.name,
     KURIER_COGNITO_ISSUER: `https://cognito-idp.us-east-2.amazonaws.com/${poolId}`,
     KURIER_COGNITO_CLIENT_ID: clientId!,
@@ -165,6 +166,11 @@ export async function createDevelopmentApi() {
     "PATCH /api/v1/projects/{projectId}",
     "DELETE /api/v1/projects/{projectId}",
     "GET /api/v1/projects/{projectId}/deletion-operations/{operationId}",
+    "POST /api/v1/projects/{projectId}/requests",
+    "GET /api/v1/projects/{projectId}/requests",
+    "GET /api/v1/projects/{projectId}/requests/{requestId}",
+    "PATCH /api/v1/projects/{projectId}/requests/{requestId}",
+    "DELETE /api/v1/projects/{projectId}/requests/{requestId}",
     "OPTIONS /api/v1/{proxy+}",
   ]) {
     api.route(route, fn.arn);
@@ -178,6 +184,7 @@ export async function createDevelopmentApi() {
     dev: false,
     environment: {
       KURIER_STAGE: "dev-api",
+      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "1",
       KURIER_CONTROL_TABLE: control.name,
       KURIER_MAINTENANCE: "empty-projects",
     },

@@ -5,8 +5,10 @@ to produce immutable, sanitized API-execution evidence that developers and
 coding agents can inspect safely.
 
 This repository contains local and development AWS users/projects DynamoDB
-ownership slices with Cognito browser authentication, plus foundations for later
-services. Request execution and sanitized evidence remain planned.
+ownership slices with Cognito browser authentication and public saved-request
+CRUD/React authoring, plus foundations for later services. Request execution and
+sanitized evidence remain planned. Credentials cannot be saved until encrypted
+secret storage exists. See the [saved-request guide](docs/development/saved-requests.md).
 
 ## Repository layout
 

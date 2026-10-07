@@ -156,3 +156,263 @@ export async function cleanupIsolationProbe(
   const completed = await awaitDeletion(op);
   return { ownerProbeUnchanged: true, finalDeletion: completed.state };
 }
+
+export async function validateCloudSavedRequests() {
+  const user = await api.me();
+  const project = await api.create("Saved-request browser validation");
+  const projectId = project.project.projectId;
+  const configuration: import("./api").RequestConfiguration = {
+    name: "Public browser request",
+    method: "POST",
+    url: "https://example.com/public",
+    queryParameters: [
+      { name: "page", value: "1", enabled: true, sensitive: false },
+    ],
+    headers: [
+      {
+        name: "Accept",
+        value: "application/json",
+        enabled: true,
+        sensitive: false,
+      },
+      { name: "Accept", value: "text/plain", enabled: false, sensitive: false },
+    ],
+    body: { type: "json", text: ' { "public" : true } ', sensitive: false },
+    operationRef: null,
+  };
+  const requests: import("./api").RequestDetail[] = [];
+  for (let n = 0; n < 26; n++) {
+    requests.push(
+      await api.createRequest(projectId, {
+        ...configuration,
+        name: `Public browser request ${n + 1}`,
+      }),
+    );
+    await pause(200);
+  }
+  const probe = requests[0];
+  const detail = await api.requestDetail(projectId, probe.request.requestId);
+  if (
+    detail.request.headers.length !== 2 ||
+    detail.request.body?.text !== configuration.body!.text
+  )
+    throw new Error("Ordered fields/body text changed.");
+  const changed = await api.patchRequest(
+    projectId,
+    detail.request.requestId,
+    { name: "Saved-request isolation probe", headers: [], body: null },
+    detail.etag,
+  );
+  if (
+    changed.request.headers.length ||
+    changed.request.body !== null ||
+    changed.request.method !== "POST" ||
+    changed.request.queryParameters.length !== 1
+  )
+    throw new Error("PATCH replacement/clearing failed.");
+  const stalePatch = await expectDenied(
+    () =>
+      api.patchRequest(
+        projectId,
+        detail.request.requestId,
+        { name: "Stale" },
+        detail.etag,
+      ),
+    412,
+  );
+  const staleDelete = await expectDenied(
+    () => api.deleteRequest(projectId, detail.request.requestId, detail.etag),
+    412,
+  );
+  const credentialRejected = await expectDenied(
+    () =>
+      api.patchRequest(
+        projectId,
+        changed.request.requestId,
+        {
+          headers: [
+            {
+              name: "Authorization",
+              value: "fixture-only",
+              enabled: false,
+              sensitive: false,
+            },
+          ],
+        },
+        changed.etag,
+      ),
+    400,
+  );
+  // Exercise the actual Gateway/Lambda limit boundary, not only Local validation.
+  const boundary = {
+    ...configuration,
+    name: "Complete configuration limit",
+    headers: [],
+    queryParameters: [],
+    body: { type: "text" as const, text: "", sensitive: false as const },
+  };
+  boundary.body.text = "x".repeat(
+    65536 - new TextEncoder().encode(JSON.stringify(boundary)).length,
+  );
+  const large = await api.createRequest(projectId, boundary);
+  const oversizedRejected = await expectDenied(
+    () =>
+      api.patchRequest(
+        projectId,
+        large.request.requestId,
+        {
+          headers: [
+            {
+              name: "Accept",
+              value: "application/json",
+              enabled: true,
+              sensitive: false,
+            },
+          ],
+        },
+        large.etag,
+      ),
+    413,
+  );
+  const verified = await api.requestDetail(projectId, large.request.requestId);
+  if (verified.request.revision !== 0)
+    throw new Error("Rejected oversize changed revision.");
+  await api.deleteRequest(projectId, large.request.requestId, large.etag);
+  await api.deleteRequest(
+    projectId,
+    requests[1].request.requestId,
+    requests[1].etag,
+  );
+  const individuallyDeleted = await expectDenied(
+    () => api.requestDetail(projectId, requests[1].request.requestId),
+    404,
+  );
+  requests.push(
+    await api.createRequest(projectId, {
+      ...configuration,
+      name: "Pagination continuation",
+    }),
+  );
+  let pagination = false;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const first = await api.listRequests(projectId);
+    if (first.nextCursor) {
+      const second = await api.listRequests(projectId, first.nextCursor);
+      const ids = new Set(
+        [...first.items, ...second.items].map((r) => r.requestId),
+      );
+      if (
+        requests
+          .filter((_, n) => n !== 1)
+          .every((r) => ids.has(r.request.requestId))
+      ) {
+        pagination = true;
+        break;
+      }
+    }
+    await pause(1000);
+  }
+  if (!pagination)
+    throw new Error(
+      "Request pagination did not converge; validation project remains for inspection.",
+    );
+  const gate = await api.detail(projectId);
+  const staleProjectDelete = await expectDenied(
+    () => api.delete(projectId, project.etag),
+    412,
+  );
+  return {
+    currentUserId: user.userId,
+    projectId,
+    requestId: changed.request.requestId,
+    requestRevision: changed.request.revision,
+    projectVersion: gate.project.version,
+    publicCreateDetailPatch: "passed",
+    patchClearingAndHeaderReplacement: "passed",
+    stalePatch,
+    staleDelete,
+    credentialRejected,
+    complete64KiBCreate: "passed",
+    oversizedRejected,
+    individuallyDeleted,
+    pagination: "passed",
+    staleProjectDelete,
+    cleanup: "pending owner review/isolation",
+  };
+}
+export async function validateForeignSavedRequest(
+  projectId: string,
+  requestId: string,
+  ownerId: string,
+) {
+  const user = await api.me();
+  if (user.userId === ownerId)
+    throw new Error("Sign in as a different user first.");
+  const publicConfig: import("./api").RequestConfiguration = {
+    name: "Denied",
+    method: "GET",
+    url: "https://example.com",
+    headers: [],
+    queryParameters: [],
+    body: null,
+    operationRef: null,
+  };
+  return {
+    ownerDifferent: true,
+    list: await expectDenied(() => api.listRequests(projectId), 404),
+    create: await expectDenied(
+      () => api.createRequest(projectId, publicConfig),
+      404,
+    ),
+    detail: await expectDenied(
+      () => api.requestDetail(projectId, requestId),
+      404,
+    ),
+    patch: await expectDenied(
+      () => api.patchRequest(projectId, requestId, { name: "Denied" }, '"1"'),
+      404,
+    ),
+    delete: await expectDenied(
+      () => api.deleteRequest(projectId, requestId, '"1"'),
+      404,
+    ),
+  };
+}
+export async function cleanupSavedRequestValidation(
+  projectId: string,
+  requestId: string,
+  ownerId: string,
+) {
+  const user = await api.me();
+  if (user.userId !== ownerId)
+    throw new Error("Sign in as original owner first.");
+  const request = await api.requestDetail(projectId, requestId);
+  if (
+    request.request.name !== "Saved-request isolation probe" ||
+    request.request.revision !== 1 ||
+    request.request.body !== null ||
+    request.request.headers.length
+  )
+    throw new Error("Owner probe changed unexpectedly.");
+  const project = await api.detail(projectId);
+  const operation = await api.delete(projectId, project.etag);
+  const hidden = await expectDenied(
+    () => api.requestDetail(projectId, requestId),
+    404,
+  );
+  // >20 known records need multiple scheduled ticks. No operator invocation.
+  for (let n = 0; n < 90; n++) {
+    const current = await api.operation(operation);
+    if (current.state === "completed")
+      return {
+        ownerProbeUnchanged: true,
+        hiddenAfterAcceptance: hidden,
+        scheduledRequestCleanup: current.state,
+        projectId,
+      };
+    await pause(2000);
+  }
+  throw new Error(
+    "Scheduled request cleanup remains pending after three minutes.",
+  );
+}

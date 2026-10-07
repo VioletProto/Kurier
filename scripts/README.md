@@ -13,3 +13,10 @@ HTTPS endpoint from public SST outputs. `sst-auth.mjs` also bridges the CLI sess
 for `sst:diff:api`/`sst:deploy:api`. `ensure-cursor-key.py` supplies the stable cloud
 cursor key through a Linux memory descriptor to SSM without printing or writing
 the key. See [cloud setup](../docs/development/aws-users-projects.md).
+
+`enable-saved-requests.py` previews and explicitly activates the known-request
+stage capability without resetting recovery generation. It is scoped to the
+existing dev-api table/account or the loopback Local table; AWS application
+requires both handlers' successful deployment markers. `aws-integration.mjs`
+bridges CLI credentials only into the scoped Go test process memory. Run it via
+`npm run test:aws:integration`. See [saved requests](../docs/development/saved-requests.md).

@@ -1,3 +1,4 @@
+import { Requests } from "./Requests";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { auth, authConfigured, authMessage, SessionExpired } from "./auth";
 import {
@@ -495,6 +496,13 @@ function Projects({ onExpired }: { onExpired: () => void }) {
           {detail ? (
             <>
               <h3>{detail.project.name}</h3>
+              <Requests
+                key={detail.project.projectId}
+                projectId={detail.project.projectId}
+                disabled={busy}
+                onExpired={onExpired}
+                onGateChanged={() => setStale(true)}
+              />
               <dl>
                 <dt>Project ID</dt>
                 <dd>{detail.project.projectId}</dd>

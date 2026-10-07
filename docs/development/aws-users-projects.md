@@ -251,3 +251,13 @@ Full cross-store deletion, production signup/SES, restore/recovery, load/throttl
 live response-loss fault injection and full-day Cognito session expiry remain
 untested or out of scope. Existing wrong-code and natural-refresh email evidence
 is in the Cognito guide, not a new validation claim here.
+
+## Saved requests extension (2026-10-07)
+
+The [saved-request guide](saved-requests.md) supersedes the empty-project-only
+implementation description for the current dev-api stage. Five request routes
+and updated API/maintenance packages reuse this inventory and IAM. An explicit
+conditional stage capability migration permits public request writers and
+recognized resumable request cleanup, preserving generation/ownership and the
+whole-partition completion proof. Unknown children still remain pending.
+No cross-store/execution/credential-storage behavior is implied.
