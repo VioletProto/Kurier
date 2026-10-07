@@ -210,8 +210,10 @@ The opt-in check in his real browser passed current-user lookup, 26 creations,
 Cognito access tokens only in the existing memory-only session; no tokens,
 passwords or codes were shared. A second independently signed-in Cognito user
 passed cross-user isolation: the owner differed, the probe was absent from their
-list, and read/rename/delete/operation lookup all returned 404. Final owner probe
-integrity and cleanup remain pending developer participation.
+list, and read/rename/delete/operation lookup all returned 404. The original owner
+then verified the probe name/version remained unchanged and its final deletion
+completed through scheduled cleanup. Actual AWS strong read confirmed a deleted,
+name-free project tombstone. All 26 browser fixture projects are deleted.
 The opt-in browser helper uses the actual memory-only signed-in session:
 
 ```js
