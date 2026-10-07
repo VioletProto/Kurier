@@ -4,8 +4,9 @@ Kurier is an agent-ready API testing and debugging platform. Its core goal is
 to produce immutable, sanitized API-execution evidence that developers and
 coding agents can inspect safely.
 
-This repository contains the first local users/projects DynamoDB ownership
-slice and minimal foundations for later services. It is not a deployed product.
+This repository contains local and development AWS users/projects DynamoDB
+ownership slices with Cognito browser authentication, plus foundations for later
+services. Request execution and sanitized evidence remain planned.
 
 ## Repository layout
 
@@ -27,8 +28,8 @@ slice and minimal foundations for later services. It is not a deployed product.
 
 Follow the [Cognito browser/local projects guide](docs/development/cognito-local-projects.md)
 for development authentication setup, startup, email participation and current
-validation boundaries. Only authentication is eligible for AWS deployment;
-the Go API and DynamoDB stay local.
+validation boundaries. For the completed development AWS API/DynamoDB slice
+with a local frontend, follow the [cloud guide](docs/development/aws-users-projects.md).
 
 After the authorized `dev-auth` deployment:
 
