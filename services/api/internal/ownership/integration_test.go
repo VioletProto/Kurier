@@ -289,31 +289,59 @@ func TestIntegrationConditionalConflictAndDeleteRace(t *testing.T) {
 	i := localIntegration(t)
 	p := i.project(t)
 	start := make(chan struct{})
-	results := make(chan error, 2)
+	type renameResult struct {
+		name string
+		err  error
+	}
+	renames := make(chan renameResult, 2)
 	for _, name := range []string{"A", "B"} {
 		go func(name string) {
 			<-start
 			_, err := i.store.RenameProject(context.Background(), i.alice.UserID, p.ProjectID, name, 0)
-			results <- err
+			renames <- renameResult{name: name, err: err}
 		}(name)
 	}
 	close(start)
 	wins := 0
+	var winner, loser string
 	for n := 0; n < 2; n++ {
-		err := <-results
-		if err == nil {
+		result := <-renames
+		if result.err == nil {
 			wins++
+			winner = result.name
 		} else {
-			assertStatus(t, err, 412)
+			// Contention can be classified before the winner is visible (409).
+			// Once the winning revision is visible, the stale write is 412.
+			var ae *APIError
+			if !errors.As(result.err, &ae) || (ae.Status != 409 && ae.Status != 412) {
+				t.Fatal(result.err)
+			}
+			loser = result.name
 		}
 	}
 	if wins != 1 {
 		t.Fatal("rename did not have one winner")
 	}
+	committed, err := i.store.GetProject(context.Background(), i.alice.UserID, p.ProjectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if committed.Version != 1 || committed.Name != winner {
+		t.Fatalf("unexpected winning revision: %+v", committed)
+	}
+	_, err = i.store.RenameProject(context.Background(), i.alice.UserID, p.ProjectID, loser, 0)
+	assertStatus(t, err, 412)
+	afterRetry, err := i.store.GetProject(context.Background(), i.alice.UserID, p.ProjectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if afterRetry.Version != committed.Version || afterRetry.Name != committed.Name {
+		t.Fatalf("stale retry changed winning revision: %+v", afterRetry)
+	}
 	for attempt := 0; attempt < 5; attempt++ {
 		p = i.project(t)
 		start = make(chan struct{})
-		results = make(chan error, 2)
+		results := make(chan error, 2)
 		go func() {
 			<-start
 			_, err := i.store.RenameProject(context.Background(), i.alice.UserID, p.ProjectID, "Race", 0)

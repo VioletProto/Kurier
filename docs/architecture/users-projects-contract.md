@@ -13,15 +13,15 @@ public and unchanged. Use `/api/v1`, application/json, lower camelCase,
 opaque random UUIDs and server-generated UTC RFC3339 timestamps. Return
 `Cache-Control: no-store`. No caller-controlled owner/user ID.
 
-| Route                                                              | Request                          | Success                                        |
-| ------------------------------------------------------------------ | -------------------------------- | ---------------------------------------------- |
-| GET /api/v1/users/me                                               | None                             | 200 `{data:{user:User}}`                       |
-| POST /api/v1/projects                                              | `{name:"My API"}`                | 201 `{data:{project:Project}}`, Location, ETag |
-| GET /api/v1/projects?limit=25&cursor=…                             | Optional pagination              | 200 `{data:{items:Project[],nextCursor:null    | string}}` |
-| GET /api/v1/projects/{projectId}                                   | None                             | 200 project envelope, ETag                     |
-| PATCH /api/v1/projects/{projectId}                                 | `{name:"Renamed API"}`, If-Match | 200 project envelope, new ETag                 |
-| DELETE /api/v1/projects/{projectId}                                | No body, If-Match                | 202 deletionOperation envelope, Location       |
-| GET /api/v1/projects/{projectId}/deletion-operations/{operationId} | None                             | 200 deletionOperation envelope                 |
+| Route                                                              | Request                          | Success                                                  |
+| ------------------------------------------------------------------ | -------------------------------- | -------------------------------------------------------- |
+| GET /api/v1/users/me                                               | None                             | 200 `{data:{user:User}}`                                 |
+| POST /api/v1/projects                                              | `{name:"My API"}`                | 201 `{data:{project:Project}}`, Location, ETag           |
+| GET /api/v1/projects?limit=25&cursor=…                             | Optional pagination              | 200 `{data:{items:Project[],nextCursor:null \| string}}` |
+| GET /api/v1/projects/{projectId}                                   | None                             | 200 project envelope, ETag                               |
+| PATCH /api/v1/projects/{projectId}                                 | `{name:"Renamed API"}`, If-Match | 200 project envelope, new ETag                           |
+| DELETE /api/v1/projects/{projectId}                                | No body, If-Match                | 202 deletionOperation envelope, Location                 |
+| GET /api/v1/projects/{projectId}/deletion-operations/{operationId} | None                             | 200 deletionOperation envelope                           |
 
 User example:
 
