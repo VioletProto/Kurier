@@ -75,7 +75,15 @@ func runtimeHandler(store *ownership.Store, getenv func(string) string) (http.Ha
 	if err != nil || len(secret) < 32 {
 		return nil, errors.New("base64 cursor signing key of at least 32 bytes required")
 	}
-	return ownership.NewServer(store, verifier, secret)
+	handler, err := ownership.NewServer(store, verifier, secret)
+	if err != nil {
+		return nil, err
+	}
+	origin := getenv("KURIER_FRONTEND_ORIGIN")
+	if origin == "" {
+		origin = "http://localhost:5173"
+	}
+	return ownership.LocalCORS(handler, origin)
 }
 
 func envOrDefault(name, fallback string) string {

@@ -5,7 +5,17 @@
 /* biome-ignore-all lint: auto-generated */
 
 declare module "sst" {
-  export interface Resource {}
+  export interface Resource {
+    DevelopmentAuth: {
+      id: string;
+      type: "sst.aws.CognitoUserPool";
+    };
+    DevelopmentBrowser: {
+      id: string;
+      secret: string;
+      type: "sst.aws.CognitoUserPoolClient";
+    };
+  }
 }
 
 import "sst";

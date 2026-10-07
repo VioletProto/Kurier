@@ -25,18 +25,25 @@ slice and minimal foundations for later services. It is not a deployed product.
 
 ## Setup and development
 
+Follow the [Cognito browser/local projects guide](docs/development/cognito-local-projects.md)
+for development authentication setup, startup, email participation and current
+validation boundaries. Only authentication is eligible for AWS deployment;
+the Go API and DynamoDB stay local.
+
+After the authorized `dev-auth` deployment:
+
 ```sh
-npm install
-cp .env.example .env
-docker compose up -d postgres
-npm run dev
+npm ci
+docker compose -f compose.dynamodb.yml up -d
+npm run dev:api -- -init-local
+# In separate terminals:
+npm run dev:api
+npm run dev:auth
 ```
 
-PostgreSQL above is the historical local/spike foundation, not the accepted
-product store. The API now requires the separate DynamoDB Local setup and
-explicit runtime authentication configuration. Follow [local ownership setup,
-cleanup and tests](docs/development/local-ownership.md); no Cognito provisioning
-or production authentication bypass is included.
+The historical PostgreSQL foundation/spikes remain separate. The
+[local ownership guide](docs/development/local-ownership.md) describes manual
+API configuration, strict JWT verification and operator-only cleanup.
 
 The API defaults to `http://localhost:8080`, the worker health server to
 `http://localhost:8081`, and the local agent to `http://localhost:8082`.

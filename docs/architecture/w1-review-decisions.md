@@ -22,7 +22,7 @@ Deployment, product implementation and AWS mutations are not authorized.
 | Deletion          | Accepted immediate access denial + 202 resumable operation                            | Honest cross-store cleanup and late-PUT handling    | Changes DELETE 204 contract; physical completion may await uncertain writes |
 | Secrets           | Accepted per-stage KMS AES-GCM envelopes, no reveal                                   | Authorized reuse without evidence disclosure        | KMS outages/cost/rotation; local device receives required runtime values    |
 | Retention         | Agreed 30-day unpinned; pins until project deletion. Conditional protocol accepted    | Metadata independent of immutable evidence          | No native TTL for authoritative history; pinned growth requires quotas      |
-| Auth              | Cognito and shared-theme screens **agreed**; Lite/15-minute tokens accepted           | Keep login credentials outside app store            | Offline JWT revocation delay and email-flow checks                          |
+| Auth              | Cognito and shared-theme screens **agreed**; Essentials/15-minute tokens accepted     | Keep login credentials outside app store            | Offline JWT revocation delay and email-flow checks                          |
 
 ## Monthly development cost estimate
 
@@ -37,14 +37,14 @@ measure this product workload: all usage below is an explicit forecast.
 
 Retain the earlier **approximately $3.10/month** light screening estimate.
 Detailed accounting including always-on scheduled maintenance and bootstrap
-allowances refines it to **$3.17/month**, including the fast-notification allowance. This is neither actual billed usage nor
-a $5 hard cap. Heavy use is **$14.14/month**, including one KMS rotation.
+allowances refines it to **$3.19/month**, including the fast-notification allowance. This is neither actual billed usage nor
+a $5 hard cap. Heavy use is **$14.19/month**, including one KMS rotation.
 
 ### Workload and storage assumptions
 
 | Assumption                                 | Light development                                                                                       | Heavier development                                                                                                                                                    |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Active users                               | 2 Cognito Lite MAUs                                                                                     | 5 MAUs                                                                                                                                                                 |
+| Active users                               | 2 Cognito Essentials MAUs                                                                               | 5 MAUs                                                                                                                                                                 |
 | Cloud executions, including workflow steps | 1,000/month; average billed worker 5 s at 512 MiB                                                       | 10,000/month; average billed worker 30 s at 512 MiB                                                                                                                    |
 | API calls                                  | 80,000 at 50 ms/256 MiB                                                                                 | 600,000 at 100 ms/256 MiB                                                                                                                                              |
 | Polling                                    | One browser + one agent, four h/day × 22 days, ten-second base; <=63,360 base polls, other calls in 80k | Two browsers + one agent, eight h/day × 22 days: two-second active browser/ten-second agent, <=696,960 if continuously active; backoff/stops modeled to fit 600k total |
@@ -118,13 +118,13 @@ Everything else is U, including retained index/body/bootstrap storage.
 | Logs + alarms U/F      | [CloudWatch](https://aws.amazon.com/cloudwatch/pricing/): $0.50/GB ingest + $0.03/GB-month storage + $0.005/GB query; three $0.10 standard alarms                      |     $0.35 |      $1.33 |
 | KMS F/U                | [Pricing](https://aws.amazon.com/kms/pricing/): $1/key + $1 first rotation heavy; $0.03/10k symmetric operations × 10k / 100k                                          |     $1.03 |      $2.30 |
 | Secrets Manager F/U    | [Pricing](https://aws.amazon.com/secrets-manager/pricing/): one $0.40 secret + $0.05/10k reads × 1k / 10k                                                              |     $0.41 |      $0.45 |
-| Cognito U              | [Lite](https://aws.amazon.com/cognito/pricing/): $0.0055/MAU × 2 / 5, charge all users                                                                                 |     $0.01 |      $0.03 |
+| Cognito U              | [Essentials](https://aws.amazon.com/cognito/pricing/): $0.015/MAU × 2 / 5, charge all users                                                                            |     $0.03 |      $0.08 |
 | SES U                  | [Pricing](https://aws.amazon.com/ses/pricing/): $0.10/1k emails × 100 / 1000, plus $0.12/GB × 0.002 / 0.02                                                             |     $0.01 |      $0.10 |
 | API/worker egress U    | [Transfer pricing example](https://aws.amazon.com/vpc/pricing/): $0.09/GB × 1 / 20.4; static CloudFront separate                                                       |     $0.09 |      $1.84 |
 | Route 53 F             | [Pricing](https://aws.amazon.com/route53/pricing/): one $0.50 zone, CloudFront/API Gateway alias queries have no query charge                                          |     $0.50 |      $0.50 |
 | Shared bootstrap ECR U | [Pricing](https://aws.amazon.com/ecr/pricing/): $0.10/GB-month × 0.1 / 0.5; S3 bootstrap already included above                                                        |     $0.01 |      $0.05 |
 | Scheduler U            | [EventBridge Scheduler](https://aws.amazon.com/eventbridge/pricing/): $1/m invocations × (43800 minute + 730 hourly)                                                   |     $0.04 |      $0.04 |
-| **Monthly total**      | Light $3.169570251 / heavy $14.14310776 before rounding                                                                                                                | **$3.17** | **$14.14** |
+| **Monthly total**      | Light $3.188570251 / heavy $14.19060776 before rounding                                                                                                                | **$3.19** | **$14.19** |
 
 S3 heavy PUT/LIST count includes 10k evidence uploads, retries/import/static
 writes and 2k orphan/deletion listings. GET count includes authorized evidence
@@ -247,7 +247,7 @@ Manager. [Envelope encryption](https://docs.aws.amazon.com/kms/latest/developerg
 
 ## Authentication and email
 
-Use Cognito Lite explicitly, public SRP-capable app client, 15-minute access
+Use Cognito Essentials explicitly, public SRP-capable app client, 15-minute access
 tokens, one-day rotating refresh session, browser memory storage (not
 localStorage), reauthenticate after reload. Go verifies RS256/key type/kid,
 configured issuer/client_id, token_use=access, exp/issuance with 60-second clock
@@ -410,3 +410,18 @@ deletion, sanitizer, crypto, Cognito/email and restore tests above are **not run
 No SST diff/install/deploy, migration, AWS resource mutation or repeated spike.
 Formatting/links/Mermaid and existing scaffold tests validate documentation and
 repository consistency only, not proposed runtime behavior or measured cost.
+
+## Development authentication amendment
+
+Davian accepted Cognito Essentials on 2026-10-07 because AWS's current feature
+table limits refresh rotation to Essentials/Plus. One-day rotating refresh,
+15-minute access and memory-only tokens/reload sign-in remain accepted. Lite is
+superseded for authentication; historical cost tables describe the original
+forecast unless amended. Essentials increases the 2/5-MAU line from $0.011/
+$0.0275 to $0.03/$0.075 before credits/free tier: +$0.019/$0.0475 monthly.
+The original rounded $3.17/$14.14 forecasts become approximately $3.19/$14.19
+with this tier-only change; these are not measured spend. Davian authorized
+Cognito default email for development; custom verified SES public-signup
+readiness remains deferred. The development slice provisions authentication
+only, with the API/database/browser remaining local. See the
+[development record](../development/cognito-local-projects.md).

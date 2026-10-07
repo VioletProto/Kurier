@@ -78,5 +78,16 @@ definitions remain; no deployment was performed by the ownership task. PostgreSQ
 available through Docker Compose, while an isolated Fargate spike proved
 private RDS PostgreSQL connectivity, secure credential delivery, TLS, and a
 versioned migration. Product services are not connected to PostgreSQL yet.
-Queueing, evidence storage, cloud authentication/email setup and redaction
-remain future work; fixture token verification is not cloud authentication.
+Queueing, evidence storage, public custom-email readiness and redaction remain
+future work. Development Cognito authentication is covered below; fixture token
+verification alone is not cloud authentication.
+
+## Cognito browser/local projects continuation
+
+The [development guide](../development/cognito-local-projects.md) records React
+auth/project integration, local CORS and real browser-to-Go/DynamoDB tests using
+a test-only Cognito fixture. The `dev-auth` SST stage contains authentication
+only. Davian authorized Cognito default email for development; custom SES
+public-signup readiness remains future work. Davian accepted Essentials with one-day rotating refresh after AWS's
+Lite/rotation feature conflict was verified. See the guide
+for current cloud/email validation gaps; fixture tests are not real Cognito.

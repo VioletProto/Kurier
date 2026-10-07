@@ -3,7 +3,9 @@
 This is a Go local HTTP adapter and actual DynamoDB Local subset, not a deployed
 Lambda/SST stage or full database migration. The [accepted contract](../architecture/users-projects-contract.md)
 defines the seven routes. No executor, workflow, protected-secret subsystem,
-S3 evidence, MCP or frontend is implemented by this task.
+S3 evidence or MCP is implemented by this task. The subsequent
+[Cognito browser/local projects continuation](cognito-local-projects.md) adds
+React auth/project UI and local CORS; its guide records cloud/email setup status.
 
 ## Setup
 
@@ -141,8 +143,9 @@ client, token_use=access, subject, required exp/iat, 60-second clock skew,
 five-minute cache, 30-second refresh cooldown, two-second HTTP timeout and bounded
 64 KiB/64-key responses. ID tokens, unknown algorithms and redirects are rejected.
 
-No rate limiter, Cognito provisioning, frontend/CORS integration, protected
-values, object storage, full project cascade or backup recovery is implemented.
+No rate limiter, protected values, object storage, full project cascade or backup
+recovery is implemented. Frontend/CORS integration and the development Cognito
+stage are covered by the subsequent continuation guide.
 This local adapter refuses nonloopback DynamoDB endpoints and stages without the
 empty-project marker; production/cloud support needs a separately authorized
 adapter, IAM and service-level validation. Future child writers require replacing

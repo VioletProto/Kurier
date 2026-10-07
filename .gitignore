@@ -24,3 +24,7 @@ bin/
 infra/spikes/sst-viability/.sst/
 *.sst-state.json
 *.sst-diff.json
+
+# Browser test artifacts (credentials must never be recorded)
+playwright-report/
+test-results/

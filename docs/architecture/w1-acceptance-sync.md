@@ -115,7 +115,7 @@ here. The remaining shape recommendations stay proposed even where behavior is a
 Documentation validation and external readback are separate from future runtime
 tests. The accepted decision sheet's fault/race/restore/security tests remain
 unperformed; historical spike tests do not cover Lambda/DynamoDB/S3 protocols.
-Cost forecasts stay $3.17 light / $14.14 heavy with existing usage/rate assumptions,
+At baseline synchronization, forecasts were $3.17 light / $14.14 heavy with the original usage/rate assumptions,
 rotation and bootstrap caveats, not a hard cap or measured usage.
 
 Checks actually run for acceptance synchronization:
@@ -150,3 +150,25 @@ was performed. Acceptance is not evidence that those future checks pass.
 
 After remaining interface agreement, the smallest separately authorized task is
 the local users/projects DynamoDB ownership slice, not executor/deployment work.
+
+## Browser/local authentication continuation
+
+Davian authorized development Cognito through SST and browser users/projects
+integration on 2026-10-07. The API and DynamoDB remain local. After checking
+AWS documentation, he accepted Essentials instead of Lite, preserving one-day
+rotating refresh and memory-only browser sessions, and authorized Cognito
+default email for development. Public custom SES sender readiness is deferred.
+See the [development record](../development/cognito-local-projects.md) for
+resource/readback, validation, email participation and incremental costs.
+The full contract-review card remains Doing; this changes auth configuration,
+not the accepted seven users/projects routes or later-slice interfaces.
+
+SST preview/deployment/readback and final no-change diff passed. Davian completed
+genuine signup/verified sign-in, project create/list/detail/rename/delete and
+password-reset email/code/new-password sign-in in Vivaldi. Independent local
+inspection verified user provisioning, rename version 1, deletion acceptance
+and name-free completed tombstone. All repository checks and race-enabled
+DynamoDB Local/Chromium fixture integration passed. The project card is Done;
+the Cognito card retains remaining live resend/expired-code checks. Davian also
+confirmed a genuine forced Cognito SDK refresh succeeded inside Vivaldi, with
+no tokens printed. Natural token/session expiry boundaries remain untested.

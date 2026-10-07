@@ -13,3 +13,9 @@ The isolated Fargate/RDS services under `infra/spikes` and root SST configuratio
 are historical experiments, not the serverless product definition. Preserve
 their [spike evidence](../docs/spikes/sst-viability.md); do not repeat the spikes
 or interpret successful experiments as runtime validation of the accepted model.
+
+The separately authorized `dev-auth` stage is the development authentication
+subset in [development-auth.ts](development-auth.ts). It creates a user pool and
+public browser client only; API/database/frontend remain local. The
+[development guide](../docs/development/cognito-local-projects.md) records the
+required session decision, default development sender and deployment checks.

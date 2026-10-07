@@ -1,0 +1,233 @@
+import { auth, SessionExpired } from "./auth";
+export interface User {
+  userId: string;
+  displayName: string;
+  createdAt: string;
+}
+export interface Project {
+  projectId: string;
+  name: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface ProjectDetail {
+  project: Project;
+  etag: string;
+}
+export interface Page {
+  items: Project[];
+  nextCursor: string | null;
+}
+export interface Deletion {
+  projectId: string;
+  operationId: string;
+  state: string;
+  startedAt: string;
+  completedAt: string | null;
+  retryAfterSeconds: number;
+}
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+  ) {
+    super(
+      status === 412
+        ? "Project changed. Refresh its details before submitting again."
+        : status === 404
+          ? "This project is no longer available."
+          : status === 403
+            ? "Your account cannot access this resource."
+            : status === 409
+              ? "Another change is in progress. Refresh before submitting again."
+              : status === 429
+                ? "Too many requests. Wait before trying again."
+                : "The local API could not complete this request.",
+    );
+  }
+}
+export class UncertainWrite extends Error {
+  constructor() {
+    super(
+      "The result is uncertain. Refresh the project list or details before submitting another change.",
+    );
+  }
+}
+const base = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8080";
+const url = new URL(base);
+if (
+  url.protocol !== "http:" ||
+  !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) ||
+  !url.port ||
+  url.username ||
+  url.password ||
+  url.pathname !== "/" ||
+  url.search ||
+  url.hash
+)
+  throw new Error("The API URL must be a local HTTP origin with port.");
+
+export class Api {
+  constructor(
+    private token = auth.token,
+    private transport: typeof fetch = (...args) => fetch(...args),
+  ) {}
+  private async request(
+    path: string,
+    method = "GET",
+    body?: string,
+    etag?: string,
+    signal?: AbortSignal,
+    refreshed = false,
+  ): Promise<Response> {
+    const token = await this.token(refreshed);
+    let response: Response;
+    try {
+      response = await this.transport(base + path, {
+        method,
+        body,
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(10000)])
+          : AbortSignal.timeout(10000),
+        credentials: "omit",
+        cache: "no-store",
+        redirect: "error",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+          ...(etag ? { "If-Match": etag } : {}),
+        },
+      });
+    } catch {
+      if (method !== "GET") throw new UncertainWrite();
+      throw new Error("Cannot reach the local API. Check that it is running.");
+    }
+    if (response.status === 401) {
+      // Retry only reads. A creation is never resubmitted, including on 401.
+      if (method === "GET" && !refreshed)
+        return this.request(path, method, body, etag, signal, true);
+      throw new SessionExpired();
+    }
+    if (!response.ok) {
+      if (method !== "GET" && response.status >= 500)
+        throw new UncertainWrite();
+      const payload = await response.json().catch(() => ({}));
+      throw new ApiError(
+        response.status,
+        payload.error?.code ?? "invalid_response",
+      );
+    }
+    return response;
+  }
+  private async detailResponse(response: Response): Promise<ProjectDetail> {
+    try {
+      const data = (await response.json()).data;
+      const etag = response.headers.get("ETag");
+      if (
+        !etag ||
+        !/^"(0|[1-9][0-9]*)"$/.test(etag) ||
+        etag !== `"${data.project.version}"`
+      )
+        throw new Error();
+      return { project: data.project, etag };
+    } catch {
+      throw new Error(
+        "The API returned an incomplete project response. Refresh before submitting again.",
+      );
+    }
+  }
+  async me(signal?: AbortSignal): Promise<User> {
+    return (
+      await (
+        await this.request(
+          "/api/v1/users/me",
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data.user;
+  }
+  async list(cursor?: string, signal?: AbortSignal): Promise<Page> {
+    return (
+      await (
+        await this.request(
+          "/api/v1/projects?limit=25" +
+            (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data;
+  }
+  async detail(id: string, signal?: AbortSignal) {
+    return this.detailResponse(
+      await this.request(
+        "/api/v1/projects/" + encodeURIComponent(id),
+        "GET",
+        undefined,
+        undefined,
+        signal,
+      ),
+    );
+  }
+  async create(name: string) {
+    const response = await this.request(
+      "/api/v1/projects",
+      "POST",
+      JSON.stringify({ name }),
+    );
+    try {
+      return await this.detailResponse(response);
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async rename(id: string, name: string, etag: string) {
+    const response = await this.request(
+      "/api/v1/projects/" + encodeURIComponent(id),
+      "PATCH",
+      JSON.stringify({ name }),
+      etag,
+    );
+    try {
+      return await this.detailResponse(response);
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async delete(id: string, etag: string): Promise<Deletion> {
+    const response = await this.request(
+      "/api/v1/projects/" + encodeURIComponent(id),
+      "DELETE",
+      undefined,
+      etag,
+    );
+    try {
+      return (await response.json()).data.deletionOperation;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async operation(op: Deletion, signal?: AbortSignal): Promise<Deletion> {
+    return (
+      await (
+        await this.request(
+          "/api/v1/projects/" +
+            encodeURIComponent(op.projectId) +
+            "/deletion-operations/" +
+            encodeURIComponent(op.operationId),
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data.deletionOperation;
+  }
+}
+export const api = new Api();

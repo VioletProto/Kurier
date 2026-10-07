@@ -24,10 +24,16 @@
     "sst:install:db": "sst install --stage db-viability",
     "sst:remove:db": "sst remove --stage db-viability",
     "sst:state:list:db": "sst state list --stage db-viability",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present && npm run test:infra",
     "verify": "npm run format:check && npm run lint && npm run test && npm run build && npm run verify:go",
     "verify:go": "set -e; for service in services/api services/worker services/local-agent infra/spikes/sst-viability/service infra/spikes/sst-db-viability/service; do (cd \"$service\" && go test ./... && go vet ./...); done",
-    "test:ownership:integration": "cd services/api && go test -race -tags=integration -count=1 ./..."
+    "test:ownership:integration": "cd services/api && go test -race -tags=integration -count=1 ./...",
+    "test:browser:integration": "cd services/api && go test -race -tags=integration,browser -run TestIntegrationBrowserProjects -count=1 ./internal/ownership",
+    "sst:diff:auth": "node scripts/sst-auth.mjs diff",
+    "sst:deploy:auth": "node scripts/sst-auth.mjs deploy",
+    "dev:api": "node scripts/local-dev.mjs api",
+    "dev:auth": "node scripts/local-dev.mjs web",
+    "test:infra": "vitest run --config infra/vitest.config.ts"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
