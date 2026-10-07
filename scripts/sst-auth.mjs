@@ -1,8 +1,11 @@
 // Bridge AWS CLI login sessions to SST's AWS SDK without writing credentials.
 import { spawn, spawnSync } from "node:child_process";
 const operation = process.argv[2];
-if (!["diff", "deploy"].includes(operation))
-  throw new Error("Choose diff or deploy.");
+const stage = process.argv[3] ?? "dev-auth";
+if (!["dev-auth", "dev-api"].includes(stage))
+  throw new Error("Choose dev-auth or dev-api.");
+if (!["diff", "deploy", "refresh"].includes(operation))
+  throw new Error("Choose diff, deploy or refresh.");
 const account = process.env.KURIER_AWS_ACCOUNT_ID;
 if (!/^\d{12}$/.test(account ?? ""))
   throw new Error("Set the intended KURIER_AWS_ACCOUNT_ID.");
@@ -41,11 +44,11 @@ for (const [source, target] of [
 }
 if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY)
   throw new Error("No usable AWS CLI session; refusing SST.");
-const child = spawn(
-  "npm",
-  ["exec", "--", "sst", operation, "--stage", "dev-auth"],
-  { cwd: new URL("../", import.meta.url), env, stdio: "inherit" },
-);
+const child = spawn("npm", ["exec", "--", "sst", operation, "--stage", stage], {
+  cwd: new URL("../", import.meta.url),
+  env,
+  stdio: "inherit",
+});
 for (const signal of ["SIGINT", "SIGTERM"])
   process.on(signal, () => child.kill(signal));
 child.on("error", () => {

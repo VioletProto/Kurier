@@ -43,7 +43,7 @@ export class ApiError extends Error {
               ? "Another change is in progress. Refresh before submitting again."
               : status === 429
                 ? "Too many requests. Wait before trying again."
-                : "The local API could not complete this request.",
+                : "The API could not complete this request.",
     );
   }
 }
@@ -54,19 +54,32 @@ export class UncertainWrite extends Error {
     );
   }
 }
-const base = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8080";
-const url = new URL(base);
-if (
-  url.protocol !== "http:" ||
-  !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) ||
-  !url.port ||
-  url.username ||
-  url.password ||
-  url.pathname !== "/" ||
-  url.search ||
-  url.hash
-)
-  throw new Error("The API URL must be a local HTTP origin with port.");
+export function validateApiUrl(base: string): string {
+  const url = new URL(base);
+  const local =
+    url.protocol === "http:" &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
+    !!url.port;
+  const cloud =
+    url.protocol === "https:" &&
+    !url.port &&
+    /^[a-z0-9]+\.execute-api\.us-east-2\.amazonaws\.com$/.test(url.hostname);
+  if (
+    (!local && !cloud) ||
+    url.username ||
+    url.password ||
+    url.pathname !== "/" ||
+    url.search ||
+    url.hash
+  )
+    throw new Error(
+      "The API URL must be a local HTTP origin with port or the development HTTPS API Gateway origin.",
+    );
+  return url.origin;
+}
+const base = validateApiUrl(
+  import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8080",
+);
 
 export class Api {
   constructor(
@@ -101,7 +114,9 @@ export class Api {
       });
     } catch {
       if (method !== "GET") throw new UncertainWrite();
-      throw new Error("Cannot reach the local API. Check that it is running.");
+      throw new Error(
+        "Cannot reach the API. Check your connection and API configuration.",
+      );
     }
     if (response.status === 401) {
       // Retry only reads. A creation is never resubmitted, including on 401.

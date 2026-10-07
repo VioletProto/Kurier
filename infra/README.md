@@ -19,3 +19,8 @@ subset in [development-auth.ts](development-auth.ts). It creates a user pool and
 public browser client only; API/database/frontend remain local. The
 [development guide](../docs/development/cognito-local-projects.md) records the
 required session decision, default development sender and deployment checks.
+
+The authorized `dev-api` stage in [development-api.ts](development-api.ts) adds
+the retained on-demand Control table/indexes, ARM64 Go API/HTTP API and scheduled
+empty-project maintenance. It reads the existing development Cognito pool; the
+frontend remains local. See [deployment, cost and validation](../docs/development/aws-users-projects.md).

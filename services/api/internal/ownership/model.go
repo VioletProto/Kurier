@@ -55,6 +55,9 @@ type record struct {
 	Operation              *DeletionOperation `dynamodbav:"deletionOperation,omitempty"`
 	LPK                    string             `dynamodbav:"LPK,omitempty"`
 	LSK                    string             `dynamodbav:"LSK,omitempty"`
+	DPK                    string             `dynamodbav:"DPK,omitempty"`
+	DSK                    string             `dynamodbav:"DSK,omitempty"`
+	MaintenanceCursor      map[string]string  `dynamodbav:"maintenanceCursor,omitempty"`
 	RecoveryGeneration     string             `dynamodbav:"recoveryGeneration,omitempty"`
 	LocalEmptyProjectsOnly bool               `dynamodbav:"localEmptyProjectsOnly,omitempty"`
 }

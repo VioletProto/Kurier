@@ -15,6 +15,10 @@ import (
 )
 
 func main() {
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
+		cloudMain()
+		return
+	}
 	initLocal := flag.Bool("init-local", false, "initialize the loopback-only DynamoDB Local subset")
 	cleanup := flag.String("cleanup-project", "", "resume empty-project deletion locally")
 	flag.Parse()

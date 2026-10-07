@@ -267,3 +267,11 @@ custom SES readiness, and forecasts are $3.19/$14.19. Trello authentication and
 project cards/checklists record verified progress and retain incomplete live
 genuinely expired-code and one-day session-expiry checks. The overall
 contract-review card remains Doing.
+
+## Cloud users/projects continuation
+
+The separately authorized development slice now has an SST `dev-api` Control
+table/ARM64 Go Lambda/HTTP API and scheduled empty-project cleanup while React
+stays local. The existing Essentials pool/public client remains unchanged.
+Use `npm run dev:cloud`; use `dev:auth` with `dev:api` for the preserved local
+adapter. See [cloud instructions, costs and separate validation evidence](aws-users-projects.md).

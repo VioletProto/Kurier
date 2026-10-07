@@ -306,7 +306,7 @@ func (st *Store) DeleteProject(ctx context.Context, userID, projectID string, ex
 		return DeletionOperation{}, unavailable()
 	}
 	gate := types.TransactWriteItem{Update: &types.Update{TableName: aws.String(st.table), Key: key(r.PK, "META"), UpdateExpression: aws.String("SET #state = :deleting, #version = :next, deletionEpoch = :epoch, initiatingVersion = :v, deletionOperation = :op REMOVE LPK, LSK"), ConditionExpression: aws.String("ownerId = :owner AND #state = :active AND #version = :v"), ExpressionAttributeNames: map[string]string{"#state": "state", "#version": "version"}, ExpressionAttributeValues: map[string]types.AttributeValue{":deleting": s("deleting"), ":next": n(expected + 1), ":epoch": n(r.DeletionEpoch + 1), ":v": n(expected), ":op": opItem, ":owner": s(userID), ":active": s("active")}}}
-	work, err := st.put(record{PK: r.PK, SK: "WORK#delete#" + op.OperationID, Kind: "deletionWork", SchemaVersion: 1, ProjectID: projectID}, "attribute_not_exists(PK)", nil)
+	work, err := st.put(record{PK: r.PK, SK: "WORK#delete#" + op.OperationID, Kind: "deletionWork", SchemaVersion: 1, ProjectID: projectID, DPK: cleanupShard(projectID), DSK: op.StartedAt + "#" + op.OperationID}, "attribute_not_exists(PK)", nil)
 	if err != nil {
 		return DeletionOperation{}, unavailable()
 	}
@@ -370,7 +370,8 @@ func (st *Store) markDeleting(ctx context.Context, r, stage record) (record, err
 	return r, nil
 }
 
-// CleanupProject is an operator-only local command, not an eighth API route.
+// CleanupProject is used by local maintenance and scheduled cloud maintenance,
+// never exposed as an eighth API route.
 // It never drains unknown entities. All participating writers must use gate CAS;
 // arbitrary administrator writes outside that protocol cannot be fenced here.
 func (st *Store) CleanupProject(ctx context.Context, projectID string) (DeletionOperation, error) {

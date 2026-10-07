@@ -118,3 +118,6 @@ The [accepted users/projects contract](docs/architecture/users-projects-contract
 records the subsequently authorized local subset, not hosted validation.
 See the [acceptance and synchronization record](docs/architecture/w1-acceptance-sync.md)
 for external-document updates and remaining proposed interface choices.
+
+For the authorized development AWS users/projects slice with a local frontend,
+see [cloud startup and validation](docs/development/aws-users-projects.md).

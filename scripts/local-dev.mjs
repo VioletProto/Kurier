@@ -4,7 +4,8 @@ import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 
 const [mode, ...args] = process.argv.slice(2);
-if (!["api", "web"].includes(mode)) throw new Error("Choose api or web.");
+if (!["api", "web", "cloud-web"].includes(mode))
+  throw new Error("Choose api, web or cloud-web.");
 let outputs;
 try {
   outputs = JSON.parse(
@@ -16,7 +17,7 @@ try {
   );
 }
 if (
-  outputs.stage !== "dev-auth" ||
+  !["dev-auth", "dev-api"].includes(outputs.stage) ||
   outputs.region !== "us-east-2" ||
   !/^us-east-2_[A-Za-z0-9]+$/.test(outputs.cognitoUserPoolId ?? "") ||
   !/^[a-z0-9]+$/.test(outputs.cognitoClientId ?? "") ||
@@ -24,10 +25,19 @@ if (
     `https://cognito-idp.us-east-2.amazonaws.com/${outputs.cognitoUserPoolId}`
 )
   throw new Error(
-    "Expected public outputs from the dev-auth stage, not a historical spike.",
+    "Expected public outputs from a development auth/API stage, not a historical spike.",
   );
+if (
+  mode === "cloud-web" &&
+  (outputs.stage !== "dev-api" ||
+    !/^https:\/\/[a-z0-9]+\.execute-api\.us-east-2\.amazonaws\.com$/.test(
+      outputs.apiUrl ?? "",
+    ))
+)
+  throw new Error("Deploy dev-api first; valid cloud API outputs required.");
 const origin = new URL(
-  process.env.KURIER_FRONTEND_ORIGIN ?? "http://localhost:5173",
+  process.env.KURIER_FRONTEND_ORIGIN ??
+    (mode === "cloud-web" ? outputs.frontendOrigin : "http://localhost:5173"),
 );
 if (
   origin.protocol !== "http:" ||
@@ -40,6 +50,10 @@ if (
   origin.hash
 )
   throw new Error("Use a loopback frontend origin with an explicit port.");
+if (mode === "cloud-web" && origin.origin !== outputs.frontendOrigin)
+  throw new Error(
+    "The frontend origin must match the deployed API CORS origin; preview/deploy to change it.",
+  );
 const env = {
   ...process.env,
   KURIER_DYNAMODB_ENDPOINT:
@@ -54,8 +68,11 @@ const env = {
     process.env.KURIER_CURSOR_KEY_BASE64 ?? randomBytes(32).toString("base64"),
   VITE_COGNITO_USER_POOL_ID: outputs.cognitoUserPoolId,
   VITE_COGNITO_CLIENT_ID: outputs.cognitoClientId,
-  VITE_API_URL: `http://127.0.0.1:${process.env.PORT ?? "8080"}`,
-  VITE_KURIER_STAGE: "local",
+  VITE_API_URL:
+    mode === "cloud-web"
+      ? outputs.apiUrl
+      : `http://127.0.0.1:${process.env.PORT ?? "8080"}`,
+  VITE_KURIER_STAGE: mode === "cloud-web" ? "dev-api" : "local",
 };
 const root = new URL("../", import.meta.url);
 const child =

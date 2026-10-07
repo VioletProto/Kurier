@@ -33,7 +33,10 @@
     "sst:deploy:auth": "node scripts/sst-auth.mjs deploy",
     "dev:api": "node scripts/local-dev.mjs api",
     "dev:auth": "node scripts/local-dev.mjs web",
-    "test:infra": "vitest run --config infra/vitest.config.ts"
+    "test:infra": "vitest run --config infra/vitest.config.ts",
+    "sst:diff:api": "node scripts/sst-auth.mjs diff dev-api",
+    "sst:deploy:api": "node scripts/sst-auth.mjs deploy dev-api",
+    "dev:cloud": "node scripts/local-dev.mjs cloud-web"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

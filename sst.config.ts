@@ -1,6 +1,11 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
-const allowedStages = ["viability", "db-viability", "dev-auth"] as const;
+const allowedStages = [
+  "viability",
+  "db-viability",
+  "dev-auth",
+  "dev-api",
+] as const;
 
 export default $config({
   app(input) {
@@ -13,15 +18,16 @@ export default $config({
     }
 
     return {
-      name:
-        input.stage === "dev-auth"
-          ? "kurier"
-          : input.stage === "db-viability"
-            ? "kurier-sst-db-spike"
-            : "kurier-sst-spike",
+      name: ["dev-auth", "dev-api"].includes(input.stage)
+        ? "kurier"
+        : input.stage === "db-viability"
+          ? "kurier-sst-db-spike"
+          : "kurier-sst-spike",
       home: "aws",
-      removal: input.stage === "dev-auth" ? "retain" : "remove",
-      protect: input.stage === "dev-auth",
+      removal: ["dev-auth", "dev-api"].includes(input.stage)
+        ? "retain"
+        : "remove",
+      protect: ["dev-auth", "dev-api"].includes(input.stage),
       providers: {
         aws: {
           package: "@pulumi/aws",
@@ -32,6 +38,10 @@ export default $config({
     };
   },
   async run() {
+    if ($app.stage === "dev-api") {
+      const { createDevelopmentApi } = await import("./infra/development-api");
+      return createDevelopmentApi();
+    }
     if ($app.stage === "dev-auth") {
       const { createDevelopmentAuth } =
         await import("./infra/development-auth");

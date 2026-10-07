@@ -6,14 +6,21 @@
 
 declare module "sst" {
   export interface Resource {
-    DevelopmentAuth: {
-      id: string;
-      type: "sst.aws.CognitoUserPool";
+    Control: {
+      name: string;
+      type: "sst.aws.Dynamo";
     };
-    DevelopmentBrowser: {
-      id: string;
-      secret: string;
-      type: "sst.aws.CognitoUserPoolClient";
+    DevelopmentHttpApi: {
+      type: "sst.aws.ApiGatewayV2";
+      url: string;
+    };
+    EmptyProjectCleanup: {
+      name: string;
+      type: "sst.aws.Function";
+    };
+    UsersProjectsApi: {
+      name: string;
+      type: "sst.aws.Function";
     };
   }
 }

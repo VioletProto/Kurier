@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { Api, ApiError, UncertainWrite } from "./api";
+import { Api, ApiError, UncertainWrite, validateApiUrl } from "./api";
 import { SessionExpired } from "./auth";
 const project = {
   projectId: "opaque",
@@ -98,5 +98,26 @@ describe("local API client", () => {
       ).list("a+b/c="),
     ).toEqual({ items: [], nextCursor: null });
     expect(transport.mock.calls[0][0]).toContain("cursor=a%2Bb%2Fc%3D");
+  });
+});
+
+describe("API origin validation", () => {
+  it.each([
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "https://abc123.execute-api.us-east-2.amazonaws.com/",
+  ])("accepts scoped origin %s", (url) => {
+    expect(validateApiUrl(url)).toBe(new URL(url).origin);
+  });
+  it.each([
+    "http://api.example.com",
+    "https://api.example.com",
+    "https://abc.execute-api.us-east-1.amazonaws.com",
+    "https://user:pass@abc.execute-api.us-east-2.amazonaws.com",
+    "https://abc.execute-api.us-east-2.amazonaws.com/path",
+    "https://abc.execute-api.us-east-2.amazonaws.com?token=secret",
+    "https://abc.execute-api.us-east-2.amazonaws.com#fragment",
+  ])("rejects unsafe URL %s", (url) => {
+    expect(() => validateApiUrl(url)).toThrow();
   });
 });

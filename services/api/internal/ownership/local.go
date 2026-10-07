@@ -15,7 +15,7 @@ import (
 )
 
 // LocalClient deliberately cannot target AWS or load AWS credentials. This task
-// supplies a local executable, not a cloud deployment adapter.
+// preserves the local executable boundary; cloud uses a separate adapter.
 func LocalClient(endpoint string) (*dynamodb.Client, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil || u.Scheme != "http" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "" || u.Port() == "" {
@@ -35,7 +35,7 @@ func LocalClient(endpoint string) (*dynamodb.Client, error) {
 	}), nil
 }
 
-// InitLocal creates only the local Control subset and its project-list index.
+// InitLocal creates the local Control subset with list/maintenance indexes.
 // Existing tables/stages are never overwritten or silently reactivated.
 func InitLocal(ctx context.Context, client *dynamodb.Client, table, stage string) error {
 	_, err := client.CreateTable(ctx, &dynamodb.CreateTableInput{
@@ -45,8 +45,13 @@ func InitLocal(ctx context.Context, client *dynamodb.Client, table, stage string
 			{AttributeName: aws.String("SK"), AttributeType: types.ScalarAttributeTypeS},
 			{AttributeName: aws.String("LPK"), AttributeType: types.ScalarAttributeTypeS},
 			{AttributeName: aws.String("LSK"), AttributeType: types.ScalarAttributeTypeS},
+			{AttributeName: aws.String("DPK"), AttributeType: types.ScalarAttributeTypeS},
+			{AttributeName: aws.String("DSK"), AttributeType: types.ScalarAttributeTypeS},
 		}, KeySchema: []types.KeySchemaElement{{AttributeName: aws.String("PK"), KeyType: types.KeyTypeHash}, {AttributeName: aws.String("SK"), KeyType: types.KeyTypeRange}},
-		GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{{IndexName: aws.String("GSI1"), KeySchema: []types.KeySchemaElement{{AttributeName: aws.String("LPK"), KeyType: types.KeyTypeHash}, {AttributeName: aws.String("LSK"), KeyType: types.KeyTypeRange}}, Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly}}},
+		GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
+			{IndexName: aws.String("GSI1"), KeySchema: []types.KeySchemaElement{{AttributeName: aws.String("LPK"), KeyType: types.KeyTypeHash}, {AttributeName: aws.String("LSK"), KeyType: types.KeyTypeRange}}, Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly}},
+			{IndexName: aws.String("GSI2"), KeySchema: []types.KeySchemaElement{{AttributeName: aws.String("DPK"), KeyType: types.KeyTypeHash}, {AttributeName: aws.String("DSK"), KeyType: types.KeyTypeRange}}, Projection: &types.Projection{ProjectionType: types.ProjectionTypeKeysOnly}},
+		},
 	})
 	var exists *types.ResourceInUseException
 	if err != nil && !errors.As(err, &exists) {

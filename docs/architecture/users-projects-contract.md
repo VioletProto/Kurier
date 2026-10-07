@@ -1,7 +1,7 @@
 # Accepted users/projects contract
 
-Davian Hernandez accepted the focused review packet and authorized this local
-implementation. This resolves only users/projects interface choices; the overall
+Davian Hernandez accepted the focused review packet and authorized local
+implementation and the focused development AWS continuation. This resolves only users/projects interface choices; the overall
 contract-review card remains **Doing**. Workflow extraction, OpenAPI libraries,
 local-result schemas, other resource revisions, MCP and pairing remain proposed
 in [the synchronization record](w1-acceptance-sync.md), not prerequisites.
@@ -180,9 +180,9 @@ timestamps. No names, ordinary creation/update timestamps, configurations,
 listing attributes or evidence remain. Never reuse project UUIDs. No TTL governs
 authorization or deletion. User identity is account-level and remains.
 
-**Local scope only:** the runnable CLI requires a loopback endpoint and active
+**Empty-project scope:** the local CLI requires a loopback endpoint and active
 `localEmptyProjectsOnly` stage. There is no Protected table or object writer in
-this local subset. It first persists deleting status; on restart it rechecks
+this isolated subset. It first persists deleting status; on restart it rechecks
 durable work and strongly queries the project partition. Only META and the exact
 deletion WORK may exist. Any unknown child, additional page or missing work
 prevents completion and is not erased. Completion conditionally replaces the
@@ -199,3 +199,25 @@ Communicate actual restore times; reconcile stores before reopening; never
 automatically replay restored external HTTP work.
 
 See [local setup, tests and limitations](../development/local-ownership.md).
+
+## Development cloud adapter
+
+The authorized SST `dev-api` stage reuses this seven-route contract and the
+existing development Cognito pool. ARM64 Go Lambda/HTTP API uses the same verifier,
+ownership store, conditional transactions, signed pagination and uncertain-write
+behavior. React remains local at the explicitly configured loopback origin. Only
+local HTTP origins with a port or HTTPS API Gateway origins in us-east-2 are
+accepted by frontend configuration; no credentials/path/query/fragment. CORS
+exposes ETag/Location/Retry-After and permits only the configured frontend origin.
+
+Control has all three accepted KEYS_ONLY indexes. Stable cursor signing uses an
+SSM SecureString read by the API at cold start, with no key in frontend/SST outputs.
+A minute scheduler discovers deletion WORK through eight GSI2 due shards and
+durable rotating page cursors, then strongly rechecks the existing empty-project
+cleanup protocol. Unknown children keep deletion pending and are never erased.
+The historical `localEmptyProjectsOnly` marker is retained for both isolated
+stages; child/object writers remain prohibited. Full cross-store deletion is
+still later work. Gateway-native errors outside Go can differ from shared
+application envelopes; application status/error contracts remain unchanged.
+
+See [cloud setup and separately recorded validation](../development/aws-users-projects.md).

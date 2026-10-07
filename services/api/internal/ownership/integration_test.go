@@ -704,3 +704,54 @@ func TestIntegrationCleanupCLI(t *testing.T) {
 		t.Fatal("CLI falsely completed unexpected children", string(output))
 	}
 }
+
+func TestIntegrationScheduledCleanupResumesPastUnknownChildren(t *testing.T) {
+	i := localIntegration(t)
+	ctx := context.Background()
+	// Put 26 blocked projects and a later empty one on the same shard.
+	var blocked []Project
+	var empty Project
+	for len(blocked) < 26 {
+		p := i.project(t)
+		if cleanupShard(p.ProjectID) != "delete#0" {
+			continue
+		}
+		blocked = append(blocked, p)
+		i.write(t, record{PK: "P#" + p.ProjectID, SK: "UNKNOWN#child", Kind: "unknown", SchemaVersion: 1})
+		if _, err := i.store.DeleteProject(ctx, i.alice.UserID, p.ProjectID, 0); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for {
+		empty = i.project(t)
+		if cleanupShard(empty.ProjectID) == "delete#0" {
+			break
+		}
+	}
+	if _, err := i.store.DeleteProject(ctx, i.alice.UserID, empty.ProjectID, 0); err != nil {
+		t.Fatal(err)
+	}
+	first, err := i.store.CleanupPending(ctx)
+	if err != nil || first.Pending != 25 || first.Completed != 0 {
+		t.Fatalf("first bounded pass: %+v %v", first, err)
+	}
+	// Reconstruct the store as a fresh Lambda invocation to prove durable resume.
+	resumed := NewStore(i.client, i.store.table, "local")
+	second, err := resumed.CleanupPending(ctx)
+	if err != nil || second.Pending != 1 || second.Completed != 1 {
+		t.Fatalf("resumed pass: %+v %v", second, err)
+	}
+	for _, p := range blocked {
+		gate, err := i.store.get(ctx, "P#"+p.ProjectID, "META")
+		if err != nil || gate.State != "deleting" {
+			t.Fatal("unknown child completed")
+		}
+		if _, err = i.store.get(ctx, gate.PK, "UNKNOWN#child"); err != nil {
+			t.Fatal("unknown child erased")
+		}
+	}
+	third, err := resumed.CleanupPending(ctx)
+	if err != nil || third.Pending != 25 {
+		t.Fatalf("cursor did not cycle: %+v %v", third, err)
+	}
+}
