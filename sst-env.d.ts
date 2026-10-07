@@ -5,7 +5,24 @@
 /* biome-ignore-all lint: auto-generated */
 
 declare module "sst" {
-  export interface Resource {}
+  export interface Resource {
+    Control: {
+      name: string;
+      type: "sst.aws.Dynamo";
+    };
+    DevelopmentHttpApi: {
+      type: "sst.aws.ApiGatewayV2";
+      url: string;
+    };
+    EmptyProjectCleanup: {
+      name: string;
+      type: "sst.aws.Function";
+    };
+    UsersProjectsApi: {
+      name: string;
+      type: "sst.aws.Function";
+    };
+  }
 }
 
 import "sst";

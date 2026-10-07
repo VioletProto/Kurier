@@ -1,6 +1,11 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
-const allowedStages = ["viability", "db-viability"] as const;
+const allowedStages = [
+  "viability",
+  "db-viability",
+  "dev-auth",
+  "dev-api",
+] as const;
 
 export default $config({
   app(input) {
@@ -8,18 +13,21 @@ export default $config({
       !allowedStages.includes(input.stage as (typeof allowedStages)[number])
     ) {
       throw new Error(
-        `The SST spikes permit only ${allowedStages.map((stage) => `"${stage}"`).join(" or ")}; received "${input.stage}".`,
+        `Kurier permits only ${allowedStages.map((stage) => `"${stage}"`).join(" or ")}; received "${input.stage}".`,
       );
     }
 
     return {
-      name:
-        input.stage === "db-viability"
+      name: ["dev-auth", "dev-api"].includes(input.stage)
+        ? "kurier"
+        : input.stage === "db-viability"
           ? "kurier-sst-db-spike"
           : "kurier-sst-spike",
       home: "aws",
-      removal: "remove",
-      protect: false,
+      removal: ["dev-auth", "dev-api"].includes(input.stage)
+        ? "retain"
+        : "remove",
+      protect: ["dev-auth", "dev-api"].includes(input.stage),
       providers: {
         aws: {
           package: "@pulumi/aws",
@@ -30,6 +38,15 @@ export default $config({
     };
   },
   async run() {
+    if ($app.stage === "dev-api") {
+      const { createDevelopmentApi } = await import("./infra/development-api");
+      return createDevelopmentApi();
+    }
+    if ($app.stage === "dev-auth") {
+      const { createDevelopmentAuth } =
+        await import("./infra/development-auth");
+      return createDevelopmentAuth();
+    }
     if ($app.stage === "db-viability") {
       return await createDatabaseViabilitySpike();
     }

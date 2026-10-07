@@ -4,8 +4,9 @@ Kurier is an agent-ready API testing and debugging platform. Its core goal is
 to produce immutable, sanitized API-execution evidence that developers and
 coding agents can inspect safely.
 
-This repository currently contains a minimal foundation, not a product
-implementation.
+This repository contains local and development AWS users/projects DynamoDB
+ownership slices with Cognito browser authentication, plus foundations for later
+services. Request execution and sanitized evidence remain planned.
 
 ## Repository layout
 
@@ -25,19 +26,25 @@ implementation.
 
 ## Setup and development
 
-```sh
-npm install
-cp .env.example .env
-docker compose up -d postgres
-npm run dev
-```
+Follow the [Cognito browser/local projects guide](docs/development/cognito-local-projects.md)
+for development authentication setup, startup, email participation and current
+validation boundaries. For the completed development AWS API/DynamoDB slice
+with a local frontend, follow the [cloud guide](docs/development/aws-users-projects.md).
 
-Run a Go service from another terminal:
+After the authorized `dev-auth` deployment:
 
 ```sh
-cd services/api
-go run .
+npm ci
+docker compose -f compose.dynamodb.yml up -d
+npm run dev:api -- -init-local
+# In separate terminals:
+npm run dev:api
+npm run dev:auth
 ```
+
+The historical PostgreSQL foundation/spikes remain separate. The
+[local ownership guide](docs/development/local-ownership.md) describes manual
+API configuration, strict JWT verification and operator-only cleanup.
 
 The API defaults to `http://localhost:8080`, the worker health server to
 `http://localhost:8081`, and the local agent to `http://localhost:8082`.
@@ -56,6 +63,16 @@ docker compose config --quiet
 
 `npm run verify` runs all formatting checks, linting, tests, builds, Go tests,
 and Go vet checks in one command.
+
+For the actual DynamoDB Local integration suite:
+
+```sh
+docker compose -f compose.dynamodb.yml up -d
+KURIER_DYNAMODB_TEST_ENDPOINT=http://127.0.0.1:8000 npm run test:ownership:integration
+```
+
+The integration tag fails when the local endpoint is absent; it is not part of
+ordinary unit-only `npm run verify`. CI includes a separate integration job.
 
 ## SST viability configuration
 
@@ -95,5 +112,13 @@ for local development only. Never store real credentials in the repository.
 ## Architecture
 
 See [the architecture overview](docs/architecture/README.md) and
-[the SST viability spike](docs/spikes/sst-viability.md). The proposed design
-is a planning baseline and may change as the team gathers evidence.
+[the SST viability spike](docs/spikes/sst-viability.md).
+[ADR 0002](docs/decisions/0002-serverless-persistence-topology.md) records the
+accepted serverless MVP baseline (`1fba942`), not implemented/deployed behavior.
+The [accepted users/projects contract](docs/architecture/users-projects-contract.md)
+records the subsequently authorized local subset, not hosted validation.
+See the [acceptance and synchronization record](docs/architecture/w1-acceptance-sync.md)
+for external-document updates and remaining proposed interface choices.
+
+For the authorized development AWS users/projects slice with a local frontend,
+see [cloud startup and validation](docs/development/aws-users-projects.md).
