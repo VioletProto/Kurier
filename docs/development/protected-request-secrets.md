@@ -193,12 +193,13 @@ This creates a fresh disposable probe. Recovery below works only while an
 existing probe remains active and accessible to its owner; completed/deleted
 probes correctly return 404. The original project below is now deleted, so
 use validateCloudProtectedSecrets above when resuming its unfinished UI checks.
-If a different earlier probe still exists, recover its safe IDs as its owner:
+If a different earlier probe still exists, replace ACTIVE_PROBE_PROJECT_ID below
+with its safe project ID and recover it as its owner:
 
 ```js
 var earlierProtectedProbe = await (
   await import("/src/cloud-validation.ts?audit=2")
-).recoverProtectedBrowserProbe("f274513a-90cf-4400-bccc-19b67f6e762e");
+).recoverProtectedBrowserProbe("ACTIVE_PROBE_PROJECT_ID");
 ```
 
 Use validateProtectedIsolation(protectedProbe) under a second Cognito user.
