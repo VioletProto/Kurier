@@ -120,7 +120,7 @@ finishProtectedBrowserProbe(probe) to wait for actual scheduled deletion.
 No outbound HTTP is executed. The probe exists in AWS and its active-value
 Control/encrypted-persistence/cloud-log audit passed. Davian reported the
 corrected genuine browser flags and second-user denial below; final UI
-query/whole-body checks and owner cleanup still await his report.
+query/whole-body checks remain open. Original probe cleanup is verified below.
 
 The first genuine probe reached its final safety check and threw a combined
 error after the expected 412 stale-replacement and two 400 reference-misuse
@@ -163,7 +163,12 @@ Cognito user.
 Three safe request IDs were returned. This confirms genuine owner-session
 behavior, JSON pointer authoring, browser persistence and second-Cognito-user
 isolation. Manual API-key query/whole-body input clearing and unrelated preserve,
-followed by owner scheduled deletion, remain to be reported.
+remain to be reported. Original probe cleanup has now been verified by AWS
+readback: deletion operation f0c54952-f464-4ee0-acbe-64aca812ce1e completed,
+Protected partition count=0 and Control retains only its safe project tombstone.
+Returning to this deleted project correctly produces 404. The browser deletion
+helper's returned object was not reported; this completion evidence is operator
+AWS readback, distinct from a browser observation.
 
 The audit is bounded to 16 MiB of inspected text and 10,000 IndexedDB/cache
 entries. Unreadable/opaque data, missing browser APIs or exceeded bounds produce
@@ -184,8 +189,11 @@ protectedProbe;
 Report safe flags/counts only, especially responsesSafe,
 persistence.storageSafe, persistence.auditComplete and safetyPassed. The query
 suffix reloads the helper without discarding the memory-only login session.
-This creates another disposable probe. If the earlier project still exists,
-recover its safe IDs while still signed in as its owner:
+This creates a fresh disposable probe. Recovery below works only while an
+existing probe remains active and accessible to its owner; completed/deleted
+probes correctly return 404. The original project below is now deleted, so
+use validateCloudProtectedSecrets above when resuming its unfinished UI checks.
+If a different earlier probe still exists, recover its safe IDs as its owner:
 
 ```js
 var earlierProtectedProbe = await (
@@ -219,4 +227,5 @@ strings cannot guarantee physical erasure. Annual key rotation is configured,
 not elapsed/runtime-tested. Unknown records intentionally keep deletion pending.
 Genuine browser acceptance remains open; submission status is recorded in Trello. The active-value
 cloud audit, genuine owner-session browser flags and second-user denial passed;
-final query/whole-body UI checks and owner deletion remain to be reported.
+final query/whole-body UI checks remain open. Original probe deletion is verified;
+any fresh disposable probe created for the remaining checks must also be cleaned.
