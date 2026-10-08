@@ -68,7 +68,7 @@ partitions empty; unknown records remain and incomplete work stays pending.
 
 ## Verified results
 
-- Final formatting/lint, 35 frontend tests, 8 infrastructure tests, frontend build,
+- Final formatting/lint, 36 frontend tests, 8 infrastructure tests, frontend build,
   all service Go tests/vet and API/worker/local-agent binary builds passed.
 - Actual DynamoDB Local race tests: ownership/reference misuse, stable identity,
   duplicate/reordered bindings, JSON pointers, shared/local replacement and
@@ -81,6 +81,11 @@ partitions empty; unknown records remain and incomplete work stays pending.
 - Chromium-to-Go/Local authoring passed, including **direct creation** of a
   protected Authorization request, cleared input and unrelated preserve.
   Cognito is simulated in this test.
+- Corrected persistence audit passed genuine Chromium storage tests: unrelated
+  existing data is accepted and preserved; disposable leaks in Web Storage,
+  IndexedDB binary records and cached response bodies are detected. A separate
+  test covers escaped JSON and stripped Bearer prefixes. Audit results contain
+  only counts/booleans, with no storage names, contents or secret values.
 - Actual AWS KMS wrapped-key decrypt matched the memory-only disposable value;
   incorrect encryption context was rejected. API IAM cannot perform this decrypt.
 - Actual AWS DynamoDB ownership/reference misuse, replacement/revocation,
@@ -115,6 +120,50 @@ finishProtectedBrowserProbe(probe) to wait for actual scheduled deletion.
 No outbound HTTP is executed. The probe exists in AWS and its active-value
 Control/encrypted-persistence/cloud-log audit passed; returned browser flags,
 second-user denial and owner cleanup still await Davian's report.
+
+The first genuine probe reached its final safety check and threw a combined
+error after the expected 412 stale-replacement and two 400 reference-misuse
+responses. Those statuses are deliberate assertions, not test failures. The
+initial helper incorrectly required all origin storage to be empty, allowing
+unrelated browser data to fail validation. It also checked only two of the
+generated disposable values. The corrected helper retains every submitted
+value only in memory, checks response representations and reads existing
+Web Storage, IndexedDB and Cache Storage for those values without deleting data.
+It returns separate response/storage/completeness flags instead of a generic
+throw. The original browser's precise failure source remains unconfirmed until
+these diagnostic flags are reported; no leak was established by the old error.
+
+The audit is bounded to 16 MiB of inspected text and 10,000 IndexedDB/cache
+entries. Unreadable/opaque data, missing browser APIs or exceeded bounds produce
+auditComplete=false and storageSafe=false; incomplete inspection is not a pass.
+It checks text/UTF-8 representations of known disposable secrets, not arbitrary
+encoding schemes. Storage may change concurrently; this is a developer probe,
+not a continuous storage monitor.
+
+Keep the same signed-in tab and bypass the cached old helper module:
+
+```js
+var protectedProbe = await (
+  await import("/src/cloud-validation.ts?audit=2")
+).validateCloudProtectedSecrets();
+protectedProbe;
+```
+
+Report safe flags/counts only, especially responsesSafe,
+persistence.storageSafe, persistence.auditComplete and safetyPassed. The query
+suffix reloads the helper without discarding the memory-only login session.
+This creates another disposable probe. Recover the earlier probe's safe IDs
+while still signed in as its owner:
+
+```js
+var earlierProtectedProbe = await (
+  await import("/src/cloud-validation.ts?audit=2")
+).recoverProtectedBrowserProbe("f274513a-90cf-4400-bccc-19b67f6e762e");
+```
+
+Use validateProtectedIsolation(protectedProbe) under a second Cognito user.
+Then, as the original owner, call finishProtectedBrowserProbe for both returned
+probe objects so the actual scheduler cleans up both disposable projects.
 
 ## Checks
 

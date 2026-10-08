@@ -1,6 +1,10 @@
 // Opt-in developer browser checks. Uses the genuine memory-only session;
 // returns safe IDs/statuses only. Never logs tokens, auth payloads or passwords.
 import { api, ApiError, type Deletion, type ProjectDetail } from "./api";
+import {
+  auditSecretPersistence,
+  containsSecretText,
+} from "./secret-persistence-audit";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function expectDenied(action: () => Promise<unknown>, status: number) {
   try {
@@ -423,7 +427,13 @@ export async function validateCloudProtectedSecrets() {
   const user = await api.me();
   const project = await api.create("Protected browser isolation probe");
   const projectId = project.project.projectId;
-  const value = "Bearer " + crypto.randomUUID();
+  const values: string[] = [];
+  const disposable = () => {
+    const value = "Bearer " + crypto.randomUUID();
+    values.push(value);
+    return value;
+  };
+  const value = disposable();
   const bindingId = crypto.randomUUID();
   const a = await api.createRequest(projectId, {
     name: "Protected A",
@@ -480,7 +490,7 @@ export async function validateCloudProtectedSecrets() {
           bindingId,
           secretWrite: {
             action: "set",
-            value: "Bearer " + crypto.randomUUID(),
+            value: disposable(),
           },
         },
       ],
@@ -491,13 +501,9 @@ export async function validateCloudProtectedSecrets() {
     throw new Error("Request-local replacement changed shared secret");
   const metadata = await api.listSecrets(projectId);
   const source = metadata.items.find((s) => s.secretId === ref.secretId)!;
-  const shared = await api.replaceSecret(
-    projectId,
-    source,
-    "Bearer " + crypto.randomUUID(),
-  );
+  const shared = await api.replaceSecret(projectId, source, disposable());
   const sharedStale = await expectDenied(
-    () => api.replaceSecret(projectId, source, "Bearer " + crypto.randomUUID()),
+    () => api.replaceSecret(projectId, source, disposable()),
     412,
   );
   await api.revokeSecret(projectId, shared);
@@ -529,6 +535,7 @@ export async function validateCloudProtectedSecrets() {
     b.etag,
   );
   const bodyValue = JSON.stringify(crypto.randomUUID());
+  values.push(bodyValue);
   const body = await api.createRequest(projectId, {
     name: "Protected JSON",
     method: "POST",
@@ -587,14 +594,8 @@ export async function validateCloudProtectedSecrets() {
     preserved,
     body,
   ]);
-  const responsesSafe = !text.includes(value) && !text.includes(bodyValue);
-  const persistentStorageEmpty =
-    localStorage.length === 0 &&
-    sessionStorage.length === 0 &&
-    (await indexedDB.databases()).length === 0 &&
-    (await caches.keys()).length === 0;
-  if (!responsesSafe || !persistentStorageEmpty)
-    throw new Error("Protected browser safety check failed");
+  const responsesSafe = !containsSecretText(text, values);
+  const persistence = await auditSecretPersistence(values);
   return {
     ownerId: user.userId,
     projectId,
@@ -610,7 +611,8 @@ export async function validateCloudProtectedSecrets() {
     revokedReuse,
     crossProject,
     responsesSafe,
-    persistentStorageEmpty,
+    persistence,
+    safetyPassed: responsesSafe && persistence.storageSafe,
   };
 }
 export async function validateProtectedIsolation(probe: {
@@ -649,4 +651,19 @@ export async function finishProtectedBrowserProbe(probe: {
     immediateDenial,
     scheduledCleanup: completed.state,
   };
+}
+
+// Recover only safe identifiers from the earlier probe that failed its blanket
+// storage-empty assertion. This performs no secret reveal or new writes.
+export async function recoverProtectedBrowserProbe(projectId: string) {
+  const user = await api.me();
+  await api.detail(projectId);
+  const requestIds: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await api.listRequests(projectId, cursor);
+    requestIds.push(...page.items.map((r) => r.requestId));
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor);
+  return { ownerId: user.userId, projectId, requestIds };
 }

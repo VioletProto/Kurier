@@ -345,3 +345,67 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
     })),
   ).toEqual({ local: 0, session: 0 });
 });
+
+test("disposable-secret audit tolerates unrelated storage and detects real leaks", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const flags = await page.evaluate(async () => {
+    const { auditSecretPersistence } =
+      await import("/src/secret-persistence-audit.ts");
+    const value = "Bearer " + crypto.randomUUID();
+    localStorage.setItem("unrelated-preference", "dark");
+    sessionStorage.setItem("unrelated-panel", "open");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open("disposable-audit-fixture", 1);
+      open.onupgradeneeded = () => open.result.createObjectStore("rows");
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(new Error("Fixture setup failed"));
+    });
+    const put = (data: unknown) =>
+      new Promise<void>((resolve, reject) => {
+        const tx = db.transaction("rows", "readwrite");
+        tx.objectStore("rows").put(data, "row");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(new Error("Fixture setup failed"));
+      });
+    await put({ preference: "public" });
+    const cache = await caches.open("disposable-audit-fixture");
+    const url = location.origin + "/disposable-audit-fixture";
+    await cache.put(url, new Response("public"));
+    const unrelated = await auditSecretPersistence([value]);
+    localStorage.setItem("disposable-value", value);
+    const web = await auditSecretPersistence([value]);
+    localStorage.removeItem("disposable-value");
+    await put({ bytes: new TextEncoder().encode(value) });
+    const indexed = await auditSecretPersistence([value]);
+    await put({ preference: "public" });
+    await cache.put(url, new Response(value));
+    const cached = await auditSecretPersistence([value]);
+    const safeOutput = !JSON.stringify([
+      unrelated,
+      web,
+      indexed,
+      cached,
+    ]).includes(value);
+    const unrelatedPreserved =
+      localStorage.getItem("unrelated-preference") === "dark";
+    db.close();
+    return {
+      unrelatedAllowed: unrelated.storageSafe && unrelated.auditComplete,
+      webDetected: !web.storageSafe && web.auditComplete,
+      indexedDetected: !indexed.storageSafe && indexed.auditComplete,
+      cacheDetected: !cached.storageSafe && cached.auditComplete,
+      safeOutput,
+      unrelatedPreserved,
+    };
+  });
+  expect(flags).toEqual({
+    unrelatedAllowed: true,
+    webDetected: true,
+    indexedDetected: true,
+    cacheDetected: true,
+    safeOutput: true,
+    unrelatedPreserved: true,
+  });
+});
