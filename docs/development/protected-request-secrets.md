@@ -119,8 +119,8 @@ validateProtectedIsolation(probe). Sign in as the original owner and call
 finishProtectedBrowserProbe(probe) to wait for actual scheduled deletion.
 No outbound HTTP is executed. The probe exists in AWS and its active-value
 Control/encrypted-persistence/cloud-log audit passed. Davian reported the
-corrected genuine browser flags below; second-user denial and owner cleanup
-still await his report.
+corrected genuine browser flags and second-user denial below; final UI
+query/whole-body checks and owner cleanup still await his report.
 
 The first genuine probe reached its final safety check and threw a combined
 error after the expected 412 stale-replacement and two 400 reference-misuse
@@ -156,9 +156,14 @@ A follow-up memory-only AWS audit checked three active value representations
 against 119 Control records, Protected persistence and 2,952 API/cleanup log
 events: no disposable plaintext found.
 
+Davian also reported second-user isolation PASS: distinctUser=true and all
+three request reads plus secret listing returned 404 under a different genuine
+Cognito user.
+
 Three safe request IDs were returned. This confirms genuine owner-session
-behavior, JSON pointer authoring and browser persistence checks; it does not
-substitute for the pending second-Cognito-user 404 test or owner deletion.
+behavior, JSON pointer authoring, browser persistence and second-Cognito-user
+isolation. Manual API-key query/whole-body input clearing and unrelated preserve,
+followed by owner scheduled deletion, remain to be reported.
 
 The audit is bounded to 16 MiB of inspected text and 10,000 IndexedDB/cache
 entries. Unreadable/opaque data, missing browser APIs or exceeded bounds produce
@@ -213,5 +218,5 @@ rules. Plaintext exists transiently in browser/server memory; garbage-collected
 strings cannot guarantee physical erasure. Annual key rotation is configured,
 not elapsed/runtime-tested. Unknown records intentionally keep deletion pending.
 Genuine browser acceptance remains open; submission status is recorded in Trello. The active-value
-cloud audit and genuine owner-session browser flags passed; second-user denial
-and owner deletion remain to be reported.
+cloud audit, genuine owner-session browser flags and second-user denial passed;
+final query/whole-body UI checks and owner deletion remain to be reported.
