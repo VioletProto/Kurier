@@ -19,6 +19,7 @@ import (
 // cleanup HTTP route is compiled into the runnable API.
 func TestIntegrationBrowserProjects(t *testing.T) {
 	i := localIntegration(t)
+	enableProtectedLocal(t, i)
 	for n := 0; n < 27; n++ {
 		if _, err := i.store.CreateProject(context.Background(), i.alice.UserID, "Seed "+twoDigits(n)); err != nil {
 			t.Fatal(err)

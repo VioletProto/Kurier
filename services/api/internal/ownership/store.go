@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -21,13 +22,15 @@ type database interface {
 	TransactWriteItems(context.Context, *dynamodb.TransactWriteItemsInput, ...func(*dynamodb.Options)) (*dynamodb.TransactWriteItemsOutput, error)
 }
 type Store struct {
-	db           database
-	table, stage string
-	now          func() time.Time
+	db             database
+	table, stage   string
+	now            func() time.Time
+	protectedTable string
+	cipher         *EnvelopeCipher
 }
 
 func NewStore(client *dynamodb.Client, table, stage string) *Store {
-	return &Store{client, table, stage, time.Now}
+	return &Store{db: client, table: table, stage: stage, now: time.Now}
 }
 func key(pk, sk string) map[string]types.AttributeValue {
 	return map[string]types.AttributeValue{"PK": s(pk), "SK": s(sk)}
@@ -54,14 +57,14 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 		return record{}, missing()
 	}
 	var r record
-	if attributevalue.UnmarshalMap(result.Item, &r) != nil || r.SchemaVersion != 1 {
+	if attributevalue.UnmarshalMap(result.Item, &r) != nil || (r.SchemaVersion != 1 && !(r.Kind == "request" && r.SchemaVersion == 2)) {
 		return record{}, unavailable()
 	}
 	return r, nil
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if err != nil || r.State != "active" || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
+	if err != nil || r.State != "active" || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !(r.SavedRequestsSchemaVersion == 2 && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
 		return record{}, unavailable()
 	}
 	return r, nil
@@ -152,10 +155,14 @@ func pause(ctx context.Context, attempt int) error {
 func (st *Store) stageGuard(stage record) types.TransactWriteItem {
 	mode := "localEmptyProjectsOnly = :yes"
 	values := map[string]types.AttributeValue{":active": s("active"), ":gen": s(stage.RecoveryGeneration), ":yes": &types.AttributeValueMemberBOOL{Value: true}}
-	if stage.SavedRequestsSchemaVersion == 1 {
+	if stage.SavedRequestsSchemaVersion >= 1 {
 		mode = "savedRequestsSchemaVersion = :requests"
 		delete(values, ":yes")
-		values[":requests"] = n(1)
+		values[":requests"] = n(int64(stage.SavedRequestsSchemaVersion))
+		if stage.SavedRequestsSchemaVersion == 2 {
+			mode += " AND protectedSecretsSchemaVersion = :protected"
+			values[":protected"] = n(1)
+		}
 	}
 	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.table), Key: key(stage.PK, "META"), ConditionExpression: aws.String("#state = :active AND recoveryGeneration = :gen AND " + mode), ExpressionAttributeNames: map[string]string{"#state": "state"}, ExpressionAttributeValues: values}}
 }
@@ -167,10 +174,19 @@ func (st *Store) put(r record, condition string, values map[string]types.Attribu
 	return types.TransactWriteItem{Put: &types.Put{TableName: aws.String(st.table), Item: item, ConditionExpression: aws.String(condition), ExpressionAttributeValues: values}}, err
 }
 func (st *Store) transact(ctx context.Context, actions []types.TransactWriteItem) error {
-	// CRUD uses four actions; cleanup uses at most 20 key-only deletes plus
-	// stage/gate/checkpoint. Configuration stays <=64 KiB; below 80/2MiB budget.
-	if len(actions) > 24 {
+	// Cross-table request writes use at most 16 secret actions plus four guards/puts.
+	// Apply the accepted 80-action/2-MiB budget before any database I/O.
+	if len(actions) > 80 {
 		return errors.New("slice transaction budget exceeded")
+	}
+	for _, a := range actions {
+		if a.Put != nil && itemBytes(a.Put.Item) > 128*1024 {
+			return errors.New("item byte budget exceeded")
+		}
+	}
+	encoded, e := json.Marshal(actions)
+	if e != nil || len(encoded) > 2*1024*1024 {
+		return errors.New("transaction byte budget exceeded")
 	}
 	_, err := st.db.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{TransactItems: actions, ClientRequestToken: aws.String(newID())})
 	return err
@@ -414,6 +430,26 @@ func (st *Store) CleanupProject(ctx context.Context, projectID string) (Deletion
 	if more {
 		return *r.Operation, conflict()
 	}
+	if stage.SavedRequestsSchemaVersion == 2 {
+		work, err = st.get(ctx, r.PK, workKey)
+		if err != nil {
+			return DeletionOperation{}, err
+		}
+		r, more, err = st.drainProtected(ctx, r, stage, work)
+		if err != nil {
+			return DeletionOperation{}, err
+		}
+		if more {
+			return *r.Operation, conflict()
+		}
+		proof, e := st.db.Query(ctx, &dynamodb.QueryInput{TableName: aws.String(st.protectedTable), KeyConditionExpression: aws.String("PK = :pk"), ExpressionAttributeValues: map[string]types.AttributeValue{":pk": s(r.PK)}, ConsistentRead: aws.Bool(true), Limit: aws.Int32(1)})
+		if e != nil {
+			return DeletionOperation{}, unavailable()
+		}
+		if len(proof.Items) > 0 || len(proof.LastEvaluatedKey) > 0 {
+			return *r.Operation, conflict()
+		}
+	}
 	result, err := st.db.Query(ctx, &dynamodb.QueryInput{TableName: aws.String(st.table), KeyConditionExpression: aws.String("PK = :pk"), ExpressionAttributeValues: map[string]types.AttributeValue{":pk": s(r.PK)}, ConsistentRead: aws.Bool(true), ProjectionExpression: aws.String("PK, SK"), Limit: aws.Int32(3)})
 	if err != nil {
 		return DeletionOperation{}, unavailable()
@@ -452,4 +488,36 @@ func (st *Store) CleanupProject(ctx context.Context, projectID string) (Deletion
 		return DeletionOperation{}, conflict()
 	}
 	return op, nil
+}
+
+// DynamoDB counts attribute names and stored values, not the JSON transport's
+// second escaping of a configurationJSON string. Include container overhead.
+func itemBytes(item map[string]types.AttributeValue) int {
+	size := 3
+	for k, v := range item {
+		size += len(k) + 1 + attributeBytes(v)
+	}
+	return size
+}
+func attributeBytes(v types.AttributeValue) int {
+	switch x := v.(type) {
+	case *types.AttributeValueMemberS:
+		return len(x.Value)
+	case *types.AttributeValueMemberN:
+		return len(x.Value) + 1
+	case *types.AttributeValueMemberB:
+		return len(x.Value)
+	case *types.AttributeValueMemberBOOL, *types.AttributeValueMemberNULL:
+		return 1
+	case *types.AttributeValueMemberM:
+		return itemBytes(x.Value)
+	case *types.AttributeValueMemberL:
+		n := 3
+		for _, v := range x.Value {
+			n += 1 + attributeBytes(v)
+		}
+		return n
+	default:
+		return 128*1024 + 1
+	}
 }

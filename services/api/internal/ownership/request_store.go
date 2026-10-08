@@ -14,7 +14,7 @@ func (st *Store) requestContext(ctx context.Context, userID, projectID string) (
 	if err != nil {
 		return record{}, record{}, record{}, err
 	}
-	if stage.SavedRequestsSchemaVersion != 1 {
+	if stage.SavedRequestsSchemaVersion < 1 {
 		return record{}, record{}, record{}, unavailable()
 	}
 	user, err := st.userRecord(ctx, userID)
@@ -55,6 +55,10 @@ func (st *Store) CreateRequest(ctx context.Context, userID, projectID string, c 
 	if err := validateConfiguration(&c); err != nil {
 		return SavedRequest{}, err
 	}
+	secretActions, err := st.protectIfEnabled(ctx, stage, projectID, &c, nil)
+	if err != nil {
+		return SavedRequest{}, err
+	}
 	raw, err := configurationJSON(c)
 	if err != nil {
 		return SavedRequest{}, err
@@ -62,11 +66,14 @@ func (st *Store) CreateRequest(ctx context.Context, userID, projectID string, c 
 	id := newID()
 	now := timestamp(st.now())
 	r := record{PK: p.PK, SK: "REQ#" + id, Kind: "request", SchemaVersion: 1, ProjectID: projectID, RequestID: id, State: "active", ConfigurationJSON: string(raw), CreatedAt: now, UpdatedAt: now, LPK: p.PK + "#REQUEST", LSK: now + "#" + id}
+	if len(slots(&c)) > 0 {
+		r.SchemaVersion = 2
+	}
 	action, err := st.put(r, "attribute_not_exists(PK)", nil)
 	if err != nil {
 		return SavedRequest{}, unavailable()
 	}
-	if err = st.transact(ctx, []types.TransactWriteItem{st.stageGuard(stage), st.userGuard(user), st.requestGate(p, "active"), action}); err != nil {
+	if err = st.transact(ctx, append([]types.TransactWriteItem{st.stageGuard(stage), st.userGuard(user), st.requestGate(p, "active"), action}, secretActions...)); err != nil {
 		return SavedRequest{}, st.requestFailure(ctx, userID, p, id, nil, err)
 	}
 	return r.savedRequest()
@@ -91,9 +98,16 @@ func (st *Store) PatchRequest(ctx context.Context, userID, projectID, requestID 
 	if err != nil {
 		return SavedRequest{}, err
 	}
+	secretActions, err := st.protectIfEnabled(ctx, stage, projectID, &c, &previous.RequestConfiguration)
+	if err != nil {
+		return SavedRequest{}, err
+	}
 	encoded, err := configurationJSON(c)
 	if err != nil {
 		return SavedRequest{}, err
+	}
+	if len(slots(&c)) > 0 {
+		r.SchemaVersion = 2
 	}
 	r.ConfigurationJSON = string(encoded)
 	r.Revision++
@@ -103,7 +117,7 @@ func (st *Store) PatchRequest(ctx context.Context, userID, projectID, requestID 
 		return SavedRequest{}, unavailable()
 	}
 	action.Put.ExpressionAttributeNames = map[string]string{"#r": "revision", "#state": "state", "#kind": "kind"}
-	if err = st.transact(ctx, []types.TransactWriteItem{st.stageGuard(stage), st.userGuard(user), st.requestGate(p, "active"), action}); err != nil {
+	if err = st.transact(ctx, append([]types.TransactWriteItem{st.stageGuard(stage), st.userGuard(user), st.requestGate(p, "active"), action}, secretActions...)); err != nil {
 		return SavedRequest{}, st.requestFailure(ctx, userID, p, requestID, &expected, err)
 	}
 	return r.savedRequest()
@@ -112,6 +126,9 @@ func requestStale() error {
 	return apiError(412, "precondition_failed", "Request changed; refresh before retrying.")
 }
 func (st *Store) requestFailure(ctx context.Context, userID string, p record, id string, expected *int64, original error) error {
+	if !isConditional(original) {
+		return unavailable()
+	}
 	if _, _, _, err := st.requestContext(ctx, userID, p.ProjectID); err != nil {
 		return err
 	}
@@ -163,7 +180,7 @@ func (st *Store) DeleteRequest(ctx context.Context, userID, projectID, requestID
 // lives on WORK; recognized records alone are removed. A full cycle resets the
 // cursor so unknown entries and uncertain commits are revisited after restart.
 func (st *Store) drainRequests(ctx context.Context, p, stage, work record) (record, bool, error) {
-	if stage.SavedRequestsSchemaVersion != 1 {
+	if stage.SavedRequestsSchemaVersion < 1 {
 		return p, false, nil
 	}
 	var start map[string]types.AttributeValue
@@ -190,7 +207,7 @@ func (st *Store) drainRequests(ctx context.Context, p, stage, work record) (reco
 			}
 		}
 		var r record
-		if !recognized || attributevalue.UnmarshalMap(item, &r) != nil || r.SchemaVersion != 1 || r.PK != p.PK || r.ProjectID != p.ProjectID || r.RequestID == "" || r.SK != "REQ#"+r.RequestID || r.Revision < 0 {
+		if !recognized || attributevalue.UnmarshalMap(item, &r) != nil || (r.SchemaVersion != 1 && r.SchemaVersion != 2) || r.PK != p.PK || r.ProjectID != p.ProjectID || r.RequestID == "" || r.SK != "REQ#"+r.RequestID || r.Revision < 0 {
 			continue
 		}
 		switch r.Kind {
@@ -205,7 +222,7 @@ func (st *Store) drainRequests(ctx context.Context, p, stage, work record) (reco
 		default:
 			continue
 		}
-		actions = append(actions, types.TransactWriteItem{Delete: &types.Delete{TableName: aws.String(st.table), Key: key(r.PK, r.SK), ConditionExpression: aws.String("schemaVersion = :schema AND #kind = :kind AND revision = :revision AND projectId = :project AND requestId = :id"), ExpressionAttributeNames: map[string]string{"#kind": "kind"}, ExpressionAttributeValues: map[string]types.AttributeValue{":schema": n(1), ":kind": s(r.Kind), ":revision": n(r.Revision), ":project": s(p.ProjectID), ":id": s(r.RequestID)}}})
+		actions = append(actions, types.TransactWriteItem{Delete: &types.Delete{TableName: aws.String(st.table), Key: key(r.PK, r.SK), ConditionExpression: aws.String("schemaVersion = :schema AND #kind = :kind AND revision = :revision AND projectId = :project AND requestId = :id"), ExpressionAttributeNames: map[string]string{"#kind": "kind"}, ExpressionAttributeValues: map[string]types.AttributeValue{":schema": n(int64(r.SchemaVersion)), ":kind": s(r.Kind), ":revision": n(r.Revision), ":project": s(p.ProjectID), ":id": s(r.RequestID)}}})
 	}
 	work.MaintenanceCursor = nil
 	if v, ok := page.LastEvaluatedKey["SK"].(*types.AttributeValueMemberS); ok {

@@ -46,6 +46,9 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 		}
 	}
 	st := NewStore(db, table, "dev-api")
+	if protected := os.Getenv("KURIER_AWS_TEST_PROTECTED"); protected != "" {
+		st.ConfigureProtected(protected, nil)
+	}
 	auth := newAuthFixture(t)
 	alice, err := st.ResolveUser(ctx, verified(t, auth, "alice"))
 	if err != nil {
@@ -226,6 +229,7 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 	}
 	// Resume using a new store, then repeat safely.
 	resumed := NewStore(db, table, "dev-api")
+	resumed.ConfigureProtected(st.protectedTable, nil)
 	completed, err := resumed.CleanupProject(ctx, p.ProjectID)
 	if err != nil || completed.State != "completed" {
 		t.Fatal("AWS resume failed")

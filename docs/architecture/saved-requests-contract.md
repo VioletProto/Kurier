@@ -1,8 +1,12 @@
 # Saved requests slice contract
 
 Status: **Accepted by Davian, 2026-10-07**, with explicit PATCH clearing and collection replacement clarification.
-Scope: public, non-sensitive saved definitions only; no execution, outbound HTTP,
+Historical baseline scope: public, non-sensitive saved definitions only; no execution, outbound HTTP,
 evidence, environments, imports or encrypted secret storage.
+
+The accepted [protected continuation](protected-request-secrets-contract.md)
+extends sensitive DTOs and cleanup in the authorized development stage.
+The original public-only rules below remain the baseline for public fields.
 
 ## Routes and versions
 

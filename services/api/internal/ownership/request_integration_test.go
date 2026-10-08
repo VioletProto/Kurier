@@ -162,6 +162,7 @@ func exerciseSavedRequests(t *testing.T, i *integration) []Project {
 		}
 		ran = true
 		other := NewStore(i.client, i.store.table, i.store.stage)
+		other.ConfigureProtected(i.store.protectedTable, i.store.cipher)
 		current, e := other.GetProject(ctx, i.alice.UserID, p2.ProjectID)
 		if e != nil {
 			t.Fatal(e)
@@ -191,6 +192,7 @@ func exerciseSavedRequests(t *testing.T, i *integration) []Project {
 	assertStatus(t, err, 409)
 	// Construct a new store to prove the next chunk uses the durable checkpoint.
 	resumed := NewStore(i.client, i.store.table, i.store.stage)
+	resumed.ConfigureProtected(i.store.protectedTable, i.store.cipher)
 	_, err = resumed.CleanupProject(ctx, p.ProjectID)
 	assertStatus(t, err, 409)
 	remaining, e := i.client.Query(ctx, &dynamodb.QueryInput{TableName: aws.String(i.store.table), KeyConditionExpression: aws.String("PK = :pk AND begins_with(SK, :prefix)"), ExpressionAttributeValues: map[string]types.AttributeValue{":pk": s(unknown.PK), ":prefix": s("REQ#")}, ConsistentRead: aws.Bool(true)})
@@ -254,6 +256,7 @@ func TestIntegrationRequestRevisionRaceAndCleanupFence(t *testing.T) {
 		}
 		ran = true
 		other := NewStore(i.client, i.store.table, i.store.stage)
+		other.ConfigureProtected(i.store.protectedTable, i.store.cipher)
 		if _, e := other.DeleteProject(ctx, i.alice.UserID, p.ProjectID, current.Version); e != nil {
 			t.Fatal(e)
 		}

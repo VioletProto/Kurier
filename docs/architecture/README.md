@@ -109,3 +109,19 @@ preserves unknown children and retains the strong whole-partition completion
 proof. Local and actual AWS integration passed; genuine browser status is
 recorded separately in [the development guide](../development/saved-requests.md).
 Execution, Protected, workflows and full cross-store cleanup remain planned.
+
+## Protected saved-request continuation
+
+The [protected saved-request contract](protected-request-secrets-contract.md)
+is accepted, including project-owned lifecycle, explicit shared replacement and
+revocation, stable binding identity, envelope encryption, limits and two-table
+cleanup. Preserve cannot introduce a binding. Defined URL checks cover named
+credential patterns and unsupported modes, not arbitrary embedded secrets.
+
+The authorized development slice provisions Protected and the annual-rotation
+stage KMS key and extends existing API/cleanup Lambdas. Request revisions,
+project gates and recovery generation remain authoritative. See
+[actual validation and remaining gaps](../development/protected-request-secrets.md).
+Execution, outbound HTTP, evidence, workflows and local-agent delivery remain
+outside this slice. Earlier public-only descriptions record their historical
+baseline; this continuation supersedes those secret-storage limits.
