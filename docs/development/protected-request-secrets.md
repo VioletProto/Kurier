@@ -118,8 +118,9 @@ Sign out and sign in as a second Cognito user, then call
 validateProtectedIsolation(probe). Sign in as the original owner and call
 finishProtectedBrowserProbe(probe) to wait for actual scheduled deletion.
 No outbound HTTP is executed. The probe exists in AWS and its active-value
-Control/encrypted-persistence/cloud-log audit passed; returned browser flags,
-second-user denial and owner cleanup still await Davian's report.
+Control/encrypted-persistence/cloud-log audit passed. Davian reported the
+corrected genuine browser flags below; second-user denial and owner cleanup
+still await his report.
 
 The first genuine probe reached its final safety check and threw a combined
 error after the expected 412 stale-replacement and two 400 reference-misuse
@@ -130,8 +131,34 @@ generated disposable values. The corrected helper retains every submitted
 value only in memory, checks response representations and reads existing
 Web Storage, IndexedDB and Cache Storage for those values without deleting data.
 It returns separate response/storage/completeness flags instead of a generic
-throw. The original browser's precise failure source remains unconfirmed until
-these diagnostic flags are reported; no leak was established by the old error.
+throw. The corrected audit found one local-storage entry and one session-storage
+entry, with no disposable secrets. Existing nonempty storage explains why the
+old blanket-empty check failed; no leak was established by the old error.
+
+Davian's genuine Cognito/browser result for disposable project
+80f2d9b6-b706-4028-95d1-496e1c995d3c:
+
+| Check                                    | Actual result                                             |
+| ---------------------------------------- | --------------------------------------------------------- |
+| Unrelated preserve                       | true                                                      |
+| Request-local replacement                | true                                                      |
+| Shared replacement                       | true                                                      |
+| Stale shared replacement                 | 412, expected                                             |
+| Revoked reference reuse                  | 400, expected                                             |
+| Cross-project reference                  | 400, expected                                             |
+| Safe responses                           | true                                                      |
+| Browser persistence audit complete       | true                                                      |
+| No disposable secrets in browser storage | true                                                      |
+| Overall safety                           | true                                                      |
+| Storage inventory                        | 1 local entry, 1 session entry; 0 databases/cache entries |
+
+A follow-up memory-only AWS audit checked three active value representations
+against 119 Control records, Protected persistence and 2,952 API/cleanup log
+events: no disposable plaintext found.
+
+Three safe request IDs were returned. This confirms genuine owner-session
+behavior, JSON pointer authoring and browser persistence checks; it does not
+substitute for the pending second-Cognito-user 404 test or owner deletion.
 
 The audit is bounded to 16 MiB of inspected text and 10,000 IndexedDB/cache
 entries. Unreadable/opaque data, missing browser APIs or exceeded bounds produce
@@ -152,8 +179,8 @@ protectedProbe;
 Report safe flags/counts only, especially responsesSafe,
 persistence.storageSafe, persistence.auditComplete and safetyPassed. The query
 suffix reloads the helper without discarding the memory-only login session.
-This creates another disposable probe. Recover the earlier probe's safe IDs
-while still signed in as its owner:
+This creates another disposable probe. If the earlier project still exists,
+recover its safe IDs while still signed in as its owner:
 
 ```js
 var earlierProtectedProbe = await (
@@ -162,8 +189,8 @@ var earlierProtectedProbe = await (
 ```
 
 Use validateProtectedIsolation(protectedProbe) under a second Cognito user.
-Then, as the original owner, call finishProtectedBrowserProbe for both returned
-probe objects so the actual scheduler cleans up both disposable projects.
+Then, as the original owner, call finishProtectedBrowserProbe for each remaining
+probe object so the actual scheduler cleans up the disposable projects.
 
 ## Checks
 
@@ -186,5 +213,5 @@ rules. Plaintext exists transiently in browser/server memory; garbage-collected
 strings cannot guarantee physical erasure. Annual key rotation is configured,
 not elapsed/runtime-tested. Unknown records intentionally keep deletion pending.
 Genuine browser acceptance remains open; submission status is recorded in Trello. The active-value
-cloud audit passed; browser flags/second-user denial/owner deletion remain to be
-reported.
+cloud audit and genuine owner-session browser flags passed; second-user denial
+and owner deletion remain to be reported.
