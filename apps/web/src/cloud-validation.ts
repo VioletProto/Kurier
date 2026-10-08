@@ -1,6 +1,10 @@
 // Opt-in developer browser checks. Uses the genuine memory-only session;
 // returns safe IDs/statuses only. Never logs tokens, auth payloads or passwords.
 import { api, ApiError, type Deletion, type ProjectDetail } from "./api";
+import {
+  auditSecretPersistence,
+  containsSecretText,
+} from "./secret-persistence-audit";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function expectDenied(action: () => Promise<unknown>, status: number) {
   try {
@@ -415,4 +419,251 @@ export async function cleanupSavedRequestValidation(
   throw new Error(
     "Scheduled request cleanup remains pending after three minutes.",
   );
+}
+
+// These probes run only when invoked by the signed-in developer. Values stay
+// in browser memory; returned objects contain identifiers and boolean results.
+export async function validateCloudProtectedSecrets() {
+  const user = await api.me();
+  const project = await api.create("Protected browser isolation probe");
+  const projectId = project.project.projectId;
+  const values: string[] = [];
+  const disposable = () => {
+    const value = "Bearer " + crypto.randomUUID();
+    values.push(value);
+    return value;
+  };
+  const value = disposable();
+  const bindingId = crypto.randomUUID();
+  const a = await api.createRequest(projectId, {
+    name: "Protected A",
+    method: "GET",
+    url: "https://example.com/public",
+    headers: [
+      {
+        name: "Authorization",
+        enabled: true,
+        sensitive: true,
+        bindingId,
+        secretWrite: { action: "set", value },
+      },
+    ],
+    queryParameters: [],
+    body: null,
+    operationRef: null,
+  });
+  const ref = a.request.headers[0].secretRef!;
+  const b = await api.createRequest(projectId, {
+    name: "Protected B",
+    method: "GET",
+    url: "https://example.com/public",
+    headers: [
+      {
+        name: "Authorization",
+        enabled: true,
+        sensitive: true,
+        bindingId: crypto.randomUUID(),
+        secretWrite: { action: "secretRef", secretRef: ref },
+      },
+    ],
+    queryParameters: [],
+    body: null,
+    operationRef: null,
+  });
+  const edited = await api.patchRequest(
+    projectId,
+    a.request.requestId,
+    { name: "Protected A renamed" },
+    a.etag,
+  );
+  if (edited.request.headers[0].secretRef?.secretId !== ref.secretId)
+    throw new Error("Unrelated edit changed secret binding");
+  const replacement = await api.patchRequest(
+    projectId,
+    edited.request.requestId,
+    {
+      headers: [
+        {
+          name: "Authorization",
+          enabled: true,
+          sensitive: true,
+          bindingId,
+          secretWrite: {
+            action: "set",
+            value: disposable(),
+          },
+        },
+      ],
+    },
+    edited.etag,
+  );
+  if (replacement.request.headers[0].secretRef?.secretId === ref.secretId)
+    throw new Error("Request-local replacement changed shared secret");
+  const metadata = await api.listSecrets(projectId);
+  const source = metadata.items.find((s) => s.secretId === ref.secretId)!;
+  const shared = await api.replaceSecret(projectId, source, disposable());
+  const sharedStale = await expectDenied(
+    () => api.replaceSecret(projectId, source, disposable()),
+    412,
+  );
+  await api.revokeSecret(projectId, shared);
+  const revokedReuse = await expectDenied(
+    () =>
+      api.createRequest(projectId, {
+        name: "Ineligible",
+        method: "GET",
+        url: "https://example.com",
+        headers: [
+          {
+            name: "Authorization",
+            enabled: true,
+            sensitive: true,
+            bindingId: crypto.randomUUID(),
+            secretWrite: { action: "secretRef", secretRef: ref },
+          },
+        ],
+        queryParameters: [],
+        body: null,
+        operationRef: null,
+      }),
+    400,
+  );
+  const preserved = await api.patchRequest(
+    projectId,
+    b.request.requestId,
+    { name: "Protected B preserved unavailable" },
+    b.etag,
+  );
+  const bodyValue = JSON.stringify(crypto.randomUUID());
+  values.push(bodyValue);
+  const body = await api.createRequest(projectId, {
+    name: "Protected JSON",
+    method: "POST",
+    url: "https://example.com/public",
+    headers: [],
+    queryParameters: [],
+    body: {
+      type: "json",
+      text: '{"password":null}',
+      sensitive: false,
+      secretFields: [
+        {
+          pointer: "/password",
+          bindingId: crypto.randomUUID(),
+          secretWrite: { action: "set", value: bodyValue },
+        },
+      ],
+    },
+    operationRef: null,
+  });
+  const foreign = await api.create("Protected foreign-reference probe");
+  const crossProject = await expectDenied(
+    () =>
+      api.createRequest(foreign.project.projectId, {
+        name: "Ineligible",
+        method: "GET",
+        url: "https://example.com",
+        headers: [
+          {
+            name: "Authorization",
+            enabled: true,
+            sensitive: true,
+            bindingId: crypto.randomUUID(),
+            secretWrite: {
+              action: "secretRef",
+              secretRef: replacement.request.headers[0].secretRef!,
+            },
+          },
+        ],
+        queryParameters: [],
+        body: null,
+        operationRef: null,
+      }),
+    400,
+  );
+  await awaitDeletion(
+    await api.delete(foreign.project.projectId, foreign.etag),
+  );
+  const text = JSON.stringify([
+    a,
+    b,
+    edited,
+    replacement,
+    metadata,
+    shared,
+    preserved,
+    body,
+  ]);
+  const responsesSafe = !containsSecretText(text, values);
+  const persistence = await auditSecretPersistence(values);
+  return {
+    ownerId: user.userId,
+    projectId,
+    requestIds: [
+      a.request.requestId,
+      b.request.requestId,
+      body.request.requestId,
+    ],
+    unrelatedPreserve: true,
+    requestLocalReplacement: true,
+    sharedReplacement: true,
+    sharedStale,
+    revokedReuse,
+    crossProject,
+    responsesSafe,
+    persistence,
+    safetyPassed: responsesSafe && persistence.storageSafe,
+  };
+}
+export async function validateProtectedIsolation(probe: {
+  ownerId: string;
+  projectId: string;
+  requestIds: string[];
+}) {
+  const current = await api.me();
+  if (current.userId === probe.ownerId)
+    throw new Error("Sign in as the second Cognito user");
+  const denied: number[] = [];
+  for (const id of probe.requestIds)
+    denied.push(
+      await expectDenied(() => api.requestDetail(probe.projectId, id), 404),
+    );
+  denied.push(await expectDenied(() => api.listSecrets(probe.projectId), 404));
+  return { distinctUser: true, denied };
+}
+export async function finishProtectedBrowserProbe(probe: {
+  ownerId: string;
+  projectId: string;
+}) {
+  const current = await api.me();
+  if (current.userId !== probe.ownerId)
+    throw new Error("Sign in as the original owner");
+  const project = await api.detail(probe.projectId);
+  const op = await api.delete(probe.projectId, project.etag);
+  const immediateDenial = await expectDenied(
+    () => api.listSecrets(probe.projectId),
+    404,
+  );
+  const completed = await awaitDeletion(op);
+  return {
+    projectId: probe.projectId,
+    operationId: completed.operationId,
+    immediateDenial,
+    scheduledCleanup: completed.state,
+  };
+}
+
+// Recover only safe identifiers from the earlier probe that failed its blanket
+// storage-empty assertion. This performs no secret reveal or new writes.
+export async function recoverProtectedBrowserProbe(projectId: string) {
+  const user = await api.me();
+  await api.detail(projectId);
+  const requestIds: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await api.listRequests(projectId, cursor);
+    requestIds.push(...page.items.map((r) => r.requestId));
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor);
+  return { ownerId: user.userId, projectId, requestIds };
 }

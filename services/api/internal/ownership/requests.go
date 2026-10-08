@@ -14,15 +14,39 @@ import (
 const savedConfigurationLimit = 64 * 1024
 
 type RequestField struct {
-	Name      string `json:"name"`
-	Value     string `json:"value"`
-	Enabled   bool   `json:"enabled"`
-	Sensitive bool   `json:"sensitive"`
+	Name        string           `json:"name"`
+	Value       string           `json:"value"`
+	Enabled     bool             `json:"enabled"`
+	Sensitive   bool             `json:"sensitive"`
+	BindingID   string           `json:"bindingId,omitempty"`
+	Masked      bool             `json:"masked,omitempty"`
+	SecretRef   *SecretReference `json:"secretRef,omitempty"`
+	SecretWrite *SecretWrite     `json:"secretWrite,omitempty"`
+}
+type SecretReference struct {
+	SecretID string `json:"secretId"`
+}
+type SecretWrite struct {
+	Action    string           `json:"action"`
+	Value     *string          `json:"value,omitempty"`
+	SecretRef *SecretReference `json:"secretRef,omitempty"`
+}
+type SecretField struct {
+	Pointer     string           `json:"pointer"`
+	BindingID   string           `json:"bindingId"`
+	Masked      bool             `json:"masked,omitempty"`
+	SecretRef   *SecretReference `json:"secretRef,omitempty"`
+	SecretWrite *SecretWrite     `json:"secretWrite,omitempty"`
 }
 type RequestBody struct {
-	Type      string `json:"type"`
-	Text      string `json:"text"`
-	Sensitive bool   `json:"sensitive"`
+	Type         string           `json:"type"`
+	Text         string           `json:"text"`
+	SecretFields []SecretField    `json:"secretFields,omitempty"`
+	Sensitive    bool             `json:"sensitive"`
+	BindingID    string           `json:"bindingId,omitempty"`
+	Masked       bool             `json:"masked,omitempty"`
+	SecretRef    *SecretReference `json:"secretRef,omitempty"`
+	SecretWrite  *SecretWrite     `json:"secretWrite,omitempty"`
 }
 type RequestConfiguration struct {
 	Name            string         `json:"name"`
@@ -52,7 +76,7 @@ func configurationJSON(c RequestConfiguration) ([]byte, error) {
 	return bytes.TrimSuffix(out.Bytes(), []byte("\n")), nil
 }
 func invalidConfiguration() error {
-	return apiError(400, "validation_failed", "Use a public HTTP(S) URL, supported method, public headers/query and a text or JSON body. Credentials and sensitive data are unavailable until encrypted storage exists.")
+	return apiError(400, "validation_failed", "Use a public HTTP(S) URL, supported method, public headers/query and a text or JSON body. Use protected inputs for credentials and designated sensitive fields.")
 }
 
 var headerToken = regexp.MustCompile("^[!#$%&'*+.^_`|~0-9A-Za-z-]+$")
@@ -203,13 +227,22 @@ func validateConfiguration(c *RequestConfiguration) error {
 		header bool
 	}{{c.Headers, true}, {c.QueryParameters, false}} {
 		for _, f := range entry.fields {
-			if f.Name == "" || control(f.Name, false) || control(f.Value, entry.header) || f.Sensitive || credentialName(f.Name) || obviousCredential(f.Value) || (entry.header && !headerToken.MatchString(f.Name)) {
+			if f.Sensitive && f.Value != "" {
+				return invalidConfiguration()
+			}
+			if !f.Sensitive && (f.BindingID != "" || f.SecretWrite != nil || f.SecretRef != nil || f.Masked) {
+				return invalidConfiguration()
+			}
+			if f.Name == "" || control(f.Name, false) || control(f.Value, entry.header) || (!f.Sensitive && (credentialName(f.Name) || obviousCredential(f.Value))) || (entry.header && !headerToken.MatchString(f.Name)) {
 				return invalidConfiguration()
 			}
 		}
 	}
-	if c.Body != nil {
-		if c.Body.Sensitive || obviousCredential(c.Body.Text) {
+	if err := validateSlots(c); err != nil {
+		return err
+	}
+	if c.Body != nil && !c.Body.Sensitive {
+		if !c.Body.Sensitive && obviousCredential(c.Body.Text) {
 			return invalidConfiguration()
 		}
 		switch c.Body.Type {
@@ -221,18 +254,18 @@ func validateConfiguration(c *RequestConfiguration) error {
 			var v any
 			d := json.NewDecoder(strings.NewReader(c.Body.Text))
 			d.UseNumber()
-			if d.Decode(&v) != nil || !publicJSON(v) {
+			if d.Decode(&v) != nil || (!c.Body.Sensitive && !publicBodyJSON(v, c.Body.SecretFields)) {
 				return invalidConfiguration()
 			}
 		default:
 			return invalidConfiguration()
 		}
 	}
-	raw, err := configurationJSON(*c)
+	size, err := configurationSize(*c)
 	if err != nil {
 		return err
 	}
-	if len(raw) > savedConfigurationLimit {
+	if size > savedConfigurationLimit {
 		return apiError(413, "payload_too_large", "Complete saved configuration exceeds 64 KiB, including URL, headers, query, body and JSON overhead.")
 	}
 	return nil
@@ -241,6 +274,9 @@ func validateConfiguration(c *RequestConfiguration) error {
 // mergeConfiguration also validates descriptor presence/nulls; Go's ordinary
 // struct decoder otherwise accepts null booleans/strings as zero values.
 func mergeConfiguration(raw []byte, previous *RequestConfiguration) (RequestConfiguration, error) {
+	return mergeConfigurationMode(raw, previous, false)
+}
+func mergeConfigurationMode(raw []byte, previous *RequestConfiguration, stored bool) (RequestConfiguration, error) {
 	c := RequestConfiguration{QueryParameters: []RequestField{}, Headers: []RequestField{}}
 	if previous != nil {
 		c = *previous
@@ -280,18 +316,12 @@ func mergeConfiguration(raw []byte, previous *RequestConfiguration) (RequestConf
 				return c, invalidConfiguration()
 			}
 			for _, entry := range entries {
-				if len(entry) != 4 {
-					return c, invalidConfiguration()
-				}
-				for _, name := range []string{"name", "value", "enabled", "sensitive"} {
-					value, ok := entry[name]
-					if !ok || bytes.Equal(value, []byte("null")) {
-						return c, invalidConfiguration()
-					}
+				if err := descriptor(entry, false, stored); err != nil {
+					return c, err
 				}
 			}
 			var values []RequestField
-			if json.Unmarshal(v, &values) != nil {
+			if strictDecode(v, &values) != nil {
 				return c, invalidConfiguration()
 			}
 			if k == "headers" {
@@ -305,17 +335,43 @@ func mergeConfiguration(raw []byte, previous *RequestConfiguration) (RequestConf
 				continue
 			}
 			var body map[string]json.RawMessage
-			if json.Unmarshal(v, &body) != nil || len(body) != 3 {
+			if json.Unmarshal(v, &body) != nil {
 				return c, invalidConfiguration()
 			}
-			for _, name := range []string{"type", "text", "sensitive"} {
-				value, ok := body[name]
-				if !ok || bytes.Equal(value, []byte("null")) {
+			if v, ok := body["secretFields"]; ok {
+				var entries []map[string]json.RawMessage
+				if json.Unmarshal(v, &entries) != nil || entries == nil {
 					return c, invalidConfiguration()
 				}
+				for _, entry := range entries {
+					expected := 3
+					if stored {
+						expected = 4
+					}
+					if len(entry) != expected {
+						return c, invalidConfiguration()
+					}
+					for _, k := range []string{"pointer", "bindingId"} {
+						if value, ok := entry[k]; !ok || bytes.Equal(value, []byte("null")) {
+							return c, invalidConfiguration()
+						}
+					}
+					if stored {
+						if _, ok := entry["secretRef"]; !ok {
+							return c, invalidConfiguration()
+						}
+					} else {
+						if _, ok := entry["secretWrite"]; !ok {
+							return c, invalidConfiguration()
+						}
+					}
+				}
+			}
+			if err := descriptor(body, true, stored); err != nil {
+				return c, err
 			}
 			var parsed RequestBody
-			if json.Unmarshal(v, &parsed) != nil {
+			if strictDecode(v, &parsed) != nil {
 				return c, invalidConfiguration()
 			}
 			c.Body = &parsed
@@ -335,7 +391,7 @@ func (r record) savedRequest() (SavedRequest, error) {
 	if r.Kind != "request" || r.State != "active" || r.RequestID == "" || r.SK != "REQ#"+r.RequestID || r.PK != "P#"+r.ProjectID || r.Revision < 0 {
 		return SavedRequest{}, missing()
 	}
-	c, err := mergeConfiguration([]byte(r.ConfigurationJSON), nil)
+	c, err := mergeConfigurationMode([]byte(r.ConfigurationJSON), nil, true)
 	if err != nil {
 		return SavedRequest{}, unavailable()
 	}

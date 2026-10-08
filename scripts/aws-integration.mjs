@@ -1,4 +1,5 @@
 // Bridge the AWS CLI session to Go only in child memory; never print credentials.
+import { readFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 function awsJson(args) {
   const result = spawnSync("aws", args, { encoding: "utf8" });
@@ -14,11 +15,16 @@ const credentials = awsJson([
   "--format",
   "process",
 ]);
+const outputs = JSON.parse(
+  readFileSync(new URL("../.sst/outputs.json", import.meta.url), "utf8"),
+);
 const env = {
   ...process.env,
   AWS_REGION: "us-east-2",
   KURIER_AWS_ACCOUNT_ID: "747336059622",
-  KURIER_AWS_TEST_TABLE: "kurier-dev-api-ControlTable-bdxbaoxb",
+  KURIER_AWS_TEST_TABLE: outputs.controlTable,
+  KURIER_AWS_TEST_PROTECTED: outputs.protectedTable,
+  KURIER_AWS_TEST_KEY: outputs.protectedKeyArn,
 };
 for (const [source, target] of [
   ["AccessKeyId", "AWS_ACCESS_KEY_ID"],
@@ -29,6 +35,9 @@ for (const [source, target] of [
 }
 if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY)
   throw new Error("No usable AWS session.");
+const filter = process.argv[2] ?? "TestAWS";
+if (!["TestAWS", "TestAWSControl", "TestAWSProtected"].includes(filter))
+  throw new Error("Choose a scoped AWS test filter.");
 const child = spawn(
   "go",
   [
@@ -36,7 +45,7 @@ const child = spawn(
     "-race",
     "-tags=integration,aws",
     "-run",
-    "TestAWSControl",
+    filter,
     "-count=1",
     "-v",
     "./internal/ownership",

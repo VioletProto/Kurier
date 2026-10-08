@@ -47,6 +47,7 @@ beforeEach(() => {
       }),
     },
     dynamodb: { TableItem: Resource },
+    kms: { Key: Resource, Alias: Resource },
   });
   vi.stubGlobal("sst", {
     aws: {
@@ -99,7 +100,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(13);
+    expect(resources.filter((r) => r.route)).toHaveLength(16);
     const http = resources.find((r) => r.name === "DevelopmentHttpApi")!;
     expect(http.args.cors).toBe(false);
     expect(http.api.corsConfiguration).toBeUndefined();
@@ -110,6 +111,24 @@ describe("scoped development API infrastructure", () => {
       resources.find((r) => r.name === "EmptyProjectCleanup")!.fn
         .reservedConcurrentExecutions,
     ).toBeUndefined();
+    const protectedTable = resources.find((r) => r.name === "Protected")!;
+    expect(protectedTable.args.globalIndexes).toBeUndefined();
+    expect(protectedTable.table).toMatchObject({
+      deletionProtectionEnabled: true,
+      pointInTimeRecovery: { enabled: true },
+    });
+    expect(api.args.permissions.flatMap((p: any) => p.actions)).toContain(
+      "kms:GenerateDataKey",
+    );
+    expect(api.args.permissions.flatMap((p: any) => p.actions)).not.toContain(
+      "kms:Decrypt",
+    );
+    expect(
+      resources
+        .find((r) => r.name === "EmptyProjectCleanup")!
+        .args.permissions.flatMap((p: any) => p.actions)
+        .some((a: string) => a.startsWith("kms:")),
+    ).toBe(false);
     expect(out.stage).toBe("dev-api");
   });
   it("refuses root and wrong-account deployment", async () => {

@@ -183,6 +183,26 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   await requests
     .getByLabel("Public request URL")
     .fill("https://example.com/public");
+  // Genuine Chromium-to-Go/Local protected authoring; no traces/screenshots.
+  const disposable = "Bearer " + crypto.randomUUID();
+  const responseChecks: Promise<boolean>[] = [];
+  page.on("response", (response) => {
+    if (response.url().startsWith(backend + "/api/"))
+      responseChecks.push(
+        response
+          .text()
+          .then((text) => !text.includes(disposable))
+          .catch(() => true),
+      );
+  });
+  await requests
+    .getByRole("button", { name: "Add header", exact: true })
+    .click();
+  await requests.getByLabel("Header name 1").fill("Authorization");
+  await requests
+    .getByRole("checkbox", { name: "Protected", exact: true })
+    .check();
+  await requests.getByLabel("Header value 1").fill(disposable);
   await requests
     .getByRole("checkbox", { name: /All fields contain public data/ })
     .check();
@@ -192,6 +212,38 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   await expect(
     requests.getByRole("heading", { name: "Edit request (revision 0)" }),
   ).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await requests.getByLabel("Header value 1").inputValue()) === "",
+    )
+    .toBe(true);
+  await requests
+    .getByLabel("Request name", { exact: true })
+    .fill("Protected cascade request");
+  await requests
+    .getByRole("checkbox", { name: /All fields contain public data/ })
+    .check();
+  await requests.getByRole("button", { name: "Save request changes" }).click();
+  await expect(
+    requests.getByRole("heading", { name: "Edit request (revision 1)" }),
+  ).toBeVisible();
+  await requests
+    .getByRole("button", { name: "Refresh project secrets" })
+    .click();
+  await expect(requests.getByText(/revision 0/)).toBeVisible();
+  const storageSafe = await page.evaluate(async (value) => {
+    const text = JSON.stringify({ ...localStorage, ...sessionStorage });
+    return (
+      !text.includes(value) &&
+      localStorage.length === 0 &&
+      sessionStorage.length === 0 &&
+      (await indexedDB.databases()).length === 0 &&
+      (await caches.keys()).length === 0
+    );
+  }, disposable);
+  if (!storageSafe || (await Promise.all(responseChecks)).some((v) => !v))
+    throw new Error("Protected value detected in forbidden browser surface");
   await details
     .getByRole("button", { name: "Refresh details", exact: true })
     .click();
@@ -292,4 +344,68 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
       session: sessionStorage.length,
     })),
   ).toEqual({ local: 0, session: 0 });
+});
+
+test("disposable-secret audit tolerates unrelated storage and detects real leaks", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const flags = await page.evaluate(async () => {
+    const { auditSecretPersistence } =
+      await import("/src/secret-persistence-audit.ts");
+    const value = "Bearer " + crypto.randomUUID();
+    localStorage.setItem("unrelated-preference", "dark");
+    sessionStorage.setItem("unrelated-panel", "open");
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const open = indexedDB.open("disposable-audit-fixture", 1);
+      open.onupgradeneeded = () => open.result.createObjectStore("rows");
+      open.onsuccess = () => resolve(open.result);
+      open.onerror = () => reject(new Error("Fixture setup failed"));
+    });
+    const put = (data: unknown) =>
+      new Promise<void>((resolve, reject) => {
+        const tx = db.transaction("rows", "readwrite");
+        tx.objectStore("rows").put(data, "row");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(new Error("Fixture setup failed"));
+      });
+    await put({ preference: "public" });
+    const cache = await caches.open("disposable-audit-fixture");
+    const url = location.origin + "/disposable-audit-fixture";
+    await cache.put(url, new Response("public"));
+    const unrelated = await auditSecretPersistence([value]);
+    localStorage.setItem("disposable-value", value);
+    const web = await auditSecretPersistence([value]);
+    localStorage.removeItem("disposable-value");
+    await put({ bytes: new TextEncoder().encode(value) });
+    const indexed = await auditSecretPersistence([value]);
+    await put({ preference: "public" });
+    await cache.put(url, new Response(value));
+    const cached = await auditSecretPersistence([value]);
+    const safeOutput = !JSON.stringify([
+      unrelated,
+      web,
+      indexed,
+      cached,
+    ]).includes(value);
+    const unrelatedPreserved =
+      localStorage.getItem("unrelated-preference") === "dark";
+    db.close();
+    return {
+      unrelatedAllowed: unrelated.storageSafe && unrelated.auditComplete,
+      webDetected: !web.storageSafe && web.auditComplete,
+      indexedDetected: !indexed.storageSafe && indexed.auditComplete,
+      cacheDetected: !cached.storageSafe && cached.auditComplete,
+      safeOutput,
+      unrelatedPreserved,
+    };
+  });
+  expect(flags).toEqual({
+    unrelatedAllowed: true,
+    webDetected: true,
+    indexedDetected: true,
+    cacheDetected: true,
+    safeOutput: true,
+    unrelatedPreserved: true,
+  });
 });

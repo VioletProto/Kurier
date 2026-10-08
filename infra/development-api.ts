@@ -68,6 +68,32 @@ export async function createDevelopmentApi() {
       },
     },
   });
+  const protectedTable = new sst.aws.Dynamo("Protected", {
+    fields: { PK: "string", SK: "string" },
+    primaryIndex: { hashKey: "PK", rangeKey: "SK" },
+    transform: {
+      table(args) {
+        args.billingMode = "PAY_PER_REQUEST";
+        args.pointInTimeRecovery = { enabled: true };
+        args.deletionProtectionEnabled = true;
+      },
+    },
+  });
+  // Inventory confirmed no existing customer stage key; retained annually rotated key.
+  const stageKey = new aws.kms.Key(
+    "ProtectedStageKey",
+    {
+      description: "Kurier dev-api saved-secret envelope key",
+      enableKeyRotation: true,
+      deletionWindowInDays: 30,
+      tags: { "kurier:stage": "dev-api", "kurier:purpose": "saved-secret" },
+    },
+    { retainOnDelete: true, protect: true },
+  );
+  new aws.kms.Alias("ProtectedStageKeyAlias", {
+    name: "alias/kurier/dev-api/protected",
+    targetKeyId: stageKey.id,
+  });
   // Owned initial marker; retained with the table. Never reset generation during
   // runtime startup. Recovery must update state/generation before reopening.
   new aws.dynamodb.TableItem(
@@ -84,7 +110,8 @@ export async function createDevelopmentApi() {
         version: { N: "0" },
         state: { S: "active" },
         recoveryGeneration: { S: "dev-api-initial-v1" },
-        savedRequestsSchemaVersion: { N: "1" },
+        savedRequestsSchemaVersion: { N: "2" },
+        protectedSecretsSchemaVersion: { N: "1" },
       }),
     },
     { ignoreChanges: ["item"] },
@@ -102,10 +129,24 @@ export async function createDevelopmentApi() {
       resources: [control.arn, $interpolate`${control.arn}/index/*`],
     },
   ];
+  const protectedPermissions = [
+    {
+      actions: [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:PutItem",
+        "dynamodb:ConditionCheckItem",
+      ],
+      resources: [protectedTable.arn],
+    },
+  ];
   const environment = {
     KURIER_STAGE: "dev-api",
-    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "1",
+    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "2",
+    KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
+    KURIER_PROTECTED_TABLE: protectedTable.name,
     KURIER_CONTROL_TABLE: control.name,
+    KURIER_KMS_KEY_ARN: stageKey.arn,
     KURIER_COGNITO_ISSUER: `https://cognito-idp.us-east-2.amazonaws.com/${poolId}`,
     KURIER_COGNITO_CLIENT_ID: clientId!,
     KURIER_FRONTEND_ORIGIN: origin,
@@ -126,6 +167,28 @@ export async function createDevelopmentApi() {
         actions: ["ssm:GetParameter"],
         resources: [
           `arn:aws:ssm:us-east-2:${account}:parameter${parameterName}`,
+        ],
+      },
+      ...protectedPermissions,
+      {
+        actions: ["kms:GenerateDataKey"],
+        resources: [stageKey.arn],
+        conditions: [
+          {
+            test: "StringEquals",
+            variable: "kms:EncryptionContext:app",
+            values: ["kurier"],
+          },
+          {
+            test: "StringEquals",
+            variable: "kms:EncryptionContext:stage",
+            values: ["dev-api"],
+          },
+          {
+            test: "StringEquals",
+            variable: "kms:EncryptionContext:purpose",
+            values: ["saved-secret"],
+          },
         ],
       },
     ],
@@ -171,6 +234,9 @@ export async function createDevelopmentApi() {
     "GET /api/v1/projects/{projectId}/requests/{requestId}",
     "PATCH /api/v1/projects/{projectId}/requests/{requestId}",
     "DELETE /api/v1/projects/{projectId}/requests/{requestId}",
+    "GET /api/v1/projects/{projectId}/secrets",
+    "PATCH /api/v1/projects/{projectId}/secrets/{secretId}",
+    "DELETE /api/v1/projects/{projectId}/secrets/{secretId}",
     "OPTIONS /api/v1/{proxy+}",
   ]) {
     api.route(route, fn.arn);
@@ -184,11 +250,19 @@ export async function createDevelopmentApi() {
     dev: false,
     environment: {
       KURIER_STAGE: "dev-api",
-      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "1",
+      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "2",
+      KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
+      KURIER_PROTECTED_TABLE: protectedTable.name,
       KURIER_CONTROL_TABLE: control.name,
       KURIER_MAINTENANCE: "empty-projects",
     },
-    permissions: tablePermissions,
+    permissions: [
+      ...tablePermissions,
+      {
+        actions: ["dynamodb:Query", "dynamodb:DeleteItem"],
+        resources: [protectedTable.arn],
+      },
+    ],
     logging: { retention: "1 week" },
   });
   const schedule = new sst.aws.Cron("EmptyProjectSchedule", {
@@ -200,6 +274,8 @@ export async function createDevelopmentApi() {
     region: "us-east-2",
     apiUrl: api.url,
     controlTable: control.name,
+    protectedTable: protectedTable.name,
+    protectedKeyArn: stageKey.arn,
     apiFunction: fn.name,
     cleanupFunction: maintenance.name,
     cleanupSchedule: schedule.nodes.rule.name,

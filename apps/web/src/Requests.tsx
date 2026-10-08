@@ -7,6 +7,8 @@ import {
   type RequestDetail,
   type RequestField,
   type SavedRequest,
+  type SecretMetadata,
+  type SecretField,
 } from "./api";
 import { SessionExpired } from "./auth";
 
@@ -24,16 +26,84 @@ function configuration(r: RequestConfiguration): RequestConfiguration {
     name: r.name,
     method: r.method,
     url: r.url,
-    queryParameters: r.queryParameters,
-    headers: r.headers,
-    body: r.body,
+    queryParameters: r.queryParameters.map(editField),
+    headers: r.headers.map(editField),
+    body: r.body ? editBody(r.body) : null,
     operationRef: null,
   };
+}
+function editField(f: RequestField): RequestField {
+  if (!f.sensitive) return { ...f };
+  return {
+    name: f.name,
+    enabled: f.enabled,
+    sensitive: true,
+    bindingId: f.bindingId,
+    secretWrite: f.secretWrite ?? {
+      action: "preserve",
+      secretRef: f.secretRef,
+    },
+  };
+}
+function editBody(
+  b: NonNullable<RequestConfiguration["body"]>,
+): NonNullable<RequestConfiguration["body"]> {
+  if (b.sensitive)
+    return {
+      type: b.type,
+      sensitive: true,
+      bindingId: b.bindingId,
+      secretWrite: b.secretWrite ?? {
+        action: "preserve",
+        secretRef: b.secretRef,
+      },
+    };
+  return {
+    ...b,
+    secretFields: b.secretFields?.map((f) => ({
+      pointer: f.pointer,
+      bindingId: f.bindingId,
+      secretWrite: f.secretWrite ?? {
+        action: "preserve",
+        secretRef: f.secretRef,
+      },
+    })),
+  };
+}
+function cleared(c: RequestConfiguration): RequestConfiguration {
+  const next = configuration(c);
+  for (const f of [
+    ...next.headers,
+    ...next.queryParameters,
+    ...(next.body ? [next.body, ...(next.body.secretFields ?? [])] : []),
+  ]) {
+    if (f.secretWrite?.action === "set")
+      f.secretWrite = { action: "set", value: "" };
+  }
+  return next;
+}
+function sized(c: RequestConfiguration): RequestConfiguration {
+  const next = configuration(c);
+  for (const f of [
+    ...next.headers,
+    ...next.queryParameters,
+    ...(next.body ? [next.body, ...(next.body.secretFields ?? [])] : []),
+  ]) {
+    if (f.secretWrite) {
+      const secretRef = f.secretWrite.secretRef ?? {
+        secretId: "00000000-0000-4000-8000-000000000000",
+      };
+      delete f.secretWrite;
+      f.secretRef = secretRef;
+      f.masked = true;
+    }
+  }
+  return next;
 }
 // Go's normalized JSON encoder additionally escapes these two Unicode separators.
 function configurationBytes(c: RequestConfiguration) {
   return new TextEncoder().encode(
-    JSON.stringify(configuration(c))
+    JSON.stringify(sized(c))
       .replaceAll("\u2028", "\\u2028")
       .replaceAll("\u2029", "\\u2029"),
   ).length;
@@ -69,12 +139,19 @@ function validate(c: RequestConfiguration) {
   } catch {
     return "Provide an absolute public HTTP(S) URL.";
   }
+  for (const f of c.headers)
+    if (!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(f.name))
+      return "Header names must be HTTP tokens without spaces. Use the exact name required by your API, such as Authorization or X-Api-Key.";
   for (const f of [...c.headers, ...c.queryParameters])
-    if (!f.name || credentialName(f.name) || /[\r\n]/.test(f.name + f.value))
-      return "Use named public headers/query fields. Credentials and line breaks cannot be saved.";
-  if (c.body?.type === "json")
+    if (
+      !f.name ||
+      (!f.sensitive && credentialName(f.name)) ||
+      /[\r\n]/.test(f.name + (f.value ?? ""))
+    )
+      return "Use named public headers/query fields or protected credential inputs. Line breaks cannot be saved.";
+  if (c.body?.type === "json" && !c.body.sensitive)
     try {
-      JSON.parse(c.body.text);
+      JSON.parse(c.body.text ?? "");
     } catch {
       return "The JSON body must contain valid JSON.";
     }
@@ -87,7 +164,9 @@ function Fields({
   values,
   disabled,
   change,
+  secrets,
 }: {
+  secrets: SecretMetadata[];
   title: string;
   values: RequestField[];
   disabled: boolean;
@@ -116,16 +195,119 @@ function Fields({
             {title} value {i + 1}
             <input
               autoComplete="off"
-              value={field.value}
+              type={field.sensitive ? "password" : "text"}
+              spellCheck={false}
+              placeholder={
+                field.sensitive
+                  ? field.secretWrite?.action === "preserve"
+                    ? "Stored secret preserved; enter to replace"
+                    : "Write-only value"
+                  : ""
+              }
+              value={
+                field.sensitive
+                  ? (field.secretWrite?.value ?? "")
+                  : (field.value ?? "")
+              }
               onChange={(e) =>
                 change(
                   values.map((v, n) =>
-                    n === i ? { ...v, value: e.target.value } : v,
+                    n === i
+                      ? v.sensitive
+                        ? {
+                            ...v,
+                            secretWrite: {
+                              action: "set",
+                              value: e.target.value,
+                            },
+                          }
+                        : { ...v, value: e.target.value }
+                      : v,
                   ),
                 )
               }
             />
           </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={field.sensitive}
+              onChange={(e) =>
+                change(
+                  values.map((v, n) =>
+                    n === i
+                      ? e.target.checked
+                        ? {
+                            name: v.name,
+                            enabled: v.enabled,
+                            sensitive: true,
+                            bindingId: crypto.randomUUID(),
+                            secretWrite: { action: "set", value: "" },
+                          }
+                        : {
+                            name: v.name,
+                            enabled: v.enabled,
+                            sensitive: false,
+                            value: "",
+                          }
+                      : v,
+                  ),
+                )
+              }
+            />
+            Protected
+          </label>
+          {field.sensitive && (
+            <label>
+              Reuse project secret
+              <select
+                aria-label={`${title} secret ${i + 1}`}
+                value={field.secretWrite?.secretRef?.secretId ?? ""}
+                onChange={(e) =>
+                  change(
+                    values.map((v, n) =>
+                      n === i
+                        ? {
+                            ...v,
+                            secretWrite: e.target.value
+                              ? {
+                                  action: "secretRef",
+                                  secretRef: { secretId: e.target.value },
+                                }
+                              : { action: "set", value: "" },
+                          }
+                        : v,
+                    ),
+                  )
+                }
+              >
+                <option value="">New value</option>
+                {secrets
+                  .filter(
+                    (s) =>
+                      s.state === "active" &&
+                      s.valueKind === "string" &&
+                      (title === "Header" ? s.headerSafe : s.querySafe),
+                  )
+                  .map((s) => (
+                    <option key={s.secretId} value={s.secretId}>
+                      {s.secretId} (masked)
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
+          <button
+            type="button"
+            disabled={i === 0}
+            onClick={() => {
+              const next = [...values];
+              [next[i - 1], next[i]] = [next[i], next[i - 1]];
+              change(next);
+            }}
+          >
+            Move {title.toLowerCase()} {i + 1} up
+          </button>
           <label>
             <input
               type="checkbox"
@@ -186,6 +368,11 @@ export function Requests({
   const [blocked, setBlocked] = useState(false);
   const [uncertainCreate, setUncertainCreate] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [secrets, setSecrets] = useState<SecretMetadata[]>([]);
+  const [secretCursor, setSecretCursor] = useState<string | null>(null);
+  const [sharedValues, setSharedValues] = useState<Record<string, string>>({});
+  const [sharedBlocked, setSharedBlocked] = useState(false);
+  const [sharedConfirm, setSharedConfirm] = useState<string>();
   const [publicConfirmed, setPublicConfirmed] = useState(false);
   function failure(e: unknown) {
     if (!mounted.current) return;
@@ -271,6 +458,7 @@ export function Requests({
     event.preventDefault();
     if (blocked || uncertainCreate || !publicConfirmed) return;
     const c = { ...draft, name: draft.name.trim() };
+    setDraft(cleared(draft));
     const invalid = validate(c);
     if (invalid) {
       setError(invalid);
@@ -314,10 +502,18 @@ export function Requests({
     >
       <h3>Saved requests</h3>
       <p>
-        Save public, non-sensitive requests. Credentials, cookies, API keys and
-        user-designated secrets are unavailable until encrypted secret storage
-        exists. Do not enter private data or signed URLs. Requests are saved
-        here; execution is not available yet.
+        Save public configuration with encrypted bearer tokens, API keys and
+        designated sensitive fields. Mark credential rows Protected before
+        entering values. For bearer tokens, use Authorization and enter the full
+        Bearer value. Header names must match the API and cannot contain spaces.
+        API keys use protected header/query rows. Protected inputs are
+        write-only and clear after submission. Execution is not available yet.
+      </p>
+      <p>
+        URLs must be public. Checks reject recognized credential patterns,
+        userinfo, templates and signed credential queries; they cannot detect
+        arbitrary unmarked secrets. Sensitive URL paths and inline credential
+        queries are unsupported: use separate protected query rows.
       </p>
       <p className="hint">
         64 KiB applies to the complete saved configuration: name, method, URL,
@@ -395,6 +591,134 @@ export function Requests({
           </button>
         </div>
       )}
+      <button
+        disabled={busy || disabled}
+        onClick={() =>
+          void run(async () => {
+            const p = await api.listSecrets(projectId);
+            setSecrets(p.items);
+            setSecretCursor(p.nextCursor);
+            setSharedValues({});
+            setSharedConfirm(undefined);
+            setSharedBlocked(false);
+          })
+        }
+      >
+        Refresh project secrets
+      </button>
+      {secretCursor && (
+        <button
+          disabled={busy || disabled}
+          onClick={() =>
+            void run(async () => {
+              const p = await api.listSecrets(projectId, secretCursor);
+              setSecrets((old) => [...old, ...p.items]);
+              setSecretCursor(p.nextCursor);
+            })
+          }
+        >
+          Load more secrets
+        </button>
+      )}
+      {secrets.length > 0 && (
+        <fieldset disabled={busy || disabled || sharedBlocked}>
+          <legend>Project-owned secrets</legend>
+          <p>
+            Removing a request binding detaches it. Request-local replacement
+            creates a new secret. Shared replacement or revocation affects every
+            request referencing this ID. Secrets survive request deletion.
+          </p>
+          {secrets.map((s) => (
+            <div key={s.secretId}>
+              <p>
+                {s.secretId} — {s.mask} — {s.state} — revision {s.revision}
+              </p>
+              {s.state === "active" && (
+                <>
+                  <label>
+                    Shared replacement value {s.secretId}
+                    <input
+                      type="password"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={sharedValues[s.secretId] ?? ""}
+                      onChange={(e) =>
+                        setSharedValues({
+                          ...sharedValues,
+                          [s.secretId]: e.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <button onClick={() => setSharedConfirm(s.secretId)}>
+                    Review shared change
+                  </button>
+                  {sharedConfirm === s.secretId && (
+                    <>
+                      <p>
+                        This affects every consumer. Replace updates this ID;
+                        revoke removes its active ciphertext and makes every
+                        reference unavailable.
+                      </p>
+                      <button
+                        disabled={!sharedValues[s.secretId]}
+                        onClick={() => {
+                          const value = sharedValues[s.secretId];
+                          setSharedValues({});
+                          setSharedConfirm(undefined);
+                          void run(async () => {
+                            const next = await api.replaceSecret(
+                              projectId,
+                              s,
+                              value,
+                            );
+                            setSecrets((old) =>
+                              old.map((v) =>
+                                v.secretId === s.secretId ? next : v,
+                              ),
+                            );
+                            onGateChanged();
+                          });
+                        }}
+                      >
+                        Replace shared secret
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSharedValues({});
+                          setSharedConfirm(undefined);
+                          void run(async () => {
+                            try {
+                              await api.revokeSecret(projectId, s);
+                            } catch (e) {
+                              setSharedBlocked(true);
+                              throw e;
+                            }
+                            setSecrets((old) =>
+                              old.map((v) =>
+                                v.secretId === s.secretId
+                                  ? {
+                                      ...v,
+                                      state: "revoked",
+                                      revision: v.revision + 1,
+                                    }
+                                  : v,
+                              ),
+                            );
+                            onGateChanged();
+                          });
+                        }}
+                      >
+                        Revoke shared secret
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
+        </fieldset>
+      )}
       {editing && (
         <>
           <h4>
@@ -417,7 +741,10 @@ export function Requests({
               draft is kept until you refresh.
             </p>
           )}
-          <form onSubmit={save}>
+          <form
+            onSubmit={save}
+            onInvalidCapture={() => setDraft(cleared(draft))}
+          >
             <fieldset disabled={locked}>
               <label htmlFor="request-name">Request name</label>
               <input
@@ -451,12 +778,14 @@ export function Requests({
                 required
               />
               <Fields
+                secrets={secrets}
                 title="Header"
                 values={draft.headers}
                 disabled={locked}
                 change={(headers) => setDraft({ ...draft, headers })}
               />
               <Fields
+                secrets={secrets}
                 title="Query parameter"
                 values={draft.queryParameters}
                 disabled={locked}
@@ -486,23 +815,253 @@ export function Requests({
                 <option value="text">Text</option>
                 <option value="json">JSON</option>
               </select>
+              {draft.body?.sensitive && (
+                <label>
+                  Reuse whole-body secret
+                  <select
+                    value={draft.body.secretWrite?.secretRef?.secretId ?? ""}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        body: {
+                          ...draft.body!,
+                          secretWrite: e.target.value
+                            ? {
+                                action: "secretRef",
+                                secretRef: { secretId: e.target.value },
+                              }
+                            : { action: "set", value: "" },
+                        },
+                      })
+                    }
+                  >
+                    <option value="">New body value</option>
+                    {secrets
+                      .filter(
+                        (s) =>
+                          s.state === "active" &&
+                          s.valueKind ===
+                            (draft.body!.type === "json"
+                              ? "jsonBody"
+                              : "string"),
+                      )
+                      .map((s) => (
+                        <option key={s.secretId} value={s.secretId}>
+                          {s.secretId} (masked)
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              )}
+              {draft.body && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={draft.body.sensitive}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        body: e.target.checked
+                          ? {
+                              type: draft.body!.type,
+                              sensitive: true,
+                              bindingId: crypto.randomUUID(),
+                              secretWrite: { action: "set", value: "" },
+                            }
+                          : {
+                              type: draft.body!.type,
+                              sensitive: false,
+                              text: "",
+                            },
+                      })
+                    }
+                  />
+                  Protect whole body
+                </label>
+              )}
               {draft.body && (
                 <>
-                  <label htmlFor="request-body">Public request body</label>
+                  <label htmlFor="request-body">
+                    {draft.body.sensitive
+                      ? "Write-only protected body"
+                      : "Public request body"}
+                  </label>
                   <textarea
+                    placeholder={
+                      draft.body.sensitive
+                        ? "Stored body is never returned; enter a replacement"
+                        : ""
+                    }
                     id="request-body"
                     rows={8}
                     autoComplete="off"
                     spellCheck={false}
-                    value={draft.body.text}
+                    value={
+                      draft.body.sensitive
+                        ? (draft.body.secretWrite?.value ?? "")
+                        : (draft.body.text ?? "")
+                    }
                     onChange={(e) =>
                       setDraft({
                         ...draft,
-                        body: { ...draft.body!, text: e.target.value },
+                        body: draft.body!.sensitive
+                          ? {
+                              ...draft.body!,
+                              secretWrite: {
+                                action: "set",
+                                value: e.target.value,
+                              },
+                            }
+                          : { ...draft.body!, text: e.target.value },
                       })
                     }
                   />
                 </>
+              )}
+              {draft.body?.type === "json" && !draft.body.sensitive && (
+                <fieldset>
+                  <legend>Protected JSON scalar fields</legend>
+                  <p>
+                    Use null placeholders in the public JSON. Enter canonical
+                    RFC 6901 pointers; values are JSON-encoded scalars, e.g. a
+                    quoted string. Remove credential keys from the template when
+                    removing their protection.
+                  </p>
+                  {(draft.body.secretFields ?? []).map((f, i) => (
+                    <div key={f.bindingId}>
+                      <label>
+                        JSON pointer {i + 1}
+                        <input
+                          value={f.pointer}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              body: {
+                                ...draft.body!,
+                                secretFields: draft.body!.secretFields!.map(
+                                  (v, n) =>
+                                    n === i
+                                      ? { ...v, pointer: e.target.value }
+                                      : v,
+                                ),
+                              },
+                            })
+                          }
+                        />
+                      </label>
+                      <label>
+                        Protected JSON value {i + 1}
+                        <input
+                          type="password"
+                          autoComplete="off"
+                          spellCheck={false}
+                          value={f.secretWrite?.value ?? ""}
+                          placeholder="Write-only JSON scalar"
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              body: {
+                                ...draft.body!,
+                                secretFields: draft.body!.secretFields!.map(
+                                  (v, n) =>
+                                    n === i
+                                      ? {
+                                          ...v,
+                                          secretWrite: {
+                                            action: "set",
+                                            value: e.target.value,
+                                          },
+                                        }
+                                      : v,
+                                ),
+                              },
+                            })
+                          }
+                        />
+                      </label>
+                      <label>
+                        Reuse JSON scalar secret {i + 1}
+                        <select
+                          value={f.secretWrite?.secretRef?.secretId ?? ""}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              body: {
+                                ...draft.body!,
+                                secretFields: draft.body!.secretFields!.map(
+                                  (v, n) =>
+                                    n === i
+                                      ? {
+                                          ...v,
+                                          secretWrite: e.target.value
+                                            ? {
+                                                action: "secretRef",
+                                                secretRef: {
+                                                  secretId: e.target.value,
+                                                },
+                                              }
+                                            : { action: "set", value: "" },
+                                        }
+                                      : v,
+                                ),
+                              },
+                            })
+                          }
+                        >
+                          <option value="">New scalar value</option>
+                          {secrets
+                            .filter(
+                              (s) =>
+                                s.state === "active" &&
+                                s.valueKind === "jsonScalar",
+                            )
+                            .map((s) => (
+                              <option key={s.secretId} value={s.secretId}>
+                                {s.secretId} (masked)
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDraft({
+                            ...draft,
+                            body: {
+                              ...draft.body!,
+                              secretFields: draft.body!.secretFields!.filter(
+                                (_, n) => n !== i,
+                              ),
+                            },
+                          })
+                        }
+                      >
+                        Remove JSON binding {i + 1}
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDraft({
+                        ...draft,
+                        body: {
+                          ...draft.body!,
+                          secretFields: [
+                            ...(draft.body!.secretFields ?? []),
+                            {
+                              pointer: "",
+                              bindingId: crypto.randomUUID(),
+                              secretWrite: { action: "set", value: "" },
+                            } as SecretField,
+                          ],
+                        },
+                      })
+                    }
+                  >
+                    Add protected JSON field
+                  </button>
+                </fieldset>
               )}
               <p>
                 {configurationBytes({
@@ -517,7 +1076,8 @@ export function Requests({
                   checked={publicConfirmed}
                   onChange={(e) => setPublicConfirmed(e.target.checked)}
                 />
-                All fields contain public data, with no credentials or secrets.
+                All fields contain public data unless explicitly protected; the
+                URL contains no credentials or secrets.
               </label>
               <button
                 className="primary"

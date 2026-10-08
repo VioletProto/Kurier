@@ -1,14 +1,51 @@
 import { auth, SessionExpired } from "./auth";
+export interface SecretReference {
+  secretId: string;
+}
+export interface SecretWrite {
+  action: "set" | "preserve" | "remove" | "secretRef";
+  value?: string;
+  secretRef?: SecretReference;
+}
+export interface SecretField {
+  pointer: string;
+  bindingId: string;
+  masked?: boolean;
+  secretRef?: SecretReference;
+  secretWrite?: SecretWrite;
+}
+export interface SecretMetadata {
+  secretId: string;
+  projectId: string;
+  revision: number;
+  state: string;
+  valueKind: string;
+  headerSafe: boolean;
+  querySafe: boolean;
+  masked: true;
+  mask: string;
+  createdAt: string;
+  updatedAt: string;
+}
 export interface RequestField {
   name: string;
-  value: string;
+  value?: string;
+  bindingId?: string;
+  masked?: boolean;
+  secretRef?: SecretReference;
+  secretWrite?: SecretWrite;
   enabled: boolean;
-  sensitive: false;
+  sensitive: boolean;
 }
 export interface RequestBody {
   type: "text" | "json";
-  text: string;
-  sensitive: false;
+  text?: string;
+  bindingId?: string;
+  masked?: boolean;
+  secretRef?: SecretReference;
+  secretWrite?: SecretWrite;
+  secretFields?: SecretField[];
+  sensitive: boolean;
 }
 export interface RequestConfiguration {
   name: string;
@@ -81,7 +118,7 @@ export class ApiError extends Error {
                 : status === 413
                   ? "Complete saved configuration is limited to 64 KiB, including all fields and JSON overhead."
                   : status === 400 && code === "validation_failed"
-                    ? "Check the request fields. Use public HTTP(S), public headers/query and valid text/JSON. Credentials and sensitive data cannot be saved."
+                    ? "Check public fields, protected inputs, body pointers and size limits. Credentials require protected inputs."
                     : "The API could not complete this request.",
     );
   }
@@ -293,16 +330,23 @@ export class Api {
         (field: RequestField) =>
           field &&
           typeof field.name === "string" &&
-          typeof field.value === "string" &&
           typeof field.enabled === "boolean" &&
-          field.sensitive === false,
+          (field.sensitive
+            ? field.value === undefined &&
+              field.masked === true &&
+              !!field.secretRef &&
+              typeof field.bindingId === "string"
+            : typeof field.value === "string"),
       ) ||
       saved.operationRef !== null ||
       (saved.body !== null &&
         (!saved.body ||
           !["text", "json"].includes(saved.body.type) ||
-          typeof saved.body.text !== "string" ||
-          saved.body.sensitive !== false)) ||
+          (saved.body.sensitive
+            ? saved.body.text !== undefined ||
+              !saved.body.secretRef ||
+              saved.body.masked !== true
+            : typeof saved.body.text !== "string"))) ||
       !Number.isSafeInteger(saved.revision) ||
       saved.revision < 0 ||
       etag !== `"${saved.revision}"`
@@ -382,6 +426,47 @@ export class Api {
       "DELETE",
       undefined,
       etag,
+    );
+    if (response.status !== 204) throw new UncertainWrite();
+  }
+  async listSecrets(
+    projectId: string,
+    cursor?: string,
+  ): Promise<{ items: SecretMetadata[]; nextCursor: string | null }> {
+    return (
+      await (
+        await this.request(
+          `/api/v1/projects/${encodeURIComponent(projectId)}/secrets?limit=100` +
+            (cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""),
+        )
+      ).json()
+    ).data;
+  }
+  async replaceSecret(
+    projectId: string,
+    secret: SecretMetadata,
+    value: string,
+  ): Promise<SecretMetadata> {
+    const response = await this.request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/secrets/${encodeURIComponent(secret.secretId)}`,
+      "PATCH",
+      JSON.stringify({ value }),
+      `"${secret.revision}"`,
+    );
+    try {
+      const s = (await response.json()).data.secret;
+      if (response.headers.get("ETag") !== `"${s.revision}"`) throw new Error();
+      return s;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async revokeSecret(projectId: string, secret: SecretMetadata) {
+    const response = await this.request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/secrets/${encodeURIComponent(secret.secretId)}`,
+      "DELETE",
+      undefined,
+      `"${secret.revision}"`,
     );
     if (response.status !== 204) throw new UncertainWrite();
   }

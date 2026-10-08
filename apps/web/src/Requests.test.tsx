@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   createRequest: vi.fn(),
   patchRequest: vi.fn(),
   deleteRequest: vi.fn(),
+  listSecrets: vi.fn(),
+  replaceSecret: vi.fn(),
+  revokeSecret: vi.fn(),
 }));
 vi.mock("./api", async () => ({
   ...(await vi.importActual<typeof import("./api")>("./api")),
@@ -35,6 +38,7 @@ const saved: SavedRequest = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.listSecrets.mockResolvedValue({ items: [], nextCursor: null });
   mocks.listRequests.mockResolvedValue({ items: [saved], nextCursor: null });
   mocks.requestDetail.mockResolvedValue({ request: saved, etag: '"0"' });
 });
@@ -166,4 +170,110 @@ it("clears body and headers in the saved configuration", async () => {
     ),
   );
   expect(gate).toHaveBeenCalled();
+});
+
+it("keeps protected inputs blank and preserves identity during unrelated edits", async () => {
+  const bindingId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    secretId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const request = {
+    ...saved,
+    headers: [
+      {
+        name: "Authorization",
+        enabled: true,
+        sensitive: true,
+        bindingId,
+        masked: true,
+        secretRef: { secretId },
+      },
+    ],
+  };
+  mocks.requestDetail.mockResolvedValue({ request, etag: '"0"' });
+  mocks.patchRequest.mockResolvedValue({
+    request: { ...request, revision: 1 },
+    etag: '"1"',
+  });
+  mount();
+  await edit();
+  expect(screen.getByLabelText("Header value 1")).toHaveValue("");
+  fireEvent.change(screen.getByLabelText("Request name"), {
+    target: { value: "Renamed" },
+  });
+  confirm();
+  fireEvent.click(screen.getByRole("button", { name: "Save request changes" }));
+  await waitFor(() =>
+    expect(mocks.patchRequest).toHaveBeenCalledWith(
+      "project",
+      "request",
+      expect.objectContaining({
+        headers: [
+          {
+            name: "Authorization",
+            enabled: true,
+            sensitive: true,
+            bindingId,
+            secretWrite: { action: "preserve", secretRef: { secretId } },
+          },
+        ],
+      }),
+      '"0"',
+    ),
+  );
+  expect(screen.getByLabelText("Header value 1")).toHaveValue("");
+});
+it("clears write-only inputs after uncertain submission without replay", async () => {
+  const bindingId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    secretId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  mocks.requestDetail.mockResolvedValue({
+    request: {
+      ...saved,
+      headers: [
+        {
+          name: "Authorization",
+          enabled: true,
+          sensitive: true,
+          bindingId,
+          masked: true,
+          secretRef: { secretId },
+        },
+      ],
+    },
+    etag: '"0"',
+  });
+  mocks.patchRequest.mockRejectedValue(new UncertainWrite());
+  mount();
+  await edit();
+  fireEvent.change(screen.getByLabelText("Header value 1"), {
+    target: { value: "Bearer disposable-browser-fixture" },
+  });
+  confirm();
+  fireEvent.click(screen.getByRole("button", { name: "Save request changes" }));
+  await screen.findByText(/saved version or write outcome changed/);
+  expect(screen.getByLabelText("Header value 1")).toHaveValue("");
+  expect(mocks.patchRequest).toHaveBeenCalledTimes(1);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Refresh project secrets" }),
+  );
+  await waitFor(() => expect(mocks.listSecrets).toHaveBeenCalled());
+  expect(
+    screen.getByRole("button", { name: "Save request changes" }),
+  ).toBeDisabled();
+});
+
+it("explains invalid protected header names before sending a credential", async () => {
+  mount();
+  await edit();
+  fireEvent.click(screen.getByRole("button", { name: "Add header" }));
+  fireEvent.change(screen.getByLabelText("Header name 1"), {
+    target: { value: "Auth SUPER IMPORTANT" },
+  });
+  fireEvent.click(screen.getByRole("checkbox", { name: "Protected" }));
+  fireEvent.change(screen.getByLabelText("Header value 1"), {
+    target: { value: "Bearer " + crypto.randomUUID() },
+  });
+  confirm();
+  fireEvent.click(screen.getByRole("button", { name: "Save request changes" }));
+  await screen.findByText(/Header names must be HTTP tokens without spaces/);
+  expect(mocks.patchRequest).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Header value 1")).toHaveValue("");
 });

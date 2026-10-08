@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
@@ -35,6 +36,9 @@ func cloudMain() {
 		log.Fatal("cloud configuration unavailable")
 	}
 	store := ownership.NewStore(dynamodb.NewFromConfig(cfg), os.Getenv("KURIER_CONTROL_TABLE"), "dev-api")
+	if os.Getenv("KURIER_PROTECTED_TABLE") != "" {
+		store.ConfigureProtected(os.Getenv("KURIER_PROTECTED_TABLE"), ownership.NewEnvelopeCipher(kms.NewFromConfig(cfg), os.Getenv("KURIER_KMS_KEY_ARN"), "dev-api"))
+	}
 	if os.Getenv("KURIER_MAINTENANCE") == "empty-projects" {
 		lambda.Start(func(ctx context.Context, _ json.RawMessage) (ownership.CleanupSummary, error) {
 			result, err := store.CleanupPending(ctx)
