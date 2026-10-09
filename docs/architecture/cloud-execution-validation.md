@@ -172,7 +172,18 @@ Sources: [AWS regional price catalogs](https://docs.aws.amazon.com/awsaccountbil
   no protected fields, so it does not establish browser secret containment.
   Response wrapping was requested and fixed with escaped preformatted text,
   wrapping long tokens and bounded vertical scrolling; browser recheck pending.
-- Pending: genuine browser protected-input/storage/log containment, immutable
+- Subsequently reported by Davian: protected Authorization/custom fields and
+  their reflected response values are masked, with two distinct execution IDs.
+  Actual private-S3 read-back verified distinct immutable captures: first
+  duration 372 ms, second 71 ms, different upstream request IDs and completion
+  times. The two pasted capture sections contained the second capture's details;
+  history reinspection remains pending to distinguish copying from UI behavior.
+- Passed: read-only containment audit of those genuine browser executions,
+  comparing two protected sources and 236 application log events against raw
+  and supported encoded variants. Source values were resolved only in authorized
+  test-process memory; neither values nor log contents were printed or persisted.
+  This establishes server evidence/log containment, not browser storage safety.
+- Pending: genuine browser storage containment, immutable
   history reopen, deliberate rerun, controlled failure UI and full project
   deletion; final commit/push. The browser probe is opt-in, uses the genuine
   memory-only session, and reports only safe identifiers/booleans/counts.

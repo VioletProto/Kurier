@@ -58,6 +58,10 @@ func TestAWSCloudExecution(t *testing.T) {
 		t.Fatal("private signing key invalid")
 	}
 	defer clear(s.SigningKey)
+	if project := os.Getenv("KURIER_AWS_AUDIT_PROJECT"); project != "" {
+		auditAWSBrowserEvidence(t, ctx, s, project, strings.Split(os.Getenv("KURIER_AWS_AUDIT_EXECUTIONS"), ","))
+		return
+	}
 	client := s.DB.(*dynamodb.Client)
 	if project := os.Getenv("KURIER_AWS_TEST_CLEANUP_PROJECT"); project != "" {
 		owner := os.Getenv("KURIER_AWS_TEST_CLEANUP_OWNER")
@@ -219,6 +223,91 @@ func TestAWSCloudExecution(t *testing.T) {
 		t.Fatal("actual API anonymous read allowed")
 	}
 	t.Log("Real AWS KMS/DynamoDB/SQS/Lambda/HTTPS/S3, immutable duplicate handling, controlled modes, boolean-only log/evidence audit and execution deletion passed. Cognito/browser admission remains separate.")
+}
+
+// Read-only containment audit for public IDs explicitly supplied by the owner.
+// Protected test values are decrypted only in this authorized process's memory.
+// Never print them or use them as CLI arguments, log filters or persisted files.
+func auditAWSBrowserEvidence(t *testing.T, ctx context.Context, s *Service, project string, executions []string) {
+	t.Helper()
+	if !uuidPattern.MatchString(project) || len(executions) == 0 || len(executions) > 8 {
+		t.Fatal("explicit scoped browser probe IDs required")
+	}
+	values := map[string]string{}
+	var captures [][]byte
+	var start time.Time
+	for _, execution := range executions {
+		if !uuidPattern.MatchString(execution) {
+			t.Fatal("invalid browser execution ID")
+		}
+		anchor, err := s.get(ctx, s.Table, "P#"+project, "EXEC#"+execution)
+		if err != nil {
+			t.Fatal("browser execution audit unavailable")
+		}
+		job, err := s.get(ctx, s.Table, anchor.PK, "JOB#"+anchor.JobID)
+		if err != nil || len(job.Sources) == 0 {
+			t.Fatal("protected browser inputs required")
+		}
+		for _, source := range job.Sources {
+			secret, err := s.get(ctx, s.Protected, anchor.PK, "SECRET#"+source.SecretID)
+			if err != nil || secret.State != "active" || secret.Revision != source.Revision {
+				t.Fatal("browser source changed or revoked; original-value audit unavailable")
+			}
+			raw, err := s.decrypt(ctx, project, source.SecretID, "saved-secret", source.Revision, secret.Envelope)
+			if err != nil {
+				t.Fatal("authorized browser test-input audit unavailable")
+			}
+			values[source.SecretID] = string(raw)
+			clear(raw)
+		}
+		capture, err := s.Evidence(ctx, anchor.OwnerID, project, execution)
+		if err != nil {
+			t.Fatal("browser immutable evidence unavailable")
+		}
+		captures = append(captures, capture)
+		date, err := time.Parse("2006-01-02T15:04:05.000000000Z", anchor.SubmittedAt)
+		if err != nil {
+			t.Fatal("browser audit time unavailable")
+		}
+		if start.IsZero() || date.Before(start) {
+			start = date
+		}
+	}
+	sanitizer := newSanitizer(values)
+	for _, capture := range captures {
+		if sanitizer.text(string(capture)) != string(capture) {
+			t.Fatal("browser evidence containment failed; no values returned")
+		}
+		clear(capture)
+	}
+	eventsChecked := 0
+	for _, name := range strings.Split(os.Getenv("KURIER_AWS_TEST_LOG_FUNCTIONS"), ",") {
+		if !strings.HasPrefix(name, "kurier-dev-api-") {
+			t.Fatal("scoped browser log group required")
+		}
+		configuration, err := exec.CommandContext(ctx, "aws", "lambda", "get-function-configuration", "--region", "us-east-2", "--function-name", name, "--query", "LoggingConfig.LogGroup", "--output", "json").Output()
+		var group string
+		if err != nil || json.Unmarshal(configuration, &group) != nil || !strings.HasPrefix(group, "/aws/lambda/kurier-dev-api-") {
+			t.Fatal("browser log configuration unavailable")
+		}
+		output, err := exec.CommandContext(ctx, "aws", "logs", "filter-log-events", "--region", "us-east-2", "--log-group-name", group, "--start-time", strconv.FormatInt(start.Add(-time.Minute).UnixMilli(), 10), "--output", "json").Output()
+		if err != nil || sanitizer.text(string(output)) != string(output) {
+			t.Fatal("browser log containment failed or unavailable; no values returned")
+		}
+		var events struct {
+			Events    []json.RawMessage `json:"events"`
+			NextToken string            `json:"nextToken"`
+		}
+		if json.Unmarshal(output, &events) != nil || events.NextToken != "" {
+			t.Fatal("browser log audit incomplete")
+		}
+		if strings.Contains(name, "CloudExecutionWorker") && len(events.Events) == 0 {
+			t.Fatal("worker log ingestion pending")
+		}
+		eventsChecked += len(events.Events)
+		clear(output)
+	}
+	t.Logf("Browser evidence/log containment passed: %d executions, %d protected sources, %d log events; no values returned", len(executions), len(values), eventsChecked)
 }
 
 // The explicit cleanup path only targets a disposable fixture partition.
