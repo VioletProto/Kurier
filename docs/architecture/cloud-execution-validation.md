@@ -214,10 +214,23 @@ Sources: [AWS regional price catalogs](https://docs.aws.amazon.com/awsaccountbil
   failed/HTTP unavailable with the unknown-outcome timeout warning. The owner
   left that disposable project available for inspection. These are genuine
   user-reported browser checks, distinct from the earlier AWS fixture suite.
-- Pending: fresh independent read-only inspection of those three executions;
-  AWS credentials expired before inspection and renewal was requested. Prior
-  AWS fixture verification remains passed. The browser probe is opt-in, uses
-  the genuine memory-only session and reports only safe identifiers/booleans/counts.
+- Passed: fresh independent read-only AWS inspection of those three executions
+  after session renewal. All belong to disposable project
+  `f800e37d-b1b8-443d-872c-453f52551035`. Strong Control reads and private S3
+  captures matched execution IDs, terminal state, HTTP status and outcome in
+  both execution and immutable snapshot metadata; all three stored lengths and
+  SHA-256 checksums matched. HTTP 500 was `upstream_http_error`/known with JSON;
+  HTTP 200 HTML was completed/known with an omitted body and omission reason;
+  timeout was `execution_timeout`/unknown, HTTP unavailable and no response body.
+  No values or response bodies were printed or written to inspection files.
+  The first inspection helper assumed JSON-style names for the stored summary;
+  it was corrected to the actual Go DynamoDB field names and rerun successfully.
+  The final fixture project was left intact; the earlier probe already verified
+  owner-driven deletion and physical cleanup. This slice's requested browser
+  checks are complete. Account throttling and dispatch/crash fault injection
+  remain simulations, and negative IAM checks remain policy simulations.
+  The browser probe is opt-in, uses the genuine memory-only session and reports
+  only safe identifiers/booleans/counts.
 
 ## Genuine browser checklist
 
