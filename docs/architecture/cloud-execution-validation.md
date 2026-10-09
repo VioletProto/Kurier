@@ -207,8 +207,17 @@ Sources: [AWS regional price catalogs](https://docs.aws.amazon.com/awsaccountbil
   evidence limits, approved Free-plan concurrency configuration and verified
   results. Native read-back confirmed prior content, tabs, inline objects and
   source-link typography were preserved. Other proposed routes remain proposals.
-- Pending: controlled failure UI. The browser probe is opt-in, uses the
-  genuine memory-only session, and reports only safe identifiers/booleans/counts.
+- Reported by Davian: all three genuine browser controlled failure checks
+  passed. Execution `1387546e-52a0-4ae1-b1b2-960c3052ece5` showed failed/HTTP 500;
+  `b90d13c9-fc12-4de1-b7ed-df1b1dd27318` showed completed/HTTP 200 with HTML
+  safely omitted and no popup; `9753ac46-db43-466e-8062-25504009bf13` showed
+  failed/HTTP unavailable with the unknown-outcome timeout warning. The owner
+  left that disposable project available for inspection. These are genuine
+  user-reported browser checks, distinct from the earlier AWS fixture suite.
+- Pending: fresh independent read-only inspection of those three executions;
+  AWS credentials expired before inspection and renewal was requested. Prior
+  AWS fixture verification remains passed. The browser probe is opt-in, uses
+  the genuine memory-only session and reports only safe identifiers/booleans/counts.
 
 ## Genuine browser checklist
 
