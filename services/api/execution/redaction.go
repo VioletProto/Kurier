@@ -17,7 +17,7 @@ func credentialName(name string) bool {
 			return true
 		}
 	}
-	return false
+	return v == "key" || v == "auth" || v == "pwd"
 }
 func headerName(s string) bool {
 	if s == "" {

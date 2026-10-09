@@ -12,6 +12,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -222,6 +223,120 @@ func (f *protocolFixture) admit(t *testing.T, key string) (View, Message) {
 		t.Fatal(e)
 	}
 	return v, Message{f.project, r.JobID, "OUT#" + r.JobID}
+}
+
+func TestIntegrationCredentialNamesMaskedBeforePublication(t *testing.T) {
+	f := newProtocolFixture(t)
+	ctx := context.Background()
+	plan := fixturePlan()
+	query := url.Values{"public": {"keep-query"}}
+	for _, name := range []string{"key", "auth", "pwd"} {
+		query.Add(name, "unmapped-query-"+name)
+	}
+	// Exercise the execution boundary independently of authoring validation and
+	// protected-value reflection matching, using only disposable fixture values.
+	plan.Configuration.URL += "?" + query.Encode()
+	request, err := f.s.get(ctx, f.s.Table, "P#"+f.project, "REQ#"+f.request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configuration, err := json.Marshal(plan.Configuration)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.ConfigurationJSON = string(configuration)
+	f.write(t, f.s.Table, request)
+	f.s.prepare = func(ctx context.Context, plan Plan, values map[string]string) (*Prepared, error) {
+		if len(values) != 0 {
+			t.Fatal("regression must not depend on protected-input values")
+		}
+		return fixturePrepared(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			f.calls.Add(1)
+			w.Header().Set("Content-Type", "application/json")
+			body := map[string]string{"public": "keep-json"}
+			for _, name := range []string{"key", "auth", "pwd"} {
+				w.Header().Set(name, "unmapped-header-"+name)
+				body[name] = "unmapped-response-" + name
+			}
+			_ = json.NewEncoder(w).Encode(body)
+		}), plan, values), nil
+	}
+	v, message := f.admit(t, id())
+	assertSanitized := func(raw []byte) {
+		t.Helper()
+		if bytes.Contains(raw, []byte("unmapped-")) {
+			t.Fatal("unmapped credential reached evidence storage or delivery")
+		}
+		var evidence Evidence
+		if err := json.Unmarshal(raw, &evidence); err != nil {
+			t.Fatal(err)
+		}
+		if evidence.Response.Body.Text == nil || evidence.Status != "completed" {
+			t.Fatal("expected completed JSON evidence")
+		}
+		var body map[string]string
+		if err := json.Unmarshal([]byte(*evidence.Response.Body.Text), &body); err != nil {
+			t.Fatal(err)
+		}
+		capturedURL, err := url.Parse(evidence.Request.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range []string{"key", "auth", "pwd"} {
+			if body[name] != "[REDACTED]" || capturedURL.Query().Get(name) != "[REDACTED]" {
+				t.Fatal("credential JSON field or query parameter was not masked")
+			}
+			found := false
+			for _, h := range evidence.Response.Headers {
+				if strings.EqualFold(h.Name, name) {
+					found = true
+					if h.Value != "[REDACTED]" {
+						t.Fatal("credential response header was not masked")
+					}
+				}
+			}
+			if !found {
+				t.Fatal("credential response header disappeared instead of being masked")
+			}
+		}
+		if body["public"] != "keep-json" || capturedURL.Query().Get("public") != "keep-query" {
+			t.Fatal("public evidence changed")
+		}
+	}
+	var uploaded []byte
+	f.objects.putFault = func() {
+		f.objects.mu.Lock()
+		for _, raw := range f.objects.data {
+			uploaded = append([]byte(nil), raw...)
+		}
+		f.objects.mu.Unlock()
+		assertSanitized(uploaded)
+		if _, err := f.s.get(ctx, f.s.Table, "P#"+f.project, "EXEC#"+v.ExecutionID+"#SNAP"); !missingRow(err) {
+			t.Fatal("publication preceded sanitized upload verification")
+		}
+	}
+	if err := f.s.Process(ctx, message); err != nil {
+		t.Fatal(err)
+	}
+	if f.calls.Load() != 1 || f.objects.puts != 1 {
+		t.Fatal("expected one outbound request and one evidence upload")
+	}
+	api, err := f.s.Evidence(ctx, f.owner, f.project, v.ExecutionID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var response struct {
+		Data struct {
+			Evidence json.RawMessage `json:"evidence"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(api, &response); err != nil {
+		t.Fatal(err)
+	}
+	assertSanitized(response.Data.Evidence)
+	if !bytes.Equal(uploaded, response.Data.Evidence) {
+		t.Fatal("published evidence differs from sanitized upload")
+	}
 }
 
 // Invocation throttling is simulated by withholding worker delivery. No AWS
