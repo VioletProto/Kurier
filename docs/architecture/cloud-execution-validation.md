@@ -192,9 +192,21 @@ Sources: [AWS regional price catalogs](https://docs.aws.amazon.com/awsaccountbil
 - Passed: separate read-only server containment audit for that browser probe:
   two executions, two protected sources and 99 application log events; no raw
   or supported encoded values found. No source values/log contents printed or
-  persisted. Probe project remains available for the owner-driven deletion check.
-- Pending: controlled failure UI, wrapping recheck and full project deletion;
-  final validation-record publication. The browser probe is opt-in, uses the
+  persisted.
+- Reported by Davian: deleting the disposable probe project through the UI
+  removed access immediately and initially showed cleanup pending. Independent
+  read-only AWS checks then verified scheduled physical cleanup completed:
+  `projectTombstone` with completed deletion operation, one Control record,
+  zero Protected records and zero S3 evidence objects, with complete query/list
+  pagination and a durable execution residual sweep registered. No unrelated
+  project was deleted and no records were manually removed to force completion.
+- Passed: shared [API contracts](https://docs.google.com/document/d/1KSfRYOb2UxmrIl8VoFjc3YP38-PMu7k_fM9wrVkEenM/edit)
+  and [proposal](https://docs.google.com/document/d/1tatrrhqytTxAZxlrOnbSQRymmqjL2MmGq7Tdj0-1T60/edit)
+  now include accepted cloud-execution continuations, source-bound idempotency,
+  evidence limits, approved Free-plan concurrency configuration and verified
+  results. Native read-back confirmed prior content, tabs, inline objects and
+  source-link typography were preserved. Other proposed routes remain proposals.
+- Pending: controlled failure UI and wrapping recheck. The browser probe is opt-in, uses the
   genuine memory-only session, and reports only safe identifiers/booleans/counts.
 
 ## Genuine browser checklist
