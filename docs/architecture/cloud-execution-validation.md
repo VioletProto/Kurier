@@ -279,3 +279,100 @@ checks immutable evidence, retry identity, a deliberate rerun of a known-success
 owned GET, history and browser storage. It returns safe IDs and audit results.
 Keep its project until evidence inspection and log audit are finished. Never
 paste values or tokens into the console, chat or screenshots.
+
+## Credential-name correction deployment — 2026-10-09
+
+The correction at `cde107fbdda4703485e6ceaf27f0c1571826acd8` was merged into
+`main` by [PR #6](https://github.com/VioletProto/Kurier/pull/6), merge commit
+`6ffa2f09823d79384f0a045416c8bb4254fc1991`. Both local and remote feature tips
+matched the correction commit and were verified as ancestors of `origin/main`
+before deleting `feat/cloud-execution-evidence`. Subsequent branch-list and
+remote-head checks confirmed its removal. Deployment preparation and this
+validation record use a separate branch from merged main,
+`chore/redaction-deployment-validation`; the execution recognizer is unchanged
+from the reviewed correction.
+
+STS verified the intended account and non-root `davian-admin`. Before and after
+deployment, `verify-cloud-execution-config.mjs` confirmed active Free plan,
+account/unreserved concurrency ten, one enabled SQS execution trigger, maximum
+concurrency two, batch one and partial batch failure reporting. No reserved or
+provisioned concurrency, provisioned pollers, quota request, billing upgrade or
+credit-arrangement changes were made.
+
+The merged-main SST preview updated code packages for the four existing
+development functions only. API and maintenance share the API executable;
+worker and controlled endpoint share the worker executable. No IAM, queue,
+bucket, route, schedule, capability or bootstrap configuration change appeared.
+For actual response-header validation, the existing controlled endpoint gained
+`credential-names`: a fixed non-secret JSON/header fixture that never echoes
+caller values. Its updated preview had the same function-only scope. The
+deployment completed at approximately 17:38:52 UTC, replacing code assets in
+the existing SST bootstrap bucket and deleting superseded assets. No new
+resources, fixed capacity or recurring cost were added; the previous $1–$3/month
+development forecast remains applicable, with small one-time build-upload and
+fixture-request charges. Both previews first failed closed until the existing
+Cognito pool/client environment was supplied; neither failure applied changes.
+
+Read-only Lambda inspection confirmed all four functions Active with successful
+updates and code SHA-256 exactly matching their local deployment archives:
+
+| Existing component          | Deployed archive SHA-256 (base64)              |
+| --------------------------- | ---------------------------------------------- |
+| UsersProjectsApi            | `4seBSHKC+K9bmE24AMsIx+AJfEQN35qylhKrolA5/00=` |
+| EmptyProjectCleanup         | `4seBSHKC+K9bmE24AMsIx+AJfEQN35qylhKrolA5/00=` |
+| CloudExecutionWorker        | `6/CBrJC604CjXd3VrjfhIsJDKzvACbruEYKuXsgDGIk=` |
+| ExecutionControlledEndpoint | `6/CBrJC604CjXd3VrjfhIsJDKzvACbruEYKuXsgDGIk=` |
+
+Validation results:
+
+- Passed: `npm run verify`: formatting, lint, 39 frontend tests, eight
+  infrastructure tests, frontend TypeScript/Vite build, and tests/vet across
+  all five Go modules. The controlled endpoint unit test verifies fixed markers
+  rather than reflected caller values. AWS-tagged execution tests compiled.
+- Passed: race-enabled `TestIntegrationCredentialNamesMaskedBeforePublication`
+  against actual DynamoDB Local, simulated KMS/S3/SQS and loopback HTTP. It
+  inspects sanitized upload bytes before SNAP publication and checks identical
+  delivery after publication. This remains simulated cloud fault evidence.
+- Passed: `TestAWSCloudExecutionCredentialNames` using real deployed Lambda,
+  SQS, HTTPS, Control and private S3, with **zero protected sources**. Fixed
+  non-secret credential-name query markers deliberately bypass authoring in
+  this disposable SDK fixture to test the runtime boundary. Response JSON
+  fields, response headers and captured request URL query parameters named
+  `key`, `auth`, `pwd` were all masked; public controls remained readable.
+  S3 byte count/SHA-256 matched immutable metadata and the API service's full
+  JSON envelope contained exactly the stored capture. Project
+  `61c0d70b-cc55-4d14-b643-ff1f8f6ebe1f`, execution
+  `b7e85ede-acc3-44ae-b21f-6046736c5071`, was physically cleaned up and verified.
+  SDK admission/delivery is separate from authenticated HTTP verification.
+- Passed, reported by Davian: the genuine signed-in browser probe below used
+  a saved GET with no protected inputs and default redaction policy. Actual
+  Cognito-protected API delivery masked the three response JSON names,
+  response headers and nested query fields, with HTTP 200/Completed. Project
+  `c0b1cebb-c166-44bc-8306-11f808b36eb1`, execution
+  `a0a40569-ef1c-48d4-93e0-1b749cead3ba`.
+- Passed: independent read-only Control/private-S3 inspection of the browser
+  execution confirmed those masks, correct public control, immutable checksum
+  and size, zero protected sources and zero Protected records. Captures were
+  inspected in memory; no values or response contents were printed or saved.
+- Reported by Davian: owner-driven browser deletion denied access immediately.
+  Initial inspection found deleting state, eight Control records, zero Protected
+  records and zero S3 evidence objects. Subsequent fully paginated strong table
+  and S3 completion checks passed: completed deletion operation and project
+  tombstone only (one Control record), zero Protected records, zero evidence
+  objects, and registered durable residual sweep. No records were removed
+  manually to force scheduled cleanup completion.
+
+While signed in at `http://localhost:5173`, run this opt-in probe once:
+
+```js
+await (
+  await import("/src/cloud-validation.ts")
+).validateCredentialNameRedaction();
+```
+
+It creates a disposable project, uses only the owned fixed-marker endpoint and
+returns public IDs/results, without credentials or tokens. Leave the project
+until independent evidence inspection, then delete it through the UI. The
+browser probe checks response query fields; the SDK fixture separately verifies
+the captured request URL query parameters. No new browser secret-storage,
+account-throttling or dispatch-crash claim is made by this correction rollout.

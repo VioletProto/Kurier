@@ -7,6 +7,69 @@ import {
 } from "./secret-persistence-audit";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Uses the genuine authenticated API with no protected inputs or values.
+export async function validateCredentialNameRedaction() {
+  const project = await api.create("Credential-name deployment probe");
+  const projectId = project.project.projectId;
+  const saved = await api.createRequest(projectId, {
+    name: "Unmapped credential-name response fixture",
+    method: "GET",
+    url: "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com/execution-fixture/credential-names",
+    headers: [],
+    queryParameters: [],
+    body: null,
+    operationRef: null,
+  });
+  const run = await api.submitExecution(
+    projectId,
+    saved.request.requestId,
+    saved.etag,
+    crypto.randomUUID(),
+    {
+      timeoutSeconds: 30,
+      allowInsecureSecrets: false,
+      responseRedaction: { headers: [], jsonPointers: [], omitBody: false },
+    },
+  );
+  for (let n = 0; n < 45; n++) {
+    const status = await api.executionStatus(projectId, run.executionId);
+    if (["completed", "failed"].includes(status.status)) {
+      const evidence = await api.executionEvidence(projectId, run.executionId);
+      const raw = JSON.stringify(evidence);
+      const body = JSON.parse(evidence.response.body.text ?? "null");
+      if (
+        status.status !== "completed" ||
+        evidence.response.httpStatus !== 200 ||
+        raw.includes("unmapped-fixture-") ||
+        body?.fields?.public !== "keep-public" ||
+        ["key", "auth", "pwd"].some(
+          (name) =>
+            body?.fields?.[name] !== "[REDACTED]" ||
+            body?.query?.[name] !== "[REDACTED]" ||
+            !evidence.response.headers.some(
+              (header) =>
+                header.name.toLowerCase() === name &&
+                header.value === "[REDACTED]",
+            ),
+        )
+      )
+        throw new Error("Credential-name API delivery check failed.");
+      return {
+        projectId,
+        executionId: run.executionId,
+        protectedInputs: 0,
+        authenticatedApiDelivery: "passed",
+        jsonFields: "passed",
+        headers: "passed",
+        queryFields: "passed",
+        cleanup: "pending inspection and deletion",
+      };
+    }
+    await pause(2000);
+  }
+  throw new Error("Execution pending; do not replay an uncertain outcome.");
+}
+
 // Opt-in genuine browser probe: disposable values stay in this closure and in
 // authorized HTTPS write memory. The returned report contains no secret values.
 export async function validateCloudExecutionEvidence() {

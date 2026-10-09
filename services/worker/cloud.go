@@ -58,6 +58,15 @@ func controlledEndpoint(_ context.Context, event events.APIGatewayV2HTTPRequest)
 	status := 200
 	var payload []byte
 	switch mode {
+	case "credential-names":
+		// Fixed non-secret markers exercise name-based masking without protected
+		// inputs. Never echo caller values in this response-header fixture.
+		fields := map[string]string{"public": "keep-public"}
+		for _, name := range []string{"key", "auth", "pwd"} {
+			fields[name] = "unmapped-fixture-" + name
+			headers[name] = fields[name]
+		}
+		payload, _ = json.Marshal(map[string]any{"fields": fields, "query": fields})
 	case "echo":
 		body := event.Body
 		if event.IsBase64Encoded {
