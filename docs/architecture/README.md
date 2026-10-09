@@ -1,5 +1,13 @@
 # Accepted architecture
 
+## Proposed cloud execution continuation
+
+The [single saved-request cloud execution review packet](cloud-execution-evidence-contract.md)
+is **Proposed**, not an accepted contract or implemented behavior. It records
+execution/evidence routes, schemas, redaction policies, protected-input freezing
+and preparation results for review. Publishing the packet does not authorize
+dependent implementation or AWS deployment while review is pending.
+
 ## Accepted W1 baseline
 
 The concrete [W1 system design](w1-system-design.md),
