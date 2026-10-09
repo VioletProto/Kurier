@@ -1,4 +1,4 @@
-module github.com/DrKaelum/Kurier/infra/spikes/sst-viability/service
+module github.com/VioletProto/Kurier/infra/spikes/sst-viability/service
 
 go 1.26.0
 

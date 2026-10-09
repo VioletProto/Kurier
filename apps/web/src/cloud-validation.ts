@@ -6,6 +6,111 @@ import {
   containsSecretText,
 } from "./secret-persistence-audit";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Opt-in genuine browser probe: disposable values stay in this closure and in
+// authorized HTTPS write memory. The returned report contains no secret values.
+export async function validateCloudExecutionEvidence() {
+  const project = await api.create("Execution browser containment probe");
+  const projectId = project.project.projectId;
+  const values = ["Bearer " + crypto.randomUUID(), crypto.randomUUID()];
+  const saved = await api.createRequest(projectId, {
+    name: "Owned echo with disposable protected inputs",
+    method: "GET",
+    url: "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com/execution-fixture/echo",
+    headers: ["Authorization", "X-Disposable"].map((name, n) => ({
+      name,
+      enabled: true,
+      sensitive: true,
+      bindingId: crypto.randomUUID(),
+      secretWrite: { action: "set" as const, value: values[n] },
+    })),
+    queryParameters: [],
+    body: null,
+    operationRef: null,
+  });
+  const key = crypto.randomUUID();
+  const options = {
+    timeoutSeconds: 30,
+    allowInsecureSecrets: false,
+    responseRedaction: { headers: [], jsonPointers: [], omitBody: false },
+  };
+  const first = await api.submitExecution(
+    projectId,
+    saved.request.requestId,
+    saved.etag,
+    key,
+    options,
+  );
+  const retry = await api.submitExecution(
+    projectId,
+    saved.request.requestId,
+    saved.etag,
+    key,
+    options,
+  );
+  if (retry.executionId !== first.executionId)
+    throw new Error("Submission reconciliation changed execution identity.");
+  async function inspect(executionId: string) {
+    for (let n = 0; n < 45; n++) {
+      const status = await api.executionStatus(projectId, executionId);
+      if (["completed", "failed"].includes(status.status)) {
+        const evidence = await api.executionEvidence(projectId, executionId);
+        if (
+          status.status !== "completed" ||
+          evidence.response.httpStatus !== 200 ||
+          containsSecretText(JSON.stringify(evidence), values)
+        )
+          throw new Error(
+            "Execution or evidence containment check failed; no values returned.",
+          );
+        return evidence;
+      }
+      await pause(2000);
+    }
+    throw new Error(
+      "Execution remains pending; do not replay an uncertain outcome.",
+    );
+  }
+  const evidence = await inspect(first.executionId);
+  const reopened = await api.executionEvidence(projectId, first.executionId);
+  if (JSON.stringify(evidence) !== JSON.stringify(reopened))
+    throw new Error("Immutable evidence changed.");
+  // This explicit probe deliberately reruns only a known successful owned GET.
+  const rerun = await api.rerunExecution(
+    projectId,
+    first.executionId,
+    crypto.randomUUID(),
+    false,
+  );
+  if (rerun.executionId === first.executionId)
+    throw new Error("Deliberate rerun reused execution identity.");
+  await inspect(rerun.executionId);
+  const history = await api.executionHistory(projectId);
+  if (
+    ![first.executionId, rerun.executionId].every((id) =>
+      history.items.some((item) => item.executionId === id),
+    )
+  )
+    throw new Error("Execution history incomplete.");
+  const storage = await auditSecretPersistence(values);
+  if (!storage.storageSafe || !storage.auditComplete)
+    throw new Error(
+      "Browser persistence audit failed or incomplete; no values returned.",
+    );
+  return {
+    projectId,
+    executionId: first.executionId,
+    rerunExecutionId: rerun.executionId,
+    secretIds: saved.request.headers.map((h) => h.secretRef!.secretId),
+    protectedEvidence: "passed",
+    immutableReopen: "passed",
+    retryIdentity: "passed",
+    deliberateRerun: "passed",
+    history: "passed",
+    storage,
+    cleanup: "pending inspection and log audit",
+  };
+}
 async function expectDenied(action: () => Promise<unknown>, status: number) {
   try {
     await action();

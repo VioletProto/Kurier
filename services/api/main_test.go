@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DrKaelum/Kurier/services/api/internal/ownership"
+	"github.com/VioletProto/Kurier/services/api/internal/ownership"
 )
 
 func TestHealth(t *testing.T) {

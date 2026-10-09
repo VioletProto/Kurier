@@ -25,6 +25,17 @@ const env = {
   KURIER_AWS_TEST_TABLE: outputs.controlTable,
   KURIER_AWS_TEST_PROTECTED: outputs.protectedTable,
   KURIER_AWS_TEST_KEY: outputs.protectedKeyArn,
+  KURIER_AWS_TEST_BUCKET: outputs.evidenceBucket,
+  KURIER_AWS_TEST_QUEUE: outputs.executionQueueUrl,
+  KURIER_AWS_TEST_ENDPOINT: outputs.controlledEndpointUrl,
+  KURIER_AWS_TEST_LOG_FUNCTIONS: [
+    outputs.apiFunction,
+    outputs.workerFunction,
+    outputs.cleanupFunction,
+    outputs.controlledEndpointFunction,
+  ]
+    .filter(Boolean)
+    .join(","),
 };
 for (const [source, target] of [
   ["AccessKeyId", "AWS_ACCESS_KEY_ID"],
@@ -36,7 +47,14 @@ for (const [source, target] of [
 if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY)
   throw new Error("No usable AWS session.");
 const filter = process.argv[2] ?? "TestAWS";
-if (!["TestAWS", "TestAWSControl", "TestAWSProtected"].includes(filter))
+if (
+  ![
+    "TestAWS",
+    "TestAWSControl",
+    "TestAWSProtected",
+    "TestAWSCloudExecution",
+  ].includes(filter)
+)
   throw new Error("Choose a scoped AWS test filter.");
 const child = spawn(
   "go",
@@ -48,7 +66,7 @@ const child = spawn(
     filter,
     "-count=1",
     "-v",
-    "./internal/ownership",
+    filter === "TestAWSCloudExecution" ? "./execution" : "./internal/ownership",
   ],
   { cwd: new URL("../services/api/", import.meta.url), env, stdio: "inherit" },
 );

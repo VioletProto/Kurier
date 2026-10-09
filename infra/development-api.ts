@@ -135,14 +135,100 @@ export async function createDevelopmentApi() {
         "dynamodb:GetItem",
         "dynamodb:Query",
         "dynamodb:PutItem",
+        "dynamodb:DeleteItem",
         "dynamodb:ConditionCheckItem",
       ],
       resources: [protectedTable.arn],
     },
   ];
+  const evidence = new aws.s3.BucketV2("ExecutionEvidence", {
+    forceDestroy: false,
+  });
+  new aws.s3.BucketPublicAccessBlock("ExecutionEvidencePublicAccess", {
+    bucket: evidence.id,
+    blockPublicAcls: true,
+    blockPublicPolicy: true,
+    ignorePublicAcls: true,
+    restrictPublicBuckets: true,
+  });
+  new aws.s3.BucketServerSideEncryptionConfigurationV2(
+    "ExecutionEvidenceEncryption",
+    {
+      bucket: evidence.id,
+      rules: [
+        { applyServerSideEncryptionByDefault: { sseAlgorithm: "AES256" } },
+      ],
+    },
+  );
+  new aws.s3.BucketOwnershipControls("ExecutionEvidenceOwnership", {
+    bucket: evidence.id,
+    rule: { objectOwnership: "BucketOwnerEnforced" },
+  });
+  new aws.s3.BucketPolicy("ExecutionEvidenceTls", {
+    bucket: evidence.id,
+    policy: $jsonStringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Deny",
+          Principal: "*",
+          Action: "s3:*",
+          Resource: [evidence.arn, $interpolate`${evidence.arn}/*`],
+          Condition: { Bool: { "aws:SecureTransport": "false" } },
+        },
+      ],
+    }),
+  });
+  const dlq = new aws.sqs.Queue("ExecutionDeadLetter", {
+    messageRetentionSeconds: 1209600,
+    sqsManagedSseEnabled: true,
+  });
+  const queue = new aws.sqs.Queue("ExecutionQueue", {
+    visibilityTimeoutSeconds: 540,
+    messageRetentionSeconds: 345600,
+    receiveWaitTimeSeconds: 20,
+    sqsManagedSseEnabled: true,
+    redrivePolicy: $jsonStringify({
+      deadLetterTargetArn: dlq.arn,
+      maxReceiveCount: 5,
+    }),
+  });
+  new aws.sqs.RedriveAllowPolicy("ExecutionDeadLetterAllow", {
+    queueUrl: dlq.url,
+    redriveAllowPolicy: $jsonStringify({
+      redrivePermission: "byQueue",
+      sourceQueueArns: [queue.arn],
+    }),
+  });
+  const queueSend = { actions: ["sqs:SendMessage"], resources: [queue.arn] };
+  const objectArn = $interpolate`${evidence.arn}/dev-api/projects/*`;
+  const purposeConditions = (purpose: string) => [
+    {
+      test: "StringEquals",
+      variable: "kms:EncryptionContext:app",
+      values: ["kurier"],
+    },
+    {
+      test: "StringEquals",
+      variable: "kms:EncryptionContext:stage",
+      values: ["dev-api"],
+    },
+    {
+      test: "StringEquals",
+      variable: "kms:EncryptionContext:purpose",
+      values: [purpose],
+    },
+  ];
+  const executionEnvironment = {
+    KURIER_CLOUD_EXECUTIONS_SCHEMA_VERSION: "1",
+    KURIER_EXECUTION_INPUTS_SCHEMA_VERSION: "1",
+    KURIER_EVIDENCE_BUCKET: evidence.bucket,
+    KURIER_EXECUTION_QUEUE_URL: queue.url,
+  };
   const environment = {
+    ...executionEnvironment,
     KURIER_STAGE: "dev-api",
-    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "2",
+    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "3",
     KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
     KURIER_PROTECTED_TABLE: protectedTable.name,
     KURIER_CONTROL_TABLE: control.name,
@@ -170,6 +256,18 @@ export async function createDevelopmentApi() {
         ],
       },
       ...protectedPermissions,
+      queueSend,
+      { actions: ["s3:GetObject"], resources: [objectArn] },
+      {
+        actions: ["kms:Decrypt"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions("saved-secret"),
+      },
+      {
+        actions: ["kms:GenerateDataKey"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions("job-bindings"),
+      },
       {
         actions: ["kms:GenerateDataKey"],
         resources: [stageKey.arn],
@@ -237,6 +335,12 @@ export async function createDevelopmentApi() {
     "GET /api/v1/projects/{projectId}/secrets",
     "PATCH /api/v1/projects/{projectId}/secrets/{secretId}",
     "DELETE /api/v1/projects/{projectId}/secrets/{secretId}",
+    "POST /api/v1/projects/{projectId}/requests/{requestId}/executions",
+    "GET /api/v1/projects/{projectId}/executions",
+    "GET /api/v1/projects/{projectId}/executions/{executionId}",
+    "GET /api/v1/projects/{projectId}/executions/{executionId}/status",
+    "GET /api/v1/projects/{projectId}/executions/{executionId}/evidence",
+    "POST /api/v1/projects/{projectId}/executions/{executionId}/rerun",
     "OPTIONS /api/v1/{proxy+}",
   ]) {
     api.route(route, fn.arn);
@@ -249,8 +353,9 @@ export async function createDevelopmentApi() {
     timeout: "60 seconds",
     dev: false,
     environment: {
+      ...executionEnvironment,
       KURIER_STAGE: "dev-api",
-      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "2",
+      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "3",
       KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
       KURIER_PROTECTED_TABLE: protectedTable.name,
       KURIER_CONTROL_TABLE: control.name,
@@ -258,13 +363,95 @@ export async function createDevelopmentApi() {
     },
     permissions: [
       ...tablePermissions,
+      queueSend,
       {
-        actions: ["dynamodb:Query", "dynamodb:DeleteItem"],
+        actions: ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+        resources: [objectArn],
+      },
+      {
+        actions: ["s3:ListBucket"],
+        resources: [evidence.arn],
+        conditions: [
+          {
+            test: "StringLike",
+            variable: "s3:prefix",
+            values: ["dev-api/projects/*"],
+          },
+        ],
+      },
+      {
+        actions: ["dynamodb:GetItem", "dynamodb:Query", "dynamodb:DeleteItem"],
         resources: [protectedTable.arn],
       },
     ],
     logging: { retention: "1 week" },
   });
+  const worker = new sst.aws.Function("CloudExecutionWorker", {
+    runtime: "go",
+    handler: "services/worker",
+    architecture: "arm64",
+    memory: "256 MB",
+    timeout: "90 seconds",
+    dev: false,
+    // Development Free plan: queue concurrency is capped on the standard ESM,
+    // without reserving any of the account's shared Lambda capacity.
+    logging: { retention: "1 week" },
+    environment: {
+      ...executionEnvironment,
+      KURIER_STAGE: "dev-api",
+      KURIER_CONTROL_TABLE: control.name,
+      KURIER_PROTECTED_TABLE: protectedTable.name,
+      KURIER_KMS_KEY_ARN: stageKey.arn,
+    },
+    permissions: [
+      ...tablePermissions,
+      {
+        actions: [
+          "dynamodb:GetItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:ConditionCheckItem",
+        ],
+        resources: [protectedTable.arn],
+      },
+      {
+        actions: [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+        ],
+        resources: [queue.arn],
+      },
+      { actions: ["s3:PutObject", "s3:GetObject"], resources: [objectArn] },
+      {
+        actions: ["kms:Decrypt"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions("job-bindings"),
+      },
+    ],
+  });
+  new aws.lambda.EventSourceMapping("ExecutionQueueWorker", {
+    eventSourceArn: queue.arn,
+    functionName: worker.arn,
+    batchSize: 1,
+    maximumBatchingWindowInSeconds: 0,
+    functionResponseTypes: ["ReportBatchItemFailures"],
+    scalingConfig: { maximumConcurrency: 2 },
+  });
+  // Owned development fixtures have no data-resource permissions and no payload logs.
+  const fixture = new sst.aws.Function("ExecutionControlledEndpoint", {
+    runtime: "go",
+    handler: "services/worker",
+    architecture: "arm64",
+    memory: "128 MB",
+    timeout: "65 seconds",
+    dev: false,
+    logging: { retention: "1 week" },
+    environment: {
+      KURIER_STAGE: "dev-api",
+      KURIER_CONTROLLED_ENDPOINT: "true",
+    },
+  });
+  api.route("ANY /execution-fixture/{mode}", fixture.arn);
   const schedule = new sst.aws.Cron("EmptyProjectSchedule", {
     schedule: "rate(1 minute)",
     function: maintenance,
@@ -277,6 +464,13 @@ export async function createDevelopmentApi() {
     protectedTable: protectedTable.name,
     protectedKeyArn: stageKey.arn,
     apiFunction: fn.name,
+    workerFunction: worker.name,
+    evidenceBucket: evidence.bucket,
+    executionQueueUrl: queue.url,
+    executionQueueArn: queue.arn,
+    executionDlqUrl: dlq.url,
+    controlledEndpointFunction: fixture.name,
+    controlledEndpointUrl: $interpolate`${api.url}/execution-fixture/echo`,
     cleanupFunction: maintenance.name,
     cleanupSchedule: schedule.nodes.rule.name,
     frontendOrigin: origin,

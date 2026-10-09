@@ -43,6 +43,12 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 		pattern string
 		handler endpoint
 	}{
+		{"POST /api/v1/projects/{projectId}/requests/{requestId}/executions", a.executionEndpoint},
+		{"GET /api/v1/projects/{projectId}/executions", a.executionEndpoint},
+		{"GET /api/v1/projects/{projectId}/executions/{executionId}", a.executionEndpoint},
+		{"GET /api/v1/projects/{projectId}/executions/{executionId}/status", a.executionEndpoint},
+		{"GET /api/v1/projects/{projectId}/executions/{executionId}/evidence", a.executionEndpoint},
+		{"POST /api/v1/projects/{projectId}/executions/{executionId}/rerun", a.executionEndpoint},
 		{"GET /api/v1/projects/{projectId}/secrets", a.listSecrets},
 		{"PATCH /api/v1/projects/{projectId}/secrets/{secretId}", a.mutateSecret},
 		{"DELETE /api/v1/projects/{projectId}/secrets/{secretId}", a.mutateSecret},

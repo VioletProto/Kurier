@@ -1,5 +1,13 @@
 # Accepted architecture
 
+## Accepted cloud execution continuation
+
+Davian accepted the [single saved-request cloud execution contract](cloud-execution-evidence-contract.md)
+on 2026-10-08, including source-bound submission/rerun idempotency, evidence
+encoding and prepublication API/Lambda size checks. Implementation, scoped
+AWS deployment and validation are authorized; unperformed checks remain pending.
+This acceptance does not claim execution is already implemented or verified.
+
 ## Accepted W1 baseline
 
 The concrete [W1 system design](w1-system-design.md),

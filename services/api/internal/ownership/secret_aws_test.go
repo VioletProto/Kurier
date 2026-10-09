@@ -36,6 +36,7 @@ func TestAWSProtectedEncryptionAndCrossTableLifecycle(t *testing.T) {
 	db := dynamodb.NewFromConfig(cfg)
 	km := kms.NewFromConfig(cfg)
 	store := NewStore(db, table, "dev-api")
+	configureAWSExecutionFixture(store, cfg)
 	store.ConfigureProtected(protected, NewEnvelopeCipher(km, keyARN, "dev-api"))
 	auth := newAuthFixture(t)
 	alice, err := store.ResolveUser(ctx, verified(t, auth, "protected-alice-"+newID()))

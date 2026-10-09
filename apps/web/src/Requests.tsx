@@ -11,6 +11,7 @@ import {
   type SecretField,
 } from "./api";
 import { SessionExpired } from "./auth";
+import { Executions } from "./Executions";
 
 const empty = (): RequestConfiguration => ({
   name: "",
@@ -500,6 +501,13 @@ export function Requests({
       aria-label="Saved requests"
       aria-busy={busy}
     >
+      <Executions
+        projectId={projectId}
+        request={detail}
+        disabled={disabled}
+        onSessionExpired={onExpired}
+        onGateChanged={onGateChanged}
+      />
       <h3>Saved requests</h3>
       <p>
         Save public configuration with encrypted bearer tokens, API keys and
@@ -507,7 +515,7 @@ export function Requests({
         entering values. For bearer tokens, use Authorization and enter the full
         Bearer value. Header names must match the API and cannot contain spaces.
         API keys use protected header/query rows. Protected inputs are
-        write-only and clear after submission. Execution is not available yet.
+        write-only and clear after submission. Execute the saved revision below.
       </p>
       <p>
         URLs must be public. Checks reject recognized credential patterns,
