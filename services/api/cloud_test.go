@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DrKaelum/Kurier/services/api/internal/ownership"
+	"github.com/VioletProto/Kurier/services/api/internal/ownership"
 	"github.com/aws/aws-lambda-go/events"
 )
 

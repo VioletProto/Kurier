@@ -1,4 +1,4 @@
-module github.com/DrKaelum/Kurier/services/api
+module github.com/VioletProto/Kurier/services/api
 
 go 1.26.0
 
