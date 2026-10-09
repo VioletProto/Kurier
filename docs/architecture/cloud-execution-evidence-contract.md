@@ -1,9 +1,12 @@
 # Single saved-request cloud execution: review packet
 
-Status: **Proposed for Davian's review**, 2026-10-08. The original task authorized
-the development slice subject to review of new wire/schema choices. Davian's
-latest instruction authorizes publishing this review packet only: do not begin
-dependent implementation or deploy AWS resources while review is pending.
+Status: **Proposed for Davian's review**, 2026-10-08. Davian found the proposed
+design acceptable subject to explicit source-bound idempotency and evidence
+delivery-size clarifications. Those clarifications are recorded below for review;
+the packet remains Proposed until that review is complete. Davian's latest
+instruction authorizes committing/pushing these contract clarifications only:
+do not begin dependent implementation or deploy AWS resources while review is
+pending.
 No execution implementation or deployment is claimed.
 Branch: `feat/cloud-execution-evidence`, from merged main `b7aaac8`.
 
@@ -20,7 +23,8 @@ Success envelopes preserve the live contract: submission/rerun/detail return
 `{data:{execution:...}}`, status `{data:{status:...}}`, history
 `{data:{items:[],nextCursor:null}}`, evidence `{data:{evidence:...}}`.
 Admission includes Location and Retry-After. The complete evidence API envelope,
-not just its inner object, must fit the accepted 4 MiB cap.
+not just its inner object, must fit the accepted 4 MiB cap; the fully serialized
+Lambda proxy response must independently fit 6 MiB. See delivery encoding below.
 
 | Route under `/api/v1/projects/{projectId}` | Contract                                                                                                                                                                                                        |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,10 +61,32 @@ invalid union types and unsupported policy forms fail closed with fixed errors.
 The body contains policies only; it cannot contain a literal secret.
 
 Idempotency keys are random UUIDs. Persist only private HMAC-derived key/input
-identities, including route purpose, owner/project, source revision and normalized
-policy. Reuse the stage's existing private signing-key material with separate
-HMAC domains; no public credential fingerprints. Look up an existing receipt
-after ownership/stage checks and before current source revision validation:
+identities. Use one execution-admission receipt namespace per owner/project for
+both submissions and reruns: `P / IDEM#execution-admission#keyDigest`. The private
+key digest binds app/stage, owner/project and the caller's key, **not the source
+ID**. Thus using the same key for another source finds the existing receipt and
+conflicts instead of creating a second receipt/job. The separately domain-bound
+normalized-input HMAC includes:
+
+- For submission: operation `submit`, owner/project, **source requestId from the
+  route**, expected request revision from If-Match, normalized timeout, consent
+  and response-redaction policy.
+- For rerun: operation `rerun`, owner/project, **source executionId from the
+  route**, and normalized rerun consent. The source execution identifies its
+  immutable replay plan/policy; current secret values/revisions are resolved for
+  first admission only and do not change a retry's input identity.
+
+Consequently, equal revisions/policies on two different requests never make
+their submissions identical; two executions of the same request never make
+their reruns identical. Within this owner/project namespace, cross-source key
+reuse returns **409**, as does reusing a submission key for a rerun (or vice
+versa), before any new admission, KMS preparation or queue notification. Never
+return another source's execution as an idempotent success. Source IDs belong in
+the input identity even though they must not partition the unique-key lookup.
+Reuse the stage's existing private signing-key material with separate HMAC
+domains and unambiguous structured field encoding; no public credential
+fingerprints. Look up an existing receipt after ownership/stage checks and before
+current source revision validation:
 same input returns the original execution even after a later request edit or
 secret replacement. A mismatched input returns 409. Receipts have the accepted
 seven-day retry window; known expired receipts return 409 with a fixed instruction
@@ -183,6 +209,79 @@ commit atomically. Uploaded but unpublished evidence is never returned.
 Missing/corrupt published objects yield fixed 503 `evidence_unavailable` and
 update mutable availability only; expiry yields 404. No fabricated evidence.
 
+## Proposed evidence delivery encoding and publication size checks
+
+Store sanitized evidence as deterministic UTF-8 JSON bytes in S3. Browser
+delivery is `application/json; charset=utf-8`, with the complete UTF-8 JSON
+success envelope `{data:{evidence:...}}`; the evidence is a JSON object, not a
+JSON-encoded string or a browser-visible base64 field. Use the same defined
+JSON serializer/escaping rules for publication preflight and API delivery,
+including HTML escaping; count bytes after serialization, not characters or
+decoded upstream-body length. No content compression or streaming in this slice.
+
+For the evidence route, the Lambda HTTP API payload-v2 response **always** uses
+standard base64 in its `body` field and `isBase64Encoded:true`, even for small
+captures. API Gateway decodes the transport body; React receives the ordinary
+JSON success envelope. This avoids a second JSON-string escaping pass over
+the full evidence envelope. The existing general adapter's 64 KiB threshold
+is not the evidence-route contract. This is a contract requirement for later
+implementation, not a claim that that adapter has already been changed.
+[HTTP API Lambda payload-v2 encoding](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html).
+
+Before registering an upload ticket or attempting PUT, freeze the sanitized
+capture, all omission decisions and outcome, then check all three serialized
+representations:
+
+1. Complete S3 evidence bytes are <=4,194,304 bytes (4 MiB).
+2. Complete API-envelope bytes, including `data`/`evidence` wrappers, JSON
+   escaping and serialization overhead, are <=4,194,304 bytes independently.
+3. The **fully serialized Lambda response JSON** is <=6,291,456 bytes (6 MiB).
+   Include `statusCode`, all headers/cookies/other emitted fields, the
+   base64-encoded envelope and `isBase64Encoded`, plus their JSON escaping and
+   serializer overhead. Base64 length is `4 * ceil(envelopeBytes / 3)`; that
+   calculation alone is not the complete response-size check. AWS documents
+   the synchronous request/response quota as 6 MB and explicitly uses binary
+   units for MB here. [Lambda quotas](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html).
+
+Prepublication Lambda measurement must use the deployed serializer and a
+bounded worst-case set of allowed API response headers/metadata, including
+configured CORS headers. The complete serialized proxy response with `body:""`
+must be <=16 KiB, counting all framing, headers, cookies and other fields; use
+that maximum metadata allowance for prepublication measurement, then measure
+the actual response at delivery. A maximum-size 4 MiB API envelope needs
+5,592,408 base64 bytes; adding the 16 KiB allowance remains below 6 MiB.
+This allowance supplements, not replaces, the fully serialized response check.
+Do not reflect arbitrary upstream/client headers into that envelope. API reads
+use the same bounds and measure the actual fully
+serialized proxy response again before returning it. Any serializer, encoding
+or header-bound change must preserve this prepublication proof and its tests.
+Private S3 keys/checksums/byte reservations describe the final evidence bytes,
+not a larger candidate later changed for delivery.
+
+If any check fails, omit the unsafe/oversized body before publication with
+`encoded_evidence_limit`, retain the bounded sanitized status/timing/header
+summary, and rerun **all three checks** on the final capture. If necessary omit
+both request and response body text. If even the minimal safe capture cannot
+fit, do not publish it: preserve the pending obligation for safe reconciliation
+without HTTP replay. Never silently truncate, omit/rewrite evidence at GET time,
+or publish a capture that only fits S3 but cannot be delivered. A later violated
+delivery bound returns a fixed small 503 `evidence_unavailable`, not a modified
+capture. Atomic immutable publication occurs only after these final checks;
+evidence contents and checksum remain unchanged across reads.
+
+Required implementation tests (pending review/implementation): exact-limit and
+one-byte-over cases at each representation; 2 MiB bodies dominated by quotes,
+backslashes, control characters and HTML-escaped characters; multi-byte Unicode
+and already escaped JSON strings; worst-case permitted headers/metadata;
+base64 lengths for all three input-length remainders; and API Gateway decode
+round-trip equality with the published evidence. Include a candidate fitting
+the evidence-object limit but exceeding the API-envelope limit, and a raw
+proxy-body double-escaping case that exceeds Lambda's limit while base64 fits.
+Assert every omission happens before ticket/PUT/SNAP publication, manifest
+checksum/size match the final object, repeated GETs preserve the same capture,
+and the actual serialized proxy response satisfies the Lambda bound. These
+requirements are not claimed tested by the documentation-only task.
+
 ## Proposed safe redaction and content policy
 
 - Always mask credential/cookie headers and credential-named URL query/JSON
@@ -212,9 +311,10 @@ update mutable availability only; expiry yields 404. No fabricated evidence.
   secrecy takes precedence over readability. No arbitrary secret transformation
   detector is promised. For unsupported/custom encodings or transformed echoes,
   users must configure paths or `omitBody:true`. UI states this limitation.
-- Bound sanitized headers and complete serialized evidence at 4 MiB. If JSON
-  escaping pushes a supported body over the envelope cap, omit it with
-  `encoded_evidence_limit`, retaining the safe status/timing/header summary.
+- Bound sanitized headers under the accepted 64 KiB header cap. Enforce the
+  evidence-object, complete API-envelope and fully serialized Lambda-response
+  limits above. Any size omission, including `encoded_evidence_limit`, is frozen
+  before immutable publication, retaining the safe status/timing/header summary.
 - Render only escaped React text/`pre`. No HTML injection, iframe preview,
   executable download, auto-followed response links or browser persistence.
   Stop polling on terminal state/sign-out/unmount/deletion, allow only one request
@@ -284,7 +384,9 @@ KMS, logs/bootstrap assumptions; no free-tier subtraction or hard cap claim.
 Meaningful tests will cover duplicate delivery; pre/post-intent crashes and lost
 commit/queue/S3 acknowledgments; source replacement/revocation races; reflected
 redaction/unsupported content; DNS/IP/rebinding/redirect protections; independent
-wire/gzip/envelope limits; terminal publication races; retention and late-PUT
+wire/gzip/envelope/Lambda limits and worst-case escaping; source-bound submission
+and rerun retries, cross-source/cross-operation key reuse returning 409 without
+new admission or disclosure; terminal publication races; retention and late-PUT
 deletion/unknown records. Fault injection is simulated evidence, explicitly
 separate from actual AWS runtime/IAM/queue/S3 verification and genuine browser
 checks. Controlled public endpoints and disposable memory-only secrets are
@@ -314,6 +416,11 @@ services. Secret containment checks return booleans/counts only, never values.
 - Davian requested committing and pushing this Proposed packet and preparation
   record on `feat/cloud-execution-evidence` for external review. Publication
   does not record acceptance or authorize dependent implementation/deployment.
+- Davian subsequently found the design acceptable subject to the two source-
+  identity and delivery-size clarifications above, and requested committing and
+  pushing those clarifications for review before dependent work. This revision
+  changes documentation only; the new runtime/fault-test requirements remain
+  pending and no AWS mutation is authorized by publishing the clarification.
 - Review choices above are not accepted merely by writing this packet. Product
   implementation, genuine browser checks and final submission of the verified
   implementation remain outstanding.

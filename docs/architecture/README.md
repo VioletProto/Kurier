@@ -5,8 +5,11 @@
 The [single saved-request cloud execution review packet](cloud-execution-evidence-contract.md)
 is **Proposed**, not an accepted contract or implemented behavior. It records
 execution/evidence routes, schemas, redaction policies, protected-input freezing
-and preparation results for review. Publishing the packet does not authorize
-dependent implementation or AWS deployment while review is pending.
+and preparation results for review. Davian found the design acceptable subject
+to clarifications; source-bound submission/rerun idempotency and evidence delivery
+encoding, prepublication API/Lambda size checks and escaping-test requirements
+are now explicit and await clarification review. Publishing the packet does
+not authorize dependent implementation or AWS deployment while review is pending.
 
 ## Accepted W1 baseline
 
