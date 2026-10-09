@@ -53,6 +53,7 @@ if (
     "TestAWSControl",
     "TestAWSProtected",
     "TestAWSCloudExecution",
+    "TestAWSCloudExecutionCredentialNames",
   ].includes(filter)
 )
   throw new Error("Choose a scoped AWS test filter.");
@@ -66,7 +67,9 @@ const child = spawn(
     filter,
     "-count=1",
     "-v",
-    filter === "TestAWSCloudExecution" ? "./execution" : "./internal/ownership",
+    filter.startsWith("TestAWSCloudExecution")
+      ? "./execution"
+      : "./internal/ownership",
   ],
   { cwd: new URL("../services/api/", import.meta.url), env, stdio: "inherit" },
 );
