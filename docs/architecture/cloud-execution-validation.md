@@ -176,17 +176,26 @@ Sources: [AWS regional price catalogs](https://docs.aws.amazon.com/awsaccountbil
   their reflected response values are masked, with two distinct execution IDs.
   Actual private-S3 read-back verified distinct immutable captures: first
   duration 372 ms, second 71 ms, different upstream request IDs and completion
-  times. The two pasted capture sections contained the second capture's details;
-  history reinspection remains pending to distinguish copying from UI behavior.
+  times. Davian confirmed the repeated pasted capture was accidental; no stale
+  UI capture defect was established.
 - Passed: read-only containment audit of those genuine browser executions,
   comparing two protected sources and 236 application log events against raw
   and supported encoded variants. Source values were resolved only in authorized
   test-process memory; neither values nor log contents were printed or persisted.
-  This establishes server evidence/log containment, not browser storage safety.
-- Pending: genuine browser storage containment, immutable
-  history reopen, deliberate rerun, controlled failure UI and full project
-  deletion; final commit/push. The browser probe is opt-in, uses the genuine
-  memory-only session, and reports only safe identifiers/booleans/counts.
+  This audit establishes server evidence/log containment.
+- Reported by Davian: the genuine signed-in browser containment probe passed
+  protected evidence, immutable reopen, history, stable submission-retry identity
+  and separate deliberate-rerun identity. Browser persistence audit was complete
+  and safe: one local-storage entry, one session-storage entry, no IndexedDB
+  databases/records or cache entries. Entries were inspected without exposing
+  their contents and unrelated browser data was preserved.
+- Passed: separate read-only server containment audit for that browser probe:
+  two executions, two protected sources and 99 application log events; no raw
+  or supported encoded values found. No source values/log contents printed or
+  persisted. Probe project remains available for the owner-driven deletion check.
+- Pending: controlled failure UI, wrapping recheck and full project deletion;
+  final validation-record publication. The browser probe is opt-in, uses the
+  genuine memory-only session, and reports only safe identifiers/booleans/counts.
 
 ## Genuine browser checklist
 
