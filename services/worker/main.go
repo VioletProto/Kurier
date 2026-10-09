@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
+		cloudMain()
+		return
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

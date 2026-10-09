@@ -9,9 +9,61 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/VioletProto/Kurier/services/api/execution"
 	"github.com/VioletProto/Kurier/services/api/internal/ownership"
 	"github.com/aws/aws-lambda-go/events"
 )
+
+func TestEvidenceProxyEncodingAndSerializedBounds(t *testing.T) {
+	for _, size := range []int{1, 2, 3, execution.EvidenceLimit - 1, execution.EvidenceLimit, execution.EvidenceLimit + 1} {
+		payload := strings.Repeat("x", size)
+		h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+			_, _ = w.Write([]byte(payload))
+		})
+		event := events.APIGatewayV2HTTPRequest{Version: "2.0", RawPath: "/api/v1/projects/p/executions/e/evidence", RequestContext: events.APIGatewayV2HTTPRequestContext{HTTP: events.APIGatewayV2HTTPRequestContextHTTPDescription{Method: "GET"}}}
+		proxy, err := proxyHTTPV2(h)(context.Background(), event)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if size > execution.EvidenceLimit {
+			if proxy.StatusCode != 503 {
+				t.Fatal("oversized API envelope returned")
+			}
+			continue
+		}
+		if !proxy.IsBase64Encoded {
+			t.Fatal("evidence transport was not always base64")
+		}
+		decoded, err := base64.StdEncoding.DecodeString(proxy.Body)
+		if err != nil || string(decoded) != payload {
+			t.Fatal("transport changed evidence bytes")
+		}
+		serialized, _ := json.Marshal(proxy)
+		if len(serialized)+1 > execution.LambdaLimit {
+			t.Fatal("serialized Lambda limit exceeded")
+		}
+	}
+	// A raw body with worst-case escaping exceeds Lambda; base64 avoids it.
+	text := strings.Repeat("\"", execution.BodyLimit)
+	raw, _ := json.Marshal(text)
+	plain, _ := json.Marshal(events.APIGatewayV2HTTPResponse{StatusCode: 200, Body: string(raw)})
+	binary, _ := json.Marshal(events.APIGatewayV2HTTPResponse{StatusCode: 200, Body: base64.StdEncoding.EncodeToString(raw), IsBase64Encoded: true})
+	if len(plain) <= execution.LambdaLimit || len(binary) > execution.LambdaLimit {
+		t.Fatal("base64 must fit where the double-escaped raw proxy exceeds Lambda")
+	}
+	metadata := strings.Repeat("<", execution.MetadataLimit)
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Fixture", metadata)
+		_, _ = w.Write([]byte(`{}`))
+	})
+	event := events.APIGatewayV2HTTPRequest{Version: "2.0", RawPath: "/api/v1/projects/p/executions/e/evidence", RequestContext: events.APIGatewayV2HTTPRequestContext{HTTP: events.APIGatewayV2HTTPRequestContextHTTPDescription{Method: "GET"}}}
+	proxy, _ := proxyHTTPV2(h)(context.Background(), event)
+	if proxy.StatusCode != 503 {
+		t.Fatal("unbounded metadata returned")
+	}
+}
 
 func TestHTTPAPIV2AdapterPreservesRouteAndCORS(t *testing.T) {
 	h, err := runtimeHandler(ownership.NewStore(nil, "unused", "unused"), testRuntimeConfig)
@@ -33,7 +85,7 @@ func TestHTTPAPIV2AdapterPreservesRouteAndCORS(t *testing.T) {
 	}
 	event.RequestContext.HTTP.Method = "OPTIONS"
 	event.Headers["access-control-request-method"] = "PATCH"
-	event.Headers["access-control-request-headers"] = "authorization,content-type,if-match"
+	event.Headers["access-control-request-headers"] = "authorization,content-type,if-match,idempotency-key"
 	response, err = adapter(context.Background(), event)
 	if err != nil || response.StatusCode != 204 {
 		t.Fatal("cloud preflight failed")

@@ -8,6 +8,7 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ApiError, UncertainWrite, type SavedRequest } from "./api";
 const mocks = vi.hoisted(() => ({
+  executionHistory: vi.fn(),
   listRequests: vi.fn(),
   requestDetail: vi.fn(),
   createRequest: vi.fn(),
@@ -38,6 +39,7 @@ const saved: SavedRequest = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.executionHistory.mockResolvedValue({ items: [], nextCursor: null });
   mocks.listSecrets.mockResolvedValue({ items: [], nextCursor: null });
   mocks.listRequests.mockResolvedValue({ items: [saved], nextCursor: null });
   mocks.requestDetail.mockResolvedValue({ request: saved, etag: '"0"' });

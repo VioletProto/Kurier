@@ -169,6 +169,7 @@ export class Api {
     etag?: string,
     signal?: AbortSignal,
     refreshed = false,
+    idempotencyKey?: string,
   ): Promise<Response> {
     const token = await this.token(refreshed);
     let response: Response;
@@ -186,6 +187,7 @@ export class Api {
           Authorization: `Bearer ${token}`,
           ...(body === undefined ? {} : { "Content-Type": "application/json" }),
           ...(etag ? { "If-Match": etag } : {}),
+          ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
         },
       });
     } catch {
@@ -210,6 +212,130 @@ export class Api {
       );
     }
     return response;
+  }
+  private executionPath(projectId: string, executionId?: string) {
+    return `/api/v1/projects/${encodeURIComponent(projectId)}/executions${executionId ? "/" + encodeURIComponent(executionId) : ""}`;
+  }
+  async submitExecution(
+    projectId: string,
+    requestId: string,
+    etag: string,
+    key: string,
+    options: ExecutionOptions,
+    signal?: AbortSignal,
+  ): Promise<Execution> {
+    const response = await this.request(
+      this.requestPath(projectId, requestId) + "/executions",
+      "POST",
+      JSON.stringify(options),
+      etag,
+      signal,
+      false,
+      key,
+    );
+    try {
+      const execution = (await response.json()).data?.execution;
+      if (!execution || typeof execution.executionId !== "string")
+        throw new Error();
+      return execution;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async rerunExecution(
+    projectId: string,
+    executionId: string,
+    key: string,
+    allowInsecureSecrets: boolean,
+    signal?: AbortSignal,
+  ): Promise<Execution> {
+    const response = await this.request(
+      this.executionPath(projectId, executionId) + "/rerun",
+      "POST",
+      JSON.stringify({ allowInsecureSecrets }),
+      undefined,
+      signal,
+      false,
+      key,
+    );
+    try {
+      const execution = (await response.json()).data?.execution;
+      if (!execution || typeof execution.executionId !== "string")
+        throw new Error();
+      return execution;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async executionHistory(
+    projectId: string,
+    cursor?: string,
+    signal?: AbortSignal,
+  ): Promise<{ items: Execution[]; nextCursor: string | null }> {
+    return (
+      await (
+        await this.request(
+          this.executionPath(projectId) +
+            "?limit=25" +
+            (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data;
+  }
+  async executionStatus(
+    projectId: string,
+    executionId: string,
+    signal?: AbortSignal,
+  ): Promise<Execution> {
+    return (
+      await (
+        await this.request(
+          this.executionPath(projectId, executionId) + "/status",
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data.status;
+  }
+  async executionDetail(
+    projectId: string,
+    executionId: string,
+    signal?: AbortSignal,
+  ): Promise<Execution> {
+    return (
+      await (
+        await this.request(
+          this.executionPath(projectId, executionId),
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data.execution;
+  }
+  async executionEvidence(
+    projectId: string,
+    executionId: string,
+    signal?: AbortSignal,
+  ): Promise<Evidence> {
+    return (
+      await (
+        await this.request(
+          this.executionPath(projectId, executionId) + "/evidence",
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data.evidence;
   }
   private async detailResponse(response: Response): Promise<ProjectDetail> {
     try {
@@ -488,3 +614,63 @@ export class Api {
   }
 }
 export const api = new Api();
+
+export type ExecutionOptions = {
+  timeoutSeconds: number;
+  allowInsecureSecrets: boolean;
+  responseRedaction: {
+    headers: string[];
+    jsonPointers: string[];
+    omitBody: boolean;
+  };
+};
+export type Execution = {
+  executionId: string;
+  projectId: string;
+  status: "queued" | "claimed" | "running" | "completed" | "failed";
+  version: number;
+  submittedAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  source: { requestId: string; revision: number };
+  configuration?: RequestConfiguration;
+  liveRequestId: string | null;
+  summary: {
+    httpStatus: number | null;
+    durationMs: number | null;
+    outcome: {
+      code: string | null;
+      certainty: "known" | "unknown" | "not_dispatched";
+    };
+  } | null;
+  retention: {
+    normalExpiresAt: string;
+    pinned: boolean;
+    evidenceAvailability: string;
+  } | null;
+  serverTime: string;
+};
+export type EvidenceBody = {
+  kind: "none" | "json" | "text" | "omitted";
+  text: string | null;
+  omissionReason: string | null;
+};
+export type Evidence = {
+  schemaVersion: number;
+  status: string;
+  outcome: { code: string | null; certainty: string };
+  request: {
+    method: string;
+    url: string;
+    headers: { name: string; value: string }[];
+    body: EvidenceBody;
+  };
+  response: {
+    httpStatus: number | null;
+    headers: { name: string; value: string }[];
+    body: EvidenceBody;
+    wireBytesRead: number;
+    decodedBytesRead: number;
+  };
+  timing: { durationMs: number | null; timeToFirstByteMs: number | null };
+};

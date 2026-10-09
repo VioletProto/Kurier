@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/VioletProto/Kurier/services/api/execution"
 	"github.com/aws/aws-lambda-go/events"
 )
 
@@ -62,11 +63,24 @@ func proxyHTTPV2(handler http.Handler) func(context.Context, events.APIGatewayV2
 		for k, v := range result.Header {
 			headers[k] = strings.Join(v, ", ")
 		}
-		if len(payload) > 64*1024 {
-			// Gateway decodes this transparently. Base64 prevents Lambda's outer JSON
-			// string escaping from amplifying a bounded public JSON list past its limit.
-			return events.APIGatewayV2HTTPResponse{StatusCode: result.StatusCode, Headers: headers, Body: base64.StdEncoding.EncodeToString(payload), IsBase64Encoded: true}, nil
+		evidenceRoute := strings.HasSuffix(event.RawPath, "/evidence") && strings.Contains(event.RawPath, "/executions/")
+		if evidenceRoute && len(payload) > execution.EvidenceLimit {
+			return bad(503, "evidence_unavailable", "Evidence unavailable.")
 		}
-		return events.APIGatewayV2HTTPResponse{StatusCode: result.StatusCode, Headers: headers, Body: string(payload)}, nil
+		proxy := events.APIGatewayV2HTTPResponse{StatusCode: result.StatusCode, Headers: headers, Body: string(payload)}
+		if evidenceRoute || len(payload) > 64*1024 {
+			proxy.Body = base64.StdEncoding.EncodeToString(payload)
+			proxy.IsBase64Encoded = true
+		}
+		metadata := proxy
+		metadata.Body = ""
+		encodedMetadata, _ := json.Marshal(metadata)
+		encoded, _ := json.Marshal(proxy)
+		// The Lambda runtime uses json.Marshal for the handler result. Include
+		// one byte of framing headroom rather than count only Body/base64.
+		if len(encodedMetadata) > execution.MetadataLimit || len(encoded)+1 > execution.LambdaLimit {
+			return bad(503, "evidence_unavailable", "Evidence unavailable.")
+		}
+		return proxy, nil
 	}
 }

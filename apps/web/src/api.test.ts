@@ -174,3 +174,42 @@ describe("saved request client outcomes", () => {
     });
   });
 });
+
+it("preserves submission idempotency identity and never automatically retries lost admission acknowledgment", async () => {
+  const transport = vi
+    .fn()
+    .mockRejectedValue(new TypeError("simulated lost acknowledgment"));
+  const client = new Api(
+    vi.fn().mockResolvedValue("fixture-access"),
+    transport,
+  );
+  const options = {
+    timeoutSeconds: 30,
+    allowInsecureSecrets: false,
+    responseRedaction: { headers: [], jsonPointers: [], omitBody: false },
+  };
+  await expect(
+    client.submitExecution(
+      "project",
+      "source-a",
+      '"3"',
+      "fixture-key",
+      options,
+    ),
+  ).rejects.toBeInstanceOf(UncertainWrite);
+  expect(transport).toHaveBeenCalledTimes(1);
+  expect(transport.mock.calls[0][1].headers).toMatchObject({
+    "If-Match": '"3"',
+    "Idempotency-Key": "fixture-key",
+  });
+  await expect(
+    client.submitExecution(
+      "project",
+      "source-a",
+      '"3"',
+      "fixture-key",
+      options,
+    ),
+  ).rejects.toBeInstanceOf(UncertainWrite);
+  expect(transport.mock.calls[1][1].body).toBe(transport.mock.calls[0][1].body);
+});

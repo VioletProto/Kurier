@@ -6,6 +6,10 @@
 
 declare module "sst" {
   export interface Resource {
+    CloudExecutionWorker: {
+      name: string;
+      type: "sst.aws.Function";
+    };
     Control: {
       name: string;
       type: "sst.aws.Dynamo";
@@ -15,6 +19,10 @@ declare module "sst" {
       url: string;
     };
     EmptyProjectCleanup: {
+      name: string;
+      type: "sst.aws.Function";
+    };
+    ExecutionControlledEndpoint: {
       name: string;
       type: "sst.aws.Function";
     };

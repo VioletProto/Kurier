@@ -48,6 +48,15 @@ beforeEach(() => {
     },
     dynamodb: { TableItem: Resource },
     kms: { Key: Resource, Alias: Resource },
+    s3: {
+      BucketV2: Resource,
+      BucketPublicAccessBlock: Resource,
+      BucketServerSideEncryptionConfigurationV2: Resource,
+      BucketOwnershipControls: Resource,
+      BucketPolicy: Resource,
+    },
+    sqs: { Queue: Resource, RedriveAllowPolicy: Resource },
+    lambda: { EventSourceMapping: Resource },
   });
   vi.stubGlobal("sst", {
     aws: {
@@ -57,6 +66,7 @@ beforeEach(() => {
       Cron: Resource,
     },
   });
+  vi.stubGlobal("$jsonStringify", JSON.stringify);
   vi.stubGlobal("$app", { stage: "dev-api" });
   vi.stubGlobal(
     "$interpolate",
@@ -100,7 +110,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(16);
+    expect(resources.filter((r) => r.route)).toHaveLength(23);
     const http = resources.find((r) => r.name === "DevelopmentHttpApi")!;
     expect(http.args.cors).toBe(false);
     expect(http.api.corsConfiguration).toBeUndefined();
@@ -120,7 +130,7 @@ describe("scoped development API infrastructure", () => {
     expect(api.args.permissions.flatMap((p: any) => p.actions)).toContain(
       "kms:GenerateDataKey",
     );
-    expect(api.args.permissions.flatMap((p: any) => p.actions)).not.toContain(
+    expect(api.args.permissions.flatMap((p: any) => p.actions)).toContain(
       "kms:Decrypt",
     );
     expect(
@@ -129,6 +139,54 @@ describe("scoped development API infrastructure", () => {
         .args.permissions.flatMap((p: any) => p.actions)
         .some((a: string) => a.startsWith("kms:")),
     ).toBe(false);
+    expect(
+      resources.find((r) => r.name === "ExecutionQueue")!.args,
+    ).toMatchObject({
+      visibilityTimeoutSeconds: 540,
+      messageRetentionSeconds: 345600,
+      sqsManagedSseEnabled: true,
+    });
+    expect(
+      resources.find((r) => r.name === "ExecutionQueueWorker")!.args,
+    ).toMatchObject({
+      batchSize: 1,
+      functionResponseTypes: ["ReportBatchItemFailures"],
+      scalingConfig: { maximumConcurrency: 2 },
+    });
+    expect(
+      resources.find((r) => r.name === "CloudExecutionWorker")!.args,
+    ).toMatchObject({ timeout: "90 seconds" });
+    expect(
+      resources.find((r) => r.name === "CloudExecutionWorker")!.args
+        .concurrency,
+    ).toBeUndefined();
+    expect(
+      resources.find((r) => r.name === "ExecutionQueueWorker")!.args
+        .provisionedPollerConfig,
+    ).toBeUndefined();
+    expect(
+      resources.find((r) => r.name === "ExecutionEvidencePublicAccess")!.args,
+    ).toMatchObject({
+      blockPublicAcls: true,
+      blockPublicPolicy: true,
+      ignorePublicAcls: true,
+      restrictPublicBuckets: true,
+    });
+    const workerPermissions = resources.find(
+      (r) => r.name === "CloudExecutionWorker",
+    )!.args.permissions;
+    expect(
+      workerPermissions.find((p: any) => p.actions.includes("kms:Decrypt"))
+        .conditions,
+    ).toContainEqual({
+      test: "StringEquals",
+      variable: "kms:EncryptionContext:purpose",
+      values: ["job-bindings"],
+    });
+    expect(
+      resources.find((r) => r.name === "ExecutionControlledEndpoint")!.args
+        .permissions,
+    ).toBeUndefined();
     expect(out.stage).toBe("dev-api");
   });
   it("refuses root and wrong-account deployment", async () => {

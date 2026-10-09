@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/VioletProto/Kurier/services/api/execution"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -27,6 +28,7 @@ type Store struct {
 	now            func() time.Time
 	protectedTable string
 	cipher         *EnvelopeCipher
+	executions     *execution.Service
 }
 
 func NewStore(client *dynamodb.Client, table, stage string) *Store {
@@ -64,7 +66,7 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if err != nil || r.State != "active" || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !(r.SavedRequestsSchemaVersion == 2 && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
+	if err != nil || r.State != "active" || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !((r.SavedRequestsSchemaVersion == 2 || (r.SavedRequestsSchemaVersion == 3 && r.CloudExecutionsSchemaVersion == 1 && r.ExecutionInputsSchemaVersion == 1 && st.executions != nil)) && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
 		return record{}, unavailable()
 	}
 	return r, nil
@@ -159,9 +161,13 @@ func (st *Store) stageGuard(stage record) types.TransactWriteItem {
 		mode = "savedRequestsSchemaVersion = :requests"
 		delete(values, ":yes")
 		values[":requests"] = n(int64(stage.SavedRequestsSchemaVersion))
-		if stage.SavedRequestsSchemaVersion == 2 {
+		if stage.SavedRequestsSchemaVersion >= 2 {
 			mode += " AND protectedSecretsSchemaVersion = :protected"
 			values[":protected"] = n(1)
+			if stage.SavedRequestsSchemaVersion == 3 {
+				mode += " AND cloudExecutionsSchemaVersion = :cloud AND executionInputsSchemaVersion = :cloud"
+				values[":cloud"] = n(1)
+			}
 		}
 	}
 	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.table), Key: key(stage.PK, "META"), ConditionExpression: aws.String("#state = :active AND recoveryGeneration = :gen AND " + mode), ExpressionAttributeNames: map[string]string{"#state": "state"}, ExpressionAttributeValues: values}}
@@ -430,7 +436,19 @@ func (st *Store) CleanupProject(ctx context.Context, projectID string) (Deletion
 	if more {
 		return *r.Operation, conflict()
 	}
-	if stage.SavedRequestsSchemaVersion == 2 {
+	if stage.SavedRequestsSchemaVersion == 3 {
+		if st.executions == nil {
+			return DeletionOperation{}, unavailable()
+		}
+		if err = st.executions.DrainProject(ctx, projectID); err != nil {
+			return *r.Operation, conflict()
+		}
+		r, err = st.get(ctx, r.PK, "META")
+		if err != nil {
+			return DeletionOperation{}, err
+		}
+	}
+	if stage.SavedRequestsSchemaVersion >= 2 {
 		work, err = st.get(ctx, r.PK, workKey)
 		if err != nil {
 			return DeletionOperation{}, err

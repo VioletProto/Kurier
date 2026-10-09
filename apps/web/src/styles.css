@@ -211,3 +211,13 @@ footer {
   font-family: monospace;
   resize: vertical;
 }
+.execution-evidence {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.execution-evidence pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 32rem;
+  overflow: auto;
+}

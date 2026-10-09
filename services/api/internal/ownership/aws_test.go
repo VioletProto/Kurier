@@ -46,6 +46,7 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 		}
 	}
 	st := NewStore(db, table, "dev-api")
+	configureAWSExecutionFixture(st, cfg)
 	if protected := os.Getenv("KURIER_AWS_TEST_PROTECTED"); protected != "" {
 		st.ConfigureProtected(protected, nil)
 	}
@@ -229,6 +230,7 @@ func TestAWSControlPropagationAndConditionalWrites(t *testing.T) {
 	}
 	// Resume using a new store, then repeat safely.
 	resumed := NewStore(db, table, "dev-api")
+	configureAWSExecutionFixture(resumed, cfg)
 	resumed.ConfigureProtected(st.protectedTable, nil)
 	completed, err := resumed.CleanupProject(ctx, p.ProjectID)
 	if err != nil || completed.State != "completed" {

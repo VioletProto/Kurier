@@ -155,7 +155,7 @@ func (st *Store) secretContext(ctx context.Context, user, project string) (recor
 	if err != nil {
 		return stage, u, p, err
 	}
-	if stage.SavedRequestsSchemaVersion != 2 || stage.ProtectedSecretsSchemaVersion != 1 || st.protectedTable == "" {
+	if (stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3) || stage.ProtectedSecretsSchemaVersion != 1 || st.protectedTable == "" {
 		return stage, u, p, unavailable()
 	}
 	return stage, u, p, nil
@@ -332,7 +332,7 @@ func (st *Store) protectIfEnabled(ctx context.Context, stage record, project str
 	if len(slots(c)) == 0 {
 		return nil, nil
 	}
-	if stage.SavedRequestsSchemaVersion != 2 || stage.ProtectedSecretsSchemaVersion != 1 {
+	if (stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3) || stage.ProtectedSecretsSchemaVersion != 1 {
 		return nil, unavailable()
 	}
 	return st.protectConfiguration(ctx, project, c, previous)

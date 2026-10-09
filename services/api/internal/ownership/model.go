@@ -39,6 +39,10 @@ type record struct {
 	ConfigurationJSON             string             `dynamodbav:"configurationJSON,omitempty"`
 	ProtectedSecretsSchemaVersion int                `dynamodbav:"protectedSecretsSchemaVersion,omitempty"`
 	ProtectedCursor               string             `dynamodbav:"protectedCursor,omitempty"`
+	ExecutionInputsSchemaVersion  int                `dynamodbav:"executionInputsSchemaVersion,omitempty"`
+	CloudExecutionsSchemaVersion  int                `dynamodbav:"cloudExecutionsSchemaVersion,omitempty"`
+	StorageReservedBytes          int64              `dynamodbav:"storageReservedBytes,omitempty"`
+	InflightCount                 int64              `dynamodbav:"inflightCount,omitempty"`
 	SavedRequestsSchemaVersion    int                `dynamodbav:"savedRequestsSchemaVersion,omitempty"`
 	PK                            string             `dynamodbav:"PK"`
 	SK                            string             `dynamodbav:"SK"`

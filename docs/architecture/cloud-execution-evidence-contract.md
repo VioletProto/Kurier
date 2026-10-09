@@ -1,20 +1,17 @@
 # Single saved-request cloud execution: review packet
 
-Status: **Proposed for Davian's review**, 2026-10-08. Davian found the proposed
-design acceptable subject to explicit source-bound idempotency and evidence
-delivery-size clarifications. Those clarifications are recorded below for review;
-the packet remains Proposed until that review is complete. Davian's latest
-instruction authorizes committing/pushing these contract clarifications only:
-do not begin dependent implementation or deploy AWS resources while review is
-pending.
-No execution implementation or deployment is claimed.
+Status: **Accepted by Davian Hernandez**, 2026-10-08, including the source-bound
+idempotency and evidence-delivery clarifications at commit `05840e8`. Davian
+explicitly authorized implementation, scoped development AWS deployment and
+validation. Accepted design is not evidence of implemented or tested behavior.
+Unperformed runtime, fault, AWS and genuine browser checks remain pending.
 Branch: `feat/cloud-execution-evidence`, from merged main `b7aaac8`.
 
 Authority: [accepted architecture](README.md), [dispatch/publication design](w1-system-design.md),
 [data model](w1-data-model.md), [defaults](w1-review-decisions.md), and
 [protected saved requests](protected-request-secrets-contract.md).
 
-## Proposed routes and submission identity
+## Accepted routes and submission identity
 
 All routes use existing Cognito ownership, error envelopes, project gates,
 active-stage/recovery guards and no-store responses. Foreign resources are 404.
@@ -103,7 +100,7 @@ do not modify the frozen replay configuration. A rerun retry uses its own receip
 and must return that same new execution. UI labels warn that a rerun can repeat
 external effects, particularly after an unknown outcome.
 
-## Proposed protected-input freezing and runtime boundary
+## Accepted protected-input freezing and runtime boundary
 
 At submission, strongly read source request and each unique active saved-secret
 revision, decrypt only in authorized API memory, then freshly encrypt the job
@@ -136,7 +133,7 @@ input will be sent over HTTP. The browser presents a deliberate consent control;
 default false rejects before admission. Retries preserve the original consent;
 reruns require their own explicit consent. HTTPS is the normal browser path.
 
-## Proposed evidence and status schemas
+## Accepted evidence and status schemas
 
 Schema-1 evidence is typed JSON, with nullable scalars explicit and collections
 always arrays. It includes no current live links, retention flags or mutable
@@ -209,7 +206,7 @@ commit atomically. Uploaded but unpublished evidence is never returned.
 Missing/corrupt published objects yield fixed 503 `evidence_unavailable` and
 update mutable availability only; expiry yields 404. No fabricated evidence.
 
-## Proposed evidence delivery encoding and publication size checks
+## Accepted evidence delivery encoding and publication size checks
 
 Store sanitized evidence as deterministic UTF-8 JSON bytes in S3. Browser
 delivery is `application/json; charset=utf-8`, with the complete UTF-8 JSON
@@ -282,7 +279,7 @@ checksum/size match the final object, repeated GETs preserve the same capture,
 and the actual serialized proxy response satisfies the Lambda bound. These
 requirements are not claimed tested by the documentation-only task.
 
-## Proposed safe redaction and content policy
+## Accepted safe redaction and content policy
 
 - Always mask credential/cookie headers and credential-named URL query/JSON
   fields, plus configured response headers/paths. Credential-named JSON
@@ -329,6 +326,16 @@ redirect or ambient proxy. Identifier-only SQS messages; one-record batches,
 two worker concurrency, 90-second invocation, 120-second lease, 540-second
 visibility, five-receive redrive, four-day queue/fourteen-day DLQ. Claims before
 intent can recover with new fence up to five; queued jobs expire after ten minutes.
+
+Accepted development configuration clarification: standard-mode SQS event-source
+maximum concurrency is two with batch size one. The worker has no reserved or
+provisioned concurrency and no provisioned pollers. SQS is its only configured
+execution trigger. This caps queue-driven concurrency without reserving account
+capacity; it does not guarantee available capacity or limit authorized direct
+invocations. Account throttling can delay queue delivery. Visibility/redrive,
+durable outbox, bounded queued expiry, fenced claims and intent recovery remain
+in force: retries before intent may dispatch once; recovery after intent never
+replays outbound HTTP.
 
 Apply all accepted destination protections at every dial: public A/AAAA only,
 reject any unsafe answer and mapped/tunnel/translation bypasses; pin validated
@@ -424,3 +431,12 @@ services. Secret containment checks return booleans/counts only, never values.
 - Review choices above are not accepted merely by writing this packet. Product
   implementation, genuine browser checks and final submission of the verified
   implementation remain outstanding.
+
+## Accepted implementation continuation
+
+Davian accepted this clarified packet and authorized the previously scoped
+implementation/deployment/validation on 2026-10-08. Earlier preparation entries
+are historical; their review holds are superseded by this explicit acceptance.
+Implementation, generated infrastructure/cost preview, deployment, actual AWS
+verification and genuine browser validation are pending until individually
+performed and documented. No acceptance alone marks those checks passed.
