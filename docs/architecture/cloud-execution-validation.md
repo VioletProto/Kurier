@@ -171,7 +171,8 @@ Sources: [AWS regional price catalogs](https://docs.aws.amazon.com/awsaccountbil
   endpoint, Completed status and evidence inspection. His first capture contained
   no protected fields, so it does not establish browser secret containment.
   Response wrapping was requested and fixed with escaped preformatted text,
-  wrapping long tokens and bounded vertical scrolling; browser recheck pending.
+  wrapping long tokens and bounded vertical scrolling. Davian subsequently
+  confirmed the response text wraps in the genuine browser UI.
 - Subsequently reported by Davian: protected Authorization/custom fields and
   their reflected response values are masked, with two distinct execution IDs.
   Actual private-S3 read-back verified distinct immutable captures: first
@@ -206,7 +207,7 @@ Sources: [AWS regional price catalogs](https://docs.aws.amazon.com/awsaccountbil
   evidence limits, approved Free-plan concurrency configuration and verified
   results. Native read-back confirmed prior content, tabs, inline objects and
   source-link typography were preserved. Other proposed routes remain proposals.
-- Pending: controlled failure UI and wrapping recheck. The browser probe is opt-in, uses the
+- Pending: controlled failure UI. The browser probe is opt-in, uses the
   genuine memory-only session, and reports only safe identifiers/booleans/counts.
 
 ## Genuine browser checklist
