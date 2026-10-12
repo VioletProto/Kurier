@@ -4,7 +4,8 @@ Status: **Accepted by Davian**, 2026-10-12, at `03a36c8`, with UI wording
 changed to “Protected from automatic expiry while pinned.” Scoped API,
 accounting, cleanup, React implementation, API contract synchronization and
 local/race/browser tests are authorized. AWS deployment preview and refreshed
-costs are authorized for review; deployment remains unauthorized. Keep the
+costs are authorized for review; the scoped deployment and guarded activation
+were subsequently approved at `e6b964f`. Keep the
 Free plan, account quota and existing concurrency settings unchanged.
 Acceptance is not evidence of implemented behavior or completed validation;
 actual results and remaining gaps are recorded in
@@ -267,8 +268,8 @@ project edits. Old binaries must fail closed before this stage opens. Existing
 schema-1 RETs can read with null pinnedAt/default version semantics; no SNAP/S3
 migration. Initialize missing pin counters only under a closed/gated stage and
 verified no-pin inventory (or reconcile actual pins), with conditional writes;
-preserve recovery generation. This rollout requirement remains pending deployment review; no migration or
-deployment is authorized yet.
+preserve recovery generation. The scoped rollout was subsequently approved and completed; see the
+[deployment validation record](evidence-pinning-validation.md).
 
 Cost forecast: reuse existing development resources/schedule, no new S3 copy,
 KMS key, queue, index, hosting or standing compute. Reference
@@ -375,6 +376,7 @@ operational validation, never inferred from fixture passes.
    standalone slice; its accepted future protection requirements are unchanged.
 
 Davian accepted these choices with the UI wording amendment above. Dependent
-implementation and API contract synchronization are now authorized. AWS changes
-remain gated on review of the prepared preview/cost estimate and explicit
-deployment authorization.
+implementation and API contract synchronization are authorized. The scoped
+development deployment and guarded activation were separately approved at
+`e6b964f` on 2026-10-12; broader AWS changes still require their own authorization.
+See [actual results and remaining checks](evidence-pinning-validation.md).

@@ -139,7 +139,9 @@ baseline; this continuation supersedes those secret-storage limits.
 Davian accepted the [evidence pinning contract](evidence-pinning-contract.md) at
 `03a36c8` with UI wording “Protected from automatic expiry while pinned.” Scoped
 standalone API/accounting/cleanup/React implementation and API contract
-synchronization are authorized. AWS preview/cost review is authorized; deployment
-requires further approval. Preserve the Free plan, account quota and existing
+synchronization are authorized. Davian subsequently approved the scoped
+development deployment and guarded activation at `e6b964f`; see the
+[actual validation record](evidence-pinning-validation.md). Preserve the Free
+plan, account quota and existing
 concurrency settings. [Validation and deployment review](../development/evidence-pinning.md)
-distinguishes local/fixture checks from pending AWS/runtime validation.
+distinguishes local/fixture checks, completed AWS/runtime validation and remaining gaps.

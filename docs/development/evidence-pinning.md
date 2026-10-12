@@ -3,8 +3,11 @@
 The [accepted contract](../architecture/evidence-pinning-contract.md) at
 `03a36c8` is implemented with the accepted wording: **Protected from automatic
 expiry while pinned.** Workflows, local-agent execution, MCP and frontend hosting
-remain outside this slice. This record describes local verification and a
-read-only AWS preview; no pinning deployment or capability activation has run.
+remain outside this slice. The preview at `e6b964f` was approved on 2026-10-12.
+Compatible consumers are deployed and capability activation passed. The
+[deployment validation record](../architecture/evidence-pinning-validation.md)
+separates actual AWS results, genuine Cognito reports and remaining checks.
+The preview and local verification below are preserved as the reviewed baseline.
 
 ## Implementation
 
@@ -108,8 +111,9 @@ Activation is resumable while closed; failures never guess an automatic reopen.
 Review durable metadata before resuming. Once any pin exists, do not downgrade
 to capability 3 or restore an old binary: retain capability 4 and compatible
 consumers while reviewing recovery. Existing restore/generation procedures still
-apply. No migration, zero initialization or stage closure was executed for this
-review packet.
+apply. No migration, zero initialization or stage closure was executed during preview
+preparation. The separately approved activation and preservation readback are
+recorded in the deployment validation record.
 
 ## Refreshed incremental estimate
 
@@ -149,11 +153,8 @@ Existing budget alerts and review remain appropriate.
 
 ## Remaining validation after approved deployment
 
-Real AWS pin routes, deployed Lambda/S3/DynamoDB behavior, actual Cognito tokens,
-IAM boundaries, cloud cleanup timing and metered incremental cost remain
-unvalidated. Capability activation was previewed against the real inventory but
-not executed; its conditional writer has pure inventory tests, not a full AWS
-migration rehearsal. Real clock skew, PITR/restore with pinned captures and
-recovery across interrupted cloud deployment remain follow-up validation.
-The browser results apply to local Chromium and controlled auth/object fixtures,
-not a hosted frontend. Trello must leave deployment/runtime validation open.
+See the deployment validation record for completed AWS and genuine Cognito
+checks. Real clock skew, PITR/restore with pinned captures, interrupted recovery
+and metered incremental cost remain follow-up validation. Local Chromium
+results use controlled auth/object fixtures and are separate from genuine
+Cognito reports. Frontend hosting remains outside this slice.
