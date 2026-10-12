@@ -45,6 +45,8 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 	}{
 		{"POST /api/v1/projects/{projectId}/requests/{requestId}/executions", a.executionEndpoint},
 		{"GET /api/v1/projects/{projectId}/executions", a.executionEndpoint},
+		{"PUT /api/v1/projects/{projectId}/executions/{executionId}/pin", a.executionEndpoint},
+		{"DELETE /api/v1/projects/{projectId}/executions/{executionId}/pin", a.executionEndpoint},
 		{"GET /api/v1/projects/{projectId}/executions/{executionId}", a.executionEndpoint},
 		{"GET /api/v1/projects/{projectId}/executions/{executionId}/status", a.executionEndpoint},
 		{"GET /api/v1/projects/{projectId}/executions/{executionId}/evidence", a.executionEndpoint},

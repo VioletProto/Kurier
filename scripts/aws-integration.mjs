@@ -51,6 +51,7 @@ if (
   ![
     "TestAWS",
     "TestAWSControl",
+    "TestAWSEvidencePinning",
     "TestAWSProtected",
     "TestAWSCloudExecution",
     "TestAWSCloudExecutionCredentialNames",

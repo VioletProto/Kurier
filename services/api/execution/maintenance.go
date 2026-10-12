@@ -171,7 +171,7 @@ func notFoundObject(e error) bool {
 
 // pending has no persisted PUT intent; writing without a durable ACK is
 // uncertain and stays inaccessible/pending indefinitely for reviewed settlement.
-func (s *Service) cleanTicket(ctx context.Context, r row, deleting bool) error {
+func (s *Service) cleanTicket(ctx context.Context, r row, deleting bool, retention ...bool) error {
 	if r.Kind != "executionUpload" || r.SchemaVersion != 1 || r.ObjectKey == "" || r.Bytes < 0 {
 		return safeError()
 	}
@@ -207,6 +207,10 @@ func (s *Service) cleanTicket(ctx context.Context, r row, deleting bool) error {
 	if p.State != "active" && p.State != "deleting" && p.State != "deleted" {
 		return safeError()
 	}
+	retentionDrain := len(retention) > 0 && retention[0]
+	if retentionDrain && p.State != "active" {
+		return failure(409, "conflict")
+	}
 	var retentionGuard *dt.TransactWriteItem
 	if p.State == "active" && deleting {
 		ret, e := s.get(ctx, s.Table, r.PK, "EXEC#"+r.ExecutionID+"#RET")
@@ -238,6 +242,9 @@ func (s *Service) cleanTicket(ctx context.Context, r row, deleting bool) error {
 	if e != nil {
 		return e
 	}
+	if retentionDrain && p.State != "active" {
+		return failure(409, "conflict")
+	}
 	quota, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "QUOTA")
 	if e != nil || quota.StorageReservedBytes < r.Bytes || p.StorageReservedBytes < r.Bytes {
 		return safeError()
@@ -246,7 +253,11 @@ func (s *Service) cleanTicket(ctx context.Context, r row, deleting bool) error {
 	quota.Version++
 	q, _ := s.put(s.Table, quota, false)
 	remove := dt.TransactWriteItem{Delete: &dt.Delete{TableName: &s.Table, Key: keys(r.PK, r.SK), ConditionExpression: aws.String("#v = :v AND #s = :s"), ExpressionAttributeNames: map[string]string{"#v": "version", "#s": "state"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":v": num(r.Version), ":s": str("deleting")}}}
-	return s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectUpdate(p, -r.Bytes, 0), q, remove})
+	actions := []dt.TransactWriteItem{s.stageGuard(stage), s.projectUpdate(p, -r.Bytes, 0), q, remove}
+	if retentionGuard != nil {
+		actions = append(actions, *retentionGuard)
+	}
+	return s.transact(ctx, actions)
 }
 func (s *Service) expire(ctx context.Context, ret row) error {
 	stage, e := s.stage(ctx)
@@ -257,10 +268,18 @@ func (s *Service) expire(ctx context.Context, ret row) error {
 	if e != nil || p.State != "active" {
 		return safeError()
 	}
+	if ret.Kind != "executionRetention" || ret.Pinned || ret.NormalExpiresAt > stamp(s.now()) || (ret.State != "live" && ret.State != "deleting") {
+		return failure(409, "conflict")
+	}
 	if ret.State == "live" {
 		ret.State = "deleting"
 		ret.Version++
 		a, _ := s.put(s.Table, ret, false)
+		a.Put.ExpressionAttributeNames["#s"] = "state"
+		a.Put.ExpressionAttributeValues[":live"] = str("live")
+		a.Put.ExpressionAttributeValues[":no"] = &dt.AttributeValueMemberBOOL{Value: false}
+		a.Put.ExpressionAttributeValues[":now"] = str(stamp(s.now()))
+		a.Put.ConditionExpression = aws.String(*a.Put.ConditionExpression + " AND #s = :live AND (attribute_not_exists(pinned) OR pinned = :no) AND normalExpiresAt <= :now")
 		if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), a}); e != nil {
 			return safeError()
 		}
@@ -369,6 +388,9 @@ func (s *Service) drainExecution(ctx context.Context, p row, execution string, r
 			if !knownExecution(item, r) {
 				return failure(409, "unknown_record")
 			}
+			if !retention && r.Kind == "executionRetention" && r.Pinned {
+				return s.releaseProjectPin(ctx, p, r)
+			}
 			if retention && r.Kind == "executionRetention" {
 				continue
 			}
@@ -376,7 +398,7 @@ func (s *Service) drainExecution(ctx context.Context, p row, execution string, r
 				if phase.prefix == "" {
 					return failure(409, "cleanup_pending")
 				}
-				if e = s.cleanTicket(ctx, r, true); e != nil {
+				if e = s.cleanTicket(ctx, r, true, retention); e != nil {
 					return e
 				}
 				return failure(409, "cleanup_pending")
@@ -394,8 +416,12 @@ func (s *Service) drainExecution(ctx context.Context, p row, execution string, r
 		if e != nil {
 			return e
 		}
+		guards, e := s.drainGuards(ctx, stage, current, execution, retention)
+		if e != nil {
+			return e
+		}
 		if len(actions) > 0 {
-			if e = s.transact(ctx, append([]dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(current, current.State)}, actions...)); e != nil {
+			if e = s.transact(ctx, append(guards, actions...)); e != nil {
 				return safeError()
 			}
 			return failure(409, "cleanup_pending")
@@ -421,7 +447,7 @@ func (s *Service) drainExecution(ctx context.Context, p row, execution string, r
 			cursor.Version++
 		}
 		a, _ := s.put(s.Table, cursor, fresh)
-		if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(current, current.State), a}); e != nil {
+		if e = s.transact(ctx, append(guards, a)); e != nil {
 			return safeError()
 		}
 		if len(last) > 0 {

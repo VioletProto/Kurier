@@ -185,14 +185,14 @@ async function expectDenied(action: () => Promise<unknown>, status: number) {
   }
   throw new Error(`Expected ${status}; check failed.`);
 }
-async function awaitDeletion(op: Deletion) {
-  for (let n = 0; n < 45; n++) {
+async function awaitDeletion(op: Deletion, attempts = 45) {
+  for (let n = 0; n < attempts; n++) {
     const current = await api.operation(op);
     if (current.state === "completed") return current;
     await pause(2000);
   }
   throw new Error(
-    "Deletion remains pending after 90 seconds; no completion claimed.",
+    "Deletion remains pending after the observation window; no completion claimed.",
   );
 }
 export async function validateCloudProjects() {
@@ -834,4 +834,213 @@ export async function recoverProtectedBrowserProbe(projectId: string) {
     cursor = page.nextCursor ?? undefined;
   } while (cursor);
   return { ownerId: user.userId, projectId, requestIds };
+}
+
+// Genuine Cognito/HTTPS probe. No tokens or evidence are returned or persisted.
+export async function validateEvidencePinning() {
+  const owner = await api.me();
+  const project = await api.create("Disposable evidence pinning validation");
+  const projectId = project.project.projectId;
+  const saved = await api.createRequest(projectId, {
+    name: "Public pinning fixture",
+    method: "GET",
+    url: "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com/execution-fixture/echo",
+    headers: [],
+    queryParameters: [],
+    body: null,
+    operationRef: null,
+  });
+  const run = await api.submitExecution(
+    projectId,
+    saved.request.requestId,
+    saved.etag,
+    crypto.randomUUID(),
+    {
+      timeoutSeconds: 30,
+      allowInsecureSecrets: false,
+      responseRedaction: { headers: [], jsonPointers: [], omitBody: false },
+    },
+  );
+  const executionId = run.executionId;
+  for (let n = 0; n < 60; n++) {
+    const status = await api.executionStatus(projectId, executionId);
+    if (status.status === "completed") {
+      const before = JSON.stringify(
+        await api.executionEvidence(projectId, executionId),
+      );
+      const first = await api.pinExecution(projectId, executionId, true);
+      const repeated = await api.pinExecution(projectId, executionId, true);
+      if (
+        !first.retention.pinned ||
+        JSON.stringify(first.retention) !==
+          JSON.stringify(repeated.retention) ||
+        before !==
+          JSON.stringify(await api.executionEvidence(projectId, executionId))
+      )
+        throw Error(
+          "Pin repeat/evidence verification failed; preserve fixture for inspection.",
+        );
+      const unpin = await api.pinExecution(projectId, executionId, false);
+      const again = await api.pinExecution(projectId, executionId, false);
+      if (
+        unpin.retention.pinned ||
+        unpin.retention.version !== again.retention.version
+      )
+        throw Error("Unpin repeat verification failed.");
+      await api.pinExecution(projectId, executionId, true);
+      return {
+        ownerId: owner.userId,
+        projectId,
+        executionId,
+        pinAndUnpin: "passed",
+        repeats: "passed",
+        evidenceUnchanged: "passed",
+        cleanup: "pending second-user isolation and owner deletion",
+      };
+    }
+    if (status.status === "failed")
+      throw Error(
+        "Execution failed; inspect disposable fixture without replay.",
+      );
+    await pause(2000);
+  }
+  throw Error("Execution pending; inspect history without replay.");
+}
+export async function validateEvidencePinningIsolation(probe: {
+  ownerId: string;
+  projectId: string;
+  executionId: string;
+}) {
+  if ((await api.me()).userId === probe.ownerId)
+    throw Error("Sign in as the second Cognito user.");
+  const denied = [];
+  for (const pinned of [true, false])
+    denied.push(
+      await expectDenied(
+        () => api.pinExecution(probe.projectId, probe.executionId, pinned),
+        404,
+      ),
+    );
+  return { distinctUser: true, denied };
+}
+export async function finishEvidencePinningProbe(probe: {
+  ownerId: string;
+  projectId: string;
+  executionId: string;
+}) {
+  if ((await api.me()).userId !== probe.ownerId)
+    throw Error("Sign in as the original owner.");
+  const capture = await api.executionDetail(probe.projectId, probe.executionId);
+  if (!capture.retention?.pinned)
+    throw Error(
+      "Keep fixture pinned for project-deletion override verification.",
+    );
+  const project = await api.detail(probe.projectId);
+  const operation = await api.delete(probe.projectId, project.etag);
+  const denied = await expectDenied(
+    () => api.pinExecution(probe.projectId, probe.executionId, true),
+    404,
+  );
+  const finished = await awaitDeletion(operation, 300);
+  return {
+    projectId: probe.projectId,
+    executionId: probe.executionId,
+    operationId: finished.operationId,
+    immediateDenial: denied,
+    pinnedProjectDeletion: finished.state,
+  };
+}
+
+export async function validateExpiredEvidenceUnpin(probe: {
+  ownerId: string;
+  projectId: string;
+  executionId: string;
+}) {
+  if ((await api.me()).userId !== probe.ownerId)
+    throw Error("Sign in as the prepared fixture owner.");
+  const before = await api.executionDetail(probe.projectId, probe.executionId);
+  if (
+    !before.retention?.pinned ||
+    Date.parse(before.retention.normalExpiresAt) >=
+      Date.parse(before.serverTime)
+  )
+    throw Error("Prepared fixture must be pinned beyond its normal expiry.");
+  const unpin = await api.pinExecution(
+    probe.projectId,
+    probe.executionId,
+    false,
+  );
+  if (
+    unpin.retention.pinned ||
+    unpin.retention.effectiveStatus !== "expired" ||
+    unpin.retention.normalExpiresAt !== before.retention.normalExpiresAt
+  )
+    throw Error("Expired unpin response failed; inspect without replay.");
+  const immediateDenial = await expectDenied(
+    () => api.executionEvidence(probe.projectId, probe.executionId),
+    404,
+  );
+  let resurrectionDenial: number;
+  try {
+    await api.pinExecution(probe.projectId, probe.executionId, true);
+    throw Error("Expired pin unexpectedly succeeded.");
+  } catch (e) {
+    if (!(e instanceof ApiError) || ![404, 409].includes(e.status)) throw e;
+    resurrectionDenial = e.status;
+  }
+  const project = await api.detail(probe.projectId);
+  const operation = await api.delete(probe.projectId, project.etag);
+  const finished = await awaitDeletion(operation, 300);
+  return {
+    projectId: probe.projectId,
+    executionId: probe.executionId,
+    operationId: finished.operationId,
+    expiredUnpin: "passed",
+    immediateDenial,
+    resurrectionDenial,
+    scheduledCleanup: finished.state,
+  };
+}
+
+// Reconcile a completed probe after a refresh/observer error. Verify completion
+// before attempting desired-state requests; no mutation is replayed on an active project.
+export async function verifyCompletedEvidencePinningProbe(probe: {
+  ownerId: string;
+  projectId: string;
+  executionId: string;
+  operationId: string;
+}) {
+  if ((await api.me()).userId !== probe.ownerId)
+    throw Error("Sign in as the original owner.");
+  const operation = await api.operation({
+    projectId: probe.projectId,
+    operationId: probe.operationId,
+    state: "deleting",
+    startedAt: "",
+    completedAt: null,
+    retryAfterSeconds: 2,
+  });
+  if (operation.state !== "completed")
+    throw Error("Operation remains pending; leave it for inspection.");
+  const evidenceDenial = await expectDenied(
+    () => api.executionEvidence(probe.projectId, probe.executionId),
+    404,
+  );
+  const pinDenial = await expectDenied(
+    () => api.pinExecution(probe.projectId, probe.executionId, true),
+    404,
+  );
+  const unpinDenial = await expectDenied(
+    () => api.pinExecution(probe.projectId, probe.executionId, false),
+    404,
+  );
+  return {
+    projectId: probe.projectId,
+    operationId: probe.operationId,
+    evidenceDenial,
+    pinDenial,
+    unpinDenial,
+    pinnedProjectDeletion: operation.state,
+    reconciliation: "completed operation verified; deletion not replayed",
+  };
 }

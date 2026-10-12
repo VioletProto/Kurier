@@ -220,6 +220,7 @@ export async function createDevelopmentApi() {
     },
   ];
   const executionEnvironment = {
+    KURIER_EVIDENCE_PINNING_SCHEMA_VERSION: "1",
     KURIER_CLOUD_EXECUTIONS_SCHEMA_VERSION: "1",
     KURIER_EXECUTION_INPUTS_SCHEMA_VERSION: "1",
     KURIER_EVIDENCE_BUCKET: evidence.bucket,
@@ -337,6 +338,8 @@ export async function createDevelopmentApi() {
     "DELETE /api/v1/projects/{projectId}/secrets/{secretId}",
     "POST /api/v1/projects/{projectId}/requests/{requestId}/executions",
     "GET /api/v1/projects/{projectId}/executions",
+    "PUT /api/v1/projects/{projectId}/executions/{executionId}/pin",
+    "DELETE /api/v1/projects/{projectId}/executions/{executionId}/pin",
     "GET /api/v1/projects/{projectId}/executions/{executionId}",
     "GET /api/v1/projects/{projectId}/executions/{executionId}/status",
     "GET /api/v1/projects/{projectId}/executions/{executionId}/evidence",

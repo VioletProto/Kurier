@@ -28,3 +28,21 @@ the API service envelope and verifies fixture cleanup. Existing read-only audit
 or resumed-cleanup modes skip this additional fixture. The opt-in signed-in
 browser probe `validateCredentialNameRedaction()` checks actual authenticated
 API delivery. See the [deployment record](../docs/architecture/cloud-execution-validation.md#credential-name-correction-deployment--2026-10-09).
+
+`activate-evidence-pinning.mjs` defaults to a read-only, metadata-only `dev-api`
+preflight. `--activate` closes the stage and conditionally initializes pin counters
+before capability activation; it requires separate deployment approval and
+compatible deployed consumers. It preserves recovery generation and never
+reopens after an uncertain failure. See the
+[evidence pinning review and runbook](../docs/development/evidence-pinning.md).
+
+`verify-evidence-pinning-deployment.mjs` compares scoped deployed function hashes
+with local deployment archives and verifies compatible configuration before
+activation. `aws-integration.mjs TestAWSEvidencePinning` uses disposable AWS
+fixtures to validate pin accounting, immutable S3 evidence and scheduled cleanup;
+its expiry mutation is fixture-only and its identities are direct SDK identities.
+See [deployment results](../docs/architecture/evidence-pinning-validation.md).
+The explicit `KURIER_AWS_PIN_BROWSER_OWNER` preparation mode creates a new
+disposable fixture for the participating owner and changes only its guarded RET
+expiry. It leaves cleanup to the owner's browser check; it is preparation,
+not authenticated route validation. Keep its safe IDs for reconciliation.

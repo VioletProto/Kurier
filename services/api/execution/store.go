@@ -73,6 +73,7 @@ type row struct {
 	SavedRequestsSchemaVersion    int            `dynamodbav:"savedRequestsSchemaVersion,omitempty"`
 	ExecutionInputsSchemaVersion  int            `dynamodbav:"executionInputsSchemaVersion,omitempty"`
 	ProtectedSecretsSchemaVersion int            `dynamodbav:"protectedSecretsSchemaVersion,omitempty"`
+	EvidencePinningSchemaVersion  int            `dynamodbav:"evidencePinningSchemaVersion,omitempty"`
 	CloudExecutionsSchemaVersion  int            `dynamodbav:"cloudExecutionsSchemaVersion,omitempty"`
 	DeletionEpoch                 int64          `dynamodbav:"deletionEpoch,omitempty"`
 	Disabled                      bool           `dynamodbav:"disabled,omitempty"`
@@ -86,6 +87,10 @@ type row struct {
 	CompletedAt                   *string        `dynamodbav:"completedAt,omitempty"`
 	Summary                       *Summary       `dynamodbav:"summary,omitempty"`
 	NormalExpiresAt               string         `dynamodbav:"normalExpiresAt,omitempty"`
+	PinnedAt                      *string        `dynamodbav:"pinnedAt,omitempty"`
+	DecisionTime                  string         `dynamodbav:"decisionTime,omitempty"`
+	PinnedCount                   *int64         `dynamodbav:"pinnedCount,omitempty"`
+	PinnedBytes                   *int64         `dynamodbav:"pinnedBytes,omitempty"`
 	Pinned                        bool           `dynamodbav:"pinned,omitempty"`
 	EvidenceAvailability          string         `dynamodbav:"evidenceAvailability,omitempty"`
 	Fence                         int64          `dynamodbav:"fence,omitempty"`
@@ -164,13 +169,19 @@ func (s *Service) transact(ctx context.Context, actions []dt.TransactWriteItem) 
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
-	if e != nil || r.State != "active" || r.RecoveryGeneration == "" || r.SavedRequestsSchemaVersion != 3 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
+	if e != nil || r.State != "active" || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
 		return row{}, safeError()
 	}
 	return r, nil
 }
 func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
-	return dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &s.Table, Key: keys(stage.PK, "META"), ConditionExpression: aws.String("#s = :active AND recoveryGeneration = :g AND savedRequestsSchemaVersion = :r AND cloudExecutionsSchemaVersion = :c AND executionInputsSchemaVersion = :c AND protectedSecretsSchemaVersion = :c"), ExpressionAttributeNames: map[string]string{"#s": "state"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":active": str("active"), ":g": str(stage.RecoveryGeneration), ":r": num(3), ":c": num(1)}}}
+	guard := dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &s.Table, Key: keys(stage.PK, "META"), ConditionExpression: aws.String("#s = :active AND recoveryGeneration = :g AND savedRequestsSchemaVersion = :r AND cloudExecutionsSchemaVersion = :c AND executionInputsSchemaVersion = :c AND protectedSecretsSchemaVersion = :c"), ExpressionAttributeNames: map[string]string{"#s": "state"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":active": str("active"), ":g": str(stage.RecoveryGeneration), ":r": num(int64(stage.SavedRequestsSchemaVersion)), ":c": num(1)}}}
+	if stage.EvidencePinningSchemaVersion == 1 {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND evidencePinningSchemaVersion = :c")
+	} else {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(evidencePinningSchemaVersion)")
+	}
+	return guard
 }
 func (s *Service) project(ctx context.Context, owner, project string) (row, error) {
 	r, e := s.get(ctx, s.Table, "P#"+project, "META")
@@ -214,7 +225,10 @@ func (s *Service) view(ctx context.Context, r row) (View, error) {
 	if e != nil {
 		return View{}, e
 	}
-	_ = p
+	stage, e := s.stage(ctx)
+	if e != nil {
+		return View{}, e
+	}
 	v := View{ExecutionID: r.ExecutionID, ProjectID: r.ProjectID, Status: r.State, Version: r.Version, SubmittedAt: r.SubmittedAt, StartedAt: r.StartedAt, CompletedAt: r.CompletedAt, Summary: r.Summary, ServerTime: stamp(s.now())}
 	if r.Plan == nil {
 		return v, safeError()
@@ -232,7 +246,18 @@ func (s *Service) view(ctx context.Context, r row) (View, error) {
 		if !ret.Pinned && ret.NormalExpiresAt <= stamp(s.now()) || ret.State != "live" {
 			return v, failure(404, "not_found")
 		}
-		v.Retention = &Retention{ret.NormalExpiresAt, ret.Pinned, ret.EvidenceAvailability}
+		now := s.now()
+		if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), s.rowGuard(r), s.rowGuard(ret)}); e != nil {
+			return v, safeError()
+		}
+		if !ret.Pinned && ret.NormalExpiresAt <= stamp(now) {
+			return v, failure(404, "not_found")
+		}
+		v.ServerTime = stamp(now)
+		v.Retention = retentionView(ret, now)
+		if stage.EvidencePinningSchemaVersion != 1 {
+			v.Retention.PinEligible = false
+		}
 	}
 	return v, nil
 }
@@ -461,6 +486,10 @@ func (s *Service) admissionQuota(ctx context.Context, owner string, now time.Tim
 		}
 		if fresh {
 			r = row{PK: spec.pk, SK: spec.sk, Kind: "executionQuota", SchemaVersion: 1}
+			if spec.pk == "STAGE#"+s.Stage {
+				r.PinnedCount = pointer(int64(0))
+				r.PinnedBytes = pointer(int64(0))
+			}
 		}
 		if r.Kind != "executionQuota" || r.SchemaVersion != 1 {
 			return nil, safeError()
