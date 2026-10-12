@@ -41,6 +41,9 @@ type record struct {
 	ProtectedCursor               string             `dynamodbav:"protectedCursor,omitempty"`
 	ExecutionInputsSchemaVersion  int                `dynamodbav:"executionInputsSchemaVersion,omitempty"`
 	CloudExecutionsSchemaVersion  int                `dynamodbav:"cloudExecutionsSchemaVersion,omitempty"`
+	EvidencePinningSchemaVersion  int                `dynamodbav:"evidencePinningSchemaVersion,omitempty"`
+	PinnedCount                   *int64             `dynamodbav:"pinnedCount,omitempty"`
+	PinnedBytes                   *int64             `dynamodbav:"pinnedBytes,omitempty"`
 	StorageReservedBytes          int64              `dynamodbav:"storageReservedBytes,omitempty"`
 	InflightCount                 int64              `dynamodbav:"inflightCount,omitempty"`
 	SavedRequestsSchemaVersion    int                `dynamodbav:"savedRequestsSchemaVersion,omitempty"`

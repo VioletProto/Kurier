@@ -153,9 +153,14 @@ type Summary struct {
 	Outcome    Outcome `json:"outcome"`
 }
 type Retention struct {
-	NormalExpiresAt      string `json:"normalExpiresAt"`
-	Pinned               bool   `json:"pinned"`
-	EvidenceAvailability string `json:"evidenceAvailability"`
+	Version              int64   `json:"version"`
+	PinnedAt             *string `json:"pinnedAt"`
+	State                string  `json:"state"`
+	EffectiveStatus      string  `json:"effectiveStatus"`
+	PinEligible          bool    `json:"pinEligible"`
+	NormalExpiresAt      string  `json:"normalExpiresAt"`
+	Pinned               bool    `json:"pinned"`
+	EvidenceAvailability string  `json:"evidenceAvailability"`
 }
 type View struct {
 	ExecutionID   string         `json:"executionId"`

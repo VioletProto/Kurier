@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -18,8 +19,10 @@ import (
 // This harness exists only in test builds. No fixture trust, token endpoint or
 // cleanup HTTP route is compiled into the runnable API.
 func TestIntegrationBrowserProjects(t *testing.T) {
-	i := localIntegration(t)
-	enableProtectedLocal(t, i)
+	i, pinProject, pinExecution, _ := pinLocal(t)
+	var pinTime atomic.Int64
+	pinTime.Store(time.Now().UnixNano())
+	i.store.executions.Now = func() time.Time { return time.Unix(0, pinTime.Load()).UTC() }
 	for n := 0; n < 27; n++ {
 		if _, err := i.store.CreateProject(context.Background(), i.alice.UserID, "Seed "+twoDigits(n)); err != nil {
 			t.Fatal(err)
@@ -31,6 +34,10 @@ func TestIntegrationBrowserProjects(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/", h)
+	mux.HandleFunc("POST /test-only/pin-expire", func(w http.ResponseWriter, r *http.Request) {
+		pinTime.Store(time.Now().Add(31 * 24 * time.Hour).UnixNano())
+		w.WriteHeader(204)
+	})
 	mux.HandleFunc("POST /test-only/cleanup", func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			ProjectID string `json:"projectId"`
@@ -47,11 +54,11 @@ func TestIntegrationBrowserProjects(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "npm", "run", "test:browser", "--workspace", "@kurier/web")
 	cmd.Dir = "../../../.."
-	cmd.Env = append(os.Environ(), "VITE_API_URL="+server.URL, "VITE_COGNITO_USER_POOL_ID=us-east-2_fixture", "VITE_COGNITO_CLIENT_ID=fixture-client", "KURIER_BROWSER_FIXTURE_TOKEN="+i.auth.token(t, "alice", nil), "KURIER_BROWSER_FIXTURE_ID_TOKEN="+i.auth.token(t, "alice", func(c jwt.MapClaims) {
+	cmd.Env = append(os.Environ(), "KURIER_BROWSER_PIN_PROJECT="+pinProject.ProjectID, "KURIER_BROWSER_PIN_EXECUTION="+pinExecution, "KURIER_BROWSER_BOB_TOKEN="+i.auth.token(t, "bob", nil), "VITE_API_URL="+server.URL, "VITE_COGNITO_USER_POOL_ID=us-east-2_fixture", "VITE_COGNITO_CLIENT_ID=fixture-client", "KURIER_BROWSER_FIXTURE_TOKEN="+i.auth.token(t, "alice", nil), "KURIER_BROWSER_FIXTURE_ID_TOKEN="+i.auth.token(t, "alice", func(c jwt.MapClaims) {
 		c["token_use"] = "id"
 		c["aud"] = "fixture-client"
 		c["cognito:username"] = "alice"

@@ -16,7 +16,7 @@ func LocalCORS(next http.Handler, origin string) (http.Handler, error) {
 		u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.String() != origin {
 		return nil, errors.New("frontend origin must be an explicit HTTP loopback origin with port")
 	}
-	methods := map[string]bool{"GET": true, "POST": true, "PATCH": true, "DELETE": true}
+	methods := map[string]bool{"GET": true, "POST": true, "PATCH": true, "PUT": true, "DELETE": true}
 	headers := map[string]bool{"authorization": true, "content-type": true, "if-match": true, "idempotency-key": true}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Origin")
@@ -45,7 +45,7 @@ func LocalCORS(next http.Handler, origin string) (http.Handler, error) {
 					return
 				}
 			}
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE")
 			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, If-Match, Idempotency-Key")
 			w.WriteHeader(http.StatusNoContent)
 			return

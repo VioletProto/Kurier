@@ -133,3 +133,13 @@ project gates and recovery generation remain authoritative. See
 Execution, outbound HTTP, evidence, workflows and local-agent delivery remain
 outside this slice. Earlier public-only descriptions record their historical
 baseline; this continuation supersedes those secret-storage limits.
+
+## Evidence pinning continuation
+
+Davian accepted the [evidence pinning contract](evidence-pinning-contract.md) at
+`03a36c8` with UI wording “Protected from automatic expiry while pinned.” Scoped
+standalone API/accounting/cleanup/React implementation and API contract
+synchronization are authorized. AWS preview/cost review is authorized; deployment
+requires further approval. Preserve the Free plan, account quota and existing
+concurrency settings. [Validation and deployment review](../development/evidence-pinning.md)
+distinguishes local/fixture checks from pending AWS/runtime validation.

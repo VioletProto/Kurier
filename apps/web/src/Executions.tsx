@@ -59,9 +59,18 @@ export function Executions({
   const [headers, setHeaders] = useState("");
   const [pointers, setPointers] = useState("");
   const [confirmRerun, setConfirmRerun] = useState(false);
+  const [confirmUnpin, setConfirmUnpin] = useState<Execution>();
+  const [pinBusy, setPinBusy] = useState<string>();
+  const [pinUnresolved, setPinUnresolved] = useState(false);
   const mounted = useRef(false);
   const inFlight = useRef(false);
   const lifecycle = useRef<AbortController | null>(null);
+  const received = useRef(new Map<string, number>());
+  const [clock, setClock] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   const report = (e: unknown) => {
     if (!mounted.current || lifecycle.current?.signal.aborted) return;
     if (e instanceof SessionExpired) {
@@ -77,31 +86,39 @@ export function Executions({
     );
   };
   const history = async (next?: string) => {
-    const page = await api.executionHistory(
-      projectId,
-      next,
-      lifecycle.current?.signal,
-    );
-    if (!mounted.current) return;
+    const signal = lifecycle.current?.signal;
+    const page = await api.executionHistory(projectId, next, signal);
+    if (!mounted.current || signal?.aborted) return;
+    for (const item of page.items)
+      received.current.set(item.executionId, Date.now());
     setItems((old) => (next ? [...old, ...page.items] : page.items));
     setCursor(page.nextCursor);
   };
   const run = async (work: () => Promise<void>) => {
     if (inFlight.current || disabled || !mounted.current) return;
+    const signal = lifecycle.current?.signal;
     inFlight.current = true;
     setBusy(true);
     setError("");
     try {
       await work();
     } catch (e) {
-      report(e);
+      if (!signal?.aborted) report(e);
     } finally {
-      inFlight.current = false;
-      if (mounted.current) setBusy(false);
+      if (!signal?.aborted) {
+        inFlight.current = false;
+        if (mounted.current) setBusy(false);
+      }
     }
   };
   useEffect(() => {
     mounted.current = true;
+    setSelected(undefined);
+    setEvidence(undefined);
+    setConfirmUnpin(undefined);
+    setPinUnresolved(false);
+    setPinBusy(undefined);
+    inFlight.current = false;
     const controller = new AbortController();
     lifecycle.current = controller;
     if (!disabled) void run(() => history());
@@ -200,6 +217,184 @@ export function Executions({
       if (e instanceof ApiError && e.status < 500) setPending(undefined);
       throw e;
     }
+  };
+  const changePin = async (item: Execution, pinned: boolean) => {
+    const signal = lifecycle.current?.signal;
+    setPinBusy(item.executionId);
+    setPinUnresolved(false);
+    setConfirmUnpin(undefined);
+    try {
+      const result = await api.pinExecution(
+        projectId,
+        item.executionId,
+        pinned,
+        signal,
+      );
+      if (!mounted.current || signal?.aborted) return;
+      onGateChanged?.();
+      received.current.set(item.executionId, Date.now());
+      const updated = {
+        ...item,
+        retention: result.retention,
+        serverTime: result.serverTime,
+      };
+      const expired =
+        result.retention.effectiveStatus === "expired" ||
+        result.retention.effectiveStatus === "deleting";
+      setItems((old) =>
+        expired
+          ? old.filter((e) => e.executionId !== item.executionId)
+          : old.map((e) =>
+              e.executionId === item.executionId
+                ? {
+                    ...e,
+                    retention: result.retention,
+                    serverTime: result.serverTime,
+                  }
+                : e,
+            ),
+      );
+      setSelected((old) =>
+        old?.executionId === item.executionId
+          ? expired
+            ? undefined
+            : {
+                ...old,
+                retention: result.retention,
+                serverTime: result.serverTime,
+              }
+          : old,
+      );
+      if (expired && selected?.executionId === item.executionId)
+        setEvidence(undefined);
+      setMessage(
+        pinned
+          ? "Evidence pinned."
+          : expired
+            ? "Evidence unpinned. Automatic expiry applies immediately."
+            : "Evidence unpinned. Original expiry applies.",
+      );
+      await history();
+      return updated;
+    } catch (e) {
+      if (!mounted.current || signal?.aborted) return;
+      onGateChanged?.();
+      if (e instanceof SessionExpired) {
+        onSessionExpired();
+        return;
+      }
+      if (e instanceof ApiError && e.status === 404) {
+        setItems((old) =>
+          old.filter((v) => v.executionId !== item.executionId),
+        );
+        if (selected?.executionId === item.executionId) {
+          setSelected(undefined);
+          setEvidence(undefined);
+        }
+        setError("Evidence is no longer available.");
+        return;
+      }
+      if (e instanceof ApiError && e.status === 409) {
+        setError(
+          e.code === "pin_quota_exceeded"
+            ? "Pin quota reached. Unpin other evidence before deliberately retrying."
+            : e.code === "pin_window_closed"
+              ? "Too close to expiry to pin this evidence."
+              : "Retention changed concurrently. Review refreshed state before deliberately retrying.",
+        );
+        try {
+          const current = await api.executionDetail(
+            projectId,
+            item.executionId,
+            signal,
+          );
+          if (!signal?.aborted && mounted.current) {
+            setItems((old) =>
+              old.map((v) =>
+                v.executionId === item.executionId ? current : v,
+              ),
+            );
+            setSelected((old) =>
+              old?.executionId === item.executionId ? current : old,
+            );
+          }
+        } catch (refreshError) {
+          if (
+            !signal?.aborted &&
+            refreshError instanceof ApiError &&
+            refreshError.status === 404 &&
+            selected?.executionId === item.executionId
+          ) {
+            setSelected(undefined);
+            setEvidence(undefined);
+          }
+        }
+        await history();
+        return;
+      }
+      setPinUnresolved(true);
+      setError(
+        "Pin operation outcome is unresolved. Refresh retention before a deliberate retry.",
+      );
+    } finally {
+      if (!signal?.aborted && mounted.current) setPinBusy(undefined);
+    }
+  };
+  const pinControl = (item: Execution) => {
+    const retention = item.retention;
+    const pinned = retention?.pinned === true;
+    const now =
+      Date.parse(item.serverTime) +
+      Math.max(0, clock - (received.current.get(item.executionId) ?? clock));
+    const eligible =
+      !!retention?.pinEligible &&
+      Date.parse(retention.normalExpiresAt) > now + 5000;
+    return (
+      <span>
+        <span>
+          {pinned
+            ? "Protected from automatic expiry while pinned."
+            : retention
+              ? `Normal expiry: ${retention.normalExpiresAt}`
+              : "Evidence is not published yet."}{" "}
+          {pinned && retention
+            ? ` Normal expiry: ${retention.normalExpiresAt}.`
+            : ""}
+          {retention?.evidenceAvailability === "unavailable"
+            ? "Evidence unavailable."
+            : ""}
+        </span>
+        <button
+          aria-label={`${pinned ? "Unpin" : "Pin"} evidence ${item.executionId}`}
+          disabled={busy || disabled || pinUnresolved || (!pinned && !eligible)}
+          onClick={() => {
+            if (
+              pinned &&
+              retention &&
+              Date.parse(retention.normalExpiresAt) <= now
+            ) {
+              setConfirmUnpin(item);
+              return;
+            }
+            void run(() => changePin(item, !pinned).then(() => undefined));
+          }}
+        >
+          {pinBusy === item.executionId
+            ? pinned
+              ? "Unpinning…"
+              : "Pinning…"
+            : pinned
+              ? "Unpin"
+              : "Pin"}
+        </button>
+        {!pinned && retention && !eligible && (
+          <span>
+            Pin unavailable: evidence is unavailable, being removed, or too
+            close to expiry.
+          </span>
+        )}
+      </span>
+    );
   };
   const options = (): ExecutionOptions => ({
     timeoutSeconds: timeout,
@@ -305,7 +500,31 @@ export function Executions({
       <p role="status">{busy ? "Refreshing executions…" : message}</p>
       <button
         disabled={busy || disabled}
-        onClick={() => void run(() => history())}
+        onClick={() =>
+          void run(async () => {
+            const signal = lifecycle.current?.signal;
+            await history();
+            if (selected) {
+              try {
+                const current = await api.executionDetail(
+                  projectId,
+                  selected.executionId,
+                  signal,
+                );
+                if (!signal?.aborted) setSelected(current);
+              } catch (e) {
+                if (e instanceof ApiError && e.status === 404) {
+                  setSelected(undefined);
+                  setEvidence(undefined);
+                } else throw e;
+              }
+            }
+            if (!signal?.aborted) {
+              setPinUnresolved(false);
+              setError("");
+            }
+          })
+        }
       >
         Refresh execution history
       </button>
@@ -322,6 +541,7 @@ export function Executions({
                     lifecycle.current?.signal,
                   );
                   if (mounted.current) {
+                    received.current.set(detail.executionId, Date.now());
                     setSelected(detail);
                     setEvidence(undefined);
                     setConfirmRerun(false);
@@ -332,6 +552,7 @@ export function Executions({
               {item.submittedAt} · {item.status} · revision{" "}
               {item.source.revision}
             </button>
+            {pinControl(item)}
           </li>
         ))}
       </ul>
@@ -346,6 +567,7 @@ export function Executions({
       {selected && (
         <div>
           <h4>Execution {selected.executionId}</h4>
+          {pinControl(selected)}
           <p>
             {selected.status} · saved revision {selected.source.revision}
           </p>
@@ -373,7 +595,7 @@ export function Executions({
           )}
           {selected.retention && (
             <p>
-              Evidence {selected.retention.evidenceAvailability}; expires{" "}
+              Evidence {selected.retention.evidenceAvailability}; normal expiry{" "}
               {selected.retention.normalExpiresAt}
             </p>
           )}
@@ -445,6 +667,28 @@ export function Executions({
               </button>
             </div>
           )}
+        </div>
+      )}
+      {confirmUnpin && (
+        <div role="dialog" aria-label="Confirm expired evidence unpin">
+          <p>
+            Unpinning ends access immediately because normal retention has
+            expired. Automatic cleanup may remove this evidence, with no new
+            grace period.
+          </p>
+          <button
+            disabled={busy || disabled}
+            onClick={() =>
+              void run(() =>
+                changePin(confirmUnpin, false).then(() => undefined),
+              )
+            }
+          >
+            Confirm unpin expired evidence
+          </button>
+          <button onClick={() => setConfirmUnpin(undefined)}>
+            Cancel unpin
+          </button>
         </div>
       )}
       {evidence && (

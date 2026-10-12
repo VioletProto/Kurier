@@ -22,11 +22,12 @@ func TestLocalCORS(t *testing.T) {
 		name, origin, method, requested, headers string
 		status, calls                            int
 	}{
+		{"pin preflight", "http://localhost:5173", "OPTIONS", "PUT", "Authorization", 204, 0},
 		{"preflight", "http://localhost:5173", "OPTIONS", "PATCH", "Authorization, Content-Type, If-Match", 204, 0},
 		{"foreign", "http://localhost:5174", "POST", "", "", 403, 0},
 		{"null", "null", "GET", "", "", 403, 0},
 		{"bad header", "http://localhost:5173", "OPTIONS", "POST", "X-User-ID", 403, 0},
-		{"bad method", "http://localhost:5173", "OPTIONS", "PUT", "Authorization", 404, 0},
+		{"bad method", "http://localhost:5173", "OPTIONS", "TRACE", "Authorization", 404, 0},
 		{"auth still required", "http://localhost:5173", "GET", "", "", 401, 1},
 		{"cli", "", "GET", "", "", 401, 1},
 	} {

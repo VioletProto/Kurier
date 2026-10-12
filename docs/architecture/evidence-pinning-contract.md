@@ -1,9 +1,14 @@
-# Evidence pinning and unpinning: proposed review packet
+# Evidence pinning and unpinning: accepted contract
 
-Status: **Proposed for Davian's review**, 2026-10-12. Preparation only is
-authorized. Acceptance is required before dependent implementation, contract
-synchronization or AWS deployment. Nothing in this packet claims implemented
-pin routes, completed pin tests, measured spend or deployment approval.
+Status: **Accepted by Davian**, 2026-10-12, at `03a36c8`, with UI wording
+changed to “Protected from automatic expiry while pinned.” Scoped API,
+accounting, cleanup, React implementation, API contract synchronization and
+local/race/browser tests are authorized. AWS deployment preview and refreshed
+costs are authorized for review; deployment remains unauthorized. Keep the
+Free plan, account quota and existing concurrency settings unchanged.
+Acceptance is not evidence of implemented behavior or completed validation;
+actual results and remaining gaps are recorded in
+[implementation and deployment review](../development/evidence-pinning.md).
 
 Branch: `feat/evidence-pinning`, created from refreshed `origin/main`
 `c6ecc991115441328984f519d155852b03db3932`. That main commit merges
@@ -24,12 +29,12 @@ Authority and context read:
   and [API contracts](https://docs.google.com/document/d/1KSfRYOb2UxmrIl8VoFjc3YP38-PMu7k_fM9wrVkEenM/edit),
   fetched read-only on 2026-10-12; no synchronization performed.
 - [Retention/pinning card](https://trello.com/c/gH2vGh9p) and current
-  [board](https://trello.com/b/dRYhnjS6/kurier-capstone). The card has no existing
-  checklists. Ownership, redaction and immutable publication dependencies have
+  [board](https://trello.com/b/dRYhnjS6/kurier-capstone). The card had no checklists at preparation; a review/acceptance checklist
+  was subsequently added. Ownership, redaction and immutable publication dependencies have
   repository implementation/validation evidence. Broader contract review remains
   Doing; this packet resolves only this slice's remaining wire choices. No
-  configured WIP limit was found. Preparation is Doing; acceptance and product
-  completion remain pending.
+  configured WIP limit was found. Preparation completed; acceptance was recorded and implementation is Doing.
+  Product/runtime validation remains separately tracked.
 
 ## Scope and existing behavior
 
@@ -43,7 +48,7 @@ abstraction for standalone executions. Saved definitions survive history cleanup
 The accepted baseline already specifies project-scoped PUT/DELETE, idempotent
 200 retention responses, 30-day normal retention, a five-second new-pin cutoff,
 original expiry after unpin, conditional cleanup and project deletion overriding
-pins. DTO additions, detailed errors, pin quotas and UI below are proposed.
+pins. DTO additions, detailed errors, pin quotas and UI below are accepted.
 
 Current main, inspected rather than inferred from older planning documents:
 
@@ -70,7 +75,7 @@ Current main, inspected rather than inferred from older planning documents:
   RET fence throughout draining; never silently change a retention drain into
   a project-deletion drain when the project changes state.
 
-## Proposed routes and DTOs
+## Accepted routes and DTOs
 
 All routes require the existing verified Cognito access token, enabled application
 user, active owned project and active compatible stage/recovery generation.
@@ -89,10 +94,10 @@ Both requests have an empty body; reject nonempty bodies with 400
 required: these are desired-state operations with internal conditional versions.
 Concurrent opposite requests use the last valid committed transition; no browser
 may automatically replay an opposite intention after refreshing a conflict.
-This simpler concurrency policy is a review decision, not inherited from request
+This concurrency policy was accepted for pin operations independently of request
 revision ETags.
 
-Proposed response (timestamps shown illustratively):
+Accepted response (timestamps shown illustratively):
 
 ```json
 {
@@ -125,7 +130,7 @@ time used for the response. Return no object key, checksum, job input or capture
 Expired/deleting retention metadata may be returned by DELETE while its anchor
 survives; ordinary history/detail/evidence access retains existing expiry denial.
 
-| Condition after ownership checks                                                           | Proposed response                                         |
+| Condition after ownership checks                                                           | Accepted response                                         |
 | ------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
 | Missing/foreign anchor or inactive project                                                 | 404 `not_found`                                           |
 | Preterminal, unpublished or deleting evidence on PUT                                       | 409 `conflict`                                            |
@@ -227,9 +232,9 @@ authoritative live RET/SNAP/anchors/tickets, and age-only S3 lifecycle cannot
 delete pinned objects. Missing/corrupt evidence updates availability only; a pin
 does not override restore reconciliation or the accepted backup exception.
 
-## Proposed quotas, accounting and development cost
+## Accepted quotas, accounting and development cost
 
-| Limit                            | Proposed light development default                                         |
+| Limit                            | Accepted light development default                                         |
 | -------------------------------- | -------------------------------------------------------------------------- |
 | Pinned capture count             | 100/project, 200/stage                                                     |
 | Pinned encoded bytes             | 256 MiB/project, 512 MiB/stage                                             |
@@ -254,15 +259,16 @@ missing counters or inconsistent totals fail closed and keep cleanup pending.
 Reconcile counters from authoritative retained records during recovery before
 reopening; never infer a healthy zero from absent data on an active pin stage.
 
-Proposed compatibility activation: add `evidencePinningSchemaVersion=1` only
+Accepted compatibility activation: advance `savedRequestsSchemaVersion` from 3
+to 4 and add `evidencePinningSchemaVersion=1` only
 after API, publication, ownership record readers/writers and both cleanup paths
 understand the new counters/RET fields. Preserve counters during ordinary
 project edits. Old binaries must fail closed before this stage opens. Existing
 schema-1 RETs can read with null pinnedAt/default version semantics; no SNAP/S3
 migration. Initialize missing pin counters only under a closed/gated stage and
 verified no-pin inventory (or reconcile actual pins), with conditional writes;
-preserve recovery generation. This is a proposed rollout requirement, not
-authorization to run a migration or deploy.
+preserve recovery generation. This rollout requirement remains pending deployment review; no migration or
+deployment is authorized yet.
 
 Cost forecast: reuse existing development resources/schedule, no new S3 copy,
 KMS key, queue, index, hosting or standing compute. Reference
@@ -272,8 +278,9 @@ and official [S3 pricing](https://aws.amazon.com/s3/pricing/),
 [Lambda pricing](https://aws.amazon.com/lambda/pricing/) and
 [API Gateway pricing](https://aws.amazon.com/api-gateway/pricing/).
 S3 GET and DDB request rates were checked against official pages on 2026-10-12;
-other rates below reuse the accepted 2026-10-06 Ohio forecast assumptions and
-require regional recheck in any later deployment preview.
+The implementation [deployment review](../development/evidence-pinning.md)
+refreshes all regional rates on 2026-10-12 and preserves the $0.70 incremental
+allowance. Recheck rates for any later deployment preview.
 
 Assume 1,000 pin/unpin calls/month, 512 MiB accumulated beyond normal retention,
 1,000 extra evidence views, 256 MiB conservatively allowed extra metadata/index/
@@ -302,11 +309,11 @@ alerts/weekly review and existing rate limits; no automatic destructive budget
 action. Verify generated resource/IAM/cost differences only after acceptance
 and separate deployment authorization.
 
-## Proposed React behavior
+## Accepted React behavior
 
 - Add Pin/Unpin to history rows and selected execution detail, synchronized from
   returned RET metadata and refreshed history. Display normal expiry and
-  "Pinned until project deletion"; availability remains visible separately.
+  "Protected from automatic expiry while pinned."; availability remains visible separately.
   No filter/index or bulk pin feature is needed for this slice.
 - Disable Pin for preterminal/unpublished/unavailable evidence and the server
   cutoff; show the reason. Server remains authoritative for time and quotas.
@@ -353,7 +360,7 @@ from actual AWS ownership/CAS/S3/scheduled cleanup and genuine Cognito/browser
 checks. Restore/PITR reconciliation and external S3 loss remain distinct
 operational validation, never inferred from fixture passes.
 
-## Decisions requiring Davian's review
+## Accepted review decisions
 
 1. Accept empty-body PUT/DELETE with internal CAS, no client If-Match/key and
    last valid committed intention; truthful idempotent repeats while the anchor
@@ -367,6 +374,7 @@ operational validation, never inferred from fixture passes.
    plan and UI late-unpin confirmation. Keep workflow/run context out of this
    standalone slice; its accepted future protection requirements are unchanged.
 
-Review acceptance must precede dependent code, external contract synchronization
-and any AWS deployment. This preparation commits only this proposed packet;
-accepted documentation and live interfaces are unchanged.
+Davian accepted these choices with the UI wording amendment above. Dependent
+implementation and API contract synchronization are now authorized. AWS changes
+remain gated on review of the prepared preview/cost estimate and explicit
+deployment authorization.

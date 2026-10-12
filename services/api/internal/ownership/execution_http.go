@@ -3,6 +3,7 @@ package ownership
 import (
 	"errors"
 	"github.com/VioletProto/Kurier/services/api/execution"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,6 +25,18 @@ func (a *Server) executionEndpoint(w http.ResponseWriter, r *http.Request, u Use
 			return apiError(e.Status, e.Code, "Execution operation could not be completed. Refresh status before a deliberate retry.")
 		}
 		return err
+	}
+	if r.Method == "PUT" || r.Method == "DELETE" {
+		raw, err := io.ReadAll(io.LimitReader(r.Body, 1))
+		if err != nil || len(raw) != 0 {
+			return apiError(400, "invalid_request", "Pin operations require an empty body.")
+		}
+		result, err := service.Pin(r.Context(), u.UserID, project, executionID, r.Method == "PUT")
+		if err != nil {
+			return wrap(err)
+		}
+		success(w, 200, result)
+		return nil
 	}
 	if r.Method == "POST" {
 		raw, err := readRequestJSON(w, r)

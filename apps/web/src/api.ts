@@ -216,6 +216,24 @@ export class Api {
   private executionPath(projectId: string, executionId?: string) {
     return `/api/v1/projects/${encodeURIComponent(projectId)}/executions${executionId ? "/" + encodeURIComponent(executionId) : ""}`;
   }
+  async pinExecution(
+    projectId: string,
+    executionId: string,
+    pinned: boolean,
+    signal?: AbortSignal,
+  ): Promise<{ retention: ExecutionRetention; serverTime: string }> {
+    return (
+      await (
+        await this.request(
+          this.executionPath(projectId, executionId) + "/pin",
+          pinned ? "PUT" : "DELETE",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data;
+  }
   async submitExecution(
     projectId: string,
     requestId: string,
@@ -624,6 +642,16 @@ export type ExecutionOptions = {
     omitBody: boolean;
   };
 };
+export type ExecutionRetention = {
+  normalExpiresAt: string;
+  pinned: boolean;
+  evidenceAvailability: string;
+  version: number;
+  pinnedAt: string | null;
+  state: "live" | "deleting";
+  effectiveStatus: "pinned" | "retained" | "expired" | "deleting";
+  pinEligible: boolean;
+};
 export type Execution = {
   executionId: string;
   projectId: string;
@@ -643,11 +671,7 @@ export type Execution = {
       certainty: "known" | "unknown" | "not_dispatched";
     };
   } | null;
-  retention: {
-    normalExpiresAt: string;
-    pinned: boolean;
-    evidenceAvailability: string;
-  } | null;
+  retention: ExecutionRetention | null;
   serverTime: string;
 };
 export type EvidenceBody = {
