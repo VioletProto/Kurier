@@ -110,7 +110,33 @@ send requires an explicit new submission and fresh consent.
 Finally Revoke in React, stop the agent, confirm status rejects the old token,
 delete the disposable project, and wait for the deletion operation to complete.
 Do not capture token displays in screenshots/traces or put tokens in shell
-arguments/files. These operator checks are **prepared, not performed**.
+arguments/files. The localhost execution and repeated revocation/re-pairing are
+now operator-reported as tested; private-LAN, ambiguity and operator fixture
+deletion checks remain prepared/unconfirmed.
+
+### Operator-reported results — 2026-10-13
+
+Davian supplied the result from his localhost fixture test:
+
+```text
+Content-Length: 47
+Content-Type: application/json
+Date: Tue, 13 Oct 2026 22:51:25 GMT
+Set-Cookie: [REDACTED]
+```
+
+```json
+{ "authorization": "[REDACTED]", "ok": true, "targetSends": 1 }
+```
+
+This records a successful operator localhost execution with one counted target
+send and redacted Authorization body field/Set-Cookie header. Content-Length
+describes the upstream response; the sanitized body may have a different encoded
+length. Davian also reports revoking and re-pairing multiple agents successfully.
+These are user-reported runtime results, distinct from automated SDK identities
+and controlled browser fixtures. They do not establish private-LAN behavior,
+old-token denial on each protocol route, ambiguity handling or final deletion
+of this operator's fixture; those checks remain separately tracked.
 
 ## Implementation and compatibility
 
@@ -245,7 +271,8 @@ beyond 2 MiB, actual S3 immutable publication, identical ACK retry, and revoked
 session/poll/upload denial. Cloud regression covers actual KMS/DynamoDB/SQS/
 worker/HTTPS/S3 and duplicate handling, credential-name sanitization and
 disposable-fixture cleanup. Crashes/lost responses remain simulation evidence;
-genuine browser/private-LAN and elapsed expiry checks remain operator work.
+private-LAN and elapsed expiry checks remain operator work. Davian's subsequent
+localhost execution and revocation/re-pairing results are recorded above.
 
 Both AWS suites passed. The local fixture's project deletion completed through
 the actual enabled minute schedule in about four minutes, without manually
@@ -264,8 +291,8 @@ also verified physical cleanup. Public project IDs for the completed checks:
 No genuine first-upload retry after lease expiry, thirty-day expiry, LAN/offline,
 PITR restore or induced AWS lost-response/crash behavior is claimed. The local
 AWS result ran the shared agent capture/result runtime with an HTTPS protocol
-client; the compiled foreground CLI plus genuine browser pairing is prepared
-for the operator, not represented as completed. The cloud suite audited safe
+client; Davian subsequently reported successful localhost execution and repeated
+revocation/re-pairing through the prepared operator workflow. The cloud suite audited safe
 logs/evidence for its own disposable values; local AWS assertions cover frozen
 delivery and published evidence, not a separate exhaustive log audit.
 
@@ -354,9 +381,10 @@ No account plan change or capacity reservation is part of the estimate.
 
 ## Remaining validation and operational gaps
 
-- No Davian-operated browser/agent/private LAN, real device offline recovery,
-  thirty-day elapsed credential expiry or real clock-skew validation is claimed.
-  The compiled CLI/TLS/localhost browser fixture is controlled local evidence.
+- Davian's localhost execution and repeated revocation/re-pairing are recorded
+  as operator-tested. Private-LAN, real device offline recovery, thirty-day
+  elapsed credential expiry, clock skew and operator fixture deletion remain
+  unconfirmed. Automated CLI/TLS/browser fixtures remain controlled local evidence.
 - Crashes and lost responses are injected simulations, not induced AWS faults.
   An uncertain S3 PUT keeps its ticket/reservation inaccessible and can keep
   physical deletion pending indefinitely until reviewed settlement; absence
