@@ -55,6 +55,7 @@ if (
     "TestAWSProtected",
     "TestAWSCloudExecution",
     "TestAWSCloudExecutionCredentialNames",
+    "TestAWSLocalAgent",
   ].includes(filter)
 )
   throw new Error("Choose a scoped AWS test filter.");

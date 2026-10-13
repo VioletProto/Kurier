@@ -2,12 +2,14 @@
 
 Davian accepted [the contract](../architecture/local-agent-execution-contract.md)
 at `585d5b3` on 2026-10-13 and authorized implementation, API-contract
-synchronization, meaningful local tests and an AWS preview. **Deployment and
-capability activation have not been performed and await review.** Current cloud
-execution remains on the existing development deployment. Local-agent code and
-fixtures are implemented on `feat/local-agent-execution`.
+synchronization, meaningful local tests and an AWS preview. Davian subsequently
+approved the scoped development deployment and activation, including correction
+`14323d8`. Both are now performed in `dev-api`/us-east-2; the live stage is
+active/version 7, savedRequests 5 and localAgentExecutions 1. Recovery generation
+remains `dev-api-initial-v1`. Code and validation live on
+`feat/local-agent-execution`.
 
-## Foreground startup after authorized deployment and activation
+## Foreground startup
 
 Requires Go 1.26. Build from the checked-out repository root:
 
@@ -65,10 +67,50 @@ environment files or shell pipelines. `--stdin` is explicit controlled-test inpu
 not a suggested shell command containing a token. Ctrl-C cancels best-effort;
 it cannot establish that an upstream operation had no effect.
 
-The live stage is still capability 4 with no agent routes deployed. These
-production startup steps will work only after reviewed deployment/activation.
-The automated fixture below exercises the compiled CLI without weakening its
-production HTTPS validation.
+These startup steps now target the deployed development capability. Browser
+pairing and operator private-LAN validation remain separate from the SDK-created
+disposable identities used in the genuine AWS protocol check.
+
+## Prepared operator localhost and private-LAN checks
+
+The compiled Linux agent is `/tmp/kurier-agent`; rebuild with the command above
+on another machine. A disposable foreground target logs no request inputs:
+
+```sh
+go -C services/local-agent build -o /tmp/kurier-check-target ./cmd/check-target
+/tmp/kurier-check-target --listen 127.0.0.1:3000
+```
+
+Use genuine Cognito sign-in in `npm run dev:cloud`, create a disposable project
+and GET saved request at `http://127.0.0.1:3000/echo`. Optionally set an enabled
+Authorization header as a protected value using a disposable random value.
+Pair the browser to exact origin `http://127.0.0.1:3000`, class Loopback, then
+start the agent with the hidden one-time token prompt and explicitly confirm its
+scope. Submit Local once, including separate insecure-secret consent if needed.
+Inspect evidence: successful JSON, authorization/cookie redacted. Read
+`http://127.0.0.1:3000/counts`: `targetSends` must be 1. Receipt retries and
+history/evidence refreshes must leave it at 1.
+
+For the private-LAN check, run the target on a second controlled machine with an
+explicit private address, e.g. `--listen 192.168.1.42:3000`; allow only the agent
+machine through that machine's existing firewall. Use its actual address as the
+saved URL and pairing origin, choose Private class, and run the compiled agent
+on the first machine. Revoke/re-pair if the immutable credential lacks this
+origin. Repeat the single submission/count/evidence check. Do not expose this
+disposable target publicly; it refuses wildcard/public binds. Stop it with
+Ctrl-C afterward.
+
+Optional ambiguity check: save `/ambiguous` on the same origin. This target
+records a send and closes the connection before returning a response. Submit
+once; inspect the failed/unknown outcome and `/counts` without rerunning. The
+count increases once and stays stable through subsequent polls/refreshes. This
+is an induced controlled-target fault, not a genuine AWS failure. A new HTTP
+send requires an explicit new submission and fresh consent.
+
+Finally Revoke in React, stop the agent, confirm status rejects the old token,
+delete the disposable project, and wait for the deletion operation to complete.
+Do not capture token displays in screenshots/traces or put tokens in shell
+arguments/files. These operator checks are **prepared, not performed**.
 
 ## Implementation and compatibility
 
@@ -155,7 +197,79 @@ Containment checks report booleans/counts, never actual credential values. Sandb
 socket restrictions require an authorized outside-sandbox test run; that is an
 execution-environment constraint, not an AWS validation result.
 
-## AWS deployment and activation preview for review
+## Actual deployment and activation — 2026-10-13
+
+Approved scope was re-previewed and deployed to account `747336059622` as
+non-root `davian-admin`, us-east-2, stage `dev-api`, including `14323d8`.
+Only seven existing-API routes/integrations/permissions, scoped API permissions
+and four existing code assets/consumer environments changed. No new standing
+resources, bootstrap, frontend hosting, Cognito or account settings changed.
+
+`node scripts/verify-local-agent-deployment.mjs` checks archive equality,
+readiness/runtime/ARM64, local support on API/maintenance/worker, capability 5
+support on API/maintenance, seven payload-v2 route targets, scoped API S3 PUT
+and stage/purpose-bound job-binding KMS decrypt, maintenance without decrypt,
+and the enabled minute cleanup target. The S3 grant reuses the existing
+`dev-api/projects/*` object prefix; evidence keys are restricted by the protocol.
+
+| Deployed asset                      | SHA-256, base64                                |
+| ----------------------------------- | ---------------------------------------------- |
+| API and cleanup                     | `tkaKRqHYPYBV1yl97Qfy45n6pfTcbq2h5eGLet2tkXk=` |
+| Worker and controlled cloud fixture | `7ocqkj9O5JwcZvmxzNCgVi2mQYlHdfnScpAX3zMoz7A=` |
+
+Guarded activation used `node scripts/activate-local-agent-executions.mjs
+--activate`. Initial inventory rejected six retained **published** upload
+tickets before any marker mutation. Strong readback confirmed active/version 5
+and capability 4. Each published ticket was then checked against a settled
+write, terminal job and matching immutable SNAP metadata; no record was reset,
+removed or replayed. Activation conditionally closed the stage at version 6,
+re-inventoried while closed, and activated at version 7. Strong readback:
+active, savedRequests 5, localAgentExecutions 1, pinning/cloud/inputs/protected 1,
+same `dev-api-initial-v1` generation. Existing project/quota accounting was
+fingerprinted while closed and preserved. Only marker state/version/capability
+attributes changed. The script rejects unexpected or already-closed markers;
+failed/uncertain operations read durable state and never automatically reopen.
+
+Free plan remains ACTIVE, account and unreserved concurrency 10; SQS remains the
+only worker trigger, standard pollers, max concurrency 2/batch 1, with no reserved
+or provisioned capacity. The existing incremental cost forecast below is
+unchanged; measured costs are not claimed.
+
+Genuine AWS protocol checks use `node scripts/aws-integration.mjs TestAWSLocalAgent`
+and `TestAWSCloudExecution`. Disposable identities, pairing and admissions are
+created through the SDK, **not browser/Cognito pairing**. Agent session/poll/result
+and self-revocation traverse the real public HTTPS API and deployed Lambda IAM.
+They verify invalid credentials and browser-CRUD isolation, actual KMS frozen
+input delivery, one controlled loopback HTTP send, sanitized JSON expansion
+beyond 2 MiB, actual S3 immutable publication, identical ACK retry, and revoked
+session/poll/upload denial. Cloud regression covers actual KMS/DynamoDB/SQS/
+worker/HTTPS/S3 and duplicate handling, credential-name sanitization and
+disposable-fixture cleanup. Crashes/lost responses remain simulation evidence;
+genuine browser/private-LAN and elapsed expiry checks remain operator work.
+
+Both AWS suites passed. The local fixture's project deletion completed through
+the actual enabled minute schedule in about four minutes, without manually
+invoking maintenance or its drain. Strong Control/Protected partition reads
+proved only the project tombstone remained; S3 prefix listing was empty. Local
+job, retained receipt, frozen binding and scope obligations were removed.
+The test then removed only its own revoked disposable credential/account lookup
+and issuance/rate records after drain completion, with strong absence readback.
+These credential records have no automatic TTL; project deletion removes scope
+authority, while revoked metadata can otherwise remain retained. Cloud fixtures
+also verified physical cleanup. Public project IDs for the completed checks:
+`880d82de-1b8f-4fb6-8714-bf40b54f7f4f` (local),
+`1cae4b48-4f5b-47eb-8d65-99b7f396aca5` (cloud),
+`101f8e67-9ef4-49c6-9cde-564a3ff3c364` (credential names).
+
+No genuine first-upload retry after lease expiry, thirty-day expiry, LAN/offline,
+PITR restore or induced AWS lost-response/crash behavior is claimed. The local
+AWS result ran the shared agent capture/result runtime with an HTTPS protocol
+client; the compiled foreground CLI plus genuine browser pairing is prepared
+for the operator, not represented as completed. The cloud suite audited safe
+logs/evidence for its own disposable values; local AWS assertions cover frozen
+delivery and published evidence, not a separate exhaustive log audit.
+
+## Historical approved deployment and activation preview
 
 Read-only STS confirmed account `747336059622`, non-root `davian-admin`, region
 us-east-2. `scripts/verify-cloud-execution-config.mjs` confirmed active Free plan,
@@ -181,10 +295,10 @@ The authorized SST diff reuses the existing bootstrap/resources and plans:
   bootstrap storage; the actual resource diff is checked before deployment.
 
 Read-only `node scripts/preview-local-agent-activation.mjs` has no mutation mode.
-Inventory returned five projects, zero queued/running cloud jobs and zero local
-records. Current marker is active/version 5, savedRequests 4/pinning 1 with
-generation `dev-api-initial-v1`. API, cleanup and worker are not yet deployed
-with local support. The reviewed activation sequence must:
+The pre-deployment inventory returned five projects, zero queued/running cloud
+jobs and zero local records. The original marker was active/version 5,
+savedRequests 4/pinning 1 with generation `dev-api-initial-v1`. The reviewed
+activation sequence was:
 
 1. Deploy only the approved dev-api changes; verify all consumer package hashes,
    environment markers/readiness, routes and scoped permissions against the
@@ -240,9 +354,6 @@ No account plan change or capacity reservation is part of the estimate.
 
 ## Remaining validation and operational gaps
 
-- No new agent routes/IAM/packages were deployed and no capability was activated.
-  Actual AWS auth/KMS/IAM/ingress encoding/S3 publication/scheduled local cleanup
-  require separately approved deployment and genuine checks.
 - No Davian-operated browser/agent/private LAN, real device offline recovery,
   thirty-day elapsed credential expiry or real clock-skew validation is claimed.
   The compiled CLI/TLS/localhost browser fixture is controlled local evidence.

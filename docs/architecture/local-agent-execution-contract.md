@@ -2,8 +2,9 @@
 
 Status: **Accepted by Davian**, 2026-10-13, at `585d5b3`. Scoped implementation,
 API-contract synchronization and local/race/protocol/browser validation are
-authorized. AWS deployment/activation preview and refreshed costs are authorized
-for review; deployment and capability activation remain pending approval.
+authorized. Davian subsequently approved scoped development deployment and
+capability activation including correction `14323d8`; both are performed.
+See [actual deployment, validation and operator checks](../development/local-agent-execution.md).
 Acceptance is not evidence that implementation or runtime checks passed.
 The preparation/review sections below preserve the original packet history.
 
