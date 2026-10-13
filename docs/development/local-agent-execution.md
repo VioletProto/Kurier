@@ -111,8 +111,8 @@ Finally Revoke in React, stop the agent, confirm status rejects the old token,
 delete the disposable project, and wait for the deletion operation to complete.
 Do not capture token displays in screenshots/traces or put tokens in shell
 arguments/files. The localhost execution and repeated revocation/re-pairing are
-now operator-reported as tested; private-LAN, ambiguity and operator fixture
-deletion checks remain prepared/unconfirmed.
+now operator-reported as tested, along with same-machine private-interface
+execution. Separate-device LAN and ambiguity checks remain prepared/unconfirmed.
 
 ### Operator-reported results — 2026-10-13
 
@@ -136,7 +136,39 @@ length. Davian also reports revoking and re-pairing multiple agents successfully
 These are user-reported runtime results, distinct from automated SDK identities
 and controlled browser fixtures. They do not establish private-LAN behavior,
 old-token denial on each protocol route, ambiguity handling or final deletion
-of this operator's fixture; those checks remain separately tracked.
+of that initial fixture; subsequent private-interface evidence and cleanup
+readback are recorded below.
+
+Davian subsequently tested the prepared private origin
+`http://192.168.1.253:3000` (the machine's `wlan0` address), with the fixture
+bound to `192.168.1.253:3000` and the request at `/echo`. He reported:
+
+```json
+{ "authorization": "[REDACTED]", "ok": true, "targetSends": 1 }
+```
+
+The reported stored response had Content-Type `application/json`, upstream
+Content-Length 51, Date `Tue, 13 Oct 2026 23:21:09 GMT`, and Set-Cookie
+`[REDACTED]`. His separate `/counts` read also returned `targetSends:1`.
+Project: `896767dd-d499-4226-ae5a-45b0df6efa36`; execution:
+`86ff6250-6835-472d-a2a0-28bf4537a145`. This establishes an operator-reported
+private-address execution/count/redaction check on the same machine, not traffic
+to a separate LAN device. The fixture was already stopped during inspection,
+so its count was not independently re-read. By then AWS execution/SNAP records
+and evidence objects were already removed by deletion; original evidence bytes
+could not be independently re-read or checksum-verified after removal.
+
+Deletion `b12b85aa-6dc1-459f-accb-14de2ab67574` belongs to project
+`c5585b9a-63be-466a-b59d-9357e90dbb24`, distinct from the private-interface
+project. Its durable operation was confirmed completed. Deletion
+`e15968fc-8d26-445f-bee3-ae53c0079ac6` belongs to the private-interface
+project: initial inspection showed only META/work records and one encrypted
+protected source remaining, with no S3 evidence objects. Subsequent read-only
+observation confirmed **both deletion operations completed** through scheduled
+cleanup, without target HTTP replay or manual deletion. Strong Control queries
+returned only each project's deleted tombstone, strong Protected queries returned
+zero records, and bounded S3 prefix listings returned zero objects without
+truncation. Operator fixture cleanup is verified for both supplied projects.
 
 ## Implementation and compatibility
 
@@ -271,8 +303,9 @@ beyond 2 MiB, actual S3 immutable publication, identical ACK retry, and revoked
 session/poll/upload denial. Cloud regression covers actual KMS/DynamoDB/SQS/
 worker/HTTPS/S3 and duplicate handling, credential-name sanitization and
 disposable-fixture cleanup. Crashes/lost responses remain simulation evidence;
-private-LAN and elapsed expiry checks remain operator work. Davian's subsequent
-localhost execution and revocation/re-pairing results are recorded above.
+Separate-device LAN and elapsed expiry checks remain operator work. Davian's
+subsequent localhost/private-interface execution, revocation/re-pairing and
+verified operator fixture cleanup results are recorded above.
 
 Both AWS suites passed. The local fixture's project deletion completed through
 the actual enabled minute schedule in about four minutes, without manually
@@ -382,9 +415,10 @@ No account plan change or capacity reservation is part of the estimate.
 ## Remaining validation and operational gaps
 
 - Davian's localhost execution and repeated revocation/re-pairing are recorded
-  as operator-tested. Private-LAN, real device offline recovery, thirty-day
-  elapsed credential expiry, clock skew and operator fixture deletion remain
-  unconfirmed. Automated CLI/TLS/browser fixtures remain controlled local evidence.
+  as operator-tested, including same-machine private-interface execution.
+  Separate-device LAN, real device offline recovery, thirty-day elapsed
+  credential expiry and clock skew remain unconfirmed. Automated CLI/TLS/browser
+  fixtures remain controlled local evidence.
 - Crashes and lost responses are injected simulations, not induced AWS faults.
   An uncertain S3 PUT keeps its ticket/reservation inaccessible and can keep
   physical deletion pending indefinitely until reviewed settlement; absence
