@@ -112,7 +112,8 @@ delete the disposable project, and wait for the deletion operation to complete.
 Do not capture token displays in screenshots/traces or put tokens in shell
 arguments/files. The localhost execution and repeated revocation/re-pairing are
 now operator-reported as tested, along with same-machine private-interface
-execution. Separate-device LAN and ambiguity checks remain prepared/unconfirmed.
+execution. The operator ambiguity/no-replay check and its cleanup are also
+completed as recorded below; separate-device LAN remains prepared/unconfirmed.
 
 ### Operator-reported results — 2026-10-13
 
@@ -169,6 +170,30 @@ cleanup, without target HTTP replay or manual deletion. Strong Control queries
 returned only each project's deleted tombstone, strong Protected queries returned
 zero records, and bounded S3 prefix listings returned zero objects without
 truncation. Operator fixture cleanup is verified for both supplied projects.
+
+### Completed operator ambiguity/no-replay check
+
+Davian reports the prepared `/ambiguous` check completed: baseline counter 0,
+failed execution with the displayed certainty warning “Outcome unknown — do not
+assume no effect. An external operation may have completed. Automatic replay is
+disabled.”, and final counter 1 after **4 minutes 20 seconds**. The UI-reported
+error code was `unavailable`. Project:
+`95b55739-aaa6-419c-b96d-da79a07447ae`; execution:
+`a6e69199-3f21-48b6-ae78-6d1d754e641c`. This records one counted target send and
+no automatic replay during the observed interval. The report labels the counter
+reads `/checks`; the supplied fixture's implemented counter endpoint is `/counts`.
+
+Deletion `aa168dd2-5981-49f1-bdc9-7655d4cdb31d` was independently confirmed
+completed in AWS. Strong Control readback returned only the deleted project
+tombstone, strong Protected readback returned zero records, and the bounded S3
+prefix listing returned zero objects without truncation. Execution/evidence were
+already deleted, so the original stored outcome code/bytes could not be
+independently verified; `unavailable` remains attributed to the operator's UI
+report. No target request was sent during inspection.
+
+Mark this controlled-target connection-loss/no-replay check and fixture cleanup
+**completed**, distinct from an induced AWS fault, agent-process crash, offline
+recovery or separate-device LAN test. Those unperformed checks remain open.
 
 ## Implementation and compatibility
 
