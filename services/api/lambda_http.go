@@ -29,8 +29,19 @@ func proxyHTTPV2(handler http.Handler) func(context.Context, events.APIGatewayV2
 		if err != nil {
 			return bad(400, "invalid_request", "Invalid request.")
 		}
+		limit := 128 * 1024
+		if event.RequestContext.HTTP.Method == "POST" && strings.HasSuffix(event.RawPath, "/result") && strings.Contains(event.RawPath, "/local-agent/jobs/") {
+			limit = execution.EvidenceLimit
+		}
+		metadata := event
+		metadata.Body = ""
+		encodedEventMetadata, _ := json.Marshal(metadata)
+		encodedEvent, _ := json.Marshal(event)
+		if len(encodedEventMetadata) > 32*1024 || len(encodedEvent)+1 > execution.LambdaLimit {
+			return bad(413, "payload_too_large", "Request is too large.")
+		}
 		body := event.Body
-		if len(body) > ((128*1024+2)/3)*4 {
+		if len(body) > ((limit+2)/3)*4 {
 			return bad(413, "payload_too_large", "Request body is too large.")
 		}
 		if event.IsBase64Encoded {
@@ -40,7 +51,7 @@ func proxyHTTPV2(handler http.Handler) func(context.Context, events.APIGatewayV2
 			}
 			body = string(decoded)
 		}
-		if len(body) > 128*1024 {
+		if len(body) > limit {
 			return bad(413, "payload_too_large", "Request body is too large.")
 		}
 		target := (&url.URL{Scheme: "https", Host: "api.invalid", Path: path, RawPath: event.RawPath, RawQuery: event.RawQueryString}).String()
@@ -72,9 +83,9 @@ func proxyHTTPV2(handler http.Handler) func(context.Context, events.APIGatewayV2
 			proxy.Body = base64.StdEncoding.EncodeToString(payload)
 			proxy.IsBase64Encoded = true
 		}
-		metadata := proxy
-		metadata.Body = ""
-		encodedMetadata, _ := json.Marshal(metadata)
+		metadataResponse := proxy
+		metadataResponse.Body = ""
+		encodedMetadata, _ := json.Marshal(metadataResponse)
 		encoded, _ := json.Marshal(proxy)
 		// The Lambda runtime uses json.Marshal for the handler result. Include
 		// one byte of framing headroom rather than count only Body/base64.

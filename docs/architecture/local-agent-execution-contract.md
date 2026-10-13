@@ -1,8 +1,11 @@
 # Local-agent pairing and single saved-request execution: review packet
 
-Status: **Proposed for Davian's review**, 2026-10-13. Preparation only; acceptance,
-dependent implementation, external contract synchronization and AWS deployment
-remain pending. Publishing this packet does not authorize those actions.
+Status: **Accepted by Davian**, 2026-10-13, at `585d5b3`. Scoped implementation,
+API-contract synchronization and local/race/protocol/browser validation are
+authorized. AWS deployment/activation preview and refreshed costs are authorized
+for review; deployment and capability activation remain pending approval.
+Acceptance is not evidence that implementation or runtime checks passed.
+The preparation/review sections below preserve the original packet history.
 
 Branch: `feat/local-agent-execution`, created from refreshed `origin/main`
 `95f3a39` with a clean working tree. That commit merges
@@ -611,3 +614,20 @@ Decisions requested for acceptance:
 Acceptance of choices must be recorded explicitly. Wait before dependent code,
 external contract synchronization or AWS deployment; each later authorization
 must state its scope. Preparation publication alone is not acceptance.
+
+## Accepted implementation continuation
+
+Davian accepted `585d5b3` and authorized the scoped foreground Go agent,
+pairing/authentication, local execution protocol, shared evidence/cleanup and
+React controls. API contracts synchronization, meaningful local/race/protocol/
+browser checks and AWS preview/cost preparation are authorized. AWS deployment
+and capability activation are held for his review. Preserve Free plan, account
+quota and existing concurrency.
+
+Concrete wire supplements implement the accepted startup/status behavior:
+`DELETE /api/v1/local-agent/session` permits only the authenticated credential
+to revoke itself for CLI unpair; it grants no browser CRUD or other-agent
+revocation authority. Browser current metadata displays credential expiry and
+last seen; initial React pairing selects the current project, while the API
+supports the bounded multi-project scope. Full validation/startup and deployment
+preview are recorded in the development guide after performed checks.

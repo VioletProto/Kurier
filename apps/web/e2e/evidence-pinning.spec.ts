@@ -39,7 +39,7 @@ test("owner pin/unpin, immutable reopen, expired confirmation and deletion throu
   await page
     .getByRole("button", { name: "Pinned browser evidence", exact: true })
     .click();
-  const panel = page.getByRole("region", { name: "Cloud executions" });
+  const panel = page.getByRole("region", { name: "Executions" });
   await expect(
     panel.getByRole("button", { name: `Pin evidence ${execution}` }),
   ).toBeEnabled();

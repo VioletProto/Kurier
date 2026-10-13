@@ -32,6 +32,12 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 	a.mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, 200, map[string]string{"service": "api", "status": "ok"})
 	})
+	for _, route := range []string{"DELETE /api/v1/local-agent/session", "GET /api/v1/local-agent/session", "POST /api/v1/projects/{projectId}/local-agent/poll", "POST /api/v1/projects/{projectId}/local-agent/jobs/{jobId}/result"} {
+		a.mux.HandleFunc(route, a.agentProtocol)
+	}
+	for _, route := range []string{"POST /api/v1/local-agents", "GET /api/v1/local-agents/current", "DELETE /api/v1/local-agents/{localAgentId}"} {
+		a.mux.HandleFunc(route, a.protected(a.agentManagement))
+	}
 	a.mux.HandleFunc("GET /api/v1/users/me", a.protected(a.me))
 	a.mux.HandleFunc("POST /api/v1/projects", a.protected(a.create))
 	a.mux.HandleFunc("GET /api/v1/projects", a.protected(a.list))

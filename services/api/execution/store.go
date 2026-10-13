@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -40,6 +41,7 @@ type Service struct {
 	KMS                                               KMS
 	Table, Protected, Bucket, QueueURL, KeyARN, Stage string
 	SigningKey                                        []byte
+	ReceiptKeys                                       map[string][]byte
 	Now                                               func() time.Time
 	prepare                                           func(context.Context, Plan, map[string]string) (*Prepared, error)
 }
@@ -56,6 +58,28 @@ type SecretSource struct {
 	Revision int64  `dynamodbav:"revision"`
 }
 type row struct {
+	CandidateCompletedAt string `dynamodbav:"candidateCompletedAt,omitempty"`
+
+	LocalAgentExecutionsSchemaVersion int     `dynamodbav:"localAgentExecutionsSchemaVersion,omitempty"`
+	LocalAgentID                      string  `dynamodbav:"localAgentId,omitempty"`
+	Target                            string  `dynamodbav:"target,omitempty"`
+	Name                              string  `dynamodbav:"name,omitempty"`
+	Scopes                            []Scope `dynamodbav:"scopes,omitempty"`
+	TokenHash                         string  `dynamodbav:"tokenHash,omitempty"`
+	ActiveJob                         string  `dynamodbav:"activeJob,omitempty"`
+	ActiveProject                     string  `dynamodbav:"activeProject,omitempty"`
+	CreatedAt                         string  `dynamodbav:"createdAt,omitempty"`
+	RevokedAt                         *string `dynamodbav:"revokedAt,omitempty"`
+	LastSeenAt                        *string `dynamodbav:"lastSeenAt,omitempty"`
+	NonceHash                         string  `dynamodbav:"nonceHash,omitempty"`
+	ExecuteNotAfter                   string  `dynamodbav:"executeNotAfter,omitempty"`
+	CandidateDigest                   string  `dynamodbav:"candidateDigest,omitempty"`
+	CandidateTicket                   string  `dynamodbav:"candidateTicket,omitempty"`
+	AcceptedAt                        string  `dynamodbav:"acceptedAt,omitempty"`
+	HMACKeyID                         string  `dynamodbav:"hmacKeyId,omitempty"`
+	CanonicalizationVersion           int     `dynamodbav:"canonicalizationVersion,omitempty"`
+	RecoveryWriter                    bool    `dynamodbav:"recoveryWriter,omitempty"`
+
 	PK                            string         `dynamodbav:"PK"`
 	SK                            string         `dynamodbav:"SK"`
 	Kind                          string         `dynamodbav:"kind"`
@@ -138,6 +162,9 @@ func (s *Service) get(ctx context.Context, table, pk, sk string) (row, error) {
 	if strings.HasPrefix(r.Kind, "execution") && strings.HasPrefix(r.PK, "P#") && !knownExecution(out.Item, r) {
 		return row{}, safeError()
 	}
+	if strings.HasPrefix(r.Kind, "localAgent") && !knownAgent(out.Item, r) {
+		return row{}, safeError()
+	}
 	return r, nil
 }
 func (s *Service) put(table string, r row, fresh bool) (dt.TransactWriteItem, error) {
@@ -169,7 +196,7 @@ func (s *Service) transact(ctx context.Context, actions []dt.TransactWriteItem) 
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
-	if e != nil || r.State != "active" || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
+	if e != nil || r.State != "active" || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5) || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
 		return row{}, safeError()
 	}
 	return r, nil
@@ -180,6 +207,11 @@ func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND evidencePinningSchemaVersion = :c")
 	} else {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(evidencePinningSchemaVersion)")
+	}
+	if stage.LocalAgentExecutionsSchemaVersion == 1 {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND localAgentExecutionsSchemaVersion = :c")
+	} else {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(localAgentExecutionsSchemaVersion)")
 	}
 	return guard
 }
@@ -233,7 +265,12 @@ func (s *Service) view(ctx context.Context, r row) (View, error) {
 	if r.Plan == nil {
 		return v, safeError()
 	}
-	v.Source = Source{r.Plan.RequestID, r.Plan.Revision}
+	v.Target = "cloud"
+	if r.Plan.Target == "local" {
+		v.Target = "local"
+		v.LocalAgentID = pointer(r.Plan.LocalAgentID)
+	}
+	v.Source = Source{RequestID: r.Plan.RequestID, Revision: r.Plan.Revision}
 	v.Configuration = &r.Plan.Configuration
 	if source, e := s.get(ctx, s.Table, r.PK, "REQ#"+r.Plan.RequestID); e == nil && source.State == "active" && source.Kind == "request" {
 		v.LiveRequestID = &r.Plan.RequestID
@@ -349,6 +386,9 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	}
 	receiptSK := "IDEM#execution-admission#" + s.digest("execution-admission-key-v1", []string{s.Stage, owner, project, key})
 	inputDigest := s.digest("execution-admission-input-v1", []any{purpose, identity})
+	if options.Target == "local" {
+		inputDigest = s.digest("local-execution-admission-input-v1", []any{purpose, identity, options.Local})
+	}
 	receipt, e := s.get(ctx, s.Table, p.PK, receiptSK)
 	if e == nil {
 		if receipt.Kind != "executionReceipt" || receipt.InputDigest != inputDigest || receipt.ExpiresAt <= stamp(s.now()) {
@@ -372,6 +412,9 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 			return View{}, e
 		}
 		plan = *old.Plan
+		if (plan.Target == "local") != (options.Target == "local") {
+			return View{}, failure(409, "conflict")
+		}
 		plan.Options.AllowInsecureSecrets = options.AllowInsecureSecrets
 		source = plan.RequestID
 	}
@@ -390,11 +433,34 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		plan.Revision = revision
 		plan.Options = options
 	}
+	var agent row
+	if options.Target == "local" {
+		if options.Local == nil || !options.Local.AllowPrivateNetwork {
+			return View{}, failure(409, "local_permission_required")
+		}
+		agent, e = s.agentByID(ctx, owner, options.Local.LocalAgentID)
+		if e != nil {
+			return View{}, e
+		}
+		d, e := agentDestination(agent, project, plan.Configuration.URL)
+		if e != nil {
+			return View{}, e
+		}
+		plan.Target = "local"
+		plan.LocalAgentID = agent.LocalAgentID
+		plan.CredentialVersion = agent.Version
+		plan.Destination = &d
+		plan.Options.Target = "local"
+		plan.Options.Local = options.Local
+	}
 	frozen, _ := json.Marshal(plan)
 	if len(frozen) > ConfigLimit {
 		return View{}, failure(413, "payload_too_large")
 	}
 	destination, e := ValidateDestination(plan.Configuration.URL)
+	if plan.Target == "local" {
+		destination, e = runner.ValidateLocalURL(plan.Configuration.URL, *plan.Destination)
+	}
 	if e != nil {
 		return View{}, e
 	}
@@ -429,6 +495,16 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		sources = append(sources, SecretSource{ref, r.Revision})
 		actions = append(actions, s.sourceGuard(r, s.Protected))
 	}
+	if plan.Target == "local" {
+		if _, e := runner.LocalRequestCapture(ctx, plan, values, *plan.Destination); e != nil {
+			return View{}, e
+		}
+		w := newWork(row{ProjectID: project, JobID: job, ExecutionID: execution, LocalAgentID: plan.LocalAgentID, RecoveryGeneration: stage.RecoveryGeneration, LeaseID: id(), Fence: 1, DispatchIntentAt: stamp(now), ExecuteNotAfter: stamp(now.Add(30 * time.Second)), Deadline: stamp(now.Add(120 * time.Second))}, plan, values, randomToken())
+		if !grantFits(w, stamp(now)) {
+			return View{}, failure(413, "payload_too_large")
+		}
+		actions = append(actions, s.rowGuard(agent))
+	}
 	envelope, e := s.encrypt(ctx, project, job, values)
 	if e != nil {
 		return View{}, e
@@ -437,6 +513,15 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	j := row{PK: p.PK, SK: "JOB#" + job, Kind: "executionJob", SchemaVersion: 1, ProjectID: project, OwnerID: owner, State: "queued", ExecutionID: execution, JobID: job, Sources: sources, SubmittedAt: r.SubmittedAt, RecoveryGeneration: stage.RecoveryGeneration, DPK: dueShard(project), DSK: stamp(now.Add(10*time.Minute)) + "#" + job}
 	receipt = row{PK: p.PK, SK: receiptSK, Kind: "executionReceipt", SchemaVersion: 1, ProjectID: project, OwnerID: owner, InputDigest: inputDigest, ExecutionID: execution, ExpiresAt: stamp(now.Add(7 * 24 * time.Hour))}
 	out := row{PK: p.PK, SK: "OUT#" + job, Kind: "executionOutbox", SchemaVersion: 1, ProjectID: project, OwnerID: owner, ExecutionID: execution, JobID: job, RecoveryGeneration: stage.RecoveryGeneration, State: "pending", DPK: dueShard(project), DSK: stamp(now) + "#" + job}
+	if plan.Target == "local" {
+		r.SchemaVersion = 2
+		j.SchemaVersion = 2
+		j.Target = "local"
+		j.LocalAgentID = agent.LocalAgentID
+		j.DPK = agentQueue(agent.LocalAgentID, project)
+		j.DSK = r.SubmittedAt + "#" + job
+		out = row{PK: p.PK, SK: "LOCALWAIT#" + job, Kind: "executionLocalWait", SchemaVersion: 1, ProjectID: project, OwnerID: owner, ExecutionID: execution, JobID: job, LocalAgentID: agent.LocalAgentID, RecoveryGeneration: stage.RecoveryGeneration, DPK: dueShard(project), DSK: stamp(now.Add(10*time.Minute)) + "#" + job}
+	}
 	bundle := row{PK: p.PK, SK: "JOB#" + job + "#BINDINGS", Kind: "executionBindings", SchemaVersion: 1, ProjectID: project, JobID: job, Envelope: envelope}
 	for _, entry := range []struct {
 		table string
@@ -470,7 +555,9 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		}
 		return View{}, safeError()
 	}
-	s.fastNotify(ctx, project, job)
+	if plan.Target != "local" {
+		s.fastNotify(ctx, project, job)
+	}
 	return s.view(ctx, r)
 }
 func (s *Service) admissionQuota(ctx context.Context, owner string, now time.Time) ([]dt.TransactWriteItem, error) {

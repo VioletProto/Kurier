@@ -31,14 +31,31 @@ func Prepare(ctx context.Context, plan Plan, values map[string]string) (*Prepare
 	return prepare(ctx, plan, values, net.DefaultResolver)
 }
 func prepare(ctx context.Context, plan Plan, values map[string]string, resolver Resolver) (*Prepared, error) {
+	return preparePolicy(ctx, plan, values, resolver, nil, true)
+}
+func preparePolicy(ctx context.Context, plan Plan, values map[string]string, resolver Resolver, local *Destination, resolveDNS bool) (*Prepared, error) {
 	preparedAt := time.Now()
 	c := plan.Configuration
-	u, e := ValidateDestination(c.URL)
+	var u *url.URL
+	var e error
+	if local == nil {
+		u, e = ValidateDestination(c.URL)
+	} else {
+		u, e = ValidateLocalURL(c.URL, *local)
+	}
 	if e != nil {
 		return nil, e
 	}
-	if _, e = validatedIPs(ctx, resolver, u.Hostname()); e != nil {
-		return nil, e
+	if resolveDNS {
+		var err error
+		if local == nil {
+			_, err = validatedIPs(ctx, resolver, u.Hostname())
+		} else {
+			_, err = localIPs(ctx, resolver, u.Hostname(), local.AddressClass)
+		}
+		if e = err; e != nil {
+			return nil, e
+		}
 	}
 	resolve := func(value string, ref *Ref, sensitive bool) (string, error) {
 		if !sensitive {
@@ -164,7 +181,11 @@ func prepare(ctx context.Context, plan Plan, values map[string]string, resolver 
 			capture.Body = san.body(body, media, RedactionPolicy{})
 		}
 	}
-	tr := &http.Transport{Proxy: nil, DialContext: safeDialer(resolver), TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12}, TLSHandshakeTimeout: 5 * time.Second, ResponseHeaderTimeout: 10 * time.Second, MaxResponseHeaderBytes: ConfigLimit, DisableKeepAlives: true, DisableCompression: true, ForceAttemptHTTP2: false}
+	dial := safeDialer(resolver)
+	if local != nil {
+		dial = localDialer(resolver, *local)
+	}
+	tr := &http.Transport{Proxy: nil, DialContext: dial, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12}, TLSHandshakeTimeout: 5 * time.Second, ResponseHeaderTimeout: 10 * time.Second, MaxResponseHeaderBytes: ConfigLimit, DisableKeepAlives: true, DisableCompression: true, ForceAttemptHTTP2: false}
 	return &Prepared{request: req, transport: tr, sanitizer: san, policy: plan.Options.ResponseRedaction, capture: capture, timeout: time.Duration(plan.Options.TimeoutSeconds) * time.Second, preparedAt: preparedAt}, nil
 }
 func headerBytes(h http.Header) int {
@@ -205,6 +226,9 @@ func NewEvidence(project, execution, submitted string, plan Plan) *Evidence {
 	e := &Evidence{SchemaVersion: 1, ProjectID: project, ExecutionID: execution, Source: Source{plan.RequestID, plan.Revision}, Target: "cloud", SubmittedAt: submitted, Status: "failed", Outcome: Outcome{Certainty: "not_dispatched"}, Request: RequestCapture{Method: plan.Configuration.Method, URL: plan.Configuration.URL, Headers: []Header{}, Body: emptyBody()}, Response: ResponseCapture{Headers: []Header{}, Body: emptyBody()}}
 	e.Redaction.PolicyVersion = 1
 	e.Redaction.Applied = true
+	if plan.Target == "local" {
+		e.Target = "local"
+	}
 	return e
 }
 func (e *Evidence) Fail(code, certainty string) {

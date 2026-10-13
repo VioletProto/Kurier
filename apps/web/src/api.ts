@@ -213,6 +213,53 @@ export class Api {
     }
     return response;
   }
+  async currentAgent(signal?: AbortSignal): Promise<LocalAgent | null> {
+    const response = await this.request(
+      "/api/v1/local-agents/current",
+      "GET",
+      undefined,
+      undefined,
+      signal,
+    );
+    const data = (await response.json()).data;
+    return data.agent ? { ...data.agent, serverTime: data.serverTime } : null;
+  }
+  async pairAgent(
+    key: string,
+    input: { name: string; scopes: LocalAgentScope[] },
+    signal?: AbortSignal,
+  ): Promise<{ agent: LocalAgent; token: string | null }> {
+    const response = await this.request(
+      "/api/v1/local-agents",
+      "POST",
+      JSON.stringify(input),
+      undefined,
+      signal,
+      false,
+      key,
+    );
+    try {
+      const data = (await response.json()).data;
+      if (
+        !data?.agent?.localAgentId ||
+        !(data.token === null || typeof data.token === "string")
+      )
+        throw new Error();
+      return data;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async revokeAgent(id: string, signal?: AbortSignal) {
+    const response = await this.request(
+      "/api/v1/local-agents/" + encodeURIComponent(id),
+      "DELETE",
+      undefined,
+      undefined,
+      signal,
+    );
+    if (response.status !== 204) throw new UncertainWrite();
+  }
   private executionPath(projectId: string, executionId?: string) {
     return `/api/v1/projects/${encodeURIComponent(projectId)}/executions${executionId ? "/" + encodeURIComponent(executionId) : ""}`;
   }
@@ -266,11 +313,15 @@ export class Api {
     key: string,
     allowInsecureSecrets: boolean,
     signal?: AbortSignal,
+    local?: ExecutionOptions["local"],
   ): Promise<Execution> {
     const response = await this.request(
       this.executionPath(projectId, executionId) + "/rerun",
       "POST",
-      JSON.stringify({ allowInsecureSecrets }),
+      JSON.stringify({
+        allowInsecureSecrets,
+        ...(local ? { target: "local", local } : {}),
+      }),
       undefined,
       signal,
       false,
@@ -634,6 +685,8 @@ export class Api {
 export const api = new Api();
 
 export type ExecutionOptions = {
+  target?: "local";
+  local?: { localAgentId: string; allowPrivateNetwork: true };
   timeoutSeconds: number;
   allowInsecureSecrets: boolean;
   responseRedaction: {
@@ -653,6 +706,8 @@ export type ExecutionRetention = {
   pinEligible: boolean;
 };
 export type Execution = {
+  target?: "cloud" | "local";
+  localAgentId?: string | null;
   executionId: string;
   projectId: string;
   status: "queued" | "claimed" | "running" | "completed" | "failed";
@@ -697,4 +752,20 @@ export type Evidence = {
     decodedBytesRead: number;
   };
   timing: { durationMs: number | null; timeToFirstByteMs: number | null };
+};
+
+export type LocalAgentScope = {
+  projectId: string;
+  destinations: { origin: string; addressClass: "loopback" | "private" }[];
+};
+export type LocalAgent = {
+  serverTime?: string;
+  localAgentId: string;
+  name: string;
+  scopes: LocalAgentScope[];
+  createdAt: string;
+  expiresAt: string;
+  revokedAt: string | null;
+  lastSeenAt: string | null;
+  recoveryGeneration: string;
 };

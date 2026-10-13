@@ -133,12 +133,12 @@ function validate(c: RequestConfiguration) {
       u.hash ||
       /[ {}\p{Cc}]/u.test(c.url)
     )
-      return "Use an absolute public HTTP(S) URL without credentials, templates or fragments.";
+      return "Use an absolute HTTP(S) URL without credentials, templates or fragments.";
     for (const [key] of u.searchParams)
       if (credentialName(key))
         return "Credential query parameters cannot be saved.";
   } catch {
-    return "Provide an absolute public HTTP(S) URL.";
+    return "Provide an absolute HTTP(S) URL.";
   }
   for (const f of c.headers)
     if (!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(f.name))
@@ -518,10 +518,12 @@ export function Requests({
         write-only and clear after submission. Execute the saved revision below.
       </p>
       <p>
-        URLs must be public. Checks reject recognized credential patterns,
-        userinfo, templates and signed credential queries; they cannot detect
-        arbitrary unmarked secrets. Sensitive URL paths and inline credential
-        queries are unsupported: use separate protected query rows.
+        Cloud execution requires public destinations; local/private destinations
+        require a paired agent and explicit origin permission. Checks reject
+        recognized credential patterns, userinfo, templates and signed
+        credential queries; they cannot detect arbitrary unmarked secrets.
+        Sensitive URL paths and inline credential queries are unsupported: use
+        separate protected query rows.
       </p>
       <p className="hint">
         64 KiB applies to the complete saved configuration: name, method, URL,

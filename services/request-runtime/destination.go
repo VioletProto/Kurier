@@ -21,6 +21,9 @@ var deniedPrefixes = func() []netip.Prefix {
 }()
 
 func PublicIP(ip netip.Addr) bool {
+	if ip.Zone() != "" {
+		return false
+	}
 	ip = ip.Unmap()
 	if !ip.IsValid() || ip.Zone() != "" || !ip.IsGlobalUnicast() {
 		return false

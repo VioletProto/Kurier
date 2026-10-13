@@ -1,3 +1,4 @@
+import { LocalAgents } from "./LocalAgents";
 import { useEffect, useRef, useState } from "react";
 import {
   api,
@@ -7,6 +8,7 @@ import {
   type ExecutionOptions,
   type Evidence,
   type EvidenceBody,
+  type LocalAgent,
   type RequestDetail,
 } from "./api";
 import { SessionExpired } from "./auth";
@@ -45,6 +47,11 @@ export function Executions({
   onSessionExpired: () => void;
   onGateChanged?: () => void;
 }) {
+  const [agent, setAgent] = useState<LocalAgent | null>(null);
+  const [target, setTarget] = useState<"cloud" | "local">("cloud");
+  const [localConsent, setLocalConsent] = useState(false);
+  const [rerunConsent, setRerunConsent] = useState(false);
+  const [rerunHTTPConsent, setRerunHTTPConsent] = useState(false);
   const [items, setItems] = useState<Execution[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [selected, setSelected] = useState<Execution>();
@@ -67,6 +74,15 @@ export function Executions({
   const lifecycle = useRef<AbortController | null>(null);
   const received = useRef(new Map<string, number>());
   const [clock, setClock] = useState(Date.now());
+  useEffect(() => {
+    setLocalConsent(false);
+    setAllow(false);
+    setRerunConsent(false);
+  }, [
+    agent?.localAgentId,
+    request?.request.requestId,
+    request?.request.revision,
+  ]);
   useEffect(() => {
     const timer = setInterval(() => setClock(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -113,6 +129,9 @@ export function Executions({
   };
   useEffect(() => {
     mounted.current = true;
+    setAgent(null);
+    setTarget("cloud");
+    setLocalConsent(false);
     setSelected(undefined);
     setEvidence(undefined);
     setConfirmUnpin(undefined);
@@ -193,6 +212,7 @@ export function Executions({
             admission.key,
             admission.options.allowInsecureSecrets,
             lifecycle.current?.signal,
+            admission.options.local,
           )
         : await api.submitExecution(
             projectId,
@@ -205,6 +225,10 @@ export function Executions({
       if (!mounted.current) return;
       onGateChanged?.();
       setPending(undefined);
+      setLocalConsent(false);
+      setAllow(false);
+      setRerunConsent(false);
+      setRerunHTTPConsent(false);
       setSelected(execution);
       setEvidence(undefined);
       setConfirmRerun(false);
@@ -397,6 +421,15 @@ export function Executions({
     );
   };
   const options = (): ExecutionOptions => ({
+    ...(target === "local" && agent
+      ? {
+          target: "local" as const,
+          local: {
+            localAgentId: agent.localAgentId,
+            allowPrivateNetwork: true as const,
+          },
+        }
+      : {}),
     timeoutSeconds: timeout,
     allowInsecureSecrets: allow,
     responseRedaction: {
@@ -409,8 +442,14 @@ export function Executions({
     },
   });
   return (
-    <section aria-label="Cloud executions" className="panel">
-      <h3>Cloud executions and evidence</h3>
+    <section aria-label="Executions" className="panel">
+      <h3>Executions and evidence</h3>
+      <LocalAgents
+        projectId={projectId}
+        disabled={disabled}
+        onAgent={setAgent}
+        onSessionExpired={onSessionExpired}
+      />
       <p>
         Execute the saved revision. Protected inputs are frozen in an encrypted
         bundle limited to 32 KiB; the complete request and resolved body each
@@ -424,6 +463,56 @@ export function Executions({
         displayed as escaped text.
       </p>
       <fieldset disabled={busy || disabled || !!pending}>
+        <label>
+          Execution target
+          <select
+            value={target}
+            onChange={(e) => {
+              setTarget(e.target.value as "cloud" | "local");
+              setLocalConsent(false);
+              setAllow(false);
+            }}
+          >
+            <option value="cloud">Cloud</option>
+            <option
+              value="local"
+              disabled={
+                !agent ||
+                !!agent.revokedAt ||
+                Date.parse(agent.expiresAt) <=
+                  (agent.serverTime
+                    ? Date.parse(agent.serverTime)
+                    : Date.now()) ||
+                !agent.scopes.some((s) => s.projectId === projectId)
+              }
+            >
+              Local agent
+            </option>
+          </select>
+        </label>
+        {target === "local" && agent && (
+          <div>
+            <p>
+              Device: {agent.name}. Approved services:{" "}
+              {agent.scopes
+                .find((s) => s.projectId === projectId)
+                ?.destinations.map((d) => d.origin)
+                .join(", ")}
+              . Last seen: {agent.lastSeenAt ?? "Offline / unknown"}. Offline
+              submissions may wait up to ten minutes; there is no cloud
+              fallback.
+            </p>
+            <label>
+              <input
+                type="checkbox"
+                checked={localConsent}
+                onChange={(e) => setLocalConsent(e.target.checked)}
+              />
+              I allow this execution on the selected device and its approved
+              local/private services.
+            </label>
+          </div>
+        )}
         <label>
           Execution deadline (seconds)
           <input
@@ -466,7 +555,18 @@ export function Executions({
           Omit the response body
         </label>
         <button
-          disabled={!request}
+          disabled={
+            !request ||
+            (target === "local" &&
+              (!localConsent ||
+                !agent ||
+                !!agent.revokedAt ||
+                Date.parse(agent.expiresAt) <=
+                  (agent.serverTime
+                    ? Date.parse(agent.serverTime)
+                    : Date.now()) ||
+                !agent.scopes.some((s) => s.projectId === projectId)))
+          }
           onClick={() => {
             if (request)
               void run(() =>
@@ -567,6 +667,10 @@ export function Executions({
       {selected && (
         <div>
           <h4>Execution {selected.executionId}</h4>
+          <p>
+            Target: {selected.target ?? "cloud"}
+            {selected.localAgentId ? ` · Agent ${selected.localAgentId}` : ""}
+          </p>
           {pinControl(selected)}
           <p>
             {selected.status} · saved revision {selected.source.revision}
@@ -633,7 +737,11 @@ export function Executions({
           )}
           <button
             disabled={busy || disabled || !!pending || !selected.liveRequestId}
-            onClick={() => setConfirmRerun(true)}
+            onClick={() => {
+              setRerunConsent(false);
+              setRerunHTTPConsent(false);
+              setConfirmRerun(true);
+            }}
           >
             Review deliberate rerun
           </button>
@@ -646,14 +754,60 @@ export function Executions({
                 after an unknown outcome. This is separate from reconciling a
                 submission.
               </p>
+              {selected.target === "local" && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={rerunConsent}
+                    onChange={(e) => setRerunConsent(e.target.checked)}
+                  />
+                  I authorize a deliberate local rerun on{" "}
+                  {agent?.name ?? "an unavailable agent"} and its approved
+                  services.
+                </label>
+              )}
+              <label>
+                <input
+                  type="checkbox"
+                  checked={rerunHTTPConsent}
+                  onChange={(e) => setRerunHTTPConsent(e.target.checked)}
+                />
+                I explicitly allow protected inputs over HTTP for this new
+                rerun.
+              </label>
               <button
-                disabled={busy || disabled || !!pending}
+                disabled={
+                  busy ||
+                  disabled ||
+                  !!pending ||
+                  (selected.target === "local" &&
+                    (!rerunConsent ||
+                      !agent ||
+                      !!agent.revokedAt ||
+                      Date.parse(agent.expiresAt) <=
+                        (agent.serverTime
+                          ? Date.parse(agent.serverTime)
+                          : Date.now()) ||
+                      !agent.scopes.some((s) => s.projectId === projectId)))
+                }
                 onClick={() =>
                   void run(() =>
                     admit({
                       key: crypto.randomUUID(),
                       source: selected.executionId,
-                      options: options(),
+                      options: {
+                        ...options(),
+                        target:
+                          selected.target === "local" ? "local" : undefined,
+                        local:
+                          selected.target === "local" && agent
+                            ? {
+                                localAgentId: agent.localAgentId,
+                                allowPrivateNetwork: true,
+                              }
+                            : undefined,
+                        allowInsecureSecrets: rerunHTTPConsent,
+                      },
                       rerun: true,
                       createdAt: Date.now(),
                     }),
