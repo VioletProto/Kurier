@@ -129,6 +129,15 @@ LAN or Davian-operated agent validation**. Required checks are run before commit
 
 Commands (DynamoDB Local must be running):
 
+Sanitized response text uses a separate 4 MiB defensive parsing ceiling: JSON
+escaping can expand a valid response beyond the unchanged 2 MiB wire and decoded
+read limits. Complete result, evidence object and browser envelopes remain
+independently capped at 4 MiB, with the existing 6 MiB Lambda transport checks.
+The expansion regression runs agent capture/result construction, strict server
+validation and immutable publication through DynamoDB Local and simulated S3/KMS;
+it covers retained expanded JSON, overflow omission and identical receipt retries
+with exactly one target HTTP send and one object PUT per execution.
+
 ```sh
 docker compose -f compose.dynamodb.yml up -d
 npm run verify

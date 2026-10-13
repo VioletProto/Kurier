@@ -109,6 +109,25 @@ func TestDefensiveLocalSanitizationNoNetwork(t *testing.T) {
 	if strings.Contains(string(raw), values["s"]) || strings.Contains(string(raw), `"raw"`) {
 		t.Fatal("server defensive sanitization leaked")
 	}
+	// An untrusted already-sanitized JSON representation may be larger than
+	// the raw response budget. Still parse strictly and redact its claims.
+	text = `{"value":"` + strings.Repeat(`\u003c`, 360*1024) + `","authorization":"raw","reflection":"disposable-secret-value"}`
+	c, err = SanitizeLocalCapture(context.Background(), p, values, CaptureEvidence(e))
+	if err != nil || c.Response.Body.Text == nil || len(*c.Response.Body.Text) <= BodyLimit || strings.Contains(*c.Response.Body.Text, values["s"]) || strings.Contains(*c.Response.Body.Text, `"raw"`) {
+		t.Fatal("expanded body rejected or defensive redaction lost", err)
+	}
+	text = strings.Repeat("x", LocalSanitizedBodyLimit+1)
+	if _, err = SanitizeLocalCapture(context.Background(), p, values, CaptureEvidence(e)); err == nil {
+		t.Fatal("unbounded sanitized text accepted")
+	}
+	text = `{}`
+	for _, counts := range [][2]int64{{BodyLimit + 2, 0}, {0, BodyLimit + 2}} {
+		e.Response.WireBytesRead, e.Response.DecodedBytesRead = counts[0], counts[1]
+		if _, err = SanitizeLocalCapture(context.Background(), p, values, CaptureEvidence(e)); err == nil {
+			t.Fatal("response-read limit expanded with sanitized text limit")
+		}
+	}
+	e.Response.WireBytesRead, e.Response.DecodedBytesRead = 0, 0
 	e.Outcome.Certainty = "bogus"
 	if _, err = SanitizeLocalCapture(context.Background(), p, values, CaptureEvidence(e)); err == nil {
 		t.Fatal("invalid outcome accepted")

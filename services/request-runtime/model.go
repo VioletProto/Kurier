@@ -11,6 +11,11 @@ import (
 const ConfigLimit = 64 * 1024
 const BodyLimit = 2 * 1024 * 1024
 const EvidenceLimit = 4 * 1024 * 1024
+
+// LocalSanitizedBodyLimit bounds defensive parsing of already sanitized text.
+// JSON escaping can expand a response beyond BodyLimit; the complete result and
+// evidence envelopes must still independently fit EvidenceLimit and LambdaLimit.
+const LocalSanitizedBodyLimit = EvidenceLimit
 const LambdaLimit = 6 * 1024 * 1024
 const MetadataLimit = 16 * 1024
 

@@ -26,6 +26,14 @@ type localFixture struct {
 }
 
 func newLocalFixture(t *testing.T) *localFixture {
+	return newLocalFixtureWithTarget(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Set-Cookie", "disposable-cookie")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "reflection": r.Header.Get("Authorization")})
+	})
+}
+
+func newLocalFixtureWithTarget(t *testing.T, target http.HandlerFunc) *localFixture {
 	t.Helper()
 	f := newProtocolFixture(t)
 	ctx := context.Background()
@@ -41,9 +49,7 @@ func newLocalFixture(t *testing.T) *localFixture {
 	f.write(t, f.s.Table, p)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f.calls.Add(1)
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Set-Cookie", "disposable-cookie")
-		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "reflection": r.Header.Get("Authorization")})
+		target(w, r)
 	}))
 	t.Cleanup(server.Close)
 	req, _ := f.s.get(ctx, f.s.Table, p.PK, "REQ#"+f.request)
@@ -57,6 +63,90 @@ func newLocalFixture(t *testing.T) *localFixture {
 		t.Fatal(e)
 	}
 	return &localFixture{f, *pair.Token, pair.Agent, server.URL}
+}
+
+func TestIntegrationLocalSanitizedJSONExpansionPublication(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		characters int
+		omit       bool
+	}{{"expanded_body_fits", 360 * 1024, false}, {"expanded_envelope_overflow", 700 * 1024, true}} {
+		t.Run(tc.name, func(t *testing.T) {
+			// Literal '<' is valid JSON. Sanitization marshals it as six-byte
+			// HTML escapes, then the result envelope escapes the backslashes.
+			body := `{"value":"` + strings.Repeat("<", tc.characters) + `","authorization":"disposable-response-secret"}`
+			if !json.Valid([]byte(body)) || len(body) > BodyLimit {
+				t.Fatal("fixture must be valid JSON within the raw response budget")
+			}
+			f := newLocalFixtureWithTarget(t, func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(body))
+			})
+			ctx := context.Background()
+			v, job := f.submit(t)
+			work := f.grant(t)
+			prepared, err := runner.PrepareLocal(ctx, work.Plan, work.ProtectedInputs.Values, work.Destination)
+			if err != nil {
+				t.Fatal(err)
+			}
+			capture := NewEvidence(work.ProjectID, work.ExecutionID, work.DispatchIntentAt, work.Plan)
+			prepared.Run(ctx, capture)
+			if capture.Status != "completed" || capture.Response.Body.Text == nil || len(*capture.Response.Body.Text) <= BodyLimit || capture.Response.WireBytesRead != int64(len(body)) || capture.Response.DecodedBytesRead != int64(len(body)) {
+				t.Fatal("agent did not produce an expanded capture within response-read limits")
+			}
+			result, err := runner.ResultFromEvidence(*work, capture)
+			if err != nil {
+				t.Fatal(err)
+			}
+			packet, err := json.Marshal(result)
+			if err != nil || len(packet) > EvidenceLimit {
+				t.Fatal("result envelope exceeds budget", err)
+			}
+			quoted, _ := json.Marshal(string(packet))
+			if len(quoted)+32*1024+1 > LambdaLimit || 4*((len(packet)+2)/3)+32*1024+1 > LambdaLimit {
+				t.Fatal("result exceeds Lambda ingress budget")
+			}
+			var uploaded runner.Result
+			if err = runner.StrictJSON(packet, &uploaded); err != nil {
+				t.Fatal(err)
+			}
+			ack, err := f.s.UploadAgentResult(ctx, f.token, f.project, job, uploaded)
+			if err != nil || ack.ExecutionID != v.ExecutionID {
+				t.Fatal("server validation/publication failed", err)
+			}
+			stored, err := f.s.Evidence(ctx, f.owner, f.project, v.ExecutionID)
+			if err != nil || len(stored) > EvidenceLimit || bytes.Contains(stored, []byte("disposable-response-secret")) {
+				t.Fatal("invalid immutable evidence", err)
+			}
+			var envelope struct {
+				Data struct {
+					Evidence Evidence `json:"evidence"`
+				} `json:"data"`
+			}
+			if err = StrictJSON(stored, &envelope); err != nil {
+				t.Fatal(err)
+			}
+			evidence := envelope.Data.Evidence
+			for _, b := range []Body{uploaded.Capture.Response.Body, evidence.Response.Body} {
+				if tc.omit {
+					if b.Kind != "omitted" || b.Text != nil || b.OmissionReason == nil || *b.OmissionReason != "encoded_evidence_limit" {
+						t.Fatal("overflow omission was not frozen/published")
+					}
+				} else if b.Kind != "json" || b.Text == nil || *b.Text != *capture.Response.Body.Text {
+					t.Fatal("expanded sanitized JSON did not survive validation/publication")
+				}
+			}
+			object, _ := json.Marshal(evidence)
+			if len(object) > EvidenceLimit || !publicationTransportFits(stored) {
+				t.Fatal("published evidence exceeds API/proxy budgets")
+			}
+			repeat, err := f.s.UploadAgentResult(ctx, f.token, f.project, job, uploaded)
+			again, readErr := f.s.Evidence(ctx, f.owner, f.project, v.ExecutionID)
+			if err != nil || readErr != nil || repeat != ack || !bytes.Equal(stored, again) || f.objects.puts != 1 || f.calls.Load() != 1 {
+				t.Fatal("receipt retry changed publication or replayed HTTP", err, readErr)
+			}
+		})
+	}
 }
 func (f *localFixture) submit(t *testing.T) (View, string) {
 	t.Helper()

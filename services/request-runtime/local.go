@@ -278,7 +278,7 @@ func SanitizeLocalCapture(ctx context.Context, p Plan, values map[string]string,
 			return c, failure(400, "invalid_request")
 		}
 	case "json", "text":
-		if b.Text == nil || b.OmissionReason != nil || len(*b.Text) > BodyLimit {
+		if b.Text == nil || b.OmissionReason != nil || len(*b.Text) > LocalSanitizedBodyLimit {
 			return c, failure(400, "invalid_request")
 		}
 		media := "text/plain"
