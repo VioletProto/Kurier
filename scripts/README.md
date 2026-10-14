@@ -46,3 +46,14 @@ The explicit `KURIER_AWS_PIN_BROWSER_OWNER` preparation mode creates a new
 disposable fixture for the participating owner and changes only its guarded RET
 expiry. It leaves cleanup to the owner's browser check; it is preparation,
 not authenticated route validation. Keep its safe IDs for reconciliation.
+
+`verify-local-agent-deployment.mjs` verifies the approved local-agent consumers,
+archive hashes, routes, scoped IAM and cleanup schedule, including unchanged
+Free-plan/concurrency settings. `activate-local-agent-executions.mjs --activate`
+requires explicit approval: it closes/re-inventories/activates with exact marker
+guards, preserves generation/accounting, validates settled published writers,
+and refuses automatic resume/reopen after failure. It is not a recovery command.
+`aws-integration.mjs TestAWSLocalAgent` exercises actual deployed agent HTTPS,
+protected delivery/publication/revocation and scheduled fixture cleanup with
+SDK-created identities; genuine browser pairing remains separate. See the
+[local-agent deployment and operator checks](../docs/development/local-agent-execution.md).

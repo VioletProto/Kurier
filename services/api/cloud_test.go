@@ -14,6 +14,48 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
+func TestAgentResultIngressCapsAndEncoding(t *testing.T) {
+	for _, mode := range []string{"plain-limit", "base64-limit", "over", "escaping", "ordinary-route"} {
+		t.Run(mode, func(t *testing.T) {
+			size := execution.EvidenceLimit
+			if mode == "over" {
+				size++
+			}
+			body := strings.Repeat("x", size)
+			path := "/api/v1/projects/p/local-agent/jobs/j/result"
+			encoded := mode == "base64-limit"
+			if mode == "escaping" {
+				body = strings.Repeat("\\", size)
+			}
+			if mode == "ordinary-route" {
+				path = "/api/v1/projects/p/requests"
+			}
+			if encoded {
+				body = base64.StdEncoding.EncodeToString([]byte(body))
+			}
+			calls := 0
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				raw, _ := io.ReadAll(r.Body)
+				if len(raw) != execution.EvidenceLimit {
+					t.Error("decoded upload size changed")
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"data":{}}`))
+			})
+			event := events.APIGatewayV2HTTPRequest{Version: "2.0", RawPath: path, Body: body, IsBase64Encoded: encoded, RequestContext: events.APIGatewayV2HTTPRequestContext{HTTP: events.APIGatewayV2HTTPRequestContextHTTPDescription{Method: "POST"}}}
+			response, e := proxyHTTPV2(handler)(context.Background(), event)
+			if e != nil {
+				t.Fatal(e)
+			}
+			valid := mode == "plain-limit" || mode == "base64-limit"
+			if valid && (response.StatusCode != 200 || calls != 1) || !valid && (response.StatusCode != 413 || calls != 0) {
+				t.Fatal("ingress boundary not enforced", response.StatusCode, calls)
+			}
+		})
+	}
+}
+
 func TestEvidenceProxyEncodingAndSerializedBounds(t *testing.T) {
 	for _, size := range []int{1, 2, 3, execution.EvidenceLimit - 1, execution.EvidenceLimit, execution.EvidenceLimit + 1} {
 		payload := strings.Repeat("x", size)

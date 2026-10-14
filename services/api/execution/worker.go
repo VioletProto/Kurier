@@ -37,6 +37,9 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 	if e != nil {
 		return e
 	}
+	if job.Target == "local" {
+		return nil
+	}
 	if job.Kind != "executionJob" || job.SchemaVersion != 1 || job.RecoveryGeneration != stage.RecoveryGeneration {
 		return nil
 	}
@@ -197,9 +200,20 @@ func (s *Service) liveWriter(ctx context.Context, expected row) (row, row, row, 
 	if e != nil || job.RecoveryGeneration != stage.RecoveryGeneration || job.LeaseID != expected.LeaseID || job.Fence != expected.Fence || job.State != expected.State || terminal(job.State) || job.Deadline <= stamp(s.now()) {
 		return row{}, row{}, row{}, failure(409, "conflict")
 	}
+	if job.Target == "local" && !job.RecoveryWriter {
+		if job.Deadline <= stamp(s.now().Add(5*time.Second)) {
+			return row{}, row{}, row{}, failure(409, "conflict")
+		}
+		if _, e = s.agentByID(ctx, job.OwnerID, job.LocalAgentID); e != nil {
+			return row{}, row{}, row{}, failure(401, "unauthenticated")
+		}
+	}
 	return stage, p, job, nil
 }
 func (s *Service) publish(ctx context.Context, job row, evidence *Evidence) error {
+	if job.Target == "local" && !job.RecoveryWriter {
+		return s.publishLocal(ctx, job, evidence)
+	}
 	raw, _, e := EncodeEvidence(evidence)
 	if e != nil {
 		return e
@@ -220,7 +234,7 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence) erro
 	qput, _ := s.put(s.Table, quota, false)
 	hash := sha256.Sum256(raw)
 	ticketID := id()
-	ticket := row{PK: job.PK, SK: "UPLOAD#" + ticketID, Kind: "executionUpload", SchemaVersion: 1, ProjectID: job.ProjectID, OwnerID: job.OwnerID, JobID: job.JobID, ExecutionID: job.ExecutionID, State: "pending", Fence: job.Fence, LeaseID: job.LeaseID, Deadline: job.Deadline, DeletionEpoch: p.DeletionEpoch, RecoveryGeneration: stage.RecoveryGeneration, ObjectKey: s.Stage + "/projects/" + job.ProjectID + "/evidence/" + job.ExecutionID + "/" + ticketID + ".json", Checksum: hex.EncodeToString(hash[:]), Bytes: int64(len(raw)), DPK: dueShard(job.ProjectID), DSK: job.Deadline + "#" + ticketID}
+	ticket := row{PK: job.PK, SK: "UPLOAD#" + ticketID, Kind: "executionUpload", SchemaVersion: 1, ProjectID: job.ProjectID, OwnerID: job.OwnerID, JobID: job.JobID, ExecutionID: job.ExecutionID, State: "pending", RecoveryWriter: job.RecoveryWriter, Fence: job.Fence, LeaseID: job.LeaseID, Deadline: job.Deadline, DeletionEpoch: p.DeletionEpoch, RecoveryGeneration: stage.RecoveryGeneration, ObjectKey: s.Stage + "/projects/" + job.ProjectID + "/evidence/" + job.ExecutionID + "/" + ticketID + ".json", Checksum: hex.EncodeToString(hash[:]), Bytes: int64(len(raw)), DPK: dueShard(job.ProjectID), DSK: job.Deadline + "#" + ticketID}
 	put, _ := s.put(s.Table, ticket, true)
 	// CAS on the authoritative job version registers before any S3 attempt.
 	job.Version++
@@ -284,7 +298,7 @@ func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *
 	if e != nil {
 		return safeError()
 	}
-	summary := &Summary{evidence.Response.HTTPStatus, evidence.Timing.DurationMS, evidence.Outcome}
+	summary := &Summary{HTTPStatus: evidence.Response.HTTPStatus, DurationMS: evidence.Timing.DurationMS, Outcome: evidence.Outcome}
 	job.State = evidence.Status
 	job.Version++
 	job.DPK = ""
@@ -301,6 +315,40 @@ func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *
 	manifest := row{PK: job.PK, SK: anchor.SK + "#SNAP", Kind: "executionSnapshot", SchemaVersion: 1, ProjectID: job.ProjectID, ExecutionID: job.ExecutionID, ObjectKey: ticket.ObjectKey, Checksum: ticket.Checksum, Bytes: ticket.Bytes, Summary: summary, CompletedAt: &evidence.CompletedAt}
 	ret := row{PK: job.PK, SK: anchor.SK + "#RET", Kind: "executionRetention", SchemaVersion: 1, ProjectID: job.ProjectID, ExecutionID: job.ExecutionID, State: "live", NormalExpiresAt: stamp(completed.Add(30 * 24 * time.Hour)), EvidenceAvailability: "available", DPK: dueShard(job.ProjectID), DSK: stamp(completed.Add(30*24*time.Hour)) + "#" + job.ExecutionID}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), s.projectUpdate(p, 0, -1)}
+	if job.Target == "local" {
+		a, e := s.get(ctx, s.Table, "U#"+job.OwnerID, "CRED#"+job.LocalAgentID)
+		if e != nil {
+			return e
+		}
+		if !job.RecoveryWriter {
+			user, e := s.userGuard(ctx, job.OwnerID)
+			if e != nil {
+				return e
+			}
+			actions = append(actions, user)
+			if a.State != "active" || a.ExpiresAt <= stamp(s.now().Add(5*time.Second)) || a.RecoveryGeneration != stage.RecoveryGeneration || a.ActiveJob != job.JobID || a.ActiveProject != job.ProjectID || job.CandidateDigest == "" {
+				return failure(401, "unauthenticated")
+			}
+			receipt := row{PK: job.PK, SK: job.SK + "#RECEIPT", Kind: "executionLocalReceipt", SchemaVersion: 1, ProjectID: job.ProjectID, OwnerID: job.OwnerID, ExecutionID: job.ExecutionID, JobID: job.JobID, LocalAgentID: job.LocalAgentID, LeaseID: job.LeaseID, Fence: job.Fence, NonceHash: job.NonceHash, InputDigest: job.CandidateDigest, CanonicalizationVersion: 1, HMACKeyID: job.HMACKeyID, AcceptedAt: stamp(s.now()), RecoveryGeneration: stage.RecoveryGeneration}
+			put, e := s.put(s.Table, receipt, true)
+			if e != nil {
+				return e
+			}
+			actions = append(actions, put)
+		}
+		if a.ActiveJob == job.JobID && a.ActiveProject == job.ProjectID {
+			a.ActiveJob = ""
+			a.ActiveProject = ""
+			a.Version++
+			put, e := s.put(s.Table, a, false)
+			if e != nil {
+				return e
+			}
+			actions = append(actions, put)
+		} else if !job.RecoveryWriter {
+			return failure(409, "conflict")
+		}
+	}
 	for _, spec := range []struct {
 		r     row
 		fresh bool
@@ -391,7 +439,7 @@ func (s *Service) recoverPrepared(ctx context.Context, job row) (bool, error) {
 			if attributevalue.UnmarshalMap(item, &ticket) != nil {
 				return false, safeError()
 			}
-			if ticket.ExecutionID != job.ExecutionID || ticket.State != "uploaded" || !ticket.WriteSettled {
+			if ticket.ExecutionID != job.ExecutionID || ticket.State != "uploaded" || !ticket.WriteSettled || (job.Target == "local" && !ticket.RecoveryWriter) {
 				continue
 			}
 			if !knownExecution(item, ticket) {

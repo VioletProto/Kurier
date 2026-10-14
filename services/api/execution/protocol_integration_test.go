@@ -658,7 +658,7 @@ func TestIntegrationFrozenSecretReplacementAndRevocationRaces(t *testing.T) {
 				t.Fatal(e)
 			}
 			plan := fixturePlan()
-			plan.Configuration.Headers = []Field{{Name: "X-Protected", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{secret}}}
+			plan.Configuration.Headers = []Field{{Name: "X-Protected", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{SecretID: secret}}}
 			config, _ := json.Marshal(plan.Configuration)
 			request.ConfigurationJSON = string(config)
 			f.write(t, f.s.Table, request)

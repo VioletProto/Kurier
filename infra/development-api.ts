@@ -221,6 +221,7 @@ export async function createDevelopmentApi() {
   ];
   const executionEnvironment = {
     KURIER_EVIDENCE_PINNING_SCHEMA_VERSION: "1",
+    KURIER_LOCAL_AGENT_EXECUTIONS_SCHEMA_VERSION: "1",
     KURIER_CLOUD_EXECUTIONS_SCHEMA_VERSION: "1",
     KURIER_EXECUTION_INPUTS_SCHEMA_VERSION: "1",
     KURIER_EVIDENCE_BUCKET: evidence.bucket,
@@ -229,7 +230,7 @@ export async function createDevelopmentApi() {
   const environment = {
     ...executionEnvironment,
     KURIER_STAGE: "dev-api",
-    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "3",
+    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "5",
     KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
     KURIER_PROTECTED_TABLE: protectedTable.name,
     KURIER_CONTROL_TABLE: control.name,
@@ -258,7 +259,12 @@ export async function createDevelopmentApi() {
       },
       ...protectedPermissions,
       queueSend,
-      { actions: ["s3:GetObject"], resources: [objectArn] },
+      { actions: ["s3:GetObject", "s3:PutObject"], resources: [objectArn] },
+      {
+        actions: ["kms:Decrypt"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions("job-bindings"),
+      },
       {
         actions: ["kms:Decrypt"],
         resources: [stageKey.arn],
@@ -321,6 +327,13 @@ export async function createDevelopmentApi() {
     },
   });
   for (const route of [
+    "POST /api/v1/local-agents",
+    "GET /api/v1/local-agents/current",
+    "DELETE /api/v1/local-agents/{localAgentId}",
+    "GET /api/v1/local-agent/session",
+    "DELETE /api/v1/local-agent/session",
+    "POST /api/v1/projects/{projectId}/local-agent/poll",
+    "POST /api/v1/projects/{projectId}/local-agent/jobs/{jobId}/result",
     "GET /api/v1/users/me",
     "GET /api/v1/projects",
     "POST /api/v1/projects",
@@ -358,7 +371,7 @@ export async function createDevelopmentApi() {
     environment: {
       ...executionEnvironment,
       KURIER_STAGE: "dev-api",
-      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "3",
+      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "5",
       KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
       KURIER_PROTECTED_TABLE: protectedTable.name,
       KURIER_CONTROL_TABLE: control.name,

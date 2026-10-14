@@ -49,7 +49,9 @@ func (a *Server) executionEndpoint(w http.ResponseWriter, r *http.Request, u Use
 		source := r.PathValue("requestId")
 		if rerun {
 			var input struct {
-				AllowInsecureSecrets bool `json:"allowInsecureSecrets"`
+				AllowInsecureSecrets bool                    `json:"allowInsecureSecrets"`
+				Target               string                  `json:"target,omitempty"`
+				Local                *execution.LocalOptions `json:"local,omitempty"`
 			}
 			if err = execution.NonNullObject(raw); err != nil {
 				return wrap(err)
@@ -58,6 +60,14 @@ func (a *Server) executionEndpoint(w http.ResponseWriter, r *http.Request, u Use
 				return wrap(err)
 			}
 			options.AllowInsecureSecrets = input.AllowInsecureSecrets
+			options.Target = input.Target
+			options.Local = input.Local
+			if input.Target == "cloud" {
+				options.Target = ""
+			}
+			if options.Target != "" && options.Target != "local" || options.Target == "" && options.Local != nil || options.Target == "local" && (options.Local == nil || !options.Local.AllowPrivateNetwork) {
+				return apiError(400, "invalid_request", "Invalid target consent.")
+			}
 			source = executionID
 		} else {
 			revision, err = precondition(r)

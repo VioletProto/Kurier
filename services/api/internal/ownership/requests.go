@@ -76,7 +76,7 @@ func configurationJSON(c RequestConfiguration) ([]byte, error) {
 	return bytes.TrimSuffix(out.Bytes(), []byte("\n")), nil
 }
 func invalidConfiguration() error {
-	return apiError(400, "validation_failed", "Use a public HTTP(S) URL, supported method, public headers/query and a text or JSON body. Use protected inputs for credentials and designated sensitive fields.")
+	return apiError(400, "validation_failed", "Use an absolute HTTP(S) URL, supported method, public headers/query and a text or JSON body. Cloud destinations must be public; local destinations require agent permission. Use protected inputs for credentials and designated sensitive fields.")
 }
 
 var headerToken = regexp.MustCompile("^[!#$%&'*+.^_`|~0-9A-Za-z-]+$")

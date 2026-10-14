@@ -20,6 +20,9 @@ const mocks = vi.hoisted(() => ({
   executionEvidence: vi.fn(),
   rerunExecution: vi.fn(),
   pinExecution: vi.fn(),
+  currentAgent: vi.fn(),
+  pairAgent: vi.fn(),
+  revokeAgent: vi.fn(),
 }));
 vi.mock("./api", async () => ({
   ...(await vi.importActual<typeof import("./api")>("./api")),
@@ -356,4 +359,59 @@ it("renders unknown outcome and response text safely, and confirms a separate de
     "project",
     "execution-a",
   ]);
+});
+
+it("defaults cloud, requires local device consent and freezes target on an unresolved admission", async () => {
+  const agent = {
+    localAgentId: "local-fixture",
+    name: "Local fixture",
+    scopes: [
+      {
+        projectId: "project",
+        destinations: [
+          { origin: "http://localhost:3000", addressClass: "loopback" },
+        ],
+      },
+    ],
+    expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    revokedAt: null,
+    lastSeenAt: null,
+  };
+  mocks.currentAgent.mockResolvedValue(agent);
+  mocks.submitExecution.mockRejectedValue(new UncertainWrite());
+  mount();
+  const select = screen.getByLabelText("Execution target") as HTMLSelectElement;
+  expect(select.value).toBe("cloud");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Refresh pairing status" }),
+  );
+  await waitFor(() =>
+    expect(screen.getByText(/Agent: Local fixture/)).toBeTruthy(),
+  );
+  fireEvent.change(select, { target: { value: "local" } });
+  const submit = screen.getByRole("button", {
+    name: /Execute saved revision/,
+  }) as HTMLButtonElement;
+  expect(submit.disabled).toBe(true);
+  fireEvent.click(
+    screen.getByLabelText(
+      "I allow this execution on the selected device and its approved local/private services.",
+    ),
+  );
+  fireEvent.click(submit);
+  await screen.findByText(/An admission is unresolved/);
+  expect(mocks.submitExecution.mock.calls[0][4]).toMatchObject({
+    target: "local",
+    local: { localAgentId: "local-fixture", allowPrivateNetwork: true },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Reconcile original submission" }),
+  );
+  await waitFor(() => expect(mocks.submitExecution).toHaveBeenCalledTimes(2));
+  expect(mocks.submitExecution.mock.calls[0][3]).toBe(
+    mocks.submitExecution.mock.calls[1][3],
+  );
+  expect(mocks.submitExecution.mock.calls[0][4]).toEqual(
+    mocks.submitExecution.mock.calls[1][4],
+  );
 });

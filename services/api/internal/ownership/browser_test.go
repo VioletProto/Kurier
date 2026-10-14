@@ -34,6 +34,7 @@ func TestIntegrationBrowserProjects(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/", h)
+	localTarget := configureBrowserLocalAgent(t, i, mux, &pinTime)
 	mux.HandleFunc("POST /test-only/pin-expire", func(w http.ResponseWriter, r *http.Request) {
 		pinTime.Store(time.Now().Add(31 * 24 * time.Hour).UnixNano())
 		w.WriteHeader(204)
@@ -58,7 +59,7 @@ func TestIntegrationBrowserProjects(t *testing.T) {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "npm", "run", "test:browser", "--workspace", "@kurier/web")
 	cmd.Dir = "../../../.."
-	cmd.Env = append(os.Environ(), "KURIER_BROWSER_PIN_PROJECT="+pinProject.ProjectID, "KURIER_BROWSER_PIN_EXECUTION="+pinExecution, "KURIER_BROWSER_BOB_TOKEN="+i.auth.token(t, "bob", nil), "VITE_API_URL="+server.URL, "VITE_COGNITO_USER_POOL_ID=us-east-2_fixture", "VITE_COGNITO_CLIENT_ID=fixture-client", "KURIER_BROWSER_FIXTURE_TOKEN="+i.auth.token(t, "alice", nil), "KURIER_BROWSER_FIXTURE_ID_TOKEN="+i.auth.token(t, "alice", func(c jwt.MapClaims) {
+	cmd.Env = append(os.Environ(), "PLAYWRIGHT_NO_COPY_PROMPT=1", "KURIER_BROWSER_LOCAL_TARGET="+localTarget, "KURIER_BROWSER_PIN_PROJECT="+pinProject.ProjectID, "KURIER_BROWSER_PIN_EXECUTION="+pinExecution, "KURIER_BROWSER_BOB_TOKEN="+i.auth.token(t, "bob", nil), "VITE_API_URL="+server.URL, "VITE_COGNITO_USER_POOL_ID=us-east-2_fixture", "VITE_COGNITO_CLIENT_ID=fixture-client", "KURIER_BROWSER_FIXTURE_TOKEN="+i.auth.token(t, "alice", nil), "KURIER_BROWSER_FIXTURE_ID_TOKEN="+i.auth.token(t, "alice", func(c jwt.MapClaims) {
 		c["token_use"] = "id"
 		c["aud"] = "fixture-client"
 		c["cognito:username"] = "alice"

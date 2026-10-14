@@ -18,6 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.30 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.38 // indirect
+	github.com/cyberphone/json-canonicalization v0.0.0-20261011152517-32a48195b9b2 // indirect
 )
 
 require (
@@ -35,5 +36,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/sso v1.38.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.2 // indirect
-	github.com/aws/smithy-go v1.28.1 // indirect
+	github.com/aws/smithy-go v1.28.1
 )
+
+require github.com/VioletProto/Kurier/services/request-runtime v0.0.0
+
+replace github.com/VioletProto/Kurier/services/request-runtime => ../request-runtime

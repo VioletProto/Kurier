@@ -116,7 +116,13 @@ func (s *Service) Maintain(ctx context.Context) error {
 			switch r.Kind {
 			case "executionOutbox":
 				_ = s.publishOutbox(ctx, r)
+			case "executionLocalWait":
+				_ = s.reconcileLocal(ctx, r.ProjectID, r.JobID)
 			case "executionJob":
+				if r.Target == "local" {
+					_ = s.reconcileLocal(ctx, r.ProjectID, r.JobID)
+					continue
+				}
 				if r.State == "running" && r.Deadline <= stamp(s.now()) || r.State == "queued" && r.SubmittedAt < stamp(s.now().Add(-10*time.Minute)) {
 					_ = s.Process(ctx, Message{r.ProjectID, r.JobID, "OUT#" + r.JobID})
 				} else if r.State == "claimed" && r.Deadline <= stamp(s.now()) {
@@ -185,6 +191,9 @@ func (s *Service) cleanTicket(ctx context.Context, r row, deleting bool, retenti
 		}
 		if e == nil && !terminal(job.State) {
 			if job.State == "running" && job.Deadline <= stamp(s.now()) {
+				if job.Target == "local" {
+					return s.reconcileLocal(ctx, job.ProjectID, job.JobID)
+				}
 				return s.Process(ctx, Message{r.ProjectID, r.JobID, "OUT#" + r.JobID})
 			}
 			return failure(409, "cleanup_pending")
@@ -295,7 +304,7 @@ func (s *Service) expire(ctx context.Context, ret row) error {
 	return s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), remove})
 }
 func knownExecution(item map[string]dt.AttributeValue, r row) bool {
-	if r.SchemaVersion != 1 || !strings.HasPrefix(r.Kind, "execution") || r.ProjectID == "" || r.PK != "P#"+r.ProjectID {
+	if (r.SchemaVersion != 1 && !(r.SchemaVersion == 2 && (r.Kind == "executionJob" && r.Target == "local" || r.Kind == "execution" && r.Plan != nil && r.Plan.Target == "local"))) || !strings.HasPrefix(r.Kind, "execution") || r.ProjectID == "" || r.PK != "P#"+r.ProjectID {
 		return false
 	}
 	allowed := map[string]bool{}
@@ -319,9 +328,21 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 	}
 	switch r.Kind {
 	case "execution":
-		return r.SK == "EXEC#"+r.ExecutionID && r.Plan != nil
+		if r.SK != "EXEC#"+r.ExecutionID || r.Plan == nil {
+			return false
+		}
+		if r.Plan.Target == "local" {
+			return r.SchemaVersion == 2 && uuidPattern.MatchString(r.Plan.LocalAgentID) && r.Plan.Destination != nil && r.Plan.Options.Local != nil && r.Plan.Options.Local.LocalAgentID == r.Plan.LocalAgentID && r.Plan.Options.Local.AllowPrivateNetwork
+		}
+		return r.SchemaVersion == 1 && (r.Plan.Target == "" || r.Plan.Target == "cloud")
 	case "executionJob":
-		return r.SK == "JOB#"+r.JobID
+		if r.SK != "JOB#"+r.JobID {
+			return false
+		}
+		if r.Target == "local" {
+			return r.SchemaVersion == 2 && uuidPattern.MatchString(r.LocalAgentID) && (r.State == "queued" || r.State == "running" || terminal(r.State))
+		}
+		return r.SchemaVersion == 1 && (r.Target == "" || r.Target == "cloud") && r.LocalAgentID == ""
 	case "executionOutbox":
 		return r.SK == "OUT#"+r.JobID
 	case "executionBindings":
@@ -332,6 +353,12 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 		return r.SK == "EXEC#"+r.ExecutionID+"#SNAP"
 	case "executionRetention":
 		return r.SK == "EXEC#"+r.ExecutionID+"#RET"
+	case "executionAgentScope":
+		return r.SK == "AGENT#"+r.LocalAgentID && r.OwnerID != ""
+	case "executionLocalWait":
+		return r.SK == "LOCALWAIT#"+r.JobID && r.LocalAgentID != ""
+	case "executionLocalReceipt":
+		return r.SK == "JOB#"+r.JobID+"#RECEIPT" && r.InputDigest != "" && r.CanonicalizationVersion == 1 && r.LocalAgentID != ""
 	case "executionReceipt":
 		return strings.HasPrefix(r.SK, "IDEM#execution-admission#")
 	}
@@ -393,6 +420,17 @@ func (s *Service) drainExecution(ctx context.Context, p row, execution string, r
 			}
 			if retention && r.Kind == "executionRetention" {
 				continue
+			}
+			if r.Kind == "executionAgentScope" {
+				if e = s.removeDeletedScope(ctx, p, r); e != nil {
+					return e
+				}
+				return failure(409, "cleanup_pending")
+			}
+			if r.Kind == "executionJob" && r.Target == "local" {
+				if e = s.clearAgentJob(ctx, p, r, retention); e != nil {
+					return e
+				}
 			}
 			if r.Kind == "executionUpload" {
 				if phase.prefix == "" {

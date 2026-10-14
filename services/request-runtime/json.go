@@ -6,11 +6,15 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 // StrictJSON rejects duplicate keys, trailing data and excessive nesting before
 // decoding typed fields. Diagnostics deliberately never include input bytes.
 func StrictJSON(raw []byte, target any) error {
+	if !utf8.Valid(raw) || !validUnicodeEscapes(raw) {
+		return failure(400, "invalid_request")
+	}
 	d := json.NewDecoder(bytes.NewReader(raw))
 	d.UseNumber()
 	var read func(int) (any, error)
@@ -185,6 +189,12 @@ func ParseOptions(raw []byte) (Options, error) {
 	if e := StrictJSON(raw, &o); e != nil {
 		return o, e
 	}
+	if o.Target == "cloud" {
+		o.Target = ""
+	}
+	if (o.Target != "" && o.Target != "local") || (o.Target == "" && o.Local != nil) || (o.Target == "local" && (o.Local == nil || !o.Local.AllowPrivateNetwork || o.Local.LocalAgentID == "")) {
+		return o, failure(400, "invalid_request")
+	}
 	if o.TimeoutSeconds < 1 || o.TimeoutSeconds > 60 || o.ResponseRedaction.Headers == nil || o.ResponseRedaction.JSONPointers == nil || len(o.ResponseRedaction.Headers) > 16 || len(o.ResponseRedaction.JSONPointers) > 16 {
 		return o, failure(400, "invalid_request")
 	}
@@ -207,4 +217,44 @@ func ParseOptions(raw []byte) (Options, error) {
 		}
 	}
 	return o, nil
+}
+
+// encoding/json replaces unmatched UTF-16 surrogate escapes; reject them before
+// canonical identity or sanitization rather than normalize malformed input.
+func validUnicodeEscapes(raw []byte) bool {
+	for i := 0; i < len(raw); i++ {
+		if raw[i] != '\\' {
+			continue
+		}
+		if i+1 >= len(raw) {
+			return false
+		}
+		if raw[i+1] != 'u' {
+			i++
+			continue
+		}
+		if i+6 > len(raw) {
+			return false
+		}
+		n, e := strconv.ParseUint(string(raw[i+2:i+6]), 16, 16)
+		if e != nil {
+			return false
+		}
+		if n >= 0xdc00 && n <= 0xdfff {
+			return false
+		}
+		if n >= 0xd800 && n <= 0xdbff {
+			if i+12 > len(raw) || string(raw[i+6:i+8]) != "\\u" {
+				return false
+			}
+			low, e := strconv.ParseUint(string(raw[i+8:i+12]), 16, 16)
+			if e != nil || low < 0xdc00 || low > 0xdfff {
+				return false
+			}
+			i += 11
+		} else {
+			i += 5
+		}
+	}
+	return true
 }

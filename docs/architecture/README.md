@@ -145,3 +145,16 @@ development deployment and guarded activation at `e6b964f`; see the
 plan, account quota and existing
 concurrency settings. [Validation and deployment review](../development/evidence-pinning.md)
 distinguishes local/fixture checks, completed AWS/runtime validation and remaining gaps.
+
+## Accepted local-agent continuation
+
+Davian accepted the [local-agent execution contract](local-agent-execution-contract.md)
+at `585d5b3` on 2026-10-13. Scoped foreground Go agent, browser-authorized pairing,
+local execution/result receipts, shared evidence/pinning/cleanup, React controls,
+API-contract synchronization and local validation are authorized. AWS preview
+and refreshed costs were reviewed; Davian subsequently approved scoped dev-api
+deployment/activation including `14323d8`. See the
+[actual deployment and validation record](../development/local-agent-execution.md)
+for capability 5/local 1, preserved generation/accounting, real AWS checks and
+prepared operator browser/private-LAN checks. Design acceptance and runtime
+validation remain distinct.

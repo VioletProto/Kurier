@@ -107,8 +107,8 @@ func TestAWSCloudExecution(t *testing.T) {
 	base := strings.TrimSuffix(endpoint, "echo")
 	plan := fixturePlan()
 	plan.Configuration.URL = endpoint
-	plan.Configuration.Headers = []Field{{Name: "Authorization", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{secret}}, {Name: "X-Designated", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{secret}}}
-	plan.Configuration.QueryParameters = []Field{{Name: "designated", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{secret}}}
+	plan.Configuration.Headers = []Field{{Name: "Authorization", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{SecretID: secret}}, {Name: "X-Designated", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{SecretID: secret}}}
+	plan.Configuration.QueryParameters = []Field{{Name: "designated", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{SecretID: secret}}}
 	raw, _ := json.Marshal(plan.Configuration)
 	write(s.Table, row{PK: "P#" + project, SK: "REQ#" + request, Kind: "request", SchemaVersion: 2, ProjectID: project, RequestID: request, Revision: 1, State: "active", ConfigurationJSON: string(raw)})
 	options, _ := ParseOptions([]byte(`{}`))

@@ -66,7 +66,7 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if err != nil || r.State != "active" || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !((r.SavedRequestsSchemaVersion == 2 || ((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1) && r.CloudExecutionsSchemaVersion == 1 && r.ExecutionInputsSchemaVersion == 1 && st.executions != nil)) && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
+	if err != nil || r.State != "active" || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5) || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !((r.SavedRequestsSchemaVersion == 2 || ((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1) && r.CloudExecutionsSchemaVersion == 1 && r.ExecutionInputsSchemaVersion == 1 && st.executions != nil)) && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
 		return record{}, unavailable()
 	}
 	return r, nil
@@ -159,6 +159,12 @@ func (st *Store) stageGuard(stage record) types.TransactWriteItem {
 	values := map[string]types.AttributeValue{":active": s("active"), ":gen": s(stage.RecoveryGeneration), ":yes": &types.AttributeValueMemberBOOL{Value: true}}
 	if stage.SavedRequestsSchemaVersion >= 1 {
 		mode = "savedRequestsSchemaVersion = :requests"
+		if stage.SavedRequestsSchemaVersion == 5 {
+			mode += " AND localAgentExecutionsSchemaVersion = :agent"
+			values[":agent"] = n(1)
+		} else {
+			mode += " AND attribute_not_exists(localAgentExecutionsSchemaVersion)"
+		}
 		delete(values, ":yes")
 		values[":requests"] = n(int64(stage.SavedRequestsSchemaVersion))
 		if stage.SavedRequestsSchemaVersion >= 2 {
@@ -167,7 +173,7 @@ func (st *Store) stageGuard(stage record) types.TransactWriteItem {
 			if stage.SavedRequestsSchemaVersion >= 3 {
 				mode += " AND cloudExecutionsSchemaVersion = :cloud AND executionInputsSchemaVersion = :cloud"
 				values[":cloud"] = n(1)
-				if stage.SavedRequestsSchemaVersion == 4 {
+				if stage.SavedRequestsSchemaVersion >= 4 {
 					mode += " AND evidencePinningSchemaVersion = :cloud"
 				} else {
 					mode += " AND attribute_not_exists(evidencePinningSchemaVersion)"
