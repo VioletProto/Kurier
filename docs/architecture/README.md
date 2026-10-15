@@ -1,5 +1,13 @@
 # Accepted architecture
 
+## Sequential workflow review pending
+
+The [cloud-only sequential workflow packet](sequential-workflows-contract.md)
+is **Proposed**. It refines the accepted W1 workflow invariants with concrete
+CRUD, extraction/binding, accounting, runtime containment and retention choices.
+Preparation publication does not accept those choices or authorize dependent
+implementation, external contract synchronization or AWS deployment.
+
 ## Accepted cloud execution continuation
 
 Davian accepted the [single saved-request cloud execution contract](cloud-execution-evidence-contract.md)
