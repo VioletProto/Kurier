@@ -56,6 +56,8 @@ if (
     "TestAWSCloudExecution",
     "TestAWSCloudExecutionCredentialNames",
     "TestAWSLocalAgent",
+    "TestAWSSequentialWorkflows",
+    "TestAWSSequentialWorkflowCleanup",
   ].includes(filter)
 )
   throw new Error("Choose a scoped AWS test filter.");
@@ -64,6 +66,7 @@ const child = spawn(
   [
     "test",
     "-race",
+    "-timeout=40m",
     "-tags=integration,aws",
     "-run",
     filter,

@@ -3,9 +3,12 @@
 Davian accepted the [revised contract](../architecture/sequential-workflows-contract.md)
 at `25158b7` and authorized this implementation, external API contract
 synchronization, meaningful local validation and scoped deployment/activation
-preview. **AWS deployment and capability activation remain held for review.**
-No workflow runtime success on AWS or genuine Cognito/user-operated browser
-validation is claimed by this implementation.
+preview. Davian subsequently approved scoped development deployment and guarded
+activation, including correction 527dd09. **Development is active at marker
+version 9 / savedRequests6 / sequentialWorkflows1**, with generation
+dev-api-initial-v1 preserved. See the [AWS deployment/runtime record](sequential-workflows-aws.md)
+and [numbered genuine Cognito/browser checks](sequential-workflows-browser.md).
+Operator browser acceptance remains separate from automated fixture checks.
 
 ## Implemented behavior
 
@@ -94,8 +97,8 @@ submission stays queued: it does **not** pretend to execute cloud HTTP. The
 separate worker integration fixtures execute controlled loopback HTTP through
 an explicit test-only transport; production public-destination restrictions are
 unchanged. The ordinary `dev:api` users/projects launcher is not a workflow/KMS/
-S3 emulator. Do not point a manual browser at the deployed API expecting
-workflows before approved deployment/activation.
+S3 emulator. The deployed API is now workflow capable. Use npm run dev:cloud and the
+numbered Cognito/browser checks for genuine authenticated browser validation.
 
 Verified locally during this task:
 
@@ -132,13 +135,13 @@ approved outside-sandbox Go runs passed. Fixture tests are not AWS/IAM proofs.
 
 The existing [native API contracts](https://docs.google.com/document/d/1KSfRYOb2UxmrIl8VoFjc3YP38-PMu7k_fM9wrVkEenM/edit)
 received an accepted workflow supplement with concrete routes/DTOs, grammar,
-header literals, sensitivity, transaction/retention/accounting rules and rollout
-hold. A revision-guarded native insertion preserved all prior document text and
+header literals, sensitivity, transaction/retention/accounting rules and the
+predeployment rollout hold (later lifted by Davian for this development rollout). A revision-guarded native insertion preserved all prior document text and
 was read back, including its heading style. Historical Proposed workflow text
 is explicitly superseded for this slice; unrelated proposals remain unchanged.
 The capstone proposal was read during preparation and was not rewritten.
 
-## Live AWS inspection and proposed deployment
+## Predeployment inspection and approved scope
 
 Read-only STS verified account `747336059622`, non-root `davian-admin`, us-east-2
 after Davian renewed the expired CLI session. Inspection found:
@@ -166,9 +169,10 @@ preview helper. It proposes:
 | Consumers          | Existing API/cleanup/worker code packages and workflow-capability environment; API/cleanup saved schema environment 5→6. Shared controlled-endpoint worker package asset also changes.                                          |
 | Standing resources | No new tables/indexes/queues/buckets/KMS keys/schedules/hosting/Cognito or account/plan/quota/concurrency changes. Versioned code assets use existing bootstrap storage.                                                        |
 
-The diff includes six updates (two IAM roles/four existing functions) and the
+The approved diff included six updates (two IAM roles/four existing functions) and the
 nine routes' component/integration/permission resources plus code assets. No
-product deployment or marker write was performed. Rebuild/re-diff if runtime
+product deployment or marker write was performed during that preview. Actual
+deployment and activation are recorded in the separate AWS record. Rebuild/re-diff if runtime
 code changes after preview; code hashes from an earlier preview are not release
 verification.
 
@@ -180,10 +184,15 @@ for API/cleanup and
 for worker/controlled endpoint. These identify preview ZIP artifacts, not
 deployed Lambda CodeSha256 readback. Resource/IAM scope and live inventory/
 plan/concurrency observations above were rechecked unchanged. No deployment or
-activation occurred. This fidelity fix changes internal metadata and guards;
+activation occurred during that preview; the subsequent approved rollout is
+recorded separately. This fidelity fix changes internal metadata and guards;
 the accepted external API contract requires no change.
 
-Repeat read-only previews with the existing public `.sst/outputs.json` and an
+The preview helpers intentionally require the preactivation marker. After
+activation, use scripts/verify-sequential-workflow-deployment.mjs for read-only
+live verification. A preview refusal does not authorize a capability downgrade.
+
+Historical preactivation commands used the existing public `.sst/outputs.json` and an
 active CLI login:
 
 ```sh
@@ -195,7 +204,7 @@ Both helpers are preview-only and have no deploy/activate argument. The latter
 runs the scoped `sst diff` through the existing in-memory CLI credential bridge;
 it never prints or persists AWS credentials.
 
-Proposed activation after explicit authorization: verify deployed code hashes,
+The approved activation plan, subsequently executed: verify deployed code hashes,
 consumer readiness, generated purpose-scoped IAM and all nine route targets;
 re-read Free plan/concurrency; require quiescent jobs and settled tickets. CAS
 active/version7/generation/current capabilities to workflow-migration/version8.
@@ -205,8 +214,11 @@ sequentialWorkflows1, preserving every existing local/cloud/pinning capability,
 project/stage counter and stored record. No resets or secret re-encryption. If
 any proof fails, leave the stage closed and review; never reopen automatically.
 The exact versions are an observed preview, not hard-coded future authority.
-An activation mutation command is intentionally not provided before deployment
-review and deployed artifact verification.
+After approval, scripts/activate-sequential-workflows.mjs --activate performed
+this guarded transition. It reruns deployed verification, requires exact
+preactivation state and complete inventories, and compares existing accounting
+before/under/after the gate. It refuses automatic resume or a second activation.
+Inspect any uncertain mutation through a strong durable marker read first.
 
 ## Refreshed incremental development cost
 
@@ -256,17 +268,19 @@ normal step storage/SQS/S3/crypto/egress. Larger plans/captures, more polling,
 failed admission, long HTTP, accumulated pins, rotations/shared stages and abuse
 can exceed the model. No billed-usage conclusion is inferred from tests.
 
-## Remaining review and validation gaps
+## Development deployment and remaining validation
 
-Deployment/activation and workflow execution against real AWS KMS/DDB/SQS/S3/
-IAM/scheduled maintenance are unperformed and require the held approval.
-No genuine Cognito/operator workflow browser report; the browser suite is an
-actual browser against fixture auth and Local stores. Genuine cloud crash/lost-
-response injection, negative IAM, PITR/restore, thirty-day elapsed retention,
-real clock skew, maximum-size Lambda memory/latency and metered cost remain
-unperformed. Existing uncertain-PUT settlement still requires reviewed operator
-reconciliation, never an automatic replay or invented absence proof.
+The approved development deployment and guarded activation completed.
+The [AWS validation record](sequential-workflows-aws.md) distinguishes genuine
+runtime/scheduling/crypto/cleanup from SDK admission and injected notification
+loss. The controlled endpoint uses disposable synthetic tokens and logs only
+a validated opaque fixture UUID, mode, authorization boolean and request ID.
+No runtime token or header/body payload is logged.
 
-Final review should inspect the scoped diff and choose whether to authorize
-development deployment and the guarded capability transition. Local fixtures
-establish the implemented protocol behavior, not those operational guarantees.
+Genuine Cognito/operator workflow browser checks are prepared but not reported:
+use the [numbered instructions](sequential-workflows-browser.md).
+The existing five-scenario Chromium suite uses fixture authentication and Local
+stores. Comprehensive negative IAM, actual Lambda crash/lost-response injection,
+PITR/restore, thirty elapsed days, clock skew, maximum-size Lambda memory/
+latency and metered cost remain unperformed. Existing uncertain-PUT settlement
+requires reviewed operator reconciliation, never automatic HTTP replay.

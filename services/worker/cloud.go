@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"github.com/VioletProto/Kurier/services/api/execution"
@@ -16,7 +18,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -50,7 +54,7 @@ func cloudMain() {
 	})
 }
 
-// A development-only owned endpoint: no persistence, tracing or payload logs,
+// A development-only owned endpoint: no data persistence, tracing or payload logs,
 // no AWS resource permissions. Echo values exist only in request/response memory.
 func controlledEndpoint(_ context.Context, event events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	mode := event.PathParameters["mode"]
@@ -58,6 +62,41 @@ func controlledEndpoint(_ context.Context, event events.APIGatewayV2HTTPRequest)
 	status := 200
 	var payload []byte
 	switch mode {
+	case "workflow-token", "workflow-consume", "workflow-failure", "workflow-delay":
+		nonce := event.QueryStringParameters["fixture"]
+		if !workflowFixtureID.MatchString(nonce) {
+			status = 400
+			payload = []byte(`{"invalidFixture":true}`)
+			break
+		}
+		// This is a disposable synthetic marker, never a real credential. Only
+		// opaque fixture metadata is logged; headers/body/token stay in memory.
+		sum := sha256.Sum256([]byte("kurier-workflow-fixture-v1/" + nonce))
+		token := hex.EncodeToString(sum[:])
+		authorized := false
+		for name, value := range event.Headers {
+			if strings.EqualFold(name, "Authorization") {
+				authorized = value == "Bearer "+token
+			}
+		}
+		record, _ := json.Marshal(map[string]any{"kurierWorkflowFixture": true, "fixtureId": nonce, "mode": mode, "authorized": authorized, "requestId": event.RequestContext.RequestID})
+		log.Print(string(record))
+		switch mode {
+		case "workflow-token":
+			payload, _ = json.Marshal(map[string]string{"token": token})
+		case "workflow-consume":
+			if !authorized {
+				status = 401
+			}
+			payload, _ = json.Marshal(map[string]any{"authorized": authorized, "rawReflection": token, "renderedReflection": "Bearer " + token})
+		case "workflow-failure":
+			status = 500
+			payload = []byte(`{"ok":false}`)
+		case "workflow-delay":
+			time.Sleep(12 * time.Second)
+			payload = []byte(`{"delayed":true}`)
+		}
+
 	case "credential-names":
 		// Fixed non-secret markers exercise name-based masking without protected
 		// inputs. Never echo caller values in this response-header fixture.
@@ -108,3 +147,5 @@ func controlledEndpoint(_ context.Context, event events.APIGatewayV2HTTPRequest)
 	}
 	return events.APIGatewayV2HTTPResponse{StatusCode: status, Headers: headers, Body: base64.StdEncoding.EncodeToString(payload), IsBase64Encoded: true}, nil
 }
+
+var workflowFixtureID = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
