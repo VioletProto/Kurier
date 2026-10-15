@@ -159,12 +159,12 @@ in the submitted order and declare that name. Reordering that violates this is
 rejected. No self/forward references, same-target duplicates or implicit name
 lookup. At most eight bindings/step. Proposed target kinds:
 
-| Kind     | Locator and rendering                                                                                                                                                               |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| query    | `index` into frozen ordered queryParameters; enabled entry required. Replace value; percent-encode through existing query serializer.                                               |
-| header   | `index` into frozen headers; enabled entry required. Replace value; reject CR/LF and invalid header value. Host/transport-controlled headers remain forbidden.                      |
-| jsonBody | `pointer` canonical RFC 6901 pointer to an existing JSON scalar; replace with typed primitive, preserving string/number/boolean/null. No container creation or overlapping targets. |
-| textBody | Replace the complete text body, string source only.                                                                                                                                 |
+| Kind     | Locator and rendering                                                                                                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| query    | `index` into frozen ordered queryParameters; enabled entry required. Replace value; percent-encode through existing query serializer.                                                               |
+| header   | `index` into frozen headers; enabled entry required. Replace value; string sources permit bounded literal `prefix`/`suffix` as specified below. Host/transport-controlled headers remain forbidden. |
+| jsonBody | `pointer` canonical RFC 6901 pointer to an existing JSON scalar; replace with typed primitive, preserving string/number/boolean/null. No container creation or overlapping targets.                 |
+| textBody | Replace the complete text body, string source only.                                                                                                                                                 |
 
 Query/header accept string/number/boolean (deterministic scalar spelling), reject
 null. No URL scheme/authority/method interpolation, raw template substitution,
@@ -172,11 +172,88 @@ header names, query names, array resizing or protected-locator overwrite. Reject
 binding to a saved protected field; credentials can instead be bound to a public
 placeholder which runtime marks sensitive. Existing JSON sensitive-field paths
 cannot overlap the target. Bindings are workflow rules, not modifications to
-the saved request. A login step can extract `$.token` as string and bind it to
-the next request's Authorization header; the header placeholder must already
-contain the desired complete value in the response (e.g. Bearer prefix), since
-this slice has no concatenation/transforms. Query IDs and typed JSON scalars are
-the other presentation examples.
+the saved request. Query IDs and typed JSON scalars remain presentation examples.
+
+### Proposed bounded string header rendering
+
+Header binding DTO adds optional string fields `prefix` and `suffix` **inside
+`to`**, permitted only when the declared producer type is string:
+
+```json
+{
+  "from": { "stepId": "producer-step-uuid", "name": "token" },
+  "to": { "kind": "header", "index": 0, "prefix": "Bearer ", "suffix": "" }
+}
+```
+
+The enabled frozen header at index 0 is named Authorization and contains a
+public placeholder. Extracting raw `$.token` as a string renders its value as
+`prefix + extractedString + suffix`, producing `Authorization: Bearer <token>`.
+This is one literal concatenation, performed once in authorized runtime memory.
+Omitted prefix/suffix normalize to empty strings; explicit empty strings are
+equivalent for normalized freeze/idempotency identity. Null, wrong types and
+unknown rendering fields reject. Non-string header sources retain their existing
+deterministic scalar spelling and must omit both fields, even empty ones.
+Query, JSON and textBody binding DTOs reject prefix/suffix; their typed behavior
+does not change. No scripts, general templates, expressions, interpolation,
+escape decoding beyond ordinary JSON string decoding, trimming or recursion.
+Template-looking characters are inert literal bytes, never evaluated.
+
+Proposed bounds: each decoded literal is <=256 UTF-8 bytes, independently;
+the complete rendered header value is <=2,048 UTF-8 bytes. Count the extracted
+string's decoded bytes plus both literals with checked addition before
+allocation/dispatch. The existing <=2 KiB **serialized typed scalar** extraction
+limit is independent and unchanged; a source within that limit can still fail
+the rendered-value limit. Reject over-limit literals at save/submission with
+413 payload_too_large; malformed/invalid literals use fixed 400 validation_failed.
+Reject over-limit rendered values before the consuming step's HTTP intent/send, with
+input_limit_exceeded/not_dispatched and terminal run cleanup, no successor.
+
+Literal fields/names, JSON escaping and enclosing DTO overhead count toward
+complete 64 KiB saved workflow and each 64 KiB frozen step configuration, the
+256 KiB aggregate freeze and serialized item/transaction caps. Freeze literals
+with rules at submission; normalized fields participate in receipt input
+identity. At runtime count final rendered values in the complete resolved
+64 KiB header block along with **all** other names/values/framing; no exemption
+for Authorization. Any persisted encrypted redaction/provenance material must
+also fit the existing 32 KiB envelope/item/transaction budgets. Neither output
+limits nor evidence/API/Lambda caps increase.
+
+Literals are public configuration, visible in the editor/frozen rules, so they
+must not contain credential material or user-designated secrets. They are not
+an alternative secret-input store. Do not promise detection of arbitrary
+embedded secrets. Reject CR, LF, NUL, DEL and ASCII control characters other
+than horizontal tab in either literal after JSON decoding. Validate the decoded
+source string and complete rendered value using the same header-value policy
+before any HTTP dispatch; never sanitize an invalid value into a different
+outbound value. Revalidate the fixed frozen header name, enabled locator and
+forbidden transport/header rules. Validation errors use fixed safe codes,
+never source/rendered values. No user-controlled header names are introduced.
+
+Effective binding sensitivity is the OR of producer sensitivity/provenance,
+recognized credential destination (including Authorization/Cookie/credential
+headers), destination designation and inherited input sensitivity. Literal
+wrapping never lowers sensitivity. Frozen credential destinations taint the
+producer's sensitivity provenance before producer evidence is prepared, even
+if extraction says sensitive:false. For every string header binding, include
+both the raw extracted string and its complete rendered value in the mandatory
+redaction corpus regardless of sensitivity:false. Compute bounded variants for
+all frozen downstream consumers while producer values are in memory, before
+sanitizing producer evidence; mask the extraction source path and supported raw/
+rendered reflections in producer and subsequent request/response captures.
+The outbound credential header is fully masked, not just its token portion.
+Public literals alone need not be globally masked. Keep variants in memory or
+recompute from encrypted source plus frozen literals; never persist plaintext
+variants. Apply existing supported encoded-reflection masking to both source
+and rendered values, and fail closed/omit unsafe captures if containment fails.
+
+The resolved binding's effective sensitivity governs secret-over-HTTP consent:
+Authorization is sensitive even for a sensitive:false source. Without fresh
+explicit allowInsecureSecrets consent at submission/rerun, reject a sensitive
+rendered binding to HTTP before dispatch; literal wrapping cannot bypass that
+gate. HTTPS follows existing destination/TLS protections. Neither raw nor
+rendered values appear in browser rule previews, status, logs, errors, queues,
+Control or evidence. Source/output encryption and terminal disposal are unchanged.
 
 ## Runtime variables and containment
 
@@ -190,9 +267,10 @@ ciphertext, fingerprints, checksums, S3 keys or secret previews. No reveal API.
 
 Treat every runtime value as redaction input, even sensitive:false; that flag
 cannot declassify credentials or designated paths. Effective sensitivity is the
-OR of explicit flag, recognized credential path, input reflection and inherited
-provenance. Encrypted producer provenance follows every binding. Secret over
-HTTP requires fresh explicit allowInsecureSecrets consent at submission/rerun;
+OR of explicit flag, recognized credential path/destination, destination
+designation, input reflection and inherited provenance. Encrypted producer
+provenance follows every binding. Secret over HTTP requires fresh explicit
+allowInsecureSecrets consent at submission/rerun;
 default rejects before dispatch. Cloud public-IP/80/443, DNS pinning, no redirect,
 proxy or automatic retries remain mandatory after resolution.
 
@@ -286,15 +364,16 @@ definition-deletion rule and is Proposed.
 
 ## Limits, evidence retention and deletion
 
-| Limit              | Accepted baseline / Proposed supplement                                                                                                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Steps / definition | Accepted 2–10 sequential / 64 KiB complete definition including all rules.                                                                                                                             |
-| Frozen input       | Accepted <=64 KiB/complete step config; <=256 KiB total frozen plans + initial bindings. Count encryption/serialization expansion in transaction/item bounds.                                          |
-| Outputs            | Accepted eight/step, 2 KiB serialized typed scalar/output, <=32 KiB complete encrypted bundle, <=10 bundle versions. Proposed <=80 named outputs/run, eight bindings/consumer.                         |
-| Sources            | Accepted eight saved-secret inputs/step, 16 distinct live inputs/run, <=18 total deduplicated workflow/request/source checks. Some ten-step combinations therefore reject.                             |
-| Resolved/runtime   | Accepted independent 64 KiB outbound body/headers, 2 MiB wire and decoded response, 4 MiB evidence/API, 6 MiB fully serialized Lambda response. Existing depth32; Proposed path512 bytes/32 selectors. |
-| Transactions       | Accepted <=80 actions/2 MiB/128 KiB item; <=60 creation/finalization. Measure worst-case terminal skips/deletes and successor refs before HTTP.                                                        |
-| Admission/pins     | Existing light execution/storage/pin quotas apply together; proposed N-step reservation and single inflight run slot described above.                                                                  |
+| Limit              | Accepted baseline / Proposed supplement                                                                                                                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Steps / definition | Accepted 2–10 sequential / 64 KiB complete definition including all rules.                                                                                                                                                        |
+| Frozen input       | Accepted <=64 KiB/complete step config; <=256 KiB total frozen plans + initial bindings. Count encryption/serialization expansion in transaction/item bounds.                                                                     |
+| Outputs            | Accepted eight/step, 2 KiB serialized typed scalar/output, <=32 KiB complete encrypted bundle, <=10 bundle versions. Proposed <=80 named outputs/run, eight bindings/consumer.                                                    |
+| Header rendering   | Proposed string-only literal prefix/suffix <=256 decoded UTF-8 bytes each; rendered value <=2 KiB independently, within complete resolved 64 KiB header block. Serialized literals count in definition/freeze/transaction limits. |
+| Sources            | Accepted eight saved-secret inputs/step, 16 distinct live inputs/run, <=18 total deduplicated workflow/request/source checks. Some ten-step combinations therefore reject.                                                        |
+| Resolved/runtime   | Accepted independent 64 KiB outbound body/headers, 2 MiB wire and decoded response, 4 MiB evidence/API, 6 MiB fully serialized Lambda response. Existing depth32; Proposed path512 bytes/32 selectors.                            |
+| Transactions       | Accepted <=80 actions/2 MiB/128 KiB item; <=60 creation/finalization. Measure worst-case terminal skips/deletes and successor refs before HTTP.                                                                                   |
+| Admission/pins     | Existing light execution/storage/pin quotas apply together; proposed N-step reservation and single inflight run slot described above.                                                                                             |
 
 Each step evidence keeps its own completedAt+30d RET expiry and existing
 individual pin endpoints/quotas: 100/200 project/stage pins, 256/512 MiB pin bytes.
@@ -341,8 +420,10 @@ acceptance and separately authorized deployment preparation.
 
 Project workflow list/editor: name, ordered saved-request selectors with explicit
 revision, move up/down/remove/add, extraction name/path/type/sensitive and
-binding producer/target selectors. Validate backward refs after reorder; stale
-save/submit asks to refresh/review, never silently upgrades request revisions.
+binding producer/target selectors. Validate backward refs after reorder.
+For string header bindings, add public literal prefix/suffix fields and show
+only their configuration and a symbolic source name, never a resolved token.
+Stale save/submit asks to refresh/review, never silently upgrades request revisions.
 No raw JSON scripting or workflow canvas is needed. Submit defaults cloud,
 shows order/N-step quota reservation and HTTP-secret consent when needed.
 
@@ -412,6 +493,28 @@ cannot establish workflow correctness. Use deterministic barriers/clocks,
 fault injection, DynamoDB Local race tests and browser fixtures after acceptance;
 count sends at a controlled endpoint, with disposable memory-only secrets.
 
+Planned header-rendering validation: omitted/empty literal equivalence, string
+sources only, rejected prefix/suffix on query/JSON/text/non-string header bindings,
+literal template-looking text remaining inert and exact Bearer-token rendering.
+Test each 256-byte prefix/suffix at its limit and one byte over, multi-byte UTF-8,
+JSON-escaped bytes versus decoded bytes, 2,048-byte rendered value and one over,
+valid extraction whose rendered form overflows, aggregate header/config/envelope
+caps and frozen literals after definition edits. Reject CR/LF (including JSON
+escape forms), NUL/DEL/other forbidden controls in prefix, suffix, source and
+rendered result before consuming HTTP; retain allowed horizontal-tab behavior.
+Assert zero target sends for rejected consumers and no unsafe diagnostic echo.
+
+Test effective sensitivity propagation from an Authorization destination to a
+sensitive:false producer; HTTP without consent fails before dispatch, explicit
+consent succeeds only under existing public destination rules, and rerun needs
+fresh consent. Audit raw token and complete Bearer-rendered value (and supported
+encoded forms) in producer response, later requests/responses, logs, Control,
+queues, status, browser storage and evidence. Assert the entire Authorization
+header and extraction path are masked, public prefix alone need not be masked,
+variants are recomputed from encrypted source and frozen literals, partial
+failure cannot leak values and terminal cleanup leaves no runtime ciphertext.
+These are planned tests, not outcomes of this documentation revision.
+
 | Area                      | Required scenarios                                                                                                                                                                                                                                                                                                                                                       |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Ownership/revisions       | Foreign and cross-project workflow/request/output/run; disabled user/deleted project; stale workflow/request at submit; edit during freeze; source replace/revoke/delete before claim and advancement; started versus unstarted workflow deletion.                                                                                                                       |
@@ -462,7 +565,9 @@ Decisions requested (all **Proposed**):
 2. Revisioned CRUD/run DTOs and shared seven-day source/operation-bound admission
    receipts, N-step quota reservation/no skipped refund and one inflight run slot.
 3. Restricted path grammar/typed primitive extraction and target mapping rules,
-   eight outputs/bindings per step and the accepted transaction/config caps.
+   bounded string header prefix/suffix rendering (256 bytes per literal, 2 KiB
+   rendered value), eight outputs/bindings per step and accepted transaction/
+   config caps. Query/JSON semantics remain unchanged.
 4. Encrypt every runtime value/no reveal, mandatory extraction-source/reflection
    redaction, exact immutable producer provenance and terminal ciphertext deletion.
 5. Atomic publication/output/advancement/OUT, unknown-stop/no replay, conditional
@@ -473,3 +578,14 @@ Decisions requested (all **Proposed**):
 Acceptance must be explicit and state the authorized follow-up scope. Commit/
 push and Trello preparation completion do not authorize dependent code, external
 contract edits or AWS deployment.
+
+Review revision: Davian requested the Proposed string header prefix/suffix
+supplement to support raw extracted tokens with a literal Bearer prefix. This
+revision changes documentation only and keeps acceptance, implementation,
+external contract synchronization and deployment on hold. Its bounds,
+sensitivity/dual-value containment and planned tests require review.
+Revision verification: `npm run verify` passed repository formatting, lint,
+48 frontend tests, 10 infrastructure tests, frontend TypeScript/Vite build and
+tests/vet across six Go modules. Markdown fences, JSON examples and local links
+passed. These baseline checks do not execute the Proposed header-rendering
+behavior or its planned security tests.
