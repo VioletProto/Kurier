@@ -6,7 +6,10 @@ This record separates genuine AWS runtime checks from SDK admission, injected
 faults and operator Cognito/browser acceptance. The subsequent
 [publication investigation](sequential-workflows-publication.md) records a
 confirmed retry defect/fix, a genuine browser polling run, reconciled direct
-fixture calls, and remaining uncertainty separately from prior successes.
+fixture calls, and remaining uncertainty separately from prior successes. The
+[approved code-only fix rollout](sequential-workflows-publication-rollout.md)
+records its deployed hashes, preserved settings, genuine diagnostics/send counts
+and complete fixture cleanup without capability activation.
 
 ## Deployment and activation
 

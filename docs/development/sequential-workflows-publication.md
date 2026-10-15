@@ -4,6 +4,8 @@ This investigation is separate from Davian's successful nine browser acceptance
 checks and the independently completed original project deletion. It adds one
 genuine browser polling run, a confirmed retry defect and regression coverage.
 The earlier SDK publication interruption is **not conclusively attributed**.
+Davian subsequently approved the code-only development rollout; see the
+[deployed hashes, genuine polling checks and cleanup results](sequential-workflows-publication-rollout.md).
 
 ## Confirmed defect and fix
 
@@ -38,7 +40,8 @@ intent, ticket registration/writing, PUT acknowledgment, durable settlement,
 finalization and encountered conflicts. They exclude request/response data,
 URLs, credentials, envelopes, SDK messages and cancellation item values.
 `ok` identifies an acknowledged boundary, not a promise that a later boundary
-committed. These diagnostics are implemented but **not deployed**.
+committed. These diagnostics were implemented but **not yet deployed at this investigation**;
+the subsequent approved rollout and genuine diagnostic validation are linked above.
 
 ## Genuine deployed browser polling
 
@@ -148,8 +151,9 @@ original error/cancellation reasons were not captured. Contention is now a
 confirmed reproducible failure mechanism, but its role in that specific incident
 remains unknown. No permanent deadlock was reproduced: transient conflicts now
 succeed in fixtures, while sustained faults conservatively stop after recovery.
-Genuine AWS validation of the fixed artifacts, actual process-crash/ACK-loss
-faults and the complete expiry-crossing credential harness remain unperformed.
+Genuine AWS validation of the fixed artifacts was pending at this investigation
+and is now recorded in the subsequent approved rollout. Actual process-crash/
+ACK-loss faults and the complete expiry-crossing credential harness remain unperformed.
 Earlier operational gaps (negative IAM, PITR, elapsed retention/skew, maximum-size
 memory/latency and metered cost) remain unchanged. Successful prior browser and
 cleanup checks are not relabeled as failures or as proof of these gaps.
