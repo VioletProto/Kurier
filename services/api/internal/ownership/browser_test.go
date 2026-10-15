@@ -36,6 +36,7 @@ func TestIntegrationBrowserProjects(t *testing.T) {
 	mux.Handle("/", h)
 	localTarget := configureBrowserLocalAgent(t, i, mux, &pinTime)
 	configureBrowserWorkflows(t, i)
+	configureBrowserMCP(t, i)
 	mux.HandleFunc("POST /test-only/pin-expire", func(w http.ResponseWriter, r *http.Request) {
 		pinTime.Store(time.Now().Add(31 * 24 * time.Hour).UnixNano())
 		w.WriteHeader(204)

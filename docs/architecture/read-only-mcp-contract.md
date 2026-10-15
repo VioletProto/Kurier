@@ -1,6 +1,11 @@
 # Read-only MCP slice: proposed review packet
 
-Status: **Proposed — awaiting Davian's acceptance.** Prepared 2026-10-15.
+Status: **Accepted by Davian** at `2d8d43c`, including evidence-size limits
+and credential-storage tradeoffs. Scoped implementation, API synchronization,
+local/client tests and AWS deployment/activation preview with refreshed costs
+are authorized. Deployment and activation remain on hold for explicit review.
+The Proposed/preparation text below preserves the accepted packet; acceptance
+does not claim implementation or runtime verification. Prepared 2026-10-15.
 This packet authorizes no dependent implementation, external contract
 synchronization, AWS preview, deployment or capability activation. New transport,
 authentication, tool/schema and limit choices below remain **Proposed** even
@@ -587,3 +592,23 @@ Record explicit acceptance and any amendments before dependent work. External
 API-contract synchronization and AWS deployment remain on hold; a later request
 must state their authorized scope. No AWS mutation or SST command was run to
 prepare this packet.
+
+## Accepted implementation continuation
+
+Davian accepted this packet at `2d8d43c`, including initial evidence limits and
+private-file tradeoffs, and authorized the scoped implementation, native API
+contract synchronization, planned local/client tests and AWS preview/cost
+preparation. The earlier preparation holds above are historical. Deployment
+and capability activation remain held for explicit review.
+
+Implementation pins official Go SDK 1.8.0 and MCP 2025-11-25, verified with the
+installed Codex 0.162.1 MCP client. Concrete code uses savedRequests7 plus
+mcpReadOnly1 as the later compatibility gate, retaining old-stage6 compatibility
+until deliberate activation. Internal release deadlines, strict per-tool DTOs,
+conditioned audit reads, encrypted public-ID cursors and dedicated credential
+cleanup preserve this contract's boundaries. Browser authoring initially scopes
+the selected project; the API supports1–10 projects. See the
+[implementation/setup/validation and deployment review](../development/read-only-mcp.md)
+for exact commands, native contract synchronization, actual evidence, refreshed
+costs and unperformed operator/deployed checks. Acceptance is not proof of those
+unperformed checks; no AWS deployment/activation occurred in this continuation.

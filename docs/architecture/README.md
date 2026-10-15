@@ -1,5 +1,15 @@
 # Accepted architecture
 
+## Accepted read-only MCP continuation
+
+Davian accepted [the read-only MCP contract](read-only-mcp-contract.md) at
+`2d8d43c`, including initial evidence limits and local-storage tradeoffs.
+Scoped foreground Go stdio, separate browser-managed scoped credentials,
+seven tools, hosted authorization/audit and cleanup integration, API-contract
+synchronization, tests and AWS preview/cost preparation are authorized.
+Deployment and activation remain held for review. Acceptance is distinct
+from local, genuine client and deployed AWS validation.
+
 ## Accepted sequential workflow continuation
 
 The [cloud-only sequential workflow packet](sequential-workflows-contract.md)

@@ -60,20 +60,26 @@ type SecretSource struct {
 	Revision int64  `dynamodbav:"revision"`
 }
 type row struct {
-	SequentialWorkflowsSchemaVersion int    `dynamodbav:"sequentialWorkflowsSchemaVersion,omitempty"`
-	WorkflowID                       string `dynamodbav:"workflowId,omitempty"`
-	WorkflowSubmission               string `dynamodbav:"workflowSubmission,omitempty"`
-	RerunSourceRunID                 string `dynamodbav:"rerunSourceRunId,omitempty"`
-	WorkflowRevision                 int64  `dynamodbav:"workflowRevision,omitempty"`
-	RunID                            string `dynamodbav:"runId,omitempty"`
-	Position                         int    `dynamodbav:"position,omitempty"`
-	CurrentPosition                  int    `dynamodbav:"currentPosition,omitempty"`
-	FailedPosition                   *int   `dynamodbav:"failedPosition,omitempty"`
-	StepCount                        int    `dynamodbav:"stepCount,omitempty"`
-	AvailableCount                   int64  `dynamodbav:"availableCount,omitempty"`
-	RunPinnedCount                   int64  `dynamodbav:"runPinnedCount,omitempty"`
-	EvidenceExpired                  bool   `dynamodbav:"evidenceExpired,omitempty"`
-	UpdatedAt                        string `dynamodbav:"updatedAt,omitempty"`
+	MCPTokenID                       string   `dynamodbav:"mcpTokenId,omitempty"`
+	MCPProjectIDs                    []string `dynamodbav:"mcpProjectIds,omitempty"`
+	MCPTool                          string   `dynamodbav:"mcpTool,omitempty"`
+	MCPCode                          string   `dynamodbav:"mcpCode,omitempty"`
+	MCPRequestID                     string   `dynamodbav:"mcpRequestId,omitempty"`
+	MCPReadOnlySchemaVersion         int      `dynamodbav:"mcpReadOnlySchemaVersion,omitempty"`
+	SequentialWorkflowsSchemaVersion int      `dynamodbav:"sequentialWorkflowsSchemaVersion,omitempty"`
+	WorkflowID                       string   `dynamodbav:"workflowId,omitempty"`
+	WorkflowSubmission               string   `dynamodbav:"workflowSubmission,omitempty"`
+	RerunSourceRunID                 string   `dynamodbav:"rerunSourceRunId,omitempty"`
+	WorkflowRevision                 int64    `dynamodbav:"workflowRevision,omitempty"`
+	RunID                            string   `dynamodbav:"runId,omitempty"`
+	Position                         int      `dynamodbav:"position,omitempty"`
+	CurrentPosition                  int      `dynamodbav:"currentPosition,omitempty"`
+	FailedPosition                   *int     `dynamodbav:"failedPosition,omitempty"`
+	StepCount                        int      `dynamodbav:"stepCount,omitempty"`
+	AvailableCount                   int64    `dynamodbav:"availableCount,omitempty"`
+	RunPinnedCount                   int64    `dynamodbav:"runPinnedCount,omitempty"`
+	EvidenceExpired                  bool     `dynamodbav:"evidenceExpired,omitempty"`
+	UpdatedAt                        string   `dynamodbav:"updatedAt,omitempty"`
 
 	CandidateCompletedAt string `dynamodbav:"candidateCompletedAt,omitempty"`
 
@@ -177,6 +183,9 @@ func (s *Service) get(ctx context.Context, table, pk, sk string) (row, error) {
 		return row{}, safeError()
 	}
 	if strings.HasPrefix(r.Kind, "execution") && strings.HasPrefix(r.PK, "P#") && !knownExecution(out.Item, r) {
+		return row{}, safeError()
+	}
+	if strings.HasPrefix(r.Kind, "mcp") && !knownMCP(out.Item, r) {
 		return row{}, safeError()
 	}
 	if strings.HasPrefix(r.Kind, "localAgent") && !knownAgent(out.Item, r) {
@@ -283,7 +292,7 @@ func transactionConflict(err error) bool {
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
-	if e != nil || r.State != "active" || (r.SequentialWorkflowsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 6) || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5 && r.SavedRequestsSchemaVersion != 6) || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 6 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
+	if e != nil || r.State != "active" || (r.MCPReadOnlySchemaVersion != 0 && (r.MCPReadOnlySchemaVersion != 1 || r.SavedRequestsSchemaVersion != 7)) || (r.SequentialWorkflowsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 6 && r.SavedRequestsSchemaVersion != 7) || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5 && r.SavedRequestsSchemaVersion != 6 && r.SavedRequestsSchemaVersion != 7) || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0) || ((r.SavedRequestsSchemaVersion == 6 || r.SavedRequestsSchemaVersion == 7 && r.MCPReadOnlySchemaVersion == 1) && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
 		return row{}, safeError()
 	}
 	return r, nil
@@ -304,6 +313,11 @@ func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND sequentialWorkflowsSchemaVersion = :c")
 	} else {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(sequentialWorkflowsSchemaVersion)")
+	}
+	if stage.MCPReadOnlySchemaVersion == 1 {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND mcpReadOnlySchemaVersion = :c")
+	} else {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(mcpReadOnlySchemaVersion)")
 	}
 	return guard
 }

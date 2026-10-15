@@ -38,6 +38,10 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 	for _, route := range []string{"POST /api/v1/local-agents", "GET /api/v1/local-agents/current", "DELETE /api/v1/local-agents/{localAgentId}"} {
 		a.mux.HandleFunc(route, a.protected(a.agentManagement))
 	}
+	a.mux.HandleFunc("POST /api/v1/mcp/invocations", a.mcpProtocol)
+	for _, route := range []string{"POST /api/v1/mcp/tokens", "GET /api/v1/mcp/tokens/current", "DELETE /api/v1/mcp/tokens/{tokenId}"} {
+		a.mux.HandleFunc(route, a.protected(a.mcpManagement))
+	}
 	a.mux.HandleFunc("GET /api/v1/users/me", a.protected(a.me))
 	a.mux.HandleFunc("POST /api/v1/projects", a.protected(a.create))
 	a.mux.HandleFunc("GET /api/v1/projects", a.protected(a.list))
