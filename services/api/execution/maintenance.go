@@ -134,6 +134,10 @@ func (s *Service) Maintain(ctx context.Context) error {
 				}
 			case "executionResidual":
 				_ = s.residualSweep(ctx, r)
+			case "executionWorkflowRun":
+				if terminal(r.State) && r.NormalExpiresAt <= stamp(s.now()) {
+					_ = s.expireRun(ctx, r)
+				}
 			case "executionRetention":
 				if !r.Pinned && r.NormalExpiresAt <= stamp(s.now()) {
 					_ = s.expire(ctx, r)
@@ -289,7 +293,15 @@ func (s *Service) expire(ctx context.Context, ret row) error {
 		a.Put.ExpressionAttributeValues[":no"] = &dt.AttributeValueMemberBOOL{Value: false}
 		a.Put.ExpressionAttributeValues[":now"] = str(stamp(s.now()))
 		a.Put.ConditionExpression = aws.String(*a.Put.ConditionExpression + " AND #s = :live AND (attribute_not_exists(pinned) OR pinned = :no) AND normalExpiresAt <= :now")
-		if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), a}); e != nil {
+		actions := []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), a}
+		if ret.RunID != "" {
+			extra, err := s.expireRunStep(ctx, ret)
+			if err != nil {
+				return err
+			}
+			actions = append(actions, extra...)
+		}
+		if e = s.transact(ctx, actions); e != nil {
 			return safeError()
 		}
 	}
@@ -327,6 +339,16 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 		}
 	}
 	switch r.Kind {
+	case "executionWorkflow":
+		return r.SK == "WF#"+r.WorkflowID && uuidPattern.MatchString(r.WorkflowID)
+	case "executionWorkflowRun":
+		return validWorkflowSubmission(r) && r.SK == "RUN#"+r.RunID && uuidPattern.MatchString(r.RunID) && r.StepCount >= 2 && r.StepCount <= 10
+	case "executionWorkflowStep":
+		return r.SK == stepKey(r.RunID, r.Position) && r.Position >= 0 && r.Position < 10 && r.Plan != nil
+	case "executionWorkflowInputs":
+		return r.SK == "RUN#"+r.RunID+"#INPUTS" && r.Envelope != nil
+	case "executionWorkflowOutput":
+		return r.SK == outputKey(r.RunID, r.Position) && r.Position >= 0 && r.Position < 10 && r.Envelope != nil
 	case "execution":
 		if r.SK != "EXEC#"+r.ExecutionID || r.Plan == nil {
 			return false
@@ -407,6 +429,9 @@ func (s *Service) drainExecution(ctx context.Context, p row, execution string, r
 				return safeError()
 			}
 			if execution != "" && r.ExecutionID != execution {
+				continue
+			}
+			if retention && strings.HasPrefix(r.Kind, "executionWorkflow") {
 				continue
 			}
 			if !strings.HasPrefix(r.Kind, "execution") {

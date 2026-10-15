@@ -300,6 +300,35 @@ func (s *Service) Pin(ctx context.Context, owner, project, execution string, pin
 		} else {
 			actions = append(actions, s.rowGuard(ret), s.rowGuard(quota))
 		}
+		if anchor.RunID != "" {
+			run, err := s.get(ctx, s.Table, p.PK, "RUN#"+anchor.RunID)
+			// An already-unpinned ACK remains valid while RET/anchor survive,
+			// even if otherwise-unneeded run context was cleaned first.
+			if missingRow(err) && !pinned && !transition {
+			} else {
+				if err != nil || run.Kind != "executionWorkflowRun" {
+					return PinResult{}, failure(409, "conflict")
+				}
+				if transition {
+					if pinned {
+						run.RunPinnedCount++
+					} else {
+						run.RunPinnedCount--
+					}
+					if run.RunPinnedCount < 0 {
+						return PinResult{}, safeError()
+					}
+					run.Version++
+					a, err := s.put(s.Table, run, false)
+					if err != nil {
+						return PinResult{}, err
+					}
+					actions = append(actions, a)
+				} else {
+					actions = append(actions, s.rowGuard(run))
+				}
+			}
+		}
 		raw, _ := json.Marshal(actions)
 		if len(actions) > 8 || len(raw) > 2*1024*1024 {
 			return PinResult{}, safeError()

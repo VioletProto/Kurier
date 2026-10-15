@@ -1,3 +1,4 @@
+import { Workflows } from "./Workflows";
 import { Requests } from "./Requests";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { auth, authConfigured, authMessage, SessionExpired } from "./auth";
@@ -496,6 +497,13 @@ function Projects({ onExpired }: { onExpired: () => void }) {
           {detail ? (
             <>
               <h3>{detail.project.name}</h3>
+              <Workflows
+                key={"workflows-" + detail.project.projectId}
+                projectId={detail.project.projectId}
+                onExpired={onExpired}
+                onGateChanged={() => setStale(true)}
+                disabled={busy}
+              />
               <Requests
                 key={detail.project.projectId}
                 projectId={detail.project.projectId}

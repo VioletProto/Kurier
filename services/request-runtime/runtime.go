@@ -18,6 +18,7 @@ import (
 )
 
 type Prepared struct {
+	workflow   *ExtractionCapture
 	request    *http.Request
 	transport  *http.Transport
 	sanitizer  *sanitizer
@@ -267,6 +268,9 @@ func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 	defer response.Body.Close()
 	e.Response.HTTPStatus = &response.StatusCode
 	e.Response.Headers = sanitizeHeaders(response.Header, p.sanitizer, p.policy.Headers)
+	if p.workflow != nil && len(p.workflow.Step.Extract) > 0 {
+		e.Response.Headers = []Header{}
+	}
 	encodedHeaders, _ := json.Marshal(e.Response.Headers)
 	if len(encodedHeaders) > ConfigLimit {
 		e.Response.Headers = []Header{}
@@ -294,6 +298,10 @@ func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 					code = "execution_timeout"
 				}
 				e.Fail(code, "unknown")
+				return
+			}
+			if p.workflow != nil && len(p.workflow.Step.Extract) > 0 {
+				e.Fail("extraction_failed", "known")
 				return
 			}
 			e.Status = statusFor(response.StatusCode)
@@ -330,7 +338,55 @@ func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 		e.Fail(code, "unknown")
 		return
 	}
+	var workflowStorageError error
+	if p.workflow != nil && len(p.workflow.Step.Extract) > 0 {
+		paths, extractErr := p.workflow.capture(raw, response.Header.Get("Content-Type"))
+		if extractErr == nil && p.workflow.Seal != nil {
+			workflowStorageError = p.workflow.Seal(p.workflow.Outputs)
+		}
+		p.sanitizer = newSanitizer(p.workflow.Values)
+		p.policy.JSONPointers = append(p.policy.JSONPointers, paths...)
+		e.Response.Headers = sanitizeHeaders(response.Header, p.sanitizer, p.policy.Headers)
+		headers, _ := json.Marshal(e.Response.Headers)
+		if len(headers) > ConfigLimit {
+			e.Response.Headers = []Header{}
+			e.Response.Body = omitted("sanitization_failed")
+			e.Fail("sanitization_failed", "known")
+			return
+		}
+		// Resanitize the captured request as outputs may reflect a value sent earlier.
+		requestBytes, _ := json.Marshal(e.Request)
+		var recaptured RequestCapture
+		safeRequest := p.sanitizer.body(requestBytes, "application/json", RedactionPolicy{})
+		if safeRequest.Text == nil || StrictJSON([]byte(*safeRequest.Text), &recaptured) != nil {
+			e.Request = RequestCapture{Method: e.Request.Method, Headers: []Header{}, Body: omitted("sanitization_failed")}
+		} else {
+			e.Request = recaptured
+			requestHeaders, _ := json.Marshal(e.Request.Headers)
+			if len(requestHeaders) > ConfigLimit {
+				e.Request.Headers = []Header{}
+				e.Request.Body = omitted("sanitization_failed")
+				e.Response.Body = omitted("sanitization_failed")
+				e.Fail("sanitization_failed", "known")
+				return
+			}
+		}
+		if extractErr != nil {
+			e.Response.Headers = []Header{}
+			e.Response.Body = omitted("extraction_failed")
+			e.Fail("extraction_failed", "known")
+			return
+		}
+	}
 	e.Response.Body = p.sanitizer.body(raw, response.Header.Get("Content-Type"), p.policy)
+	if p.workflow != nil && len(p.workflow.Step.Extract) > 0 && e.Response.Body.Kind == "omitted" {
+		e.Fail("extraction_failed", "known")
+		return
+	}
+	if workflowStorageError != nil {
+		e.Fail("runtime_storage_failed", "known")
+		return
+	}
 	e.Status = statusFor(response.StatusCode)
 	e.Outcome = Outcome{Certainty: "known"}
 	if e.Status == "failed" {

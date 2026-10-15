@@ -1,0 +1,107 @@
+{
+  "sourceCommit": "115a7a2c9ff43f96f282066901e66f9803718612",
+  "stage": "dev-api",
+  "region": "us-east-2",
+  "account": "747336059622",
+  "capabilityActivationPerformed": false,
+  "deployedCodeSha256": {
+    "apiAndCleanup": "4YWNTr5y/i6zhhF5apPwZb4WYOWPRH3z8ZSDTZ1USUQ=",
+    "workerAndControlledEndpoint": "4PdjuCXGE/NxN1UcEG8RlAdadFcbemcak/fscHodRoM="
+  },
+  "deploymentPreservationBaseline": {
+    "stage": "325ad85a1650a25adcf6b1dee89ef3df7d07a051add93eb514b2ed650a1e256f",
+    "accounting": "39b0877fc3d5701c066bd46428366e48e5166799372386911e121abafeb1f9a4",
+    "iam": "128b578169bd717266ad2561890cc27007d8560ca16019dddb9c3e2c577ae3b6",
+    "functionConfig": "2bc9d8ac0b39d865b3943493b1792faa639cf8013923c676763271d5a002a884",
+    "routes": "889fcf30e7cf77b05e47a9f4b47677c1fe6d4209289454c02fdc723236e9a78d",
+    "settings": {
+      "accountConcurrency": 10,
+      "unreservedConcurrency": 10,
+      "freeType": "FREE",
+      "freeState": "ACTIVE",
+      "queueMax": 2,
+      "batchSize": 1,
+      "mappingUuid": "e44cbb7d-4bc8-4989-a4e5-96d80019f191",
+      "provisionedPollers": null
+    },
+    "rows": 17
+  },
+  "postDeploymentPreservation": {
+    "stage": true,
+    "accountingBeforeFixtures": true,
+    "iamInlineAndAttachments": true,
+    "functionConfigurations": true,
+    "routes": true,
+    "FreeQuotaConcurrency": true
+  },
+  "genuineLogAudit": {
+    "projectId": "d4969c76-a65a-4338-90e8-f0a2f542dd2e",
+    "targetCounts": {
+      "a7aa6eab-0999-4eb6-b2e9-efb41a58c1e0/workflow-token": 1,
+      "a7aa6eab-0999-4eb6-b2e9-efb41a58c1e0/workflow-consume": 1,
+      "c1a6f1db-3bec-448d-89f9-f5abf6b14bcd/workflow-token": 1,
+      "c1a6f1db-3bec-448d-89f9-f5abf6b14bcd/workflow-consume": 1,
+      "c1a6f1db-3bec-448d-89f9-f5abf6b14bcd/workflow-delay": 1
+    },
+    "uniqueTargetRequests": 5,
+    "jobs": 5,
+    "phases": {
+      "claimed": 5,
+      "intent": 5,
+      "registered": 5,
+      "writing": 5,
+      "put_ack": 5,
+      "settled": 5,
+      "finalize": 5
+    },
+    "diagnostics": 35,
+    "observedConflictEvents": 0,
+    "inspectedLogEvents": 295,
+    "sourceAndRenderedValuesAbsent": true,
+    "safeDiagnosticSchema": true
+  },
+  "operatorReportedRuns": {
+    "fee8923f-e4b9-4982-88c1-804c5ac54fb8": "completed",
+    "f2f0005c-4075-42eb-9eff-948bfbd0c254": "failed_expected_unknown_stop"
+  },
+  "terminalReadback": {
+    "jobs": 5,
+    "publishedSettledTickets": 5,
+    "immutableManifests": 5,
+    "attemptsPerJob": 1,
+    "fencePerJob": 1,
+    "protectedRecords": 0,
+    "inflight": 0,
+    "fixtureEvidenceBytes": 6013,
+    "admittedSlotsRetained": 6
+  },
+  "fixtureDeletion": {
+    "operationId": "56d57f4b-6679-451f-a340-670dba4c8ba7",
+    "completed": true,
+    "manuallyAssisted": true,
+    "controlTombstoneOnly": true,
+    "protectedEmpty": true,
+    "completeS3PrefixEmpty": true,
+    "realUserRetained": true
+  },
+  "finalAccounting": {
+    "monthlyAdmissions": 93,
+    "reservedStorageBytes": 6627,
+    "stageProjectUploadReconciliation": true,
+    "pinnedCount": 0,
+    "pinnedBytes": 0,
+    "unsettledJobs": 0,
+    "concurrentAcceptedDeletion": {
+      "projectId": "af4672de-5a97-4bcf-a60b-50ec5ae8101e",
+      "operationId": "fd787057-f232-42aa-a9e0-5450866e7a51",
+      "startedAt": "2026-10-15T06:10:54.661088872Z",
+      "submittedOrManuallyAdvancedByThisTask": false,
+      "projectStorageReachedZero": true
+    }
+  },
+  "limits": [
+    "No genuine AWS transaction conflict occurred; injected conflict tests are separate fixtures.",
+    "Historical interruption cause remains unproven.",
+    "First-preview ZIP byte comparison was unavailable after SST rebuild; final hashes matched deployed archives and commit build identity."
+  ]
+}

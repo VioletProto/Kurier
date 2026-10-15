@@ -213,6 +213,119 @@ export class Api {
     }
     return response;
   }
+  async workflows(
+    project: string,
+    cursor?: string,
+    signal?: AbortSignal,
+  ): Promise<{ items: Workflow[]; nextCursor: string | null }> {
+    return (
+      await (
+        await this.request(
+          `/api/v1/projects/${encodeURIComponent(project)}/workflows${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data;
+  }
+  async saveWorkflow(
+    project: string,
+    definition: WorkflowDefinition,
+    old?: Workflow,
+    signal?: AbortSignal,
+  ): Promise<Workflow> {
+    const response = await this.request(
+      `/api/v1/projects/${encodeURIComponent(project)}/workflows${old ? `/${old.workflowId}` : ""}`,
+      old ? "PATCH" : "POST",
+      JSON.stringify(definition),
+      old ? `"${old.revision}"` : undefined,
+      signal,
+    );
+    try {
+      const data = (await response.json()).data;
+      if (!data?.workflow?.workflowId) throw Error();
+      return data.workflow;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async deleteWorkflow(
+    project: string,
+    workflow: Workflow,
+    signal?: AbortSignal,
+  ) {
+    await this.request(
+      `/api/v1/projects/${encodeURIComponent(project)}/workflows/${workflow.workflowId}`,
+      "DELETE",
+      undefined,
+      `"${workflow.revision}"`,
+      signal,
+    );
+  }
+  async workflowRuns(
+    project: string,
+    cursor?: string,
+    signal?: AbortSignal,
+  ): Promise<{ items: WorkflowRun[]; nextCursor: string | null }> {
+    return (
+      await (
+        await this.request(
+          `/api/v1/projects/${encodeURIComponent(project)}/workflow-runs${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data;
+  }
+  async workflowRun(
+    project: string,
+    id: string,
+    signal?: AbortSignal,
+  ): Promise<WorkflowRun> {
+    return (
+      await (
+        await this.request(
+          `/api/v1/projects/${encodeURIComponent(project)}/workflow-runs/${id}`,
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data.run;
+  }
+  async submitWorkflow(
+    project: string,
+    source: string,
+    key: string,
+    allow: boolean,
+    workflow?: Workflow,
+    signal?: AbortSignal,
+  ): Promise<WorkflowRun> {
+    const path = workflow
+      ? `/workflows/${source}/runs`
+      : `/workflow-runs/${source}/rerun`;
+    const response = await this.request(
+      `/api/v1/projects/${encodeURIComponent(project)}${path}`,
+      "POST",
+      JSON.stringify({ target: "cloud", allowInsecureSecrets: allow }),
+      workflow ? `"${workflow.revision}"` : undefined,
+      signal,
+      false,
+      key,
+    );
+    try {
+      const data = (await response.json()).data;
+      if (!data?.run?.workflowRunId) throw Error();
+      return data.run;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
   async currentAgent(signal?: AbortSignal): Promise<LocalAgent | null> {
     const response = await this.request(
       "/api/v1/local-agents/current",
@@ -706,6 +819,8 @@ export type ExecutionRetention = {
   pinEligible: boolean;
 };
 export type Execution = {
+  runId?: string;
+  position?: number;
   target?: "cloud" | "local";
   localAgentId?: string | null;
   executionId: string;
@@ -768,4 +883,51 @@ export type LocalAgent = {
   revokedAt: string | null;
   lastSeenAt: string | null;
   recoveryGeneration: string;
+};
+
+export type WorkflowExtraction = {
+  name: string;
+  path: string;
+  type: "string" | "number" | "boolean" | "null";
+  sensitive: boolean;
+};
+export type WorkflowBinding = {
+  from: { stepId: string; name: string };
+  to: {
+    kind: "header" | "query" | "jsonBody" | "textBody";
+    index?: number;
+    pointer?: string;
+    prefix?: string;
+    suffix?: string;
+  };
+};
+export type WorkflowStep = {
+  stepId: string;
+  requestId: string;
+  requestRevision: number;
+  extract: WorkflowExtraction[];
+  bindings: WorkflowBinding[];
+};
+export type WorkflowDefinition = { name: string; steps: WorkflowStep[] };
+export type Workflow = WorkflowDefinition & {
+  workflowId: string;
+  revision: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type WorkflowRun = {
+  workflowRunId: string;
+  workflowId: string;
+  workflowRevision: number;
+  state: string;
+  currentPosition: number;
+  failedPosition: number | null;
+  steps: (WorkflowStep & {
+    position: number;
+    executionId: string | null;
+    state: string;
+    summary: Execution["summary"];
+    retention: ExecutionRetention | null;
+    evidenceExpired: boolean;
+  })[];
 };

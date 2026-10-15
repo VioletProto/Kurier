@@ -55,6 +55,9 @@ func (s *Service) decrypt(ctx context.Context, project, binding, purpose string,
 	return raw, nil
 }
 func (s *Service) encrypt(ctx context.Context, project, job string, values map[string]string) (*Envelope, error) {
+	return s.encryptPurpose(ctx, project, job, "job-bindings", values)
+}
+func (s *Service) encryptPurpose(ctx context.Context, project, binding, purpose string, values any) (*Envelope, error) {
 	raw, err := json.Marshal(values)
 	if err != nil {
 		return nil, safeError()
@@ -63,7 +66,7 @@ func (s *Service) encrypt(ctx context.Context, project, job string, values map[s
 	if len(raw) > 24*1024 {
 		return nil, failure(413, "payload_too_large")
 	}
-	scope := s.cryptoScope(project, job, "job-bindings", 1)
+	scope := s.cryptoScope(project, binding, purpose, 1)
 	key, err := s.KMS.GenerateDataKey(ctx, &kms.GenerateDataKeyInput{KeyId: aws.String(s.KeyARN), KeySpec: kt.DataKeySpecAes256, EncryptionContext: scope})
 	if key != nil {
 		defer clear(key.Plaintext)

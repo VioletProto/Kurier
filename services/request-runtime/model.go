@@ -169,6 +169,8 @@ type Retention struct {
 	EvidenceAvailability string  `json:"evidenceAvailability"`
 }
 type View struct {
+	RunID        *string `json:"runId,omitempty"`
+	Position     *int    `json:"position,omitempty"`
 	Target       string  `json:"target"`
 	LocalAgentID *string `json:"localAgentId"`
 

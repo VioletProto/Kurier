@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -39,6 +41,9 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 	}
 	if job.Target == "local" {
 		return nil
+	}
+	if job.Kind == "executionJob" && job.RunID != "" && job.RecoveryGeneration != stage.RecoveryGeneration {
+		return s.interruptRestoredWorkflow(ctx, stage, job)
 	}
 	if job.Kind != "executionJob" || job.SchemaVersion != 1 || job.RecoveryGeneration != stage.RecoveryGeneration {
 		return nil
@@ -91,6 +96,7 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 		}
 		job = read
 	}
+	s.tracePublication(job, row{}, "claimed", nil)
 	evidence := NewEvidence(job.ProjectID, job.ExecutionID, anchor.SubmittedAt, *anchor.Plan)
 	if recovery {
 		if recovered, err := s.recoverPrepared(ctx, job); err != nil {
@@ -108,6 +114,10 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 	}
 	if s.now().Sub(submitted) > 10*time.Minute || job.Attempts > 5 {
 		evidence.Fail("queued_expired", "not_dispatched")
+		return s.publish(ctx, job, evidence)
+	}
+	if job.RunID != "" && p.StorageReservedBytes >= 1024*1024*1024 {
+		evidence.Fail("input_limit_exceeded", "not_dispatched")
 		return s.publish(ctx, job, evidence)
 	}
 	user, e := s.userGuard(ctx, job.OwnerID)
@@ -129,26 +139,42 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 		}
 		guards = append(guards, s.sourceGuard(r, s.Protected))
 	}
-	bindings, e := s.get(ctx, s.Protected, job.PK, job.SK+"#BINDINGS")
-	if e != nil || bindings.Kind != "executionBindings" || bindings.ProjectID != job.ProjectID {
-		return safeError()
-	}
-	raw, e := s.decrypt(ctx, job.ProjectID, job.JobID, "job-bindings", 1, bindings.Envelope)
-	if e != nil {
-		return e
-	}
 	values := map[string]string{}
-	err = StrictJSON(raw, &values)
-	clear(raw)
-	defer clear(values)
-	if err != nil {
-		return safeError()
+	var capture *runner.ExtractionCapture
+	var output *Envelope
+	runtimePlan := *anchor.Plan
+	if job.RunID != "" {
+		runtimePlan, values, capture, e = s.workflowRuntime(ctx, job, runtimePlan)
+		if e != nil {
+			code := "source_unavailable"
+			var err *Error
+			if errors.As(e, &err) {
+				code = err.Code
+			}
+			evidence.Fail(code, "not_dispatched")
+			return s.publish(ctx, job, evidence)
+		}
+	} else {
+		bindings, e := s.get(ctx, s.Protected, job.PK, job.SK+"#BINDINGS")
+		if e != nil || bindings.Kind != "executionBindings" || bindings.ProjectID != job.ProjectID {
+			return safeError()
+		}
+		raw, e := s.decrypt(ctx, job.ProjectID, job.JobID, "job-bindings", 1, bindings.Envelope)
+		if e != nil {
+			return e
+		}
+		err = StrictJSON(raw, &values)
+		clear(raw)
+		if err != nil {
+			return safeError()
+		}
 	}
+	defer clear(values)
 	prepareRequest := s.prepare
 	if prepareRequest == nil {
 		prepareRequest = Prepare
 	}
-	prepared, e := prepareRequest(ctx, *anchor.Plan, values)
+	prepared, e := prepareRequest(ctx, runtimePlan, values)
 	if e != nil {
 		code := "input_limit_exceeded"
 		var a *Error
@@ -157,6 +183,14 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 		}
 		evidence.Fail(code, "not_dispatched")
 		return s.publish(ctx, job, evidence)
+	}
+	if capture != nil {
+		capture.Seal = func(values map[string]runner.RuntimeValue) error {
+			var err error
+			output, err = s.encryptPurpose(ctx, job.ProjectID, job.RunID+fmt.Sprintf("/%02d", job.Position), "workflow-output", values)
+			return err
+		}
+		prepared.WorkflowCapture(capture)
 	}
 	// Deletion, source revocation/replacement and recovery races are fenced in
 	// the same durable intent transaction. Uncertain intent never grants HTTP.
@@ -177,15 +211,24 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 	jput, _ = s.put(s.Table, job, false)
 	aput, _ = s.put(s.Table, anchor, false)
 	actions := append([]dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), jput, aput}, guards...)
+	if job.RunID != "" {
+		extra, err := s.workflowIntent(ctx, job)
+		if err != nil {
+			return err
+		}
+		actions = append(actions, extra...)
+	}
 	if e = s.transact(ctx, actions); e != nil {
 		read, readErr := s.get(ctx, s.Table, job.PK, job.SK)
 		if readErr != nil || read.State != "running" || read.LeaseID != job.LeaseID || read.Fence != job.Fence || read.Version != job.Version {
 			return safeError()
 		}
 	}
+	s.tracePublication(job, row{}, "intent", nil)
 	prepared.Run(ctx, evidence)
 	evidence.StartedAt = &job.DispatchIntentAt
-	return s.publish(ctx, job, evidence)
+
+	return s.publish(ctx, job, evidence, output)
 }
 func (s *Service) liveWriter(ctx context.Context, expected row) (row, row, row, error) {
 	stage, e := s.stage(ctx)
@@ -210,7 +253,7 @@ func (s *Service) liveWriter(ctx context.Context, expected row) (row, row, row, 
 	}
 	return stage, p, job, nil
 }
-func (s *Service) publish(ctx context.Context, job row, evidence *Evidence) error {
+func (s *Service) publish(ctx context.Context, job row, evidence *Evidence, outputs ...*Envelope) error {
 	if job.Target == "local" && !job.RecoveryWriter {
 		return s.publishLocal(ctx, job, evidence)
 	}
@@ -240,12 +283,14 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence) erro
 	job.Version++
 	jput, _ := s.put(s.Table, job, false)
 	if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectUpdate(p, ticket.Bytes, 0), jput, put, qput}); e != nil {
+		s.tracePublication(job, ticket, "register", e)
 		read, readErr := s.get(ctx, s.Table, ticket.PK, ticket.SK)
 		if readErr != nil || read.Checksum != ticket.Checksum {
 			return safeError()
 		}
 		ticket = read
 	}
+	s.tracePublication(job, ticket, "registered", nil)
 	// Persist writing intent separately. A crash/timeout after it is unresolved
 	// until the PUT outcome is durably settled; absence alone is not settlement.
 	stage, p, job, e = s.liveWriter(ctx, job)
@@ -258,11 +303,14 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence) erro
 	job.Version++
 	jput, _ = s.put(s.Table, job, false)
 	if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), jput, tput}); e != nil {
+		s.tracePublication(job, ticket, "writing", e)
 		return safeError()
 	}
+	s.tracePublication(job, ticket, "writing", nil)
 	upload, cancel := context.WithTimeout(ctx, 15*time.Second)
 	_, e = s.Objects.PutObject(upload, &s3.PutObjectInput{Bucket: &s.Bucket, Key: &ticket.ObjectKey, Body: bytes.NewReader(raw), ContentType: aws.String("application/json"), IfNoneMatch: aws.String("*"), ChecksumSHA256: aws.String(base64.StdEncoding.EncodeToString(hash[:]))})
 	cancel()
+	s.tracePublication(job, ticket, "put_ack", e)
 	if e != nil {
 		return safeError()
 	}
@@ -272,15 +320,19 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence) erro
 	ticket.Version++
 	tput, _ = s.put(s.Table, ticket, false)
 	if e = s.transact(ctx, []dt.TransactWriteItem{tput}); e != nil {
+		s.tracePublication(job, ticket, "settle", e)
 		read, readErr := s.get(ctx, s.Table, ticket.PK, ticket.SK)
 		if readErr != nil || !read.WriteSettled {
 			return safeError()
 		}
 		ticket = read
 	}
-	return s.finalize(ctx, job, ticket, evidence)
+	s.tracePublication(job, ticket, "settled", nil)
+	e = s.finalize(ctx, job, ticket, evidence, outputs...)
+	s.tracePublication(job, ticket, "finalize", e)
+	return e
 }
-func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *Evidence) error {
+func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *Evidence, outputs ...*Envelope) error {
 	stage, p, job, e := s.liveWriter(ctx, expected)
 	if e != nil {
 		return e
@@ -315,6 +367,27 @@ func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *
 	manifest := row{PK: job.PK, SK: anchor.SK + "#SNAP", Kind: "executionSnapshot", SchemaVersion: 1, ProjectID: job.ProjectID, ExecutionID: job.ExecutionID, ObjectKey: ticket.ObjectKey, Checksum: ticket.Checksum, Bytes: ticket.Bytes, Summary: summary, CompletedAt: &evidence.CompletedAt}
 	ret := row{PK: job.PK, SK: anchor.SK + "#RET", Kind: "executionRetention", SchemaVersion: 1, ProjectID: job.ProjectID, ExecutionID: job.ExecutionID, State: "live", NormalExpiresAt: stamp(completed.Add(30 * 24 * time.Hour)), EvidenceAvailability: "available", DPK: dueShard(job.ProjectID), DSK: stamp(completed.Add(30*24*time.Hour)) + "#" + job.ExecutionID}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), s.projectUpdate(p, 0, -1)}
+	continuing := false
+	if job.RunID != "" {
+		if p.InflightCount < 1 {
+			return safeError()
+		}
+		var output *Envelope
+		if len(outputs) > 0 {
+			output = outputs[0]
+		}
+		extra, more, err := s.workflowFinalActions(ctx, job, evidence, output)
+		if err != nil {
+			return err
+		}
+		continuing = more
+		actions = append(actions, extra...)
+		if continuing {
+			actions[1] = s.projectUpdate(p, 0, 0)
+		}
+		ret.RunID = job.RunID
+		ret.Position = job.Position
+	}
 	if job.Target == "local" {
 		a, e := s.get(ctx, s.Table, "U#"+job.OwnerID, "CRED#"+job.LocalAgentID)
 		if e != nil {
@@ -360,12 +433,18 @@ func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *
 		actions = append(actions, a)
 	}
 	actions = append(actions, dt.TransactWriteItem{Delete: &dt.Delete{TableName: &s.Protected, Key: keys(job.PK, job.SK+"#BINDINGS")}})
+	if job.RunID != "" && len(actions) > 60 {
+		return safeError()
+	}
 	if e = s.transact(ctx, actions); e != nil {
 		read, readErr := s.get(ctx, s.Table, job.PK, manifest.SK)
 		if readErr == nil && read.Checksum == ticket.Checksum && read.ObjectKey == ticket.ObjectKey {
 			return nil
 		}
 		return safeError()
+	}
+	if continuing {
+		s.fastNotify(ctx, job.ProjectID, workflowIdentity(job.RunID, job.Position+1, "job"))
 	}
 	return nil
 }
@@ -428,6 +507,9 @@ func (s *Service) evidenceUnavailable(ctx context.Context, owner, project, execu
 // An acknowledged upload can be republished under the new fence. This retries
 // only the immutable sanitized result; there is no outbound HTTP here.
 func (s *Service) recoverPrepared(ctx context.Context, job row) (bool, error) {
+	if job.RunID != "" {
+		return false, nil
+	}
 	var start map[string]dt.AttributeValue
 	for page := 0; page < 5; page++ {
 		rows, e := s.DB.Query(ctx, &dynamodb.QueryInput{TableName: &s.Table, KeyConditionExpression: aws.String("PK = :pk AND begins_with(SK,:prefix)"), ExpressionAttributeValues: map[string]dt.AttributeValue{":pk": str(job.PK), ":prefix": str("UPLOAD#")}, ConsistentRead: aws.Bool(true), Limit: aws.Int32(20), ExclusiveStartKey: start})

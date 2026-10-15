@@ -1,5 +1,17 @@
 # Accepted architecture
 
+## Accepted sequential workflow continuation
+
+The [cloud-only sequential workflow packet](sequential-workflows-contract.md)
+was accepted by Davian at `25158b7`. Scoped cloud implementation, API-contract
+synchronization, local validation and deployment/activation preview are authorized.
+Davian subsequently approved scoped development deployment and guarded
+activation, including correction 527dd09. Development is active at
+savedRequests6/sequentialWorkflows1 with the existing recovery generation.
+The [implementation/validation guide](../development/sequential-workflows.md)
+records fixture results, approved AWS scope and genuine validation status.
+Implementation and validation status remain separate from acceptance.
+
 ## Accepted cloud execution continuation
 
 Davian accepted the [single saved-request cloud execution contract](cloud-execution-evidence-contract.md)

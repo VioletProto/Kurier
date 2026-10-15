@@ -415,3 +415,20 @@ it("defaults cloud, requires local device consent and freezes target on an unres
     mocks.submitExecution.mock.calls[1][4],
   );
 });
+it("directs run-owned steps to a whole-workflow rerun", async () => {
+  const current = { ...retained(), runId: "workflow-run", position: 0 };
+  mocks.executionHistory.mockResolvedValue({
+    items: [current],
+    nextCursor: null,
+  });
+  mocks.executionDetail.mockResolvedValue(current);
+  mount();
+  fireEvent.click(
+    await screen.findByRole("button", { name: /completed.*revision 3/ }),
+  );
+  await screen.findByText(/Use the workflow panel to deliberately rerun/);
+  expect(
+    screen.getByRole("button", { name: "Review deliberate rerun" }),
+  ).toBeDisabled();
+  expect(mocks.rerunExecution).not.toHaveBeenCalled();
+});

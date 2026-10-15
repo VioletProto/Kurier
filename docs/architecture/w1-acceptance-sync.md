@@ -193,3 +193,18 @@ sensitive locator/crypto, execution, workflow and other protocol decisions stay
 Proposed. Overall contract review remains Doing. The live contract has been
 updated/read back; actual Local/AWS versus genuine browser evidence remains
 separate in [the guide](../development/saved-requests.md).
+
+## Accepted cloud sequential workflow continuation
+
+Davian accepted the revised [workflow contract](sequential-workflows-contract.md)
+at `25158b7`, including bounded literal prefix/suffix rendering for string header
+bindings. Its concrete CRUD/run DTOs, restricted path grammar, typed bindings,
+source/rendered-value containment, accounting and context lifecycle supersede
+older Proposed workflow recommendations for this cloud-only slice. Scoped
+implementation, API contract synchronization, local validation and AWS preview
+are authorized; deployment and capability activation remain held for review.
+The [implementation/validation guide](../development/sequential-workflows.md)
+records actual fixture results, external readback, scoped preview and gaps.
+Local workflows, assertions/environments/schema, branching/loops/parallelism,
+scripts and MCP remain outside this implementation. Full contract-review and
+other unrelated backlog choices are not marked complete by this continuation.
