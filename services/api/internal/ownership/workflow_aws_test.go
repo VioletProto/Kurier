@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -770,4 +771,186 @@ func TestAWSSequentialWorkflowBrowserCleanup(t *testing.T) {
 		t.Fatal("capability, owner or admission quota changed")
 	}
 	t.Logf("operation=%s completed started=%s completed=%s; Control tombstone only, Protected0/S30; owner, stage marker and admission quota preserved; no HTTP dispatched", operation, p.Operation.StartedAt, *p.Operation.CompletedAt)
+}
+
+// Prepare a disposable project for this operator's genuine signed-in browser.
+// No HTTP is submitted here; the operator deliberately submits the workflow.
+func TestAWSWorkflowPublicationBrowserSetup(t *testing.T) {
+	if os.Getenv("KURIER_AWS_PUBLICATION_BROWSER_SETUP") != "prepare" {
+		t.Skip("explicit browser fixture setup required")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	cfg, e := workflowAWSConfig(ctx)
+	if e != nil {
+		t.Fatal("AWS session unavailable")
+	}
+	who, e := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if e != nil || aws.ToString(who.Account) != "747336059622" || strings.HasSuffix(aws.ToString(who.Arn), ":root") {
+		t.Fatal("intended identity required")
+	}
+	db := dynamodb.NewFromConfig(cfg)
+	st := NewStore(db, os.Getenv("KURIER_AWS_TEST_TABLE"), "dev-api")
+	st.ConfigureProtected(os.Getenv("KURIER_AWS_TEST_PROTECTED"), nil)
+	configureAWSExecutionFixture(st, cfg)
+	// Reuse only the real owner of Davian's independently verified browser
+	// tombstone; never create a fake Cognito identity or change its credentials.
+	original, e := st.get(ctx, "P#31365f35-9c01-46a7-a70d-62f822ffbc4a", "META")
+	if e != nil || original.State != "deleted" || original.Operation == nil || original.Operation.OperationID != "efe8008a-ce58-447d-b9c7-440ae9bb4f7d" {
+		t.Fatal("verified operator owner reference required")
+	}
+	owner, e := st.userRecord(ctx, original.OwnerID)
+	if e != nil || owner.Issuer != "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_qTDZQT1FE" {
+		t.Fatal("genuine Cognito owner required")
+	}
+	if _, err := st.get(ctx, "P#ace3b7a2-6499-4a5e-a5dd-281c46a3dbac", "META"); err == nil {
+		t.Skip("this investigation fixture was already prepared; do not create duplicates")
+	} else {
+		var api *APIError
+		if !errors.As(err, &api) || api.Status != 404 {
+			t.Fatal("fixture absence readback unavailable")
+		}
+	}
+	p, e := st.CreateProject(ctx, original.OwnerID, "Workflow publication polling investigation")
+	if e != nil {
+		t.Fatal("project preparation failed")
+	}
+	t.Logf("prepared project=%s; fixture cleanup required", p.ProjectID)
+	req, e := st.CreateRequest(ctx, original.OwnerID, p.ProjectID, RequestConfiguration{Name: "Controlled five-second delay", Method: "GET", URL: "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com/execution-fixture/delay", Headers: []RequestField{}, QueryParameters: []RequestField{}})
+	if e != nil {
+		t.Fatal("request preparation failed")
+	}
+	steps := []runner.WorkflowStep{}
+	for i := 0; i < 6; i++ {
+		steps = append(steps, runner.WorkflowStep{StepID: newID(), RequestID: req.RequestID, RequestRevision: req.Revision, Extract: []runner.Extraction{}, Bindings: []runner.Binding{}})
+	}
+	wf, e := st.executions.SaveWorkflow(ctx, original.OwnerID, p.ProjectID, "", 0, execution.WorkflowDefinition{Name: "Six sequential delays — normal browser polling", Steps: steps}, true)
+	if e != nil {
+		t.Fatal("workflow preparation failed")
+	}
+	t.Logf("prepared project=%s workflow=%s revision=%d; no run submitted, no HTTP dispatched, owner unchanged", p.ProjectID, wf.WorkflowID, wf.Revision)
+}
+
+func TestAWSWorkflowPublicationBrowserReadback(t *testing.T) {
+	const project = "ace3b7a2-6499-4a5e-a5dd-281c46a3dbac"
+	const runID = "c59a8ba2-8342-4522-9bbd-fcad1996290b"
+	mode := os.Getenv("KURIER_AWS_PUBLICATION_BROWSER_READBACK")
+	if mode != "audit" && mode != "cleanup" {
+		t.Skip("explicit browser publication fixture only")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	cfg, e := workflowAWSConfig(ctx)
+	if e != nil {
+		t.Fatal("AWS session unavailable")
+	}
+	who, e := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if e != nil || aws.ToString(who.Account) != "747336059622" || strings.HasSuffix(aws.ToString(who.Arn), ":root") {
+		t.Fatal("intended identity required")
+	}
+	db := dynamodb.NewFromConfig(cfg)
+	st := NewStore(db, os.Getenv("KURIER_AWS_TEST_TABLE"), "dev-api")
+	st.ConfigureProtected(os.Getenv("KURIER_AWS_TEST_PROTECTED"), nil)
+	configureAWSExecutionFixture(st, cfg)
+	read := func(pk, sk string) map[string]dt.AttributeValue {
+		r, err := db.GetItem(ctx, &dynamodb.GetItemInput{TableName: &st.table, Key: key(pk, sk), ConsistentRead: aws.Bool(true)})
+		if err != nil {
+			t.Fatal("strong read unavailable")
+		}
+		return r.Item
+	}
+	stageBefore, _ := json.Marshal(read("STAGE#dev-api", "META"))
+	quotaBefore := read("STAGE#dev-api", "QUOTA")
+	p, e := st.get(ctx, "P#"+project, "META")
+	reference, refErr := st.get(ctx, "P#31365f35-9c01-46a7-a70d-62f822ffbc4a", "META")
+	if e != nil || refErr != nil || p.OwnerID != reference.OwnerID {
+		t.Fatal("operator fixture ownership guard failed")
+	}
+	userBefore, _ := json.Marshal(read("U#"+p.OwnerID, "META"))
+	query := func(table string) []map[string]dt.AttributeValue {
+		r, err := db.Query(ctx, &dynamodb.QueryInput{TableName: &table, ConsistentRead: aws.Bool(true), KeyConditionExpression: aws.String("PK = :pk"), ExpressionAttributeValues: map[string]dt.AttributeValue{":pk": s(p.PK)}})
+		if err != nil || len(r.LastEvaluatedKey) > 0 {
+			t.Fatal("complete partition read unavailable")
+		}
+		return r.Items
+	}
+	if p.State == "active" {
+		run, err := st.executions.RunDetail(ctx, p.OwnerID, project, runID)
+		if err != nil || run.State != "completed" || len(run.Steps) != 6 {
+			t.Fatal("genuine browser run not completed")
+		}
+		for _, step := range run.Steps {
+			if step.State != "completed" || step.ExecutionID == nil {
+				t.Fatal("step finalization missing")
+			}
+			if _, err = st.executions.Evidence(ctx, p.OwnerID, project, *step.ExecutionID); err != nil {
+				t.Fatal("immutable evidence verification failed")
+			}
+		}
+		jobs, tickets, manifests := 0, 0, 0
+		var stored int64
+		for _, item := range query(st.table) {
+			switch item["kind"].(*dt.AttributeValueMemberS).Value {
+			case "executionJob":
+				jobs++
+				if item["state"].(*dt.AttributeValueMemberS).Value != "completed" || item["fence"].(*dt.AttributeValueMemberN).Value != "1" || item["attempts"].(*dt.AttributeValueMemberN).Value != "1" {
+					t.Fatal("unexpected retry/lease history")
+				}
+			case "executionUpload":
+				tickets++
+				if item["state"].(*dt.AttributeValueMemberS).Value != "published" || !item["writeSettled"].(*dt.AttributeValueMemberBOOL).Value {
+					t.Fatal("unsettled publication")
+				}
+				n, err := strconv.ParseInt(item["bytes"].(*dt.AttributeValueMemberN).Value, 10, 64)
+				if err != nil {
+					t.Fatal("invalid accounting")
+				}
+				stored += n
+			case "executionSnapshot":
+				manifests++
+			}
+		}
+		if jobs != 6 || tickets != 6 || manifests != 6 || p.StorageReservedBytes != stored || p.InflightCount != 0 || len(query(st.executions.Protected)) != 0 {
+			t.Fatal("terminal ciphertext/accounting/publication mismatch")
+		}
+		t.Logf("Genuine deployed browser run: six completed steps, six verified immutable manifests, six settled published tickets, fence1/attempt1 each, Protected0, storage%d/inflight0; sampled trace is not a complete transition log", stored)
+	}
+	if mode == "cleanup" && p.State == "active" {
+		op, err := st.DeleteProject(ctx, p.OwnerID, project, p.Version)
+		if err != nil {
+			t.Fatal("fixture deletion acceptance uncertain; reconcile existing operation")
+		}
+		t.Logf("accepted fixture deletion operation=%s", op.OperationID)
+		p, e = st.get(ctx, p.PK, "META")
+		if e != nil {
+			t.Fatal("deletion readback unavailable")
+		}
+	}
+	if mode == "cleanup" {
+		if p.Operation == nil || (p.State != "deleting" && p.State != "deleted") {
+			t.Fatal("accepted deletion required")
+		}
+		operation := p.Operation.OperationID
+		for pass := 0; pass < 40 && p.State != "deleted"; pass++ {
+			_, _ = st.CleanupProject(ctx, project)
+			p, e = st.get(ctx, p.PK, "META")
+			if e != nil || p.Operation == nil || p.Operation.OperationID != operation {
+				t.Fatal("cleanup operation readback failed")
+			}
+		}
+		if p.State != "deleted" || p.Operation.State != "completed" || len(query(st.table)) != 1 || len(query(st.executions.Protected)) != 0 {
+			t.Fatal("bounded guarded cleanup incomplete")
+		}
+		objects, err := s3.NewFromConfig(cfg).ListObjectsV2(ctx, &s3.ListObjectsV2Input{Bucket: &st.executions.Bucket, Prefix: aws.String("dev-api/projects/" + project + "/")})
+		if err != nil || aws.ToBool(objects.IsTruncated) || len(objects.Contents) != 0 {
+			t.Fatal("complete S3 emptiness proof failed")
+		}
+		t.Logf("Manually assisted guarded fixture deletion=%s completed: Control tombstone only/Protected0/S30; no HTTP replay or user deletion", operation)
+	}
+	stageAfter, _ := json.Marshal(read("STAGE#dev-api", "META"))
+	userAfter, _ := json.Marshal(read("U#"+p.OwnerID, "META"))
+	quotaAfter := read("STAGE#dev-api", "QUOTA")
+	if !bytes.Equal(stageBefore, stageAfter) || !bytes.Equal(userBefore, userAfter) || !reflect.DeepEqual(quotaBefore["count"], quotaAfter["count"]) || !reflect.DeepEqual(quotaBefore["month"], quotaAfter["month"]) {
+		t.Fatal("stage/user/admission usage changed")
+	}
 }

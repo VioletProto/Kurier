@@ -15,6 +15,7 @@ import (
 	dt "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"math/rand/v2"
 	"strings"
 	"time"
 )
@@ -43,6 +44,7 @@ type Service struct {
 	SigningKey                                        []byte
 	ReceiptKeys                                       map[string][]byte
 	Now                                               func() time.Time
+	PublicationTrace                                  func(PublicationTrace)
 	prepare                                           func(context.Context, Plan, map[string]string) (*Prepared, error)
 }
 
@@ -207,7 +209,40 @@ func (s *Service) transact(ctx context.Context, actions []dt.TransactWriteItem) 
 		return safeError()
 	}
 	input := &dynamodb.TransactWriteItemsInput{TransactItems: actions, ClientRequestToken: pointer(id())}
-	_, e := s.DB.TransactWriteItems(ctx, input)
+	var e error
+	// A canceled transaction with only conflict reasons did not commit. Retry
+	// the identical guarded transaction/token, never the enclosing HTTP action.
+	// In particular this also covers ticket-only PUT settlement, which has no
+	// runId and was excluded from the historical workflow retry below.
+	for attempt := 0; attempt < 6; attempt++ {
+		_, e = s.DB.TransactWriteItems(ctx, input)
+		if transactionConflict(e) && s.PublicationTrace != nil {
+			for _, action := range actions {
+				if action.Put == nil {
+					continue
+				}
+				var candidate row
+				if attributevalue.UnmarshalMap(action.Put.Item, &candidate) == nil && (candidate.Kind == "executionJob" || candidate.Kind == "executionUpload") {
+					ticket := row{}
+					if candidate.Kind == "executionUpload" {
+						ticket = candidate
+					}
+					s.tracePublication(candidate, ticket, "transaction_conflict", e)
+					break
+				}
+			}
+		}
+		if !transactionConflict(e) || attempt == 5 {
+			break
+		}
+		wait := time.NewTimer(time.Duration(10*(1<<attempt)+rand.IntN(11)) * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			wait.Stop()
+			return ctx.Err()
+		case <-wait.C:
+		}
+	}
 	var conditional *dt.TransactionCanceledException
 	workflow := false
 	for _, a := range actions {
@@ -217,10 +252,34 @@ func (s *Service) transact(ctx context.Context, actions []dt.TransactWriteItem) 
 			}
 		}
 	}
-	if workflow && e != nil && !errors.As(e, &conditional) {
+	if workflow && e != nil && !errors.As(e, &conditional) && !transactionConflict(e) {
 		_, e = s.DB.TransactWriteItems(ctx, input)
 	}
 	return e
+}
+
+// Missing reasons and mixed conditional/validation failures are not transient
+// conflicts. They retain the caller's existing readback/recovery decisions.
+func transactionConflict(err error) bool {
+	var conflict *dt.TransactionConflictException
+	if errors.As(err, &conflict) {
+		return true
+	}
+	var canceled *dt.TransactionCanceledException
+	if !errors.As(err, &canceled) {
+		return false
+	}
+	found := false
+	for _, reason := range canceled.CancellationReasons {
+		switch aws.ToString(reason.Code) {
+		case "TransactionConflict":
+			found = true
+		case "None":
+		default:
+			return false
+		}
+	}
+	return found
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")

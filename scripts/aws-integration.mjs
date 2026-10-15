@@ -59,6 +59,8 @@ if (
     "TestAWSSequentialWorkflows",
     "TestAWSSequentialWorkflowCleanup",
     "TestAWSSequentialWorkflowBrowserCleanup",
+    "TestAWSWorkflowPublicationBrowserSetup",
+    "TestAWSWorkflowPublicationBrowserReadback",
   ].includes(filter)
 )
   throw new Error("Choose a scoped AWS test filter.");

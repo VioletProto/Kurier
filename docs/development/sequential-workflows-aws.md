@@ -3,7 +3,10 @@
 Davian approved the scoped dev-api deployment and guarded activation including
 527dd09. Region us-east-2, account 747336059622, non-root davian-admin.
 This record separates genuine AWS runtime checks from SDK admission, injected
-faults and pending operator Cognito/browser acceptance.
+faults and operator Cognito/browser acceptance. The subsequent
+[publication investigation](sequential-workflows-publication.md) records a
+confirmed retry defect/fix, a genuine browser polling run, reconciled direct
+fixture calls, and remaining uncertainty separately from prior successes.
 
 ## Deployment and activation
 
@@ -237,8 +240,10 @@ final verification. Numeric admission usage is retained, not refunded.
 A memory-only independent audit of the three public browser fixture IDs found
 **3 token / 3 consumer / 2 failure / 2 delay** target sends. Consumer authorization
 results were **false, true, true**. These totals exceed the guide's minimal
-2/2/1/1 sequence; logs alone do not establish why the extra calls were made, so
-an exact minimal send-count acceptance is not claimed. No calls were made by
+2/2/1/1 sequence; logs alone did not establish why the extra calls were made at this readback.
+Davian subsequently confirmed direct fixture-URL calls; see the separate
+[publication investigation](sequential-workflows-publication.md) for the
+operator-confirmed reconciliation and its per-request attribution limits. No calls were made by
 this cleanup task. Both successful consumer calls support the Bearer checks;
 source tokens were absent from all ten matching endpoint log events. Historical
 immutable evidence/storage containment remains operator-reported here because

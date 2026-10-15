@@ -39,6 +39,10 @@ func cloudMain() {
 		panic("worker configuration unavailable")
 	}
 	service := &execution.Service{DB: dynamodb.NewFromConfig(cfg), Objects: s3.NewFromConfig(cfg), Queue: sqs.NewFromConfig(cfg), KMS: kms.NewFromConfig(cfg), Table: os.Getenv("KURIER_CONTROL_TABLE"), Protected: os.Getenv("KURIER_PROTECTED_TABLE"), Bucket: os.Getenv("KURIER_EVIDENCE_BUCKET"), QueueURL: os.Getenv("KURIER_EXECUTION_QUEUE_URL"), KeyARN: os.Getenv("KURIER_KMS_KEY_ARN"), Stage: "dev-api"}
+	service.PublicationTrace = func(event execution.PublicationTrace) {
+		raw, _ := json.Marshal(event)
+		log.Print(string(raw))
+	}
 	lambda.Start(func(ctx context.Context, event events.SQSEvent) (events.SQSEventResponse, error) {
 		result := events.SQSEventResponse{BatchItemFailures: []events.SQSBatchItemFailure{}}
 		for _, record := range event.Records {

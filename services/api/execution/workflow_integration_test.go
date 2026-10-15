@@ -819,3 +819,132 @@ func TestIntegrationWorkflowLegacyRunRequiresDefinition(t *testing.T) {
 	}
 	assertWorkflowAccounting(t, f, run, "failed", 0, 2)
 }
+
+// Faults model AWS TransactionConflict cancellations around real Local
+// transactions. Polling uses the real RunDetail condition checks, not a mock.
+func TestIntegrationWorkflowPublicationConflictsWithPolling(t *testing.T) {
+	for _, phase := range []string{"pending", "writing", "uploaded", "published"} {
+		t.Run(phase, func(t *testing.T) {
+			f, wf := workflowProtocolFixture(t)
+			run := workflowRun(t, f, wf, id())
+			ctx := context.Background()
+			conflicts := 0
+			f.db.before = func(in *dynamodb.TransactWriteItemsInput) error {
+				if conflicts < 2 && writesState(in, "executionUpload", phase) {
+					if _, e := f.s.RunDetail(ctx, f.owner, f.project, run.WorkflowRunID); e != nil {
+						t.Fatal("normal detail polling failed before injected conflict")
+					}
+					conflicts++
+					return canceledCodes("None", "TransactionConflict")
+				}
+				return nil
+			}
+			if e := f.s.Process(ctx, workflowMessage(f, run, 0)); e != nil {
+				t.Fatalf("publication failed after transient %s conflict", phase)
+			}
+			f.db.before = nil
+			if conflicts != 2 {
+				t.Fatal("publication boundary not exercised")
+			}
+			for i := 0; i < 2; i++ {
+				if e := f.s.Process(ctx, workflowMessage(f, run, i)); e != nil {
+					t.Fatal(e)
+				}
+				if e := f.s.Process(ctx, workflowMessage(f, run, i)); e != nil {
+					t.Fatal(e)
+				}
+			}
+			result, e := f.s.RunDetail(ctx, f.owner, f.project, run.WorkflowRunID)
+			p, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "META")
+			quota, _ := f.s.get(ctx, f.s.Table, "STAGE#dev-api", "QUOTA")
+			if e != nil || result.State != "completed" || f.calls.Load() != 2 || f.objects.puts != 2 || p.InflightCount != 0 || quota.Count != 2 {
+				t.Fatal("poll/conflict recovery duplicated effects or accounting")
+			}
+			for i := 0; i < 2; i++ {
+				if _, err := f.s.get(ctx, f.s.Protected, p.PK, outputKey(run.WorkflowRunID, i)); !missingRow(err) {
+					t.Fatal("terminal ciphertext retained")
+				}
+			}
+		})
+	}
+}
+
+func TestIntegrationWorkflowExhaustedPublicationConflictNeverReplays(t *testing.T) {
+	f, wf := workflowProtocolFixture(t)
+	run := workflowRun(t, f, wf, id())
+	ctx := context.Background()
+	f.db.before = func(in *dynamodb.TransactWriteItemsInput) error {
+		if writesState(in, "executionUpload", "published") {
+			return canceledCodes("TransactionConflict")
+		}
+		return nil
+	}
+	if f.s.Process(ctx, workflowMessage(f, run, 0)) == nil {
+		t.Fatal("exhaustion must surface")
+	}
+	if f.calls.Load() != 1 {
+		t.Fatal("unexpected target count")
+	}
+	f.db.before = nil
+	f.now = f.now.Add(121 * time.Second)
+	if e := f.s.Process(ctx, workflowMessage(f, run, 0)); e != nil {
+		t.Fatal(e)
+	}
+	if e := f.s.Process(ctx, workflowMessage(f, run, 0)); e != nil {
+		t.Fatal(e)
+	}
+	result, e := f.s.RunDetail(ctx, f.owner, f.project, run.WorkflowRunID)
+	if e != nil || result.State != "failed" || result.Steps[0].Summary.Outcome.Certainty != "unknown" || result.Steps[1].State != "skipped" || f.calls.Load() != 1 {
+		t.Fatal("exhausted publication failed to stop conservatively without HTTP replay")
+	}
+	p, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "META")
+	quota, _ := f.s.get(ctx, f.s.Table, "STAGE#dev-api", "QUOTA")
+	if p.InflightCount != 0 || quota.Count != 2 {
+		t.Fatal("recovery accounting mismatch")
+	}
+}
+
+func TestIntegrationWorkflowConflictRetryPreservesFinalizationGuards(t *testing.T) {
+	for _, guard := range []string{"project-deletion", "source-revocation", "recovery-generation"} {
+		t.Run(guard, func(t *testing.T) {
+			f, wf := workflowProtocolFixture(t)
+			ctx := context.Background()
+			run := workflowRun(t, f, wf, id())
+			fired := false
+			f.db.before = func(in *dynamodb.TransactWriteItemsInput) error {
+				if !fired && writesState(in, "executionUpload", "published") {
+					fired = true
+					switch guard {
+					case "project-deletion":
+						p, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "META")
+						p.State = "deleting"
+						p.Version++
+						p.DeletionEpoch++
+						f.write(t, f.s.Table, p)
+					case "source-revocation":
+						r, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "REQ#"+f.request)
+						r.State = "deleted"
+						r.Revision++
+						f.write(t, f.s.Table, r)
+					case "recovery-generation":
+						stage, _ := f.s.get(ctx, f.s.Table, "STAGE#dev-api", "META")
+						stage.RecoveryGeneration = "recovered"
+						stage.Version++
+						f.write(t, f.s.Table, stage)
+					}
+					return canceledCodes("TransactionConflict")
+				}
+				return nil
+			}
+			if f.s.Process(ctx, workflowMessage(f, run, 0)) == nil || !fired || f.calls.Load() != 1 {
+				t.Fatal("changed finalization guard bypassed")
+			}
+			if _, e := f.s.get(ctx, f.s.Table, "P#"+f.project, "JOB#"+workflowIdentity(run.WorkflowRunID, 1, "job")); !missingRow(e) {
+				t.Fatal("successor created despite failed guard")
+			}
+			if _, e := f.s.get(ctx, f.s.Protected, "P#"+f.project, outputKey(run.WorkflowRunID, 0)); !missingRow(e) {
+				t.Fatal("output committed despite failed guard")
+			}
+		})
+	}
+}

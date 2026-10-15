@@ -96,6 +96,7 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 		}
 		job = read
 	}
+	s.tracePublication(job, row{}, "claimed", nil)
 	evidence := NewEvidence(job.ProjectID, job.ExecutionID, anchor.SubmittedAt, *anchor.Plan)
 	if recovery {
 		if recovered, err := s.recoverPrepared(ctx, job); err != nil {
@@ -223,6 +224,7 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 			return safeError()
 		}
 	}
+	s.tracePublication(job, row{}, "intent", nil)
 	prepared.Run(ctx, evidence)
 	evidence.StartedAt = &job.DispatchIntentAt
 
@@ -281,12 +283,14 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence, outp
 	job.Version++
 	jput, _ := s.put(s.Table, job, false)
 	if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectUpdate(p, ticket.Bytes, 0), jput, put, qput}); e != nil {
+		s.tracePublication(job, ticket, "register", e)
 		read, readErr := s.get(ctx, s.Table, ticket.PK, ticket.SK)
 		if readErr != nil || read.Checksum != ticket.Checksum {
 			return safeError()
 		}
 		ticket = read
 	}
+	s.tracePublication(job, ticket, "registered", nil)
 	// Persist writing intent separately. A crash/timeout after it is unresolved
 	// until the PUT outcome is durably settled; absence alone is not settlement.
 	stage, p, job, e = s.liveWriter(ctx, job)
@@ -299,11 +303,14 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence, outp
 	job.Version++
 	jput, _ = s.put(s.Table, job, false)
 	if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), jput, tput}); e != nil {
+		s.tracePublication(job, ticket, "writing", e)
 		return safeError()
 	}
+	s.tracePublication(job, ticket, "writing", nil)
 	upload, cancel := context.WithTimeout(ctx, 15*time.Second)
 	_, e = s.Objects.PutObject(upload, &s3.PutObjectInput{Bucket: &s.Bucket, Key: &ticket.ObjectKey, Body: bytes.NewReader(raw), ContentType: aws.String("application/json"), IfNoneMatch: aws.String("*"), ChecksumSHA256: aws.String(base64.StdEncoding.EncodeToString(hash[:]))})
 	cancel()
+	s.tracePublication(job, ticket, "put_ack", e)
 	if e != nil {
 		return safeError()
 	}
@@ -313,13 +320,17 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence, outp
 	ticket.Version++
 	tput, _ = s.put(s.Table, ticket, false)
 	if e = s.transact(ctx, []dt.TransactWriteItem{tput}); e != nil {
+		s.tracePublication(job, ticket, "settle", e)
 		read, readErr := s.get(ctx, s.Table, ticket.PK, ticket.SK)
 		if readErr != nil || !read.WriteSettled {
 			return safeError()
 		}
 		ticket = read
 	}
-	return s.finalize(ctx, job, ticket, evidence, outputs...)
+	s.tracePublication(job, ticket, "settled", nil)
+	e = s.finalize(ctx, job, ticket, evidence, outputs...)
+	s.tracePublication(job, ticket, "finalize", e)
+	return e
 }
 func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *Evidence, outputs ...*Envelope) error {
 	stage, p, job, e := s.liveWriter(ctx, expected)
