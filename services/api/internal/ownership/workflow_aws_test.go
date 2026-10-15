@@ -693,3 +693,81 @@ func TestAWSSequentialWorkflowCleanup(t *testing.T) {
 	}
 	t.Logf("Interrupted fixture scheduled cleanup operation=%s completed; Control tombstone/Protected0/S30; disposable identity removed; numeric usage preserved", op.OperationID)
 }
+
+// Explicit operator-authorized cleanup of the reported browser deletion only.
+// Calls the existing fenced maintenance path; never sends HTTP or deletes users.
+func TestAWSSequentialWorkflowBrowserCleanup(t *testing.T) {
+	const project = "31365f35-9c01-46a7-a70d-62f822ffbc4a"
+	const operation = "efe8008a-ce58-447d-b9c7-440ae9bb4f7d"
+	if os.Getenv("KURIER_AWS_BROWSER_CLEANUP_OPERATION") != operation {
+		t.Skip("explicit browser deletion authorization required")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	cfg, e := workflowAWSConfig(ctx)
+	if e != nil {
+		t.Fatal("AWS configuration unavailable")
+	}
+	who, e := sts.NewFromConfig(cfg).GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
+	if e != nil || aws.ToString(who.Account) != "747336059622" || strings.HasSuffix(aws.ToString(who.Arn), ":root") {
+		t.Fatal("intended non-root identity required")
+	}
+	db := dynamodb.NewFromConfig(cfg)
+	st := NewStore(db, os.Getenv("KURIER_AWS_TEST_TABLE"), "dev-api")
+	if st.table != "kurier-dev-api-ControlTable-bdxbaoxb" || os.Getenv("KURIER_AWS_TEST_PROTECTED") != "kurier-dev-api-ProtectedTable-szbvcchc" || os.Getenv("KURIER_AWS_TEST_BUCKET") != "executionevidence-71a0f7a" {
+		t.Fatal("development resources required")
+	}
+	st.ConfigureProtected(os.Getenv("KURIER_AWS_TEST_PROTECTED"), nil)
+	configureAWSExecutionFixture(st, cfg)
+	read := func(pk, sk string) map[string]dt.AttributeValue {
+		r, err := db.GetItem(ctx, &dynamodb.GetItemInput{TableName: &st.table, Key: key(pk, sk), ConsistentRead: aws.Bool(true)})
+		if err != nil {
+			t.Fatal("strong read failed")
+		}
+		return r.Item
+	}
+	marker, _ := json.Marshal(read("STAGE#dev-api", "META"))
+	p, e := st.get(ctx, "P#"+project, "META")
+	if e != nil || p.Operation == nil || p.Operation.OperationID != operation || (p.State != "deleting" && p.State != "deleted") {
+		t.Fatal("exact accepted deletion required")
+	}
+	user := read("U#"+p.OwnerID, "META")
+	if len(user) == 0 {
+		t.Fatal("real owner must remain present")
+	}
+	userBefore, _ := json.Marshal(user)
+	quotaBefore, _ := json.Marshal(read("STAGE#dev-api", "QUOTA"))
+	for pass := 0; pass < 40 && p.State != "deleted"; pass++ {
+		_, err := st.CleanupProject(ctx, project)
+		next, getErr := st.get(ctx, p.PK, "META")
+		if getErr != nil || next.Operation == nil || next.Operation.OperationID != operation {
+			t.Fatal("deletion readback failed")
+		}
+		t.Logf("guarded pass=%d state=%s version=%d pending=%t", pass+1, next.State, next.Version, err != nil)
+		p = next
+	}
+	if p.State != "deleted" || p.Operation.State != "completed" {
+		t.Fatal("bounded cleanup incomplete")
+	}
+	for _, table := range []string{st.table, st.executions.Protected} {
+		r, err := db.Query(ctx, &dynamodb.QueryInput{TableName: &table, ConsistentRead: aws.Bool(true), KeyConditionExpression: aws.String("PK = :pk"), ExpressionAttributeValues: map[string]dt.AttributeValue{":pk": s(p.PK)}})
+		want := 0
+		if table == st.table {
+			want = 1
+		}
+		if err != nil || len(r.LastEvaluatedKey) != 0 || len(r.Items) != want {
+			t.Fatal("physical partition cleanup incomplete")
+		}
+	}
+	objects, e := s3.NewFromConfig(cfg).ListObjectsV2(ctx, &s3.ListObjectsV2Input{Bucket: &st.executions.Bucket, Prefix: aws.String("dev-api/projects/" + project + "/")})
+	if e != nil || aws.ToBool(objects.IsTruncated) || len(objects.Contents) != 0 {
+		t.Fatal("S3 cleanup incomplete")
+	}
+	markerAfter, _ := json.Marshal(read("STAGE#dev-api", "META"))
+	userAfter, _ := json.Marshal(read("U#"+p.OwnerID, "META"))
+	quotaAfter, _ := json.Marshal(read("STAGE#dev-api", "QUOTA"))
+	if !bytes.Equal(marker, markerAfter) || !bytes.Equal(userBefore, userAfter) || !bytes.Equal(quotaBefore, quotaAfter) {
+		t.Fatal("capability, owner or admission quota changed")
+	}
+	t.Logf("operation=%s completed started=%s completed=%s; Control tombstone only, Protected0/S30; owner, stage marker and admission quota preserved; no HTTP dispatched", operation, p.Operation.StartedAt, *p.Operation.CompletedAt)
+}

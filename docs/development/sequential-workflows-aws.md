@@ -195,7 +195,8 @@ They provide exact controlled fixture URLs and expected states/redaction/
 pin/deleted-definition/unknown behavior, cross-owner checks and deletion steps.
 No browser fixture is precreated under a fake identity for Davian to discover:
 the operator creates a project owned by the genuine signed-in Cognito account.
-Operator results, resulting fixture IDs and independent cleanup audit are pending.
+Davian reports all numbered genuine Cognito/browser checks passed, including
+cross-owner checks. Independent cleanup and target-log readback follow below.
 
 Synthetic expiry timestamps and SDK-side notification suppression are deliberate
 test interventions; real elapsed thirty-day retention and an actual AWS queue/
@@ -203,3 +204,63 @@ Lambda outage are not claimed. Actual process-crash/ACK-loss injection,
 comprehensive negative IAM, PITR/restore, clock skew, maximum-size Lambda
 memory/latency, sustained quota saturation and billed cost remain unperformed.
 No automatic HTTP replay or unreviewed uncertain-PUT absence proof was used.
+
+## Operator acceptance and reported slow deletion
+
+Davian reported all nine numbered genuine Cognito/browser checks passed. This is
+operator-reported acceptance, separate from automated fixture tests. The browser
+project `31365f35-9c01-46a7-a70d-62f822ffbc4a` was already deleting under operation
+`efe8008a-ce58-447d-b9c7-440ae9bb4f7d`. Its recorded start/completion interval is
+**9 minutes 34.675 seconds**. Access revocation happens at deletion acceptance;
+physical cleanup proceeds asynchronously.
+
+Inspection found reserved evidence storage already zero and eleven remaining
+Control records (project/work coordination plus workflow definitions/run/step
+metadata). The normal drain settles one upload ticket per invocation, then
+metadata in at most twenty-record transactions. With the once-per-minute
+schedule, even small workflow projects can take several minutes. No uncertain
+PUT or unknown-record blocker was identified for this project.
+
+At Davian's request, the same existing guarded `CleanupProject`/`DrainProject`
+paths were invoked for this exact accepted deletion. No raw child deletion,
+HTTP dispatch, credential change or user removal occurred. The first helper
+incorrectly treated unchanged project version as no progress: metadata deletion
+can advance without incrementing that version. That observer failed and is not
+called a pass; the predicate was removed. The scheduler subsequently recorded
+completion. This is **manually assisted cleanup**, not an entirely scheduled
+cleanup timing measurement. The final helper passed genuine AWS strong reads:
+Control contains only its minimal deleted-project tombstone, Protected is empty,
+and a complete S3 prefix listing is empty. The real owner META, stage capability/
+recovery marker and stage admission quota were byte-for-byte preserved during
+final verification. Numeric admission usage is retained, not refunded.
+
+A memory-only independent audit of the three public browser fixture IDs found
+**3 token / 3 consumer / 2 failure / 2 delay** target sends. Consumer authorization
+results were **false, true, true**. These totals exceed the guide's minimal
+2/2/1/1 sequence; logs alone do not establish why the extra calls were made, so
+an exact minimal send-count acceptance is not claimed. No calls were made by
+this cleanup task. Both successful consumer calls support the Bearer checks;
+source tokens were absent from all ten matching endpoint log events. Historical
+immutable evidence/storage containment remains operator-reported here because
+physical cleanup had already removed those objects. Earlier independent SDK
+containment proof remains documented separately above.
+
+The cleanup helper is opt-in and restricted to this exact project/operation and
+development resources; it leaves real application/Cognito identities intact:
+
+```sh
+KURIER_AWS_BROWSER_CLEANUP_OPERATION=efe8008a-ce58-447d-b9c7-440ae9bb4f7d \
+  npm run test:aws:integration -- TestAWSSequentialWorkflowBrowserCleanup
+```
+
+No consumer artifact, deployment, capability, Free-plan, account-quota or
+concurrency configuration was changed for this investigation. Faster bounded
+cleanup within a single scheduler invocation remains a potential follow-up;
+this task did not deploy a throughput change. Earlier publication/credential
+observer and unperformed operational-test gaps remain open.
+
+Verification for this investigation passed: repository `npm run verify`
+(format/gofmt/lint, 52 frontend and 10 infrastructure tests, production build,
+six Go modules tests/vet), AWS-tagged ownership vet, and the explicit genuine
+AWS cleanup readback helper. Trello operator acceptance is complete; earlier
+unresolved operational follow-up remains open.

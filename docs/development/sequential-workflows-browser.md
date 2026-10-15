@@ -1,8 +1,9 @@
 # Sequential workflow Cognito/browser checks
 
 These are numbered checks for Davian against genuine Cognito and the deployed
-`dev-api` API. They are **pending operator execution**. Automated Chromium tests
-use fixture authentication and do not satisfy this checklist. The SDK AWS suite
+`dev-api` API. **Davian reports all nine checks passed.** Physical project
+cleanup was independently verified after that report; see the AWS results below.
+Automated Chromium tests use fixture authentication and do not satisfy this checklist. The SDK AWS suite
 uses a separate disposable owner/project, which is deleted after its checks.
 
 Start the current branch frontend with `npm run dev:cloud`, open

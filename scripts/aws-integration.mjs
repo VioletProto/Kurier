@@ -58,6 +58,7 @@ if (
     "TestAWSLocalAgent",
     "TestAWSSequentialWorkflows",
     "TestAWSSequentialWorkflowCleanup",
+    "TestAWSSequentialWorkflowBrowserCleanup",
   ].includes(filter)
 )
   throw new Error("Choose a scoped AWS test filter.");
