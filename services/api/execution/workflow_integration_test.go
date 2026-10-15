@@ -44,7 +44,7 @@ func workflowProtocolFixture(t *testing.T) (*protocolFixture, Workflow) {
 	}
 	f.s.prepare = func(ctx context.Context, plan Plan, values map[string]string) (*Prepared, error) {
 		return fixturePrepared(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if f.calls.Add(1) == 2 && r.Header.Get("Authorization") != "Bearer fixture-runtime-credential" {
+			if f.calls.Add(1)%2 == 0 && r.Header.Get("Authorization") != "Bearer fixture-runtime-credential" {
 				t.Error("consumer did not receive rendered header")
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -526,4 +526,296 @@ func TestIntegrationWorkflowFullProjectRejectsNewAdmission(t *testing.T) {
 	if _, e = f.s.get(ctx, f.s.Table, "STAGE#dev-api", "QUOTA"); !missingRow(e) {
 		t.Fatal("rejected storage admission charged quota")
 	}
+}
+
+// These tests use DynamoDB Local and controlled HTTP/KMS/queue/object fixtures.
+func finishWorkflowFixture(t *testing.T, f *protocolFixture, run WorkflowRun) {
+	t.Helper()
+	for i := range run.Steps {
+		if e := f.s.Process(context.Background(), workflowMessage(f, run, i)); e != nil {
+			t.Fatal(e)
+		}
+	}
+}
+func assertWorkflowAccounting(t *testing.T, f *protocolFixture, run WorkflowRun, state string, sends, admissions int64) {
+	t.Helper()
+	ctx := context.Background()
+	detail, e := f.s.RunDetail(ctx, f.owner, f.project, run.WorkflowRunID)
+	if e != nil || detail.State != state || int64(f.calls.Load()) != sends {
+		t.Fatalf("unexpected outcome: state=%s sends=%d err=%v", detail.State, f.calls.Load(), e)
+	}
+	p, e := f.s.get(ctx, f.s.Table, "P#"+f.project, "META")
+	if e != nil || p.InflightCount != 0 {
+		t.Fatal("inflight accounting not released exactly once", e)
+	}
+	q, e := f.s.get(ctx, f.s.Table, "STAGE#dev-api", "QUOTA")
+	if e != nil || q.Count != admissions {
+		t.Fatal("admission accounting changed", e)
+	}
+	if state == "failed" && (detail.Steps[0].State != "failed" || detail.Steps[1].State != "skipped") {
+		t.Fatal("undispatched run did not fail and skip successors")
+	}
+}
+func TestIntegrationWorkflowDeletedDefinitionFrozenRerun(t *testing.T) {
+	f, wf := workflowProtocolFixture(t)
+	ctx := context.Background()
+	original := workflowRun(t, f, wf, id())
+	finishWorkflowFixture(t, f, original)
+	if e := f.s.DeleteWorkflow(ctx, f.owner, f.project, wf.WorkflowID, wf.Revision); e != nil {
+		t.Fatal(e)
+	}
+	key := id()
+	rerun, e := f.s.SubmitWorkflow(ctx, f.owner, f.project, original.WorkflowRunID, key, 0, RunOptions{Target: "cloud", AllowInsecureSecrets: true}, true)
+	if e != nil {
+		t.Fatal(e)
+	}
+	stored, e := f.s.get(ctx, f.s.Table, "P#"+f.project, "RUN#"+rerun.WorkflowRunID)
+	if e != nil || stored.WorkflowSubmission != workflowFrozenRerun || stored.RerunSourceRunID != original.WorkflowRunID {
+		t.Fatal("rerun provenance missing", e)
+	}
+	again, e := f.s.SubmitWorkflow(ctx, f.owner, f.project, original.WorkflowRunID, key, 0, RunOptions{Target: "cloud", AllowInsecureSecrets: true}, true)
+	if e != nil || again.WorkflowRunID != rerun.WorkflowRunID {
+		t.Fatal("rerun admission duplicated", e)
+	}
+	// Change live configuration: the rerun must still extract/bind its frozen sequence.
+	req, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "REQ#"+f.request)
+	req.ConfigurationJSON = "{}"
+	req.Revision++
+	f.write(t, f.s.Table, req)
+	finishWorkflowFixture(t, f, rerun)
+	for i := 0; i < 2; i++ {
+		if e = f.s.Process(ctx, workflowMessage(f, rerun, i)); e != nil {
+			t.Fatal(e)
+		}
+	}
+	assertWorkflowAccounting(t, f, rerun, "completed", 4, 4)
+	detail, e := f.s.RunDetail(ctx, f.owner, f.project, rerun.WorkflowRunID)
+	if e != nil || detail.StartedAt == nil || detail.LiveWorkflowID != nil {
+		t.Fatal("rerun intent or deleted-definition inspection incorrect", e)
+	}
+}
+func TestIntegrationWorkflowQueuedDefinitionDeletion(t *testing.T) {
+	f, wf := workflowProtocolFixture(t)
+	run := workflowRun(t, f, wf, id())
+	if e := f.s.DeleteWorkflow(context.Background(), f.owner, f.project, wf.WorkflowID, wf.Revision); e != nil {
+		t.Fatal(e)
+	}
+	for i := 0; i < 3; i++ {
+		if e := f.s.Process(context.Background(), workflowMessage(f, run, 0)); e != nil {
+			t.Fatal(e)
+		}
+	}
+	assertWorkflowAccounting(t, f, run, "failed", 0, 2)
+}
+func TestIntegrationWorkflowFrozenRerunRequiredSources(t *testing.T) {
+	for _, kind := range []string{"future_request", "secret"} {
+		for _, timing := range []string{"before_admission", "after_admission", "at_intent"} {
+			t.Run(kind+"/"+timing, func(t *testing.T) {
+				f, wf := workflowProtocolFixture(t)
+				ctx := context.Background()
+				// Give step two a distinct required request so step one's source
+				// check alone cannot authorize the entire frozen sequence.
+				def, e := f.s.WorkflowDetail(ctx, f.owner, f.project, wf.WorkflowID)
+				if e != nil {
+					t.Fatal(e)
+				}
+				req, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "REQ#"+f.request)
+				req.RequestID = id()
+				req.SK = "REQ#" + req.RequestID
+				var source row
+				table := f.s.Table
+				if kind == "secret" {
+					secret := id()
+					source = row{PK: req.PK, SK: "SECRET#" + secret, Kind: "savedSecret", SchemaVersion: 1, ProjectID: f.project, SecretID: secret, Revision: 1, State: "active", ValueKind: "string", Envelope: fixtureSecretEnvelope(t, f.s, f.project, secret, "fixture-required-secret", 1)}
+					table = f.s.Protected
+					f.write(t, table, source)
+					var cfg Configuration
+					if e := json.Unmarshal([]byte(req.ConfigurationJSON), &cfg); e != nil {
+						t.Fatal(e)
+					}
+					cfg.Headers = append(cfg.Headers, Field{Name: "X-Protected", Enabled: true, Sensitive: true, BindingID: id(), Masked: true, SecretRef: &Ref{SecretID: secret}})
+					raw, _ := json.Marshal(cfg)
+					req.ConfigurationJSON = string(raw)
+				}
+				f.write(t, f.s.Table, req)
+				if kind == "future_request" {
+					source = req
+				}
+				def.Steps[1].RequestID = req.RequestID
+				wf, e = f.s.SaveWorkflow(ctx, f.owner, f.project, wf.WorkflowID, wf.Revision, WorkflowDefinition{Name: def.Name, Steps: def.Steps}, false)
+				if e != nil {
+					t.Fatal(e)
+				}
+				original := workflowRun(t, f, wf, id())
+				finishWorkflowFixture(t, f, original)
+				if e = f.s.DeleteWorkflow(ctx, f.owner, f.project, wf.WorkflowID, wf.Revision); e != nil {
+					t.Fatal(e)
+				}
+				revoke := func() {
+					source.State = "deleted"
+					source.Revision++
+					f.write(t, table, source)
+				}
+				if timing == "before_admission" {
+					revoke()
+				}
+				rerun, e := f.s.SubmitWorkflow(ctx, f.owner, f.project, original.WorkflowRunID, id(), 0, RunOptions{Target: "cloud", AllowInsecureSecrets: true}, true)
+				if timing == "before_admission" {
+					if e == nil {
+						t.Fatal("revoked source admitted")
+					}
+					assertWorkflowAccounting(t, f, original, "completed", 2, 2)
+					return
+				}
+				if e != nil {
+					t.Fatal(e)
+				}
+				if timing == "after_admission" {
+					revoke()
+				} else {
+					fired := false
+					f.db.before = func(in *dynamodb.TransactWriteItemsInput) error {
+						if !fired && workflowIntentTransaction(in) {
+							fired = true
+							revoke()
+						}
+						return nil
+					}
+					_ = f.s.Process(ctx, workflowMessage(f, rerun, 0))
+					f.db.before = nil
+					if !fired || f.calls.Load() != 2 {
+						t.Fatal("revocation did not fence first intent")
+					}
+					f.now = f.now.Add(121 * time.Second)
+				}
+				for i := 0; i < 3; i++ {
+					if e = f.s.Process(ctx, workflowMessage(f, rerun, 0)); e != nil {
+						t.Fatal(e)
+					}
+				}
+				assertWorkflowAccounting(t, f, rerun, "failed", 2, 4)
+			})
+		}
+	}
+}
+func workflowIntentTransaction(in *dynamodb.TransactWriteItemsInput) bool {
+	for _, a := range in.TransactItems {
+		if a.Put != nil {
+			kind, _ := a.Put.Item["kind"].(*dt.AttributeValueMemberS)
+			state, _ := a.Put.Item["state"].(*dt.AttributeValueMemberS)
+			if kind != nil && state != nil && kind.Value == "executionJob" && state.Value == "running" {
+				return true
+			}
+		}
+	}
+	return false
+}
+func TestIntegrationWorkflowDefinitionDeletionAtFirstIntent(t *testing.T) {
+	for _, origin := range []string{"definition", "frozen_rerun"} {
+		for _, winner := range []string{"deletion", "intent"} {
+			t.Run(origin+"/"+winner, func(t *testing.T) {
+				f, wf := workflowProtocolFixture(t)
+				ctx := context.Background()
+				run := workflowRun(t, f, wf, id())
+				sends, admissions := int64(0), int64(2)
+				if origin == "frozen_rerun" {
+					finishWorkflowFixture(t, f, run)
+					var e error
+					run, e = f.s.SubmitWorkflow(ctx, f.owner, f.project, run.WorkflowRunID, id(), 0, RunOptions{Target: "cloud", AllowInsecureSecrets: true}, true)
+					if e != nil {
+						t.Fatal(e)
+					}
+					sends, admissions = 2, 4
+				}
+				fired := false
+				hook := func(in *dynamodb.TransactWriteItemsInput) error {
+					if !fired && workflowIntentTransaction(in) {
+						fired = true
+						if e := f.s.DeleteWorkflow(ctx, f.owner, f.project, wf.WorkflowID, wf.Revision); e != nil {
+							t.Fatal(e)
+						}
+					}
+					return nil
+				}
+				if winner == "deletion" {
+					f.db.before = hook
+				} else {
+					f.db.after = hook
+				}
+				_ = f.s.Process(ctx, workflowMessage(f, run, 0))
+				f.db.before, f.db.after = nil, nil
+				if !fired {
+					t.Fatal("first-intent race not exercised")
+				}
+				f.now = f.now.Add(121 * time.Second)
+				// Duplicate deliveries race after either side of the intent boundary.
+				var wg sync.WaitGroup
+				for i := 0; i < 8; i++ {
+					wg.Add(1)
+					go func() { defer wg.Done(); _ = f.s.Process(ctx, workflowMessage(f, run, 0)) }()
+				}
+				wg.Wait()
+				if winner == "deletion" && origin == "definition" {
+					assertWorkflowAccounting(t, f, run, "failed", sends, admissions)
+					return
+				}
+				if e := f.s.Process(ctx, workflowMessage(f, run, 1)); e != nil {
+					t.Fatal(e)
+				}
+				assertWorkflowAccounting(t, f, run, "completed", sends+2, admissions)
+			})
+		}
+	}
+}
+
+func TestIntegrationWorkflowRerunAdmissionContextDeletionRace(t *testing.T) {
+	f, wf := workflowProtocolFixture(t)
+	ctx := context.Background()
+	original := workflowRun(t, f, wf, id())
+	finishWorkflowFixture(t, f, original)
+	if e := f.s.DeleteWorkflow(ctx, f.owner, f.project, wf.WorkflowID, wf.Revision); e != nil {
+		t.Fatal(e)
+	}
+	fired := false
+	f.db.before = func(in *dynamodb.TransactWriteItemsInput) error {
+		for _, a := range in.TransactItems {
+			if a.Put == nil {
+				continue
+			}
+			kind, _ := a.Put.Item["kind"].(*dt.AttributeValueMemberS)
+			if !fired && kind != nil && kind.Value == "executionWorkflowRun" {
+				fired = true
+				// Model context cleanup winning after the authorized retained
+				// read and before admission. No new run/quota may commit.
+				_, e := f.db.Client.DeleteItem(ctx, &dynamodb.DeleteItemInput{TableName: &f.s.Table, Key: keys("P#"+f.project, "RUN#"+original.WorkflowRunID)})
+				return e
+			}
+		}
+		return nil
+	}
+	_, e := f.s.SubmitWorkflow(ctx, f.owner, f.project, original.WorkflowRunID, id(), 0, RunOptions{Target: "cloud", AllowInsecureSecrets: true}, true)
+	f.db.before = nil
+	if !fired || e == nil || f.calls.Load() != 2 {
+		t.Fatal("source context deletion did not fence rerun admission")
+	}
+	p, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "META")
+	q, _ := f.s.get(ctx, f.s.Table, "STAGE#dev-api", "QUOTA")
+	if p.InflightCount != 0 || q.Count != 2 {
+		t.Fatal("rejected rerun consumed accounting")
+	}
+}
+func TestIntegrationWorkflowLegacyRunRequiresDefinition(t *testing.T) {
+	f, wf := workflowProtocolFixture(t)
+	ctx := context.Background()
+	run := workflowRun(t, f, wf, id())
+	stored, _ := f.s.get(ctx, f.s.Table, "P#"+f.project, "RUN#"+run.WorkflowRunID)
+	stored.WorkflowSubmission = ""
+	f.write(t, f.s.Table, stored)
+	if e := f.s.DeleteWorkflow(ctx, f.owner, f.project, wf.WorkflowID, wf.Revision); e != nil {
+		t.Fatal(e)
+	}
+	if e := f.s.Process(ctx, workflowMessage(f, run, 0)); e != nil {
+		t.Fatal(e)
+	}
+	assertWorkflowAccounting(t, f, run, "failed", 0, 2)
 }

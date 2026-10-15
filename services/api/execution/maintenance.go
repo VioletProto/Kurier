@@ -342,7 +342,7 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 	case "executionWorkflow":
 		return r.SK == "WF#"+r.WorkflowID && uuidPattern.MatchString(r.WorkflowID)
 	case "executionWorkflowRun":
-		return r.SK == "RUN#"+r.RunID && uuidPattern.MatchString(r.RunID) && r.StepCount >= 2 && r.StepCount <= 10
+		return validWorkflowSubmission(r) && r.SK == "RUN#"+r.RunID && uuidPattern.MatchString(r.RunID) && r.StepCount >= 2 && r.StepCount <= 10
 	case "executionWorkflowStep":
 		return r.SK == stepKey(r.RunID, r.Position) && r.Position >= 0 && r.Position < 10 && r.Plan != nil
 	case "executionWorkflowInputs":

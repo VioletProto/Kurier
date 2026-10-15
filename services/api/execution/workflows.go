@@ -244,8 +244,8 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	var wf row
 	if rerun {
 		old, e := s.get(ctx, s.Table, p.PK, "RUN#"+source)
-		if e != nil {
-			return WorkflowRun{}, e
+		if e != nil || old.Kind != "executionWorkflowRun" || old.OwnerID != owner || old.ProjectID != project {
+			return WorkflowRun{}, failure(404, "not_found")
 		}
 		if _, e = s.RunDetail(ctx, owner, project, source); e != nil {
 			return WorkflowRun{}, e
@@ -360,13 +360,15 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	now := stamp(s.now())
 	defRaw, _ := json.Marshal(definition)
 	run := row{PK: p.PK, SK: "RUN#" + runID, Kind: "executionWorkflowRun", SchemaVersion: 1, ProjectID: project, OwnerID: owner, RunID: runID, WorkflowID: wf.WorkflowID, WorkflowRevision: wf.Revision, State: "queued", StepCount: len(plans), ConfigurationJSON: string(defRaw), Sources: sources, SubmittedAt: now, RecoveryGeneration: stage.RecoveryGeneration, LPK: p.PK + "#RUN", LSK: now + "#" + runID}
+	run.WorkflowSubmission = workflowDefinitionSubmission
 	if rerun {
 		run.WorkflowRevision = wf.WorkflowRevision
+		run.WorkflowSubmission = workflowFrozenRerun
+		run.RerunSourceRunID = source
 	}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), user, s.projectUpdate(p, 0, 1)}
-	if !rerun {
-		actions = append(actions, s.rowGuard(wf))
-	}
+	// Fence the definition or retained source run against concurrent deletion.
+	actions = append(actions, s.rowGuard(wf))
 	for _, r := range requests {
 		actions = append(actions, s.sourceGuard(r, s.Table))
 	}

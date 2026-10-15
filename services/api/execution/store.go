@@ -60,6 +60,8 @@ type SecretSource struct {
 type row struct {
 	SequentialWorkflowsSchemaVersion int    `dynamodbav:"sequentialWorkflowsSchemaVersion,omitempty"`
 	WorkflowID                       string `dynamodbav:"workflowId,omitempty"`
+	WorkflowSubmission               string `dynamodbav:"workflowSubmission,omitempty"`
+	RerunSourceRunID                 string `dynamodbav:"rerunSourceRunId,omitempty"`
 	WorkflowRevision                 int64  `dynamodbav:"workflowRevision,omitempty"`
 	RunID                            string `dynamodbav:"runId,omitempty"`
 	Position                         int    `dynamodbav:"position,omitempty"`

@@ -8,16 +8,40 @@ import (
 	"time"
 )
 
+const (
+	workflowDefinitionSubmission = "definition"
+	workflowFrozenRerun          = "frozen_rerun"
+)
+
+// Only server-side rerun admission sets this provenance after retained-context
+// authorization. Legacy runs without provenance remain definition-backed.
+func validWorkflowSubmission(run row) bool {
+	switch run.WorkflowSubmission {
+	case "", workflowDefinitionSubmission:
+		return run.RerunSourceRunID == ""
+	case workflowFrozenRerun:
+		return uuidPattern.MatchString(run.RerunSourceRunID) && run.RerunSourceRunID != run.RunID
+	default:
+		return false
+	}
+}
+
 func (s *Service) workflowRuntime(ctx context.Context, job row, plan Plan) (Plan, map[string]string, *runner.ExtractionCapture, error) {
 	run, e := s.get(ctx, s.Table, job.PK, "RUN#"+job.RunID)
 	if e != nil || terminal(run.State) || run.CurrentPosition != job.Position || run.RecoveryGeneration != job.RecoveryGeneration {
 		return plan, nil, nil, failure(409, "conflict")
 	}
-	if run.StartedAt == nil {
+	if !validWorkflowSubmission(run) {
+		return plan, nil, nil, safeError()
+	}
+	if run.StartedAt == nil && run.WorkflowSubmission != workflowFrozenRerun {
 		wf, e := s.get(ctx, s.Table, job.PK, "WF#"+run.WorkflowID)
 		if e != nil || wf.Kind != "executionWorkflow" || wf.State != "active" {
 			return plan, nil, nil, failure(400, "source_unavailable")
 		}
+	}
+	if _, e = s.workflowRequestGuards(ctx, run, ""); e != nil {
+		return plan, nil, nil, e
 	}
 	var definition WorkflowDefinition
 	if StrictJSON([]byte(run.ConfigurationJSON), &definition) != nil {
@@ -104,13 +128,23 @@ func (s *Service) workflowIntent(ctx context.Context, job row) ([]dt.TransactWri
 	if e != nil || step.State != "queued" {
 		return nil, failure(409, "conflict")
 	}
-	actions := []dt.TransactWriteItem{}
-	if run.StartedAt == nil {
+	if !validWorkflowSubmission(run) {
+		return nil, safeError()
+	}
+	// The worker already guards the current request and every secret. Guard
+	// other required requests here without duplicate transaction targets.
+	actions, e := s.workflowRequestGuards(ctx, run, step.Plan.RequestID)
+	if e != nil {
+		return nil, e
+	}
+	if run.StartedAt == nil && run.WorkflowSubmission != workflowFrozenRerun {
 		wf, e := s.get(ctx, s.Table, job.PK, "WF#"+run.WorkflowID)
-		if e != nil || wf.State != "active" {
+		if e != nil || wf.Kind != "executionWorkflow" || wf.State != "active" {
 			return nil, failure(400, "source_unavailable")
 		}
 		actions = append(actions, s.rowGuard(wf))
+	}
+	if run.StartedAt == nil {
 		run.StartedAt = &job.DispatchIntentAt
 	}
 	run.State = "running"
@@ -127,23 +161,30 @@ func (s *Service) workflowIntent(ctx context.Context, job row) ([]dt.TransactWri
 	}
 	return actions, nil
 }
-func (s *Service) workflowSourceGuards(ctx context.Context, run row) ([]dt.TransactWriteItem, error) {
+func (s *Service) workflowRequestGuards(ctx context.Context, run row, exclude string) ([]dt.TransactWriteItem, error) {
 	steps, e := s.runSteps(ctx, run)
 	if e != nil {
 		return nil, e
 	}
 	actions := []dt.TransactWriteItem{}
-	seen := map[string]bool{}
+	seen := map[string]bool{exclude: true}
 	for _, step := range steps {
 		if seen[step.Plan.RequestID] {
 			continue
 		}
 		r, e := s.get(ctx, s.Table, run.PK, "REQ#"+step.Plan.RequestID)
-		if e != nil || r.Kind != "request" || r.State != "active" {
+		if e != nil || r.Kind != "request" || r.State != "active" || r.ProjectID != run.ProjectID {
 			return nil, failure(400, "source_unavailable")
 		}
 		actions = append(actions, s.sourceGuard(r, s.Table))
 		seen[step.Plan.RequestID] = true
+	}
+	return actions, nil
+}
+func (s *Service) workflowSourceGuards(ctx context.Context, run row) ([]dt.TransactWriteItem, error) {
+	actions, e := s.workflowRequestGuards(ctx, run, "")
+	if e != nil {
+		return nil, e
 	}
 	for _, source := range run.Sources {
 		r, e := s.get(ctx, s.Protected, run.PK, "SECRET#"+source.SecretID)

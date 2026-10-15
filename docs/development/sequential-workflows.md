@@ -34,6 +34,25 @@ standalone protocol retry behavior is preserved. After intent, a crash losing
 outputs produces unknown failure with no automatic HTTP replay. An older recovery
 generation is terminalized as recovery_interrupted without sending HTTP.
 
+Run admission now persists server-derived `workflowSubmission: definition` or
+`frozen_rerun`; the latter also records `rerunSourceRunId`. Only deliberate
+whole-run rerun admission can set frozen provenance, after owned retained-context
+authorization and current request/secret checks. Its creation transaction guards
+the source run version against concurrent cleanup. The new run owns its copied
+context; it does not depend on the original remaining retained after admission.
+Missing provenance means an ordinary definition-backed run; malformed or unknown
+provenance fails closed.
+
+Preparation and first intent require an active definition only for an ordinary
+run that has not started. The definition CAS shares the durable first-intent
+transaction, so deletion winning first blocks HTTP; intent winning first lets
+the frozen sequence continue. A frozen-context rerun can start after definition
+deletion, and still records its first intent. All required requests, including
+later-step requests, are checked before preparation and fenced at intent;
+existing user/project/secret/recovery guards remain in place. A lost
+pre-intent race can leave a claim until lease expiry; subsequent delivery
+revalidates authorization without replaying committed HTTP.
+
 Each step's original evidence expiry and individual pins are independent of
 run context. RET claims update the step's evidenceExpired and run counters in
 one transaction. Evidence cleanup preserves step records until run-context
@@ -95,6 +114,14 @@ Verified locally during this task:
   outbox recovery, unknown/no-replay, deletion during S3 publication and restored
   generation interruption. Pin/expiry contention, pinned context with expired
   sibling cleanup, expired last unpin and subsequent context/project draining.
+- Deleted-definition completed-run rerun executes the frozen sequence despite
+  subsequent live request edits; ordinary queued and legacy unmarked runs send
+  no HTTP after definition deletion. Required future-request deletion and secret
+  revocation block rerun admission or dispatch, including at first intent.
+  Both definition/frozen origins cover deletion-before/after-intent with
+  concurrent duplicate delivery, exact send counts and quota/inflight accounting.
+  Source-context deletion between retained read and rerun admission rejects the
+  entire admission without consuming quota.
 - Actual Chromium-to-Go/DynamoDB Local browser suite (five scenarios); Cognito,
   KMS/S3 and target-execution trust remain fixture boundaries.
 
@@ -144,6 +171,17 @@ nine routes' component/integration/permission resources plus code assets. No
 product deployment or marker write was performed. Rebuild/re-diff if runtime
 code changes after preview; code hashes from an earlier preview are not release
 verification.
+
+The deleted-definition rerun fix was rebuilt and previewed against the same
+live stage before deployment. Proposed code archive SHA-256 values are
+`b3a3d8a870817280200b00d2cfdb810d896c68847c9feedf4b84bb024d4e286a`
+for API/cleanup and
+`f28f4eea35b1362d5276f4d4925b21e8200f48442baefeb127eac79ffb7e1a0c`
+for worker/controlled endpoint. These identify preview ZIP artifacts, not
+deployed Lambda CodeSha256 readback. Resource/IAM scope and live inventory/
+plan/concurrency observations above were rechecked unchanged. No deployment or
+activation occurred. This fidelity fix changes internal metadata and guards;
+the accepted external API contract requires no change.
 
 Repeat read-only previews with the existing public `.sst/outputs.json` and an
 active CLI login:
@@ -205,6 +243,11 @@ PITR/backup, 2k KMS operations, 100 extra worker GB-s and <=1 GB additional view
 | Evidence delivery                            | $0.090                                  |
 | Subtotal                                     | About $0.43                             |
 | Logs/cleanup/retry/bootstrap-asset allowance | Round to **$0.50–$1/month incremental** |
+
+The rerun fix adds a small provenance field/source-run condition check and
+bounded reads/intent checks for at most ten distinct required requests; these
+fit the conservative request allowance above. It adds no standing resources
+or compute/concurrency settings. The planning range remains unchanged.
 
 This remains the accepted planning range with a more conservative read budget,
 not observed spend or a spending cap. Current worker is 256 MiB: adding 300 new
