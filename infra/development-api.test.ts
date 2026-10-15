@@ -110,7 +110,14 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(32);
+    expect(resources.filter((r) => r.route)).toHaveLength(41);
+    expect(resources.filter((r) => r.route?.includes("workflow"))).toHaveLength(
+      9,
+    );
+    expect(
+      api.args.environment.KURIER_SEQUENTIAL_WORKFLOWS_SCHEMA_VERSION,
+    ).toBe("1");
+
     const http = resources.find((r) => r.name === "DevelopmentHttpApi")!;
     expect(http.args.cors).toBe(false);
     expect(http.api.corsConfiguration).toBeUndefined();
@@ -176,8 +183,15 @@ describe("scoped development API infrastructure", () => {
       (r) => r.name === "CloudExecutionWorker",
     )!.args.permissions;
     expect(
-      workerPermissions.find((p: any) => p.actions.includes("kms:Decrypt"))
-        .conditions,
+      workerPermissions.find(
+        (p: any) =>
+          p.actions.includes("kms:Decrypt") &&
+          p.conditions?.some(
+            (c: any) =>
+              c.variable === "kms:EncryptionContext:purpose" &&
+              c.values.includes("job-bindings"),
+          ),
+      ).conditions,
     ).toContainEqual({
       test: "StringEquals",
       variable: "kms:EncryptionContext:purpose",

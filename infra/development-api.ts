@@ -220,6 +220,7 @@ export async function createDevelopmentApi() {
     },
   ];
   const executionEnvironment = {
+    KURIER_SEQUENTIAL_WORKFLOWS_SCHEMA_VERSION: "1",
     KURIER_EVIDENCE_PINNING_SCHEMA_VERSION: "1",
     KURIER_LOCAL_AGENT_EXECUTIONS_SCHEMA_VERSION: "1",
     KURIER_CLOUD_EXECUTIONS_SCHEMA_VERSION: "1",
@@ -230,7 +231,7 @@ export async function createDevelopmentApi() {
   const environment = {
     ...executionEnvironment,
     KURIER_STAGE: "dev-api",
-    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "5",
+    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "6",
     KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
     KURIER_PROTECTED_TABLE: protectedTable.name,
     KURIER_CONTROL_TABLE: control.name,
@@ -258,6 +259,11 @@ export async function createDevelopmentApi() {
         ],
       },
       ...protectedPermissions,
+      {
+        actions: ["kms:GenerateDataKey"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions("workflow-inputs"),
+      },
       queueSend,
       { actions: ["s3:GetObject", "s3:PutObject"], resources: [objectArn] },
       {
@@ -327,6 +333,15 @@ export async function createDevelopmentApi() {
     },
   });
   for (const route of [
+    "POST /api/v1/projects/{projectId}/workflows",
+    "GET /api/v1/projects/{projectId}/workflows",
+    "GET /api/v1/projects/{projectId}/workflows/{workflowId}",
+    "PATCH /api/v1/projects/{projectId}/workflows/{workflowId}",
+    "DELETE /api/v1/projects/{projectId}/workflows/{workflowId}",
+    "POST /api/v1/projects/{projectId}/workflows/{workflowId}/runs",
+    "GET /api/v1/projects/{projectId}/workflow-runs",
+    "GET /api/v1/projects/{projectId}/workflow-runs/{workflowRunId}",
+    "POST /api/v1/projects/{projectId}/workflow-runs/{workflowRunId}/rerun",
     "POST /api/v1/local-agents",
     "GET /api/v1/local-agents/current",
     "DELETE /api/v1/local-agents/{localAgentId}",
@@ -371,7 +386,7 @@ export async function createDevelopmentApi() {
     environment: {
       ...executionEnvironment,
       KURIER_STAGE: "dev-api",
-      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "5",
+      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "6",
       KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
       KURIER_PROTECTED_TABLE: protectedTable.name,
       KURIER_CONTROL_TABLE: control.name,
@@ -421,6 +436,18 @@ export async function createDevelopmentApi() {
     },
     permissions: [
       ...tablePermissions,
+      queueSend,
+      { actions: ["dynamodb:PutItem"], resources: [protectedTable.arn] },
+      ...["workflow-inputs", "workflow-output"].map((purpose) => ({
+        actions: ["kms:Decrypt"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions(purpose),
+      })),
+      {
+        actions: ["kms:GenerateDataKey"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions("workflow-output"),
+      },
       {
         actions: [
           "dynamodb:GetItem",

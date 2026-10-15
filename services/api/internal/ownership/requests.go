@@ -233,7 +233,7 @@ func validateConfiguration(c *RequestConfiguration) error {
 			if !f.Sensitive && (f.BindingID != "" || f.SecretWrite != nil || f.SecretRef != nil || f.Masked) {
 				return invalidConfiguration()
 			}
-			if f.Name == "" || control(f.Name, false) || control(f.Value, entry.header) || (!f.Sensitive && (credentialName(f.Name) || obviousCredential(f.Value))) || (entry.header && !headerToken.MatchString(f.Name)) {
+			if f.Name == "" || control(f.Name, false) || control(f.Value, entry.header) || (!f.Sensitive && (credentialName(f.Name) && !(entry.header && f.Value == "") || obviousCredential(f.Value))) || (entry.header && !headerToken.MatchString(f.Name)) {
 				return invalidConfiguration()
 			}
 		}

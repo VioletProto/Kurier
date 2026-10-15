@@ -58,6 +58,19 @@ type SecretSource struct {
 	Revision int64  `dynamodbav:"revision"`
 }
 type row struct {
+	SequentialWorkflowsSchemaVersion int    `dynamodbav:"sequentialWorkflowsSchemaVersion,omitempty"`
+	WorkflowID                       string `dynamodbav:"workflowId,omitempty"`
+	WorkflowRevision                 int64  `dynamodbav:"workflowRevision,omitempty"`
+	RunID                            string `dynamodbav:"runId,omitempty"`
+	Position                         int    `dynamodbav:"position,omitempty"`
+	CurrentPosition                  int    `dynamodbav:"currentPosition,omitempty"`
+	FailedPosition                   *int   `dynamodbav:"failedPosition,omitempty"`
+	StepCount                        int    `dynamodbav:"stepCount,omitempty"`
+	AvailableCount                   int64  `dynamodbav:"availableCount,omitempty"`
+	RunPinnedCount                   int64  `dynamodbav:"runPinnedCount,omitempty"`
+	EvidenceExpired                  bool   `dynamodbav:"evidenceExpired,omitempty"`
+	UpdatedAt                        string `dynamodbav:"updatedAt,omitempty"`
+
 	CandidateCompletedAt string `dynamodbav:"candidateCompletedAt,omitempty"`
 
 	LocalAgentExecutionsSchemaVersion int     `dynamodbav:"localAgentExecutionsSchemaVersion,omitempty"`
@@ -191,12 +204,25 @@ func (s *Service) transact(ctx context.Context, actions []dt.TransactWriteItem) 
 	if len(actions) > 80 || len(raw) > 2*1024*1024 {
 		return safeError()
 	}
-	_, e := s.DB.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{TransactItems: actions})
+	input := &dynamodb.TransactWriteItemsInput{TransactItems: actions, ClientRequestToken: pointer(id())}
+	_, e := s.DB.TransactWriteItems(ctx, input)
+	var conditional *dt.TransactionCanceledException
+	workflow := false
+	for _, a := range actions {
+		if a.Put != nil {
+			if v, ok := a.Put.Item["runId"].(*dt.AttributeValueMemberS); ok && v.Value != "" {
+				workflow = true
+			}
+		}
+	}
+	if workflow && e != nil && !errors.As(e, &conditional) {
+		_, e = s.DB.TransactWriteItems(ctx, input)
+	}
 	return e
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
-	if e != nil || r.State != "active" || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5) || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
+	if e != nil || r.State != "active" || (r.SequentialWorkflowsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 6) || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5 && r.SavedRequestsSchemaVersion != 6) || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 6 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
 		return row{}, safeError()
 	}
 	return r, nil
@@ -212,6 +238,11 @@ func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND localAgentExecutionsSchemaVersion = :c")
 	} else {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(localAgentExecutionsSchemaVersion)")
+	}
+	if stage.SequentialWorkflowsSchemaVersion == 1 {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND sequentialWorkflowsSchemaVersion = :c")
+	} else {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(sequentialWorkflowsSchemaVersion)")
 	}
 	return guard
 }
@@ -264,6 +295,10 @@ func (s *Service) view(ctx context.Context, r row) (View, error) {
 	v := View{ExecutionID: r.ExecutionID, ProjectID: r.ProjectID, Status: r.State, Version: r.Version, SubmittedAt: r.SubmittedAt, StartedAt: r.StartedAt, CompletedAt: r.CompletedAt, Summary: r.Summary, ServerTime: stamp(s.now())}
 	if r.Plan == nil {
 		return v, safeError()
+	}
+	if r.RunID != "" {
+		v.RunID = &r.RunID
+		v.Position = &r.Position
 	}
 	v.Target = "cloud"
 	if r.Plan.Target == "local" {
@@ -407,6 +442,9 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		old, e := s.get(ctx, s.Table, p.PK, "EXEC#"+source)
 		if e != nil || old.Kind != "execution" || old.OwnerID != owner || old.Plan == nil {
 			return View{}, failure(404, "not_found")
+		}
+		if old.RunID != "" {
+			return View{}, failure(409, "conflict")
 		}
 		if _, e = s.view(ctx, old); e != nil {
 			return View{}, e
@@ -561,6 +599,9 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	return s.view(ctx, r)
 }
 func (s *Service) admissionQuota(ctx context.Context, owner string, now time.Time) ([]dt.TransactWriteItem, error) {
+	return s.admissionQuotaCount(ctx, owner, now, 1)
+}
+func (s *Service) admissionQuotaCount(ctx context.Context, owner string, now time.Time, count int64) ([]dt.TransactWriteItem, error) {
 	actions := []dt.TransactWriteItem{}
 	for _, spec := range []struct {
 		pk, sk string
@@ -585,10 +626,10 @@ func (s *Service) admissionQuota(ctx context.Context, owner string, now time.Tim
 			r.Month = now.UTC().Format("2006-01")
 			r.Count = 0
 		}
-		if r.Count >= spec.limit || (spec.pk == "STAGE#"+s.Stage && r.StorageReservedBytes >= 2*1024*1024*1024) {
+		if r.Count+count > spec.limit || (spec.pk == "STAGE#"+s.Stage && r.StorageReservedBytes >= 2*1024*1024*1024) {
 			return nil, failure(429, "rate_limited")
 		}
-		r.Count++
+		r.Count += count
 		if !fresh {
 			r.Version++
 		}

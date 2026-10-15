@@ -736,7 +736,13 @@ export function Executions({
             </button>
           )}
           <button
-            disabled={busy || disabled || !!pending || !selected.liveRequestId}
+            disabled={
+              busy ||
+              disabled ||
+              !!pending ||
+              !selected.liveRequestId ||
+              !!selected.runId
+            }
             onClick={() => {
               setRerunConsent(false);
               setRerunHTTPConsent(false);
@@ -745,6 +751,12 @@ export function Executions({
           >
             Review deliberate rerun
           </button>
+          {selected.runId && (
+            <p>
+              This step belongs to workflow run {selected.runId}. Use the
+              workflow panel to deliberately rerun the entire sequence.
+            </p>
+          )}
           {confirmRerun && (
             <div>
               <p>

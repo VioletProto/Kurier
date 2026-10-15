@@ -1,9 +1,12 @@
 # Cloud-only sequential workflows: review packet
 
-Status: **Proposed**. Prepared for Davian on 2026-10-14. Publication is not
-acceptance. Wait for explicit acceptance before dependent implementation or
-external contract synchronization, and for explicit authorization before AWS
-deployment. No workflow behavior or future fault test is claimed implemented.
+Status: **Accepted by Davian** at `25158b7`. Scoped cloud-only implementation,
+API-contract synchronization, meaningful local/race/browser testing and scoped
+AWS deployment/activation preview with refreshed costs are authorized.
+Deployment and capability activation remain on hold for explicit review.
+The preparation and Proposed labels below preserve the packet reviewed at that
+commit; they do not mean acceptance is still pending. Implementation and runtime
+validation are separate from design acceptance.
 
 Branch `feat/sequential-workflows` starts at refreshed `origin/main` `42fe9e5`,
 which merges [local-agent PR #9](https://github.com/VioletProto/Kurier/pull/9).
@@ -589,3 +592,11 @@ Revision verification: `npm run verify` passed repository formatting, lint,
 tests/vet across six Go modules. Markdown fences, JSON examples and local links
 passed. These baseline checks do not execute the Proposed header-rendering
 behavior or its planned security tests.
+
+## Accepted implementation clarifications
+
+An empty public header value is the saved-request placeholder for a credential
+header such as Authorization. Nonempty public credential values remain rejected;
+protected inputs retain their existing rules. The bound value exists only in
+runtime memory. This makes the accepted public-placeholder binding usable with
+the existing saved-request editor without adding a template or secret store.

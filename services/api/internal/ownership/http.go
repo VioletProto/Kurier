@@ -49,6 +49,15 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 		pattern string
 		handler endpoint
 	}{
+		{"POST /api/v1/projects/{projectId}/workflows", a.workflowEndpoint},
+		{"GET /api/v1/projects/{projectId}/workflows", a.workflowEndpoint},
+		{"GET /api/v1/projects/{projectId}/workflows/{workflowId}", a.workflowEndpoint},
+		{"PATCH /api/v1/projects/{projectId}/workflows/{workflowId}", a.workflowEndpoint},
+		{"DELETE /api/v1/projects/{projectId}/workflows/{workflowId}", a.workflowEndpoint},
+		{"POST /api/v1/projects/{projectId}/workflows/{workflowId}/runs", a.workflowEndpoint},
+		{"GET /api/v1/projects/{projectId}/workflow-runs", a.workflowEndpoint},
+		{"GET /api/v1/projects/{projectId}/workflow-runs/{workflowRunId}", a.workflowEndpoint},
+		{"POST /api/v1/projects/{projectId}/workflow-runs/{workflowRunId}/rerun", a.workflowEndpoint},
 		{"POST /api/v1/projects/{projectId}/requests/{requestId}/executions", a.executionEndpoint},
 		{"GET /api/v1/projects/{projectId}/executions", a.executionEndpoint},
 		{"PUT /api/v1/projects/{projectId}/executions/{executionId}/pin", a.executionEndpoint},

@@ -146,7 +146,9 @@ function validate(c: RequestConfiguration) {
   for (const f of [...c.headers, ...c.queryParameters])
     if (
       !f.name ||
-      (!f.sensitive && credentialName(f.name)) ||
+      (!f.sensitive &&
+        credentialName(f.name) &&
+        !(c.headers.includes(f) && (f.value ?? "") === "")) ||
       /[\r\n]/.test(f.name + (f.value ?? ""))
     )
       return "Use named public headers/query fields or protected credential inputs. Line breaks cannot be saved.";
@@ -512,10 +514,12 @@ export function Requests({
       <p>
         Save public configuration with encrypted bearer tokens, API keys and
         designated sensitive fields. Mark credential rows Protected before
-        entering values. For bearer tokens, use Authorization and enter the full
-        Bearer value. Header names must match the API and cannot contain spaces.
-        API keys use protected header/query rows. Protected inputs are
-        write-only and clear after submission. Execute the saved revision below.
+        entering values. An empty public credential header can be a workflow
+        binding placeholder; never enter a token there. For bearer tokens, use
+        Authorization and enter the full Bearer value. Header names must match
+        the API and cannot contain spaces. API keys use protected header/query
+        rows. Protected inputs are write-only and clear after submission.
+        Execute the saved revision below.
       </p>
       <p>
         Cloud execution requires public destinations; local/private destinations

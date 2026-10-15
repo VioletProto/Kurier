@@ -66,7 +66,7 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if err != nil || r.State != "active" || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5) || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !((r.SavedRequestsSchemaVersion == 2 || ((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1) && r.CloudExecutionsSchemaVersion == 1 && r.ExecutionInputsSchemaVersion == 1 && st.executions != nil)) && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
+	if err != nil || r.State != "active" || (r.SequentialWorkflowsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 6) || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5 && r.SavedRequestsSchemaVersion != 6) || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !((r.SavedRequestsSchemaVersion == 2 || ((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 6 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1) && r.CloudExecutionsSchemaVersion == 1 && r.ExecutionInputsSchemaVersion == 1 && st.executions != nil)) && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
 		return record{}, unavailable()
 	}
 	return r, nil
@@ -159,11 +159,16 @@ func (st *Store) stageGuard(stage record) types.TransactWriteItem {
 	values := map[string]types.AttributeValue{":active": s("active"), ":gen": s(stage.RecoveryGeneration), ":yes": &types.AttributeValueMemberBOOL{Value: true}}
 	if stage.SavedRequestsSchemaVersion >= 1 {
 		mode = "savedRequestsSchemaVersion = :requests"
-		if stage.SavedRequestsSchemaVersion == 5 {
+		if stage.SavedRequestsSchemaVersion >= 5 {
 			mode += " AND localAgentExecutionsSchemaVersion = :agent"
 			values[":agent"] = n(1)
 		} else {
 			mode += " AND attribute_not_exists(localAgentExecutionsSchemaVersion)"
+		}
+		if stage.SequentialWorkflowsSchemaVersion == 1 {
+			mode += " AND sequentialWorkflowsSchemaVersion = :agent"
+		} else {
+			mode += " AND attribute_not_exists(sequentialWorkflowsSchemaVersion)"
 		}
 		delete(values, ":yes")
 		values[":requests"] = n(int64(stage.SavedRequestsSchemaVersion))
