@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError, type MCPCredential } from "./api";
+import { api, ApiError, UncertainWrite, type MCPCredential } from "./api";
 import { SessionExpired } from "./auth";
 
 export function MCPCredentials({
@@ -19,6 +19,7 @@ export function MCPCredentials({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [unresolved, setUnresolved] = useState(false);
+  const [statusChecked, setStatusChecked] = useState(false);
   const active = useRef<AbortController | null>(null);
   const flight = useRef(false);
   useEffect(() => {
@@ -28,6 +29,7 @@ export function MCPCredentials({
     setConsent(false);
     setError("");
     setUnresolved(false);
+    setStatusChecked(false);
     setBusy(false);
     flight.current = false;
     return () => {
@@ -48,10 +50,15 @@ export function MCPCredentials({
         if (e instanceof SessionExpired) onSessionExpired();
         else {
           setUnresolved(true);
+          setStatusChecked(false);
           setError(
-            e instanceof ApiError
-              ? `MCP credential unavailable (${e.code}). Refresh status.`
-              : "Issuance may have succeeded. Refresh status, then revoke and reissue if the token was lost.",
+            e instanceof UncertainWrite
+              ? "The credential operation could not be confirmed. If you were creating a credential, issuance may have succeeded. Refresh status, then revoke and reissue if the token was lost."
+              : e instanceof ApiError
+                ? e.status === 404 || e.status === 503
+                  ? "MCP access is unavailable on this API. Deployment and activation may still be pending. Refresh status when access is available."
+                  : `MCP credential unavailable (${e.code}). Refresh status.`
+                : "Cannot check MCP access. Check your connection and API configuration, then refresh status.",
           );
         }
       }
@@ -84,6 +91,7 @@ export function MCPCredentials({
             const current = await api.currentMCP(signal);
             if (!signal.aborted) {
               setCredential(current);
+              setStatusChecked(true);
               setUnresolved(false);
               setError("");
             }
@@ -92,6 +100,11 @@ export function MCPCredentials({
       >
         Refresh MCP status
       </button>
+      {!statusChecked && (
+        <p>
+          Refresh MCP status to check availability before creating a credential.
+        </p>
+      )}
       {credential && (
         <div>
           <p>
@@ -118,7 +131,9 @@ export function MCPCredentials({
           </button>
         </div>
       )}
-      <fieldset disabled={busy || disabled || !!live || unresolved}>
+      <fieldset
+        disabled={busy || disabled || !!live || unresolved || !statusChecked}
+      >
         <legend>Authorize this project</legend>
         <p>
           {projectName} ({projectId}). Scope is fixed. Revoke and issue again to
