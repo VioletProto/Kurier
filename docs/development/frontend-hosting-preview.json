@@ -1,0 +1,374 @@
+{
+  "inventory": {
+    "checkedAt": "2026-10-16T22:28:47.159Z",
+    "account": "747336059622",
+    "nonRoot": true,
+    "region": "us-east-2",
+    "bootstrap": {
+      "version": 5,
+      "parameterVersion": 1,
+      "valueSha256": "f390213368ff859bf1b886d97785aee459948f4b20e495b1dabc799f56a688ff",
+      "state": "sst-state-moshrdrrbeba",
+      "asset": "sst-asset-moshrdrrbeba"
+    },
+    "plan": {
+      "type": "FREE",
+      "status": "ACTIVE",
+      "expiration": "2026-12-29T21:05:52.776000+00:00"
+    },
+    "accountConcurrency": 10,
+    "unreserved": 10,
+    "stageSha256": "30d09eff379c622c552cd3547c8dc84619945be2f7b5d3fca2176224ec0f9efb",
+    "quotaSha256": "05766e0fa186614d9aef5e7ebf941f8dfe4f32d9cd3bb5d75fb481ecf268b1e4",
+    "projectAccounting": {
+      "count": 6,
+      "sha256": "fcb9badb538b8ee40b59c37fe5e31c494aaa47e2753ed219bf669e572b6e00cc"
+    },
+    "schedule": {
+      "enabled": true,
+      "expression": "rate(1 minute)"
+    },
+    "api": {
+      "gatewayCorsAbsent": true,
+      "rate": 10,
+      "burst": 20
+    },
+    "generation": "dev-api-initial-v1",
+    "stageVersion": "11",
+    "consumers": [
+      {
+        "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+        "codeSha256": "5R/t9UuF/UhpoTxtk4u3JuLCauMlR71t8bREoZT9oho=",
+        "environmentSha256": "bc42ee5fd02d2b072b9b5818dcc55794e9594a9e73c293c860517fd5b6aafd09",
+        "role": "kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+        "inlineIamSha256": "b7b5f4018fbda8238e139230f1a734fc212f09ab6623d6236bbc0d32e2c5e591",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 256,
+        "timeout": 15,
+        "reserved": false,
+        "provisioned": false
+      },
+      {
+        "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+        "codeSha256": "5R/t9UuF/UhpoTxtk4u3JuLCauMlR71t8bREoZT9oho=",
+        "environmentSha256": "4d4b1fb897d33ccafe45468cdc0da1fa55f745ca3e90a3b7f3b9145d43e8b517",
+        "role": "kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+        "inlineIamSha256": "e9035ff341283e94c01d601388fcb4834e6dd35c88cf2be5ad5dfffb7f1c7f02",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 256,
+        "timeout": 60,
+        "reserved": false,
+        "provisioned": false
+      },
+      {
+        "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+        "codeSha256": "IOwGRkqoKIxzjXsPmsg5LxhfBVWeURZ7Q4sjoR3rgnY=",
+        "environmentSha256": "b4bce3ff109f801c16c36eb7daf71d8b4858973efdfc88e623275cabd4d1621f",
+        "role": "kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+        "inlineIamSha256": "0992d2303c82fa31de3fc68ac7e6f0cad3b279c3d65c071aba3bd66afb56329a",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 256,
+        "timeout": 90,
+        "reserved": false,
+        "provisioned": false
+      },
+      {
+        "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+        "codeSha256": "IOwGRkqoKIxzjXsPmsg5LxhfBVWeURZ7Q4sjoR3rgnY=",
+        "environmentSha256": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+        "role": "kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+        "inlineIamSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 128,
+        "timeout": 65,
+        "reserved": false,
+        "provisioned": false
+      }
+    ],
+    "worker": {
+      "batch": 1,
+      "max": 2,
+      "standardPollers": true
+    },
+    "cognito": {
+      "pool": "us-east-2_qTDZQT1FE",
+      "client": "5jg9sb38i6ae9c0adm5rtdfkno",
+      "essentials": true,
+      "defaultEmail": true,
+      "rotatingRefresh": true
+    },
+    "productDeploymentPerformed": false,
+    "previewCompleted": true,
+    "bootstrapUnchanged": true,
+    "consumersUnchanged": true,
+    "accountingUnchanged": true
+  },
+  "resources": [
+    {
+      "name": "FrontendWebHeaders",
+      "type": "aws:cloudfront/responseHeadersPolicy:ResponseHeadersPolicy",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebAssets",
+      "type": "aws:s3/bucketV2:BucketV2",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebCache",
+      "type": "aws:cloudfront/cachePolicy:CachePolicy",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebOwnership",
+      "type": "aws:s3/bucketOwnershipControls:BucketOwnershipControls",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebEncryption",
+      "type": "aws:s3/bucketServerSideEncryptionConfigurationV2:BucketServerSideEncryptionConfigurationV2",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebPublicAccess",
+      "type": "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWeb",
+      "type": "sst:aws:StaticSite",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebCdn",
+      "type": "sst:aws:CDN",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebKvStore",
+      "type": "aws:cloudfront/keyValueStore:KeyValueStore",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "default",
+      "type": "pulumi:providers:pulumi-nodejs",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebCloudfrontFunctionRequest",
+      "type": "aws:cloudfront/function:Function",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebKvKeys.sst.aws.KvKeys",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "UsersProjectsApiCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "operation": "replace",
+      "changedProperties": ["key", "source", "versionId"]
+    },
+    {
+      "name": "FrontendWebCdnDistribution",
+      "type": "aws:cloudfront/distribution:Distribution",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebLinkRef",
+      "type": "sst:sst:LinkRef",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebPolicy",
+      "type": "aws:s3/bucketPolicy:BucketPolicy",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebCdnWaiter.sst.aws.DistributionDeploymentWaiter",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "UsersProjectsApiFunction",
+      "type": "aws:lambda/function:Function",
+      "operation": "update",
+      "changedProperties": ["environment.variables", "lastModified", "s3Key"]
+    },
+    {
+      "name": "EmptyProjectCleanupCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "operation": "replace",
+      "changedProperties": ["key", "source", "versionId"]
+    },
+    {
+      "name": "EmptyProjectCleanupFunction",
+      "type": "aws:lambda/function:Function",
+      "operation": "update",
+      "changedProperties": ["lastModified", "s3Key"]
+    },
+    {
+      "name": "ExecutionControlledEndpointCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "operation": "replace",
+      "changedProperties": ["key", "source", "versionId"]
+    },
+    {
+      "name": "ExecutionControlledEndpointFunction",
+      "type": "aws:lambda/function:Function",
+      "operation": "update",
+      "changedProperties": ["lastModified", "s3Key"]
+    },
+    {
+      "name": "CloudExecutionWorkerCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "operation": "replace",
+      "changedProperties": ["key", "source", "versionId"]
+    },
+    {
+      "name": "CloudExecutionWorkerFunction",
+      "type": "aws:lambda/function:Function",
+      "operation": "update",
+      "changedProperties": ["lastModified", "s3Key"]
+    }
+  ],
+  "runtimeIamChanges": false,
+  "newBucketPolicy": {
+    "cloudFrontGetObject": "web-bucket/* only, AWS:SourceArn == new distribution ARN",
+    "insecureTransportDenied": true,
+    "previewPolicyString": "unknown until distribution ARN resolves"
+  },
+  "policies": {
+    "cache": {
+      "defaultTtl": 0,
+      "maxTtl": 31536000,
+      "minTtl": 0,
+      "name": "FrontendWebCache-d323bf8",
+      "parametersInCacheKeyAndForwardedToOrigin": {
+        "cookiesConfig": {
+          "cookieBehavior": "none"
+        },
+        "enableAcceptEncodingBrotli": true,
+        "enableAcceptEncodingGzip": true,
+        "headersConfig": {
+          "headerBehavior": "none"
+        },
+        "queryStringsConfig": {
+          "queryStringBehavior": "none"
+        }
+      }
+    },
+    "headers": {
+      "customHeadersConfig": {
+        "items": [
+          {
+            "header": "Permissions-Policy",
+            "override": true,
+            "value": "camera=(), microphone=(), geolocation=()"
+          }
+        ]
+      },
+      "name": "FrontendWebHeaders-c851e85",
+      "securityHeadersConfig": {
+        "contentSecurityPolicy": {
+          "contentSecurityPolicy": "default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com https://cognito-idp.us-east-2.amazonaws.com; form-action 'self'; manifest-src 'self'; worker-src 'none'; upgrade-insecure-requests",
+          "override": true
+        },
+        "contentTypeOptions": {
+          "override": true
+        },
+        "frameOptions": {
+          "frameOption": "DENY",
+          "override": true
+        },
+        "referrerPolicy": {
+          "override": true,
+          "referrerPolicy": "no-referrer"
+        },
+        "strictTransportSecurity": {
+          "accessControlMaxAgeSec": 31536000,
+          "includeSubdomains": false,
+          "override": true,
+          "preload": false
+        }
+      }
+    }
+  },
+  "distribution": {
+    "defaultCacheBehavior": {
+      "allowedMethods": ["GET", "HEAD"],
+      "cachePolicyId": "[unknown]",
+      "cachedMethods": ["GET", "HEAD"],
+      "compress": true,
+      "functionAssociations": [
+        {
+          "eventType": "viewer-request",
+          "functionArn": "[unknown]"
+        }
+      ],
+      "responseHeadersPolicyId": "[unknown]",
+      "targetOriginId": "default",
+      "viewerProtocolPolicy": "redirect-to-https"
+    },
+    "customErrorResponses": [
+      {
+        "errorCachingMinTtl": 0,
+        "errorCode": 403,
+        "responseCode": 404,
+        "responsePagePath": "/404.html"
+      },
+      {
+        "errorCachingMinTtl": 0,
+        "errorCode": 404
+      }
+    ],
+    "priceClass": "PriceClass_100",
+    "viewerCertificate": {
+      "cloudfrontDefaultCertificate": true,
+      "minimumProtocolVersion": "TLSv1"
+    },
+    "waitForDeployment": true,
+    "originSelection": "SST viewer-request function uses signed S3 REST origin; no API behavior",
+    "edgeCodeBytes": 7429,
+    "edgeCodeSha256": "6807045eb389ee5fc8192d4658228793c93b8d2b03eb9d9ec088290aad456d59"
+  },
+  "previewUnknowns": [
+    "Generated bucket/distribution hostname and IDs; exact new bucket policy ARN",
+    "StaticSite AssetFiles and Invalidation providers are registered inside applies after the new bucket read resolves; absent from the first-create preview",
+    "Exact API environment is secret/unknown in preview; source adds only KURIER_HOSTED_FRONTEND_ORIGIN"
+  ],
+  "deferredProviders": {
+    "AssetFiles": {
+      "purge": false,
+      "retainOnDelete": true,
+      "ordering": "SST 4.17.1 uploads non-HTML then HTML"
+    },
+    "Invalidation": {
+      "paths": ["/*"],
+      "wait": true,
+      "dependencies": ["AssetFiles", "KvKeys"]
+    }
+  },
+  "deploymentAuthorized": false
+}

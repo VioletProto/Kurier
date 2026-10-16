@@ -51,6 +51,43 @@ beforeEach(() => {
   mocks.logout.mockResolvedValue(undefined);
 });
 afterEach(cleanup);
+it("clears signed-in state and auth inputs across browser history restoration", async () => {
+  mocks.login.mockResolvedValue("done");
+  render(<App />);
+  email();
+  password();
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  await screen.findByRole("button", { name: "Sign out" });
+  fireEvent(window, new PageTransitionEvent("pagehide", { persisted: true }));
+  await screen.findByRole("button", { name: "Sign in" });
+  expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
+  expect(screen.getByLabelText("Email")).toHaveValue("");
+  expect(screen.getByLabelText("Password")).toHaveValue("");
+  expect(mocks.logout).toHaveBeenCalled();
+  fireEvent(window, new PageTransitionEvent("pageshow", { persisted: true }));
+  await screen.findByRole("button", { name: "Sign in" });
+  expect(
+    screen.getByText("Your session ended. Please sign in again."),
+  ).toBeInTheDocument();
+});
+it("does not restore a workspace when sign-in completes after pagehide", async () => {
+  let finish!: (result: string) => void;
+  mocks.login.mockReturnValue(
+    new Promise<string>((resolve) => {
+      finish = resolve;
+    }),
+  );
+  render(<App />);
+  email();
+  password();
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  fireEvent(window, new PageTransitionEvent("pagehide", { persisted: true }));
+  await screen.findByRole("button", { name: "Sign in" });
+  finish("done");
+  await waitFor(() => expect(mocks.logout).toHaveBeenCalledTimes(2));
+  expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
+  expect(screen.getByLabelText("Password")).toHaveValue("");
+});
 function email() {
   fireEvent.change(screen.getByLabelText("Email"), {
     target: { value: "fixture@example.com" },

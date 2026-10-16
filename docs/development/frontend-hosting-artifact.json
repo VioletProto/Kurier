@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "publicConfig": {
+    "VITE_API_URL": "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+    "VITE_COGNITO_USER_POOL_ID": "us-east-2_qTDZQT1FE",
+    "VITE_COGNITO_CLIENT_ID": "5jg9sb38i6ae9c0adm5rtdfkno",
+    "VITE_KURIER_STAGE": "dev-api"
+  },
+  "files": [
+    {
+      "path": "404.html",
+      "bytes": 344,
+      "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "path": "assets/index-CAjex_6u.css",
+      "bytes": 2955,
+      "sha256": "89dd6331058a55d3bb75930baa3d6554ceaf73abaaff99b5913f904b07661ec9",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "assets/index-TwEBpFzH.js",
+      "bytes": 401533,
+      "sha256": "732f0ea17731aea8df067ee62504695392101f2f201fd1e7cd6a108dbaf3c2ba",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "index.html",
+      "bytes": 666,
+      "sha256": "5bca705b875131871c17c9c296aa7de5130d78fbabe905217399c2226b85c850",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "path": "startup.js",
+      "bytes": 1030,
+      "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    }
+  ],
+  "releaseId": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e"
+}

@@ -11,6 +11,14 @@ remains `dev-api-initial-v1`. Code and validation live on
 
 ## Foreground startup
 
+The [accepted frontend-hosting continuation](frontend-hosting.md) is implemented
+locally and previewed; its deployment remains held. Continue using the local UI
+below until a verified hosted `siteUrl` is published. After approved deployment,
+that HTTPS UI can issue/manage the same local-agent credential. Hidden-terminal
+pairing, outbound HTTPS polling and explicit destination consent remain unchanged;
+the browser never contacts a localhost/private-network control server. A separate
+hosted-origin pairing/private-target check remains required.
+
 Requires Go 1.26. Build from the checked-out repository root:
 
 ```sh

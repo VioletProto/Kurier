@@ -79,6 +79,14 @@ client bytes/transcripts cannot be recalled by revocation.
 
 ## Pairing and Codex TUI setup
 
+The [accepted hosting continuation](frontend-hosting.md) has local implementation
+and an AWS preview, with deployment still held. Until a verified `siteUrl` is
+published, keep using the local React instructions below. After separately
+approved hosting deployment, open that exact HTTPS `siteUrl` instead of starting
+Terminal A's local frontend. Steps for browser consent, hidden-prompt `pair`,
+Codex registration and Codex-launched `serve` remain the same and use the existing
+API origin. The browser never controls localhost and MCP remains local stdio.
+
 The scoped development backend was approved for deployment/activation including
 `916ea23`. The [deployment validation record](../architecture/read-only-mcp-validation.md)
 records the active marker and live results. React still runs locally. These are

@@ -1,5 +1,18 @@
 # Accepted architecture
 
+## Accepted frontend hosting continuation
+
+Davian accepted [frontend-hosting contract `6b026a7`](frontend-hosting-contract.md),
+including the AWS-hostname TLS limitation, development-only Cognito default
+sender exception, release retention and costs. Scoped static hosting/CORS/public
+configuration implementation, local tests and documentation synchronization are
+authorized, as are read-only AWS inventory and SST preview using the verified
+existing bootstrap. Bootstrap creation/replacement, plan upgrades and product
+deployment during preview are prohibited. **Deployment remains on hold** for
+actual resource/IAM changes, artifact manifest, release ordering/rollback and
+refreshed cost review. [Implementation/preview evidence](../development/frontend-hosting.md)
+keeps local/fixture results distinct from unperformed genuine hosted validation.
+
 ## Accepted read-only MCP continuation
 
 Davian accepted [the read-only MCP contract](read-only-mcp-contract.md) at

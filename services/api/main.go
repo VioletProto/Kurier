@@ -87,7 +87,7 @@ func runtimeHandler(store *ownership.Store, getenv func(string) string) (http.Ha
 	if origin == "" {
 		origin = "http://localhost:5173"
 	}
-	return ownership.LocalCORS(handler, origin)
+	return ownership.FrontendCORS(handler, origin, getenv("KURIER_HOSTED_FRONTEND_ORIGIN"))
 }
 
 func envOrDefault(name, fallback string) string {

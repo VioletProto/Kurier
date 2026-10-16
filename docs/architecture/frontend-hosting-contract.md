@@ -1,10 +1,16 @@
 # Frontend hosting: proposed review packet
 
-Status: **Proposed — awaiting Davian's acceptance.** Prepared 2026-10-16.
-This packet authorizes nothing beyond its own preparation. Implementation,
-external proposal/API-contract synchronization, SST preview/bootstrap and AWS
-deployment require subsequent authorization. No hosted browser, Cognito email,
-cache, IAM or deployment result is claimed here.
+Status: **Accepted by Davian at `6b026a7` on 2026-10-16.**
+Acceptance includes the AWS-hostname TLS limitation, development-only default
+Cognito sender exception, release retention and cost allowances. Davian authorized
+scoped hosting/CORS/config implementation, local verification and documentation
+synchronization, plus read-only AWS inventory and scoped SST preview using the
+verified existing bootstrap. No bootstrap creation/replacement, account-plan
+upgrade or product deployment during preview. **Deployment remains on hold.**
+The [implementation/preview record](../development/frontend-hosting.md) distinguishes
+local/fixture results, actual read-only AWS observations and remaining hosted
+validation. The body below preserves the accepted review packet; proposed
+wording describes those accepted choices, not completed runtime checks.
 
 Dependency: [MCP PR #11](https://github.com/VioletProto/Kurier/pull/11) is merged;
 GitHub returned `merged=true`, merge commit
@@ -483,7 +489,7 @@ added for this proposed document. These checks do not validate the proposed
 hosted configuration; no AWS inventory/mutation, SST diff, hosted browser test
 or external-document synchronization was performed during preparation.
 
-## Decisions requiring acceptance
+## Accepted decisions and remaining authorization gates
 
 1. **Topology and scope:** one SST StaticSite in existing `dev-api`, a dedicated
    private web bucket, current API/Cognito reuse, AWS-generated HTTPS hostname;
@@ -503,7 +509,8 @@ or external-document synchronization was performed during preparation.
    account plan and existing quotas/concurrency; metered routing Function/KV,
    scoped IAM/bootstrap review, $0.25–$2 monthly hosting planning range and
    $1–$3 validation allowance, with no hard-cap claim.
-6. **Next authorization:** decide separately whether to authorize implementation
-   and local verification, external proposal/API synchronization, and a scoped
-   bootstrap-capable AWS preview. Deployment remains held for its concrete
-   resource/IAM/cost review even if the design is accepted.
+6. **Authorization boundary:** scoped implementation/local verification,
+   external proposal/API synchronization and inventory/preview are now authorized.
+   Preview must reuse the verified existing bootstrap without creating or
+   replacing it. Deployment remains held for the concrete resource/IAM/artifact/
+   ordering/rollback/cost review.

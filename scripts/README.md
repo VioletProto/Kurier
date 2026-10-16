@@ -80,3 +80,19 @@ SRP users, deployed HTTPS/worker/storage and scheduled project cleanup. Its
 `--cleanup RECEIPT` reconciles only that disposable fixture. Values remain in
 memory; receipts contain IDs/status only. See the
 [deployment/validation record](../docs/architecture/read-only-mcp-validation.md).
+
+## Frontend hosting
+
+Use Node 22.18+ (native TypeScript stripping) for the frontend helper scripts.
+`build-frontend-artifact.mjs` reads only the public `dev-api` output fields and
+builds a fail-closed hosted artifact with a filtered build environment and no
+dotenv loading. `test-frontend-hosting-browser.mjs` runs production assets against
+a local Chromium/CSP/cache fixture with all AWS requests blocked.
+`preview-frontend-hosting.mjs` is inventory-only by default; `--diff` additionally
+runs only SST diff after verifying the existing version-5 Ohio bootstrap,
+passphrase/state, account, plan, quotas, consumers, auth and stage/accounting.
+`review-frontend-preview.mjs` publishes selected public evidence from that preview.
+`frontend-retention.mjs <current-id> <previous-known-good-id>` is a read-only
+30-day/current/previous retention planner; it never deletes objects.
+See the [operating and rollback guide](../docs/development/frontend-hosting.md).
+No helper grants deployment or general-public signup authorization.
