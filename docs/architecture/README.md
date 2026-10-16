@@ -7,8 +7,11 @@ Davian accepted [the read-only MCP contract](read-only-mcp-contract.md) at
 Scoped foreground Go stdio, separate browser-managed scoped credentials,
 seven tools, hosted authorization/audit and cleanup integration, API-contract
 synchronization, tests and AWS preview/cost preparation are authorized.
-Deployment and activation remain held for review. Acceptance is distinct
-from local, genuine client and deployed AWS validation.
+Davian subsequently approved scoped development deployment and guarded
+activation, including `916ea23`. Development is active at savedRequests7/MCP1,
+version 11, with recovery generation/accounting/existing capabilities preserved.
+The [deployment record](read-only-mcp-validation.md) separates genuine AWS results
+from installed-Codex fixture tests and the open operator pairing/TUI checks.
 
 ## Accepted sequential workflow continuation
 

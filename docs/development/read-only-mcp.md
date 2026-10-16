@@ -2,9 +2,10 @@
 
 Davian accepted [contract `2d8d43c`](../architecture/read-only-mcp-contract.md),
 including evidence-size and private-file tradeoffs, and authorized this scoped
-implementation, contract synchronization, tests and AWS preview. **Deployment
-and capability activation have not been performed and remain held for review.**
-The current deployed API does not yet provide these MCP routes. There is no new
+implementation, contract synchronization, tests and AWS preview. Davian then
+approved the scoped development deployment and guarded activation including
+`916ea23`; **the backend is ready for pairing**, active at schema 7/MCP 1, version 11. See the
+[deployed validation record](../architecture/read-only-mcp-validation.md). There is no new
 hosted frontend or remote HTTP MCP server in this slice.
 
 ## Implemented behavior
@@ -78,61 +79,81 @@ client bytes/transcripts cannot be recalled by revocation.
 
 ## Pairing and Codex TUI setup
 
-These commands are ready for use **after the reviewed API deployment and
-activation**. Until then the live API will reject/miss MCP routes; do not use a
-local-agent token or browser JWT as a substitute. React remains local and uses
-the existing approved Cognito/development API configuration.
+The scoped development backend was approved for deployment/activation including
+`916ea23`. The [deployment validation record](../architecture/read-only-mcp-validation.md)
+records the active marker and live results. React still runs locally. These are
+separate setup steps; only the final `serve` process is launched by Codex.
 
-From `/home/king/Neumont/Kurier`, build a stable ignored local binary:
+1. **Build once, in a setup terminal**, from `/home/king/Neumont/Kurier`:
 
-```sh
-mkdir -p bin
-go -C services/mcp build -o /home/king/Neumont/Kurier/bin/kurier-mcp .
-```
+   ```sh
+   mkdir -p bin
+   go -C services/mcp build -o /home/king/Neumont/Kurier/bin/kurier-mcp .
+   ```
 
-Run the current local React application against the approved development API
-(`npm run dev:cloud` with the repository's existing local configuration). Sign
-in, select the owned project and open **Read-only MCP access**. Refresh MCP
-status first to confirm that this API supports access and load any existing credential.
-Creation stays disabled until this read succeeds.
-If access is unavailable, token creation cannot proceed. On 2026-10-15 a
-read-only inspection confirmed the hosted consumers were not MCP-capable and
-there were zero MCP records. The earlier generic “Issuance may have succeeded”
-message did not establish that a token existed; deployment and activation
-remain required before cloud pairing. Review project name/ID and the
-thirty-day read-only disclosure, check consent and choose **Create MCP
-credential**. The capability is shown once in browser memory. Scope changes or
-a lost token require **Revoke MCP access**, then explicit reissuance.
+2. **Start the browser app in Terminal A** and leave it running:
 
-In a separate terminal, run:
+   ```sh
+   npm run dev:cloud
+   ```
 
-```sh
-/home/king/Neumont/Kurier/bin/kurier-mcp pair --api-origin https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com --persist
-```
+   Open `http://localhost:5173`. If already running, leave that terminal running
+   and refresh the browser so it uses the current UI; do not start a second copy. This local frontend connects to the deployed development API.
 
-Enter the browser-issued token only at the hidden controlling-terminal prompt.
-Pairing verifies scoped access before writing the file. Default private file:
-`/home/king/.config/kurier-mcp/credential.json`, in a dedicated 0700 directory,
-regular 0600 file. Storage checks descriptor-relative ancestors, ownership,
-permissions, symlinks/hardlinks and bounded content; writes are atomic. Only
-token and bound HTTPS API origin are stored. Same-user processes can read the
-file; this accepted limitation is not an OS keyring guarantee. Windows
-persistence/output remains unsupported and fails closed. There is no background
+3. **In the browser**, sign in and select the owned project you want Codex to
+   inspect. Open **Read-only MCP access**, click **Refresh MCP status**, review
+   the project scope/30-day disclosure, check consent and click **Create MCP
+   credential**. The token appears once. If an active credential already exists
+   and its token is lost, revoke it before creating another. Do not copy a browser
+   JWT or local-agent credential instead.
+
+4. **Pair in Terminal B**, while the one-time token remains visible:
+
+   ```sh
+   /home/king/Neumont/Kurier/bin/kurier-mcp pair --api-origin https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com --persist
+   ```
+
+   Enter the token only at the hidden terminal prompt, then press Enter.
+   Pairing verifies scoped API access, saves the private credential and exits.
+   It does not start a background server. Close the browser token display after
+   successful pairing. Default storage is
+   `/home/king/.config/kurier-mcp/credential.json`: a regular 0600 file inside a
+   dedicated 0700 directory. Only token and trusted HTTPS origin are stored.
+   Same-user processes can read it; this accepted limitation is not an OS keyring.
+
+5. **Register the command once in Terminal B** (skip if `codex mcp get kurier`
+   already shows these exact executable/arguments):
+
+   ```sh
+   codex mcp add kurier -- /home/king/Neumont/Kurier/bin/kurier-mcp serve --credential-file /home/king/.config/kurier-mcp/credential.json
+   codex mcp list
+   ```
+
+   No token goes into arguments, environment or Codex configuration. If a
+   differently configured entry already exists, inspect it before replacing it.
+
+6. **Start a fresh Codex TUI in Terminal B**:
+
+   ```sh
+   codex
+   ```
+
+   Use `/mcp` in the TUI to inspect Kurier and its seven tools. Codex itself
+   launches `kurier-mcp serve --credential-file ...` and owns its stdio pipes.
+   **Do not separately launch `serve` in another terminal**; that process would
+   not attach to Codex. Terminal A can remain running for credential management.
+
+7. **Perform your genuine pairing/TUI acceptance checks**: list authorized
+   projects, inspect a recent execution/run and request summary/complete
+   sanitized evidence. Treat names/body text as captured untrusted data.
+   Revoking access in the browser must deny later reads; reauthorization then
+   requires deliberate browser reissuance and another separate `pair` step.
+   These operator checks remain open until Davian reports them completed.
+
+Storage validates descriptor-relative ancestors, ownership, permissions,
+symlinks/hardlinks and bounded content; writes are atomic. Windows persistence
+and protocol output remain unsupported and fail closed. There is no background
 installer or auto-update.
-
-Register the local command; no token goes into Codex configuration:
-
-```sh
-codex mcp add kurier -- /home/king/Neumont/Kurier/bin/kurier-mcp serve --credential-file /home/king/.config/kurier-mcp/credential.json
-codex mcp list
-codex
-```
-
-In the new TUI use `/mcp` to inspect the connection and its seven tools. Ask to
-list scoped projects, find recent failed executions, inspect a run or retrieve
-summary/complete evidence. Data in names/body text is untrusted, including
-text that resembles instructions. A manually launched process in another
-terminal does not attach to Codex's pipes.
 
 Equivalent user-level `~/.codex/config.toml` entry:
 
@@ -181,6 +202,7 @@ Completed checks, separated by evidence source:
 | DynamoDB Local/race               | Full existing API/execution/ownership race suite passed. Focused MCP checks cover one-time issuance/receipt/slot contention, credential separation, scope, generation/revocation/disable/deletion/audit races, run projection/expired sibling/pins, unavailable evidence with a surviving object, immutable evidence, large-capture summary/denial, cursor scope/continuation, aggregate rate and account/project cleanup. S3/KMS/network failures and clocks are controlled doubles.                                                                                                                                                      |
 | Chromium integration              | Real Chromium→Go→DynamoDB Local, including MCP consent, one-time display/no Web Storage, scope denial, close/revoke, later 401 and project cleanup; prior browser fixtures also pass. Cognito is a signing/authentication fixture and there is no deployed IAM/S3/KMS validation.                                                                                                                                                                                                                                                                                                                                                          |
 | **Actual installed Codex client** | `codex-cli 0.162.1` app-server launched the compiled foreground binary with SDK 1.8.0/MCP 2025-11-25, discovered and called all seven tools, handled summary/complete/oversize/scope denial and revocation with the connection open. A separate fresh compiled process, connected by the official SDK, also denied the persisted revoked credential. A malicious instruction-like project name stayed captured data. HTTPS API/auth/evidence are simulated with a private test CA. No model turn or AWS invocation, no persistent Codex config edit. This is genuine installed-client integration, not a hand-written protocol transcript. |
+| **Deployed AWS backend**          | Real Cognito SRP, distinct JWT/MCP/local-agent authentication, all seven tools, scope/pagination, persisted audits, S3 checksum/immutable capture, 96-KiB complete limit/explicit summary, revocation and deleting-project denial passed. Scheduled cleanup completed; independent readback verified six disposable projects and six temporary users removed. Observer interruptions/resumption are disclosed in the [deployment record](../architecture/read-only-mcp-validation.md). This is separate from Codex's simulated-API integration and the pending operator TUI checks.                                                        |
 | Read-only AWS preview             | Actual identity/inventory/price-catalog reads and generated SST preview, described below. This proves current settings and planned diff only, not deployed MCP behavior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 Reproducible commands:
@@ -200,14 +222,13 @@ credential assertions report booleans/counts and fixture credentials are
 memory-only except deliberately private disposable CLI pairing files. Test
 configuration uses a public fixture CA path, never a token literal in Codex TOML.
 
-Unperformed: interactive operator browser pairing/hidden terminal prompt plus
-manual `/mcp` inspection in the TUI; deployed Cognito/MCP HTTPS routing, IAM,
-actual DDB/S3 integrity/revocation/audit/rate/cleanup behavior; elapsed thirty-day
-expiry, real clock skew/PITR/recovery and metered billing. Fixtures and app-server
-client integration do not establish those outcomes. Deployed checks must follow
-separate deployment/activation approval and use disposable owner-scoped data.
+Interactive operator browser pairing/hidden terminal prompt and manual `/mcp`
+inspection remain open. Deployed checks are recorded separately in the
+[validation record](../architecture/read-only-mcp-validation.md); fixture and
+app-server integration do not establish live AWS outcomes. Elapsed thirty-day
+expiry, real clock skew/PITR/recovery and metered billing remain unperformed.
 
-## Scoped AWS deployment and activation review
+## Scoped AWS deployment and activation review (historical preview)
 
 Read-only inventory on 2026-10-15 verified non-root `davian-admin`, account
 `747336059622`, us-east-2, existing SST bootstrap. Stage active/version 9,
@@ -264,8 +285,9 @@ Old binaries reject schema 7; new code remains compatible with the pre-MCP
 schema 6 stage but MCP issuance/reads fail closed until capability 1 is active.
 Unknown/uncertain results leave the stage closed for deliberate reconciliation;
 there is no automatic reopen/recovery or HTTP replay. Re-inventory rather than
-assuming version 9 or idle work is still current. This review does not execute
-those transactions.
+assuming version 9 or idle work is still current. This historical review did not execute those transactions. Davian subsequently
+approved them; the [validation record](../architecture/read-only-mcp-validation.md)
+records actual deployment, the inspected first-attempt failure and activation readback.
 
 ## Refreshed incremental cost
 
@@ -306,6 +328,6 @@ with **Accepted read-only MCP continuation (2d8d43c)**. Readback confirmed the
 new authority/routes/DTOs/limits/SDK pin/credential/cleanup section and preserved
 all original text. Earlier unrelated Proposed interfaces and the capstone
 proposal remain unchanged. [Trello](https://trello.com/c/9UBvPhBB) distinguishes
-acceptance, implementation/publication, client/local tests and the still-open
-AWS deployment/runtime checks. Original workflow operational follow-ups and the
+acceptance, implementation/publication, client/local tests, completed scoped AWS
+deployment/runtime validation and the still-open operator browser pairing/TUI checks. Original workflow operational follow-ups and the
 broader contract-review card remain open.

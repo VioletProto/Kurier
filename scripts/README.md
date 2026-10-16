@@ -65,3 +65,18 @@ quota and consumer/queue concurrency, and reports unresolved work. It has no
 mutation flag. `preview-read-only-mcp-deployment.mjs` performs that guarded
 inventory before an authorized SST diff; it never deploys or activates. See
 [read-only MCP setup and validation](../docs/development/read-only-mcp.md).
+
+`verify-read-only-mcp-deployment.mjs --capture-baseline PATH` records only public
+configuration/IAM hashes before an approved deployment. `--verify-baseline PATH`
+checks exact built/deployed archives, four MCP routes/invoke permissions,
+unchanged runtime IAM/configuration and Free-plan/quota/concurrency/schedule.
+`activate-read-only-mcp.mjs --activate BASELINE` is an explicit approved two-phase
+schema6→7/MCP1 activation, not a recovery command. It refuses unexpected state
+and inspects failures without automatic retry/reopen. JSON mutation input uses
+an inherited anonymous RAM descriptor (Linux/Python), never secret argv/disk.
+`validate-read-only-mcp-aws.mjs --validate NEW_RECEIPT` uses temporary real Cognito
+SRP users, deployed HTTPS/worker/storage and scheduled project cleanup. Its
+`--resume RECEIPT` reads existing publications without replaying admission;
+`--cleanup RECEIPT` reconciles only that disposable fixture. Values remain in
+memory; receipts contain IDs/status only. See the
+[deployment/validation record](../docs/architecture/read-only-mcp-validation.md).

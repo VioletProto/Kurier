@@ -3,7 +3,9 @@
 Status: **Accepted by Davian** at `2d8d43c`, including evidence-size limits
 and credential-storage tradeoffs. Scoped implementation, API synchronization,
 local/client tests and AWS deployment/activation preview with refreshed costs
-are authorized. Deployment and activation remain on hold for explicit review.
+are authorized. Davian subsequently approved scoped development deployment and
+guarded activation, including `916ea23`; see the
+[actual deployment record](read-only-mcp-validation.md).
 The Proposed/preparation text below preserves the accepted packet; acceptance
 does not claim implementation or runtime verification. Prepared 2026-10-15.
 This packet authorizes no dependent implementation, external contract
@@ -598,8 +600,10 @@ prepare this packet.
 Davian accepted this packet at `2d8d43c`, including initial evidence limits and
 private-file tradeoffs, and authorized the scoped implementation, native API
 contract synchronization, planned local/client tests and AWS preview/cost
-preparation. The earlier preparation holds above are historical. Deployment
-and capability activation remain held for explicit review.
+preparation. The earlier preparation holds above are historical. Davian then
+approved scoped development deployment and guarded activation including `916ea23`.
+The [deployment record](read-only-mcp-validation.md) records active/version11,
+savedRequests7/MCP1 and the preserved generation/accounting.
 
 Implementation pins official Go SDK 1.8.0 and MCP 2025-11-25, verified with the
 installed Codex 0.162.1 MCP client. Concrete code uses savedRequests7 plus
@@ -610,5 +614,5 @@ cleanup preserve this contract's boundaries. Browser authoring initially scopes
 the selected project; the API supports1–10 projects. See the
 [implementation/setup/validation and deployment review](../development/read-only-mcp.md)
 for exact commands, native contract synchronization, actual evidence, refreshed
-costs and unperformed operator/deployed checks. Acceptance is not proof of those
-unperformed checks; no AWS deployment/activation occurred in this continuation.
+costs and unperformed operator checks. Installed-Codex fixture integration, real
+AWS validation and Davian's pending browser pairing/TUI acceptance stay separate.

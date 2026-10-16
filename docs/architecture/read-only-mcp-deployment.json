@@ -1,0 +1,123 @@
+{
+  "developmentDate": "2026-10-15 (America/Denver)",
+  "account": "747336059622",
+  "region": "us-east-2",
+  "sourceCommit": "916ea233a894e39fef5b099e82a4a348bfa963a8",
+  "consumers": [
+    {
+      "resource": "UsersProjectsApi",
+      "codeSha256": "5R/t9UuF/UhpoTxtk4u3JuLCauMlR71t8bREoZT9oho=",
+      "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3",
+      "archiveMatch": true,
+      "iamUnchanged": true
+    },
+    {
+      "resource": "EmptyProjectCleanup",
+      "codeSha256": "5R/t9UuF/UhpoTxtk4u3JuLCauMlR71t8bREoZT9oho=",
+      "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb",
+      "archiveMatch": true,
+      "iamUnchanged": true
+    },
+    {
+      "resource": "CloudExecutionWorker",
+      "codeSha256": "IOwGRkqoKIxzjXsPmsg5LxhfBVWeURZ7Q4sjoR3rgnY=",
+      "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66",
+      "archiveMatch": true,
+      "iamUnchanged": true
+    },
+    {
+      "resource": "ExecutionControlledEndpoint",
+      "codeSha256": "IOwGRkqoKIxzjXsPmsg5LxhfBVWeURZ7Q4sjoR3rgnY=",
+      "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81",
+      "archiveMatch": true,
+      "iamUnchanged": true
+    }
+  ],
+  "mcpRoutes": 4,
+  "activation": {
+    "activated": true,
+    "state": "active",
+    "version": "11",
+    "savedRequests": "7",
+    "mcpReadOnly": "1",
+    "generation": "dev-api-initial-v1",
+    "originalVersion": "9",
+    "accountingPreserved": true,
+    "accountingHash": "e543a81c133ae49027d129a04626adaf0e4d8fea92d1cadf4c79195a00d1d600",
+    "projects": 5,
+    "existingCapabilitiesPreserved": true,
+    "counterResets": false
+  },
+  "preservedControls": {
+    "plan": {
+      "type": "FREE",
+      "status": "ACTIVE"
+    },
+    "quota": 10,
+    "unreserved": 10,
+    "queueMaximumConcurrency": 2,
+    "queueBatchSize": 1,
+    "provisionedPollers": false,
+    "schedule": "rate(1 minute)"
+  },
+  "operatorPairingAndTUI": "pending",
+  "liveAWSValidation": {
+    "genuineCognitoSRP": true,
+    "distinctUsers": true,
+    "oneTimeIssuance": true,
+    "authenticationSeparated": true,
+    "localAgentCredentialRejected": true,
+    "sevenReadTools": true,
+    "scopedPagination": true,
+    "auditRecords": 11,
+    "evidenceIntegrity": true,
+    "s3ChecksumVerified": true,
+    "complete96KiBLimit": true,
+    "explicitSummary": true,
+    "revokedTokenDenied": true,
+    "deletingProjectDenied": true,
+    "operatorBrowserOrTUI": false
+  },
+  "independentCleanupAndMarkerReadback": {
+    "independentReadback": true,
+    "projects": 6,
+    "tombstoneOnlyControl": true,
+    "protectedEmpty": true,
+    "s3Empty": true,
+    "disposableCognitoUsersDeleted": 6,
+    "disposableAccountCredentialsRemoved": true,
+    "usageNotRefunded": true,
+    "stage": {
+      "state": "active",
+      "version": 11,
+      "savedRequests": 7,
+      "mcpReadOnly": 1,
+      "generation": "dev-api-initial-v1",
+      "existingCapabilities": 1
+    },
+    "activeFreePlan": true,
+    "accountQuota": 10,
+    "unreserved": 10,
+    "sqsMaximumConcurrency": 2,
+    "sqsBatchSize": 1,
+    "standardPollers": true,
+    "operatorPairingAndTUI": "pending"
+  },
+  "postDeploymentSSTDiff": "No changes",
+  "installedCodexIntegration": {
+    "client": "0.162.1",
+    "officialGoSDK": "1.8.0",
+    "protocol": "2025-11-25",
+    "result": "passed",
+    "hostedServices": "simulated HTTPS fixture",
+    "operatorTUI": "pending"
+  },
+  "fixtureProjectIds": [
+    "33a26ef4-40aa-45f7-97b1-2e5f6968293f",
+    "fc3e8fbb-11ae-43ef-9e22-f704fefdf6bd",
+    "f52c3a5d-b15a-4148-8a4a-9dbbd477fc53",
+    "d2c26a0f-31bb-44b5-a414-2a1de28afe4b",
+    "b9d53de3-4966-41ca-8cf5-ce5d44ac5b8b",
+    "efcf4c33-eb81-43e7-87fd-3766b597bd94"
+  ]
+}
