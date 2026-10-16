@@ -1,3 +1,4 @@
+import { MCPCredentials } from "./MCPCredentials";
 import { Workflows } from "./Workflows";
 import { Requests } from "./Requests";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -497,6 +498,13 @@ function Projects({ onExpired }: { onExpired: () => void }) {
           {detail ? (
             <>
               <h3>{detail.project.name}</h3>
+              <MCPCredentials
+                key={"mcp-" + detail.project.projectId}
+                projectId={detail.project.projectId}
+                projectName={detail.project.name}
+                disabled={busy}
+                onSessionExpired={onExpired}
+              />
               <Workflows
                 key={"workflows-" + detail.project.projectId}
                 projectId={detail.project.projectId}

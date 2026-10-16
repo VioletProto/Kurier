@@ -326,6 +326,56 @@ export class Api {
       throw new UncertainWrite();
     }
   }
+  async currentMCP(signal?: AbortSignal): Promise<MCPCredential | null> {
+    const response = await this.request(
+      "/api/v1/mcp/tokens/current",
+      "GET",
+      undefined,
+      undefined,
+      signal,
+    );
+    const data = (await response.json()).data;
+    if (data?.credential === null || validMCP(data?.credential))
+      return data.credential;
+    throw new Error("MCP response unavailable");
+  }
+  async issueMCP(
+    key: string,
+    projectIds: string[],
+    signal?: AbortSignal,
+  ): Promise<{ credential: MCPCredential; token: string | null }> {
+    const response = await this.request(
+      "/api/v1/mcp/tokens",
+      "POST",
+      JSON.stringify({ projectIds }),
+      undefined,
+      signal,
+      false,
+      key,
+    );
+    try {
+      const data = (await response.json()).data;
+      if (
+        validMCP(data?.credential) &&
+        (data.token === null ||
+          (typeof data.token === "string" && data.token.length === 43))
+      )
+        return data;
+    } catch {
+      /* uncertain one-time issuance */
+    }
+    throw new UncertainWrite();
+  }
+  async revokeMCP(tokenId: string, signal?: AbortSignal) {
+    const response = await this.request(
+      "/api/v1/mcp/tokens/" + encodeURIComponent(tokenId),
+      "DELETE",
+      undefined,
+      undefined,
+      signal,
+    );
+    if (response.status !== 204) throw new Error("MCP revocation unavailable");
+  }
   async currentAgent(signal?: AbortSignal): Promise<LocalAgent | null> {
     const response = await this.request(
       "/api/v1/local-agents/current",
@@ -931,3 +981,23 @@ export type WorkflowRun = {
     evidenceExpired: boolean;
   })[];
 };
+
+export type MCPCredential = {
+  tokenId: string;
+  projectIds: string[];
+  createdAt: string;
+  expiresAt: string;
+  revokedAt: string | null;
+};
+function validMCP(v: MCPCredential) {
+  return (
+    !!v &&
+    typeof v.tokenId === "string" &&
+    Array.isArray(v.projectIds) &&
+    v.projectIds.length <= 10 &&
+    v.projectIds.every((id) => typeof id === "string") &&
+    typeof v.createdAt === "string" &&
+    typeof v.expiresAt === "string" &&
+    (v.revokedAt === null || typeof v.revokedAt === "string")
+  );
+}

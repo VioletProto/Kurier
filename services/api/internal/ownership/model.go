@@ -34,6 +34,7 @@ type DeletionOperation struct {
 // record is internal storage, never a response DTO. Omitted fields are removed
 // when the project becomes a minimal tombstone.
 type record struct {
+	MCPReadOnlySchemaVersion          int `dynamodbav:"mcpReadOnlySchemaVersion,omitempty"`
 	SequentialWorkflowsSchemaVersion  int `dynamodbav:"sequentialWorkflowsSchemaVersion,omitempty"`
 	LocalAgentExecutionsSchemaVersion int `dynamodbav:"localAgentExecutionsSchemaVersion,omitempty"`
 

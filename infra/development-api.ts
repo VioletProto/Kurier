@@ -220,6 +220,7 @@ export async function createDevelopmentApi() {
     },
   ];
   const executionEnvironment = {
+    KURIER_MCP_READ_ONLY_SCHEMA_VERSION: "1",
     KURIER_SEQUENTIAL_WORKFLOWS_SCHEMA_VERSION: "1",
     KURIER_EVIDENCE_PINNING_SCHEMA_VERSION: "1",
     KURIER_LOCAL_AGENT_EXECUTIONS_SCHEMA_VERSION: "1",
@@ -231,7 +232,7 @@ export async function createDevelopmentApi() {
   const environment = {
     ...executionEnvironment,
     KURIER_STAGE: "dev-api",
-    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "6",
+    KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "7",
     KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
     KURIER_PROTECTED_TABLE: protectedTable.name,
     KURIER_CONTROL_TABLE: control.name,
@@ -333,6 +334,10 @@ export async function createDevelopmentApi() {
     },
   });
   for (const route of [
+    "POST /api/v1/mcp/tokens",
+    "GET /api/v1/mcp/tokens/current",
+    "DELETE /api/v1/mcp/tokens/{tokenId}",
+    "POST /api/v1/mcp/invocations",
     "POST /api/v1/projects/{projectId}/workflows",
     "GET /api/v1/projects/{projectId}/workflows",
     "GET /api/v1/projects/{projectId}/workflows/{workflowId}",
@@ -386,7 +391,7 @@ export async function createDevelopmentApi() {
     environment: {
       ...executionEnvironment,
       KURIER_STAGE: "dev-api",
-      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "6",
+      KURIER_SAVED_REQUESTS_SCHEMA_VERSION: "7",
       KURIER_PROTECTED_SECRETS_SCHEMA_VERSION: "1",
       KURIER_PROTECTED_TABLE: protectedTable.name,
       KURIER_CONTROL_TABLE: control.name,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	wire "github.com/VioletProto/Kurier/services/request-runtime/mcpwire"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -114,6 +115,8 @@ func (s *Service) Maintain(ctx context.Context) error {
 				return e
 			}
 			switch r.Kind {
+			case "mcpCredential", "mcpIssuance", "mcpRate", "mcpAudit", "executionMCPAudit":
+				_ = s.cleanMCP(ctx, r)
 			case "executionOutbox":
 				_ = s.publishOutbox(ctx, r)
 			case "executionLocalWait":
@@ -339,6 +342,16 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 		}
 	}
 	switch r.Kind {
+	case "executionMCPScope":
+		if !mcpFields(item, "ownerId projectId mcpTokenId") {
+			return false
+		}
+		return r.SK == "MCP#"+r.MCPTokenID && wire.ValidID(r.MCPTokenID) && r.OwnerID != ""
+	case "executionMCPAudit":
+		if !mcpFields(item, "ownerId projectId mcpTokenId mcpTool mcpCode mcpRequestId createdAt expiresAt DPK DSK") {
+			return false
+		}
+		return strings.HasPrefix(r.SK, "AUDIT#") && r.ExpiresAt != "" && r.OwnerID != "" && wire.ValidID(r.MCPTokenID)
 	case "executionWorkflow":
 		return r.SK == "WF#"+r.WorkflowID && uuidPattern.MatchString(r.WorkflowID)
 	case "executionWorkflowRun":
@@ -445,6 +458,12 @@ func (s *Service) drainExecution(ctx context.Context, p row, execution string, r
 			}
 			if retention && r.Kind == "executionRetention" {
 				continue
+			}
+			if r.Kind == "executionMCPScope" {
+				if e = s.removeMCPScope(ctx, p, r); e != nil {
+					return e
+				}
+				return failure(409, "cleanup_pending")
 			}
 			if r.Kind == "executionAgentScope" {
 				if e = s.removeDeletedScope(ctx, p, r); e != nil {

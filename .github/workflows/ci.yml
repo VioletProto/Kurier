@@ -33,6 +33,7 @@ jobs:
           - services/api
           - services/worker
           - services/local-agent
+          - services/mcp
           - services/request-runtime
           - infra/spikes/sst-viability/service
           - infra/spikes/sst-db-viability/service

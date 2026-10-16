@@ -66,7 +66,7 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if err != nil || r.State != "active" || (r.SequentialWorkflowsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 6) || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5 && r.SavedRequestsSchemaVersion != 6) || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !((r.SavedRequestsSchemaVersion == 2 || ((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 6 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1) && r.CloudExecutionsSchemaVersion == 1 && r.ExecutionInputsSchemaVersion == 1 && st.executions != nil)) && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
+	if err != nil || r.State != "active" || (r.MCPReadOnlySchemaVersion != 0 && (r.MCPReadOnlySchemaVersion != 1 || r.SavedRequestsSchemaVersion != 7)) || (r.SequentialWorkflowsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 6 && r.SavedRequestsSchemaVersion != 7) || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5 && r.SavedRequestsSchemaVersion != 6 && r.SavedRequestsSchemaVersion != 7) || r.RecoveryGeneration == "" || (r.SavedRequestsSchemaVersion != 1 && !((r.SavedRequestsSchemaVersion == 2 || ((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0 || r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0 || (r.SavedRequestsSchemaVersion == 6 || r.SavedRequestsSchemaVersion == 7 && r.MCPReadOnlySchemaVersion == 1) && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1) && r.CloudExecutionsSchemaVersion == 1 && r.ExecutionInputsSchemaVersion == 1 && st.executions != nil)) && r.ProtectedSecretsSchemaVersion == 1 && st.protectedTable != "") && (!r.LocalEmptyProjectsOnly || r.SavedRequestsSchemaVersion != 0)) {
 		return record{}, unavailable()
 	}
 	return r, nil
@@ -185,6 +185,12 @@ func (st *Store) stageGuard(stage record) types.TransactWriteItem {
 				}
 			}
 		}
+	}
+	if stage.MCPReadOnlySchemaVersion == 1 {
+		mode += " AND mcpReadOnlySchemaVersion = :mcp"
+		values[":mcp"] = n(1)
+	} else {
+		mode += " AND attribute_not_exists(mcpReadOnlySchemaVersion)"
 	}
 	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.table), Key: key(stage.PK, "META"), ConditionExpression: aws.String("#state = :active AND recoveryGeneration = :gen AND " + mode), ExpressionAttributeNames: map[string]string{"#state": "state"}, ExpressionAttributeValues: values}}
 }
