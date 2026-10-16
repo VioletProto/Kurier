@@ -11,7 +11,8 @@ Davian subsequently approved scoped development deployment and guarded
 activation, including `916ea23`. Development is active at savedRequests7/MCP1,
 version 11, with recovery generation/accounting/existing capabilities preserved.
 The [deployment record](read-only-mcp-validation.md) separates genuine AWS results
-from installed-Codex fixture tests and the open operator pairing/TUI checks.
+from installed-Codex fixture tests and Davian's 2026-10-16 deployed-client
+connection/read/redaction/revocation confirmation.
 
 ## Accepted sequential workflow continuation
 

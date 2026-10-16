@@ -60,7 +60,7 @@
     "provisionedPollers": false,
     "schedule": "rate(1 minute)"
   },
-  "operatorPairingAndTUI": "pending",
+  "operatorPairingAndTUI": "operator_reported_passed",
   "liveAWSValidation": {
     "genuineCognitoSRP": true,
     "distinctUsers": true,
@@ -101,7 +101,7 @@
     "sqsMaximumConcurrency": 2,
     "sqsBatchSize": 1,
     "standardPollers": true,
-    "operatorPairingAndTUI": "pending"
+    "operatorPairingAndTUI": "pending at historical backend readback; later operator report recorded separately"
   },
   "postDeploymentSSTDiff": "No changes",
   "installedCodexIntegration": {
@@ -110,7 +110,7 @@
     "protocol": "2025-11-25",
     "result": "passed",
     "hostedServices": "simulated HTTPS fixture",
-    "operatorTUI": "pending"
+    "operatorTUI": "not exercised by this simulated-service test; see operatorAcceptance"
   },
   "fixtureProjectIds": [
     "33a26ef4-40aa-45f7-97b1-2e5f6968293f",
@@ -119,5 +119,21 @@
     "d2c26a0f-31bb-44b5-a414-2a1de28afe4b",
     "b9d53de3-4966-41ca-8cf5-ce5d44ac5b8b",
     "efcf4c33-eb81-43e7-87fd-3766b597bd94"
-  ]
+  ],
+  "operatorAcceptance": {
+    "reportedBy": "Davian",
+    "reportedDate": "2026-10-16",
+    "timezone": "America/Denver",
+    "source": "user report in task conversation",
+    "backend": "deployed Kurier",
+    "client": "another Codex instance; version not reported",
+    "connectionAndInformationReads": true,
+    "executionRetrieval": true,
+    "redactionPreserved": true,
+    "immediatePostRevocationToolDenial": true,
+    "exactBrowserAndHiddenPromptSteps": "not separately reported",
+    "allSevenTools": "not enumerated in operator report",
+    "inFlightCancellation": "not established",
+    "transcriptOrSecretsRecorded": false
+  }
 }

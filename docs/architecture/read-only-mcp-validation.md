@@ -2,9 +2,11 @@
 
 Davian explicitly approved the scoped deployment and guarded activation in
 [the review packet](../development/read-only-mcp.md), including `916ea23`.
-The feature branch remains open for his genuine browser pairing and Codex TUI
-checks. Design acceptance, fixture tests, deployed backend validation and those
-operator checks are separate evidence.
+On 2026-10-16 (America/Denver), Davian reported successful deployed Codex
+connection, information/execution retrieval, preserved redaction and immediate
+access denial after revocation. He authorized final review, merge after CI and
+deletion of the merged branch. Design acceptance, fixture tests, deployed AWS
+validation and operator-reported results remain separate evidence.
 
 ## Deployment and readiness
 
@@ -147,10 +149,29 @@ The full live read and cleanup evidence is consolidated in the machine-readable
 record; the earlier observer failures remain disclosed rather than relabeled
 as uninterrupted passes.
 
-The development backend is ready for Davian's pairing. His normal account was
-not used for these credential probes. [Numbered setup steps](../development/read-only-mcp.md#pairing-and-codex-tui-setup)
+The development backend is ready for pairing. Davian's normal account was
+not used for the automated credential probes. [Numbered setup steps](../development/read-only-mcp.md#pairing-and-codex-tui-setup)
 separate browser consent, one-time terminal pairing/registration and the server
 command launched by Codex itself.
+
+## Operator-reported deployed Codex acceptance
+
+On 2026-10-16 (America/Denver), Davian confirmed in this task conversation that
+he connected another Codex instance to the deployed Kurier backend and observed:
+
+- The client could request information and retrieve executions.
+- Redacted fields remained redacted in the information returned to Codex.
+- Revoking MCP access immediately removed access; subsequent tool calls stopped
+  working.
+
+This is Davian's genuine deployed-client report, separate from the automated
+installed-Codex test against simulated HTTPS services and the disposable AWS
+backend checks above. No credential, evidence body or client transcript was
+requested or recorded. The report does not identify a client version, enumerate
+all seven tools, document exact browser/hidden-prompt steps, or establish
+cancellation of in-flight responses or recall of already delivered data.
+Those details are not inferred from his confirmation. The deployed connection,
+execution inspection, redaction and revocation acceptance gate is complete.
 
 ## Separate client/local evidence and remaining checks
 
@@ -165,8 +186,8 @@ summary/complete/size/scope denial and live-connection revocation passed against
 a controlled HTTPS service. No model turn or deployed AWS call occurred in that
 test. It is genuine installed-client integration against simulated services.
 
-Pending: Davian's browser token display, hidden-terminal pairing and manual
-Codex TUI `/mcp`/scoped reads; real thirty-day elapsed expiry, clock-skew and
+Still unperformed or not separately confirmed: detailed browser token-display/
+hidden-prompt UX and `/mcp` inspection steps; real thirty-day elapsed expiry, clock-skew and
 PITR/recovery drills, interrupted cloud activation after a committed close,
 comprehensive negative IAM/quota saturation, exact live 256-KiB serialized MCP
 boundary and metered costs. Local protocol tests cover response-size handling;

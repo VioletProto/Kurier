@@ -148,7 +148,9 @@ separate setup steps; only the final `serve` process is launched by Codex.
    sanitized evidence. Treat names/body text as captured untrusted data.
    Revoking access in the browser must deny later reads; reauthorization then
    requires deliberate browser reissuance and another separate `pair` step.
-   These operator checks remain open until Davian reports them completed.
+   Davian reported successful deployed Codex connection, information/execution
+   retrieval, preserved redaction and immediate revocation denial on 2026-10-16.
+   See the validation record for the limits of that operator report.
 
 Storage validates descriptor-relative ancestors, ownership, permissions,
 symlinks/hardlinks and bounded content; writes are atomic. Windows persistence
@@ -202,7 +204,7 @@ Completed checks, separated by evidence source:
 | DynamoDB Local/race               | Full existing API/execution/ownership race suite passed. Focused MCP checks cover one-time issuance/receipt/slot contention, credential separation, scope, generation/revocation/disable/deletion/audit races, run projection/expired sibling/pins, unavailable evidence with a surviving object, immutable evidence, large-capture summary/denial, cursor scope/continuation, aggregate rate and account/project cleanup. S3/KMS/network failures and clocks are controlled doubles.                                                                                                                                                      |
 | Chromium integration              | Real Chromium→Go→DynamoDB Local, including MCP consent, one-time display/no Web Storage, scope denial, close/revoke, later 401 and project cleanup; prior browser fixtures also pass. Cognito is a signing/authentication fixture and there is no deployed IAM/S3/KMS validation.                                                                                                                                                                                                                                                                                                                                                          |
 | **Actual installed Codex client** | `codex-cli 0.162.1` app-server launched the compiled foreground binary with SDK 1.8.0/MCP 2025-11-25, discovered and called all seven tools, handled summary/complete/oversize/scope denial and revocation with the connection open. A separate fresh compiled process, connected by the official SDK, also denied the persisted revoked credential. A malicious instruction-like project name stayed captured data. HTTPS API/auth/evidence are simulated with a private test CA. No model turn or AWS invocation, no persistent Codex config edit. This is genuine installed-client integration, not a hand-written protocol transcript. |
-| **Deployed AWS backend**          | Real Cognito SRP, distinct JWT/MCP/local-agent authentication, all seven tools, scope/pagination, persisted audits, S3 checksum/immutable capture, 96-KiB complete limit/explicit summary, revocation and deleting-project denial passed. Scheduled cleanup completed; independent readback verified six disposable projects and six temporary users removed. Observer interruptions/resumption are disclosed in the [deployment record](../architecture/read-only-mcp-validation.md). This is separate from Codex's simulated-API integration and the pending operator TUI checks.                                                        |
+| **Deployed AWS backend**          | Real Cognito SRP, distinct JWT/MCP/local-agent authentication, all seven tools, scope/pagination, persisted audits, S3 checksum/immutable capture, 96-KiB complete limit/explicit summary, revocation and deleting-project denial passed. Scheduled cleanup completed; independent readback verified six disposable projects and six temporary users removed. Observer interruptions/resumption are disclosed in the [deployment record](../architecture/read-only-mcp-validation.md). This is separate from Codex's simulated-API integration and Davian's separately reported deployed-client acceptance.                                |
 | Read-only AWS preview             | Actual identity/inventory/price-catalog reads and generated SST preview, described below. This proves current settings and planned diff only, not deployed MCP behavior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 Reproducible commands:
@@ -222,8 +224,9 @@ credential assertions report booleans/counts and fixture credentials are
 memory-only except deliberately private disposable CLI pairing files. Test
 configuration uses a public fixture CA path, never a token literal in Codex TOML.
 
-Interactive operator browser pairing/hidden terminal prompt and manual `/mcp`
-inspection remain open. Deployed checks are recorded separately in the
+Davian's deployed-client connection/read/redaction/revocation report is recorded
+separately. Exact browser token-display/hidden-prompt UX and manual `/mcp`
+inspection steps were not separately reported. Deployed checks are recorded separately in the
 [validation record](../architecture/read-only-mcp-validation.md); fixture and
 app-server integration do not establish live AWS outcomes. Elapsed thirty-day
 expiry, real clock skew/PITR/recovery and metered billing remain unperformed.
@@ -329,5 +332,5 @@ new authority/routes/DTOs/limits/SDK pin/credential/cleanup section and preserve
 all original text. Earlier unrelated Proposed interfaces and the capstone
 proposal remain unchanged. [Trello](https://trello.com/c/9UBvPhBB) distinguishes
 acceptance, implementation/publication, client/local tests, completed scoped AWS
-deployment/runtime validation and the still-open operator browser pairing/TUI checks. Original workflow operational follow-ups and the
+deployment/runtime validation and operator-reported deployed Codex acceptance. Original workflow operational follow-ups and the
 broader contract-review card remain open.
