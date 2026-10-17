@@ -121,6 +121,13 @@ quota/concurrency or bootstrap-infrastructure permission change is proposed.
 Old code-object replacements can delete superseded deployment ZIP objects in
 the existing asset bucket; they do not touch evidence or application data.
 
+The rollback archive correction leaves the app manifest/release identity unchanged:
+`acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e`.
+The refreshed guarded preview adds no resources/IAM changes beyond the original
+hosting proposal; its `releaseUpload` section lists the complete private archive
+and shared hashed keys. All generated upload app bytes were checked against the
+manifest locally. Actual remote S3 recovery remains a postdeployment check.
+
 ## Upload order, retention and rollback
 
 The artifact builder validates root asset references, rejects symlinks, maps,
@@ -129,7 +136,9 @@ files, 8 MiB/file and 20 MiB total. These are deployment artifact checks, not AP
 input limits. Each release has an ignored local archive under
 `.build/frontend-releases/<release-id>/app`, a generated site tree, and manifest.
 The S3 site tree adds public `artifact.json` and private-origin
-`_releases/<id>/{index.html,artifact.json}` archives. CloudFront denies viewer
+`_releases/<id>/{index.html,startup.js,404.html,artifact.json}` archives.
+Every non-content-addressed app file is copied into its release prefix; hashed
+JS/CSS remain shared at their manifest-listed root keys. CloudFront denies viewer
 access to `_releases`; none of these archives contains protected data.
 
 The [pinned uploader](https://github.com/sst/sst/blob/v4.17.1/pkg/server/resource/aws-bucket-files.go)
@@ -155,7 +164,10 @@ node scripts/frontend-retention.mjs <current-id> <previous-known-good-id>
 
 only reads this scoped web bucket and lists deletion candidates. It preserves
 every release within 30 days, both known-good releases regardless of age, and
-all hashed assets referenced by any preserved release. Incomplete/malformed
+its complete nonhashed archive plus all hashed assets referenced by any
+preserved release. Expired release candidates include every archived nonhashed
+file and its manifest; shared hashed assets are candidates only when no retained
+release references them. Incomplete/malformed
 inventory fails closed. It never deletes anything; an operator must review
 candidates and separately authorize deliberate cleanup. Existing scheduled
 application maintenance gets no web-bucket permissions or new duty.
@@ -165,11 +177,19 @@ Concrete rollback, after deployment authorization:
 1. Choose the prior **verified** manifest and confirm the same API/pool/client
    public configuration. Retain the current API/CORS-capable binary and all
    database/capability/accounting state.
-2. Use the retained local `app` archive. If unavailable, recover the exact
-   archived shell/manifest and manifest-listed assets/startup/404 files from
-   this web bucket into `.build/frontend-releases/<id>/app`; verify hashes before
-   using them. If a required byte is absent, stop rather than invent/rebuild a
-   supposed historical artifact.
+2. Use the retained local `app` archive. If unavailable, run
+   `node scripts/restore-frontend-artifact.mjs <id>` with deployed scoped outputs
+   and read-only origin credentials. It retrieves `_releases/<id>/artifact.json`,
+   every nonhashed file exclusively from `_releases/<id>/<path>`, and shared
+   hashed assets from their root manifest keys. It verifies the selected release
+   identity, current public configuration, every size/hash and complete artifact
+   before atomically publishing `.build/frontend-releases/<id>/app`. It never
+   uses the mutable root startup/404/shell, rebuilds, uploads or invalidates.
+   Missing/corrupted bytes, malformed manifests or configuration mismatch stop
+   recovery and leave no selectable local release. Existing local releases are
+   refused rather than overwritten; inspect/quarantine an invalid local archive
+   deliberately before retrying. Keep the independently verified release ID:
+   hashes establish identity/integrity, not operator approval of a release.
 3. Set `KURIER_FRONTEND_ROLLBACK_RELEASE=<64-hex-id>` for
    `node scripts/build-frontend-artifact.mjs` and then the guarded `--diff`.
    The helper validates the release/config/content hash and uses the preserved
@@ -190,8 +210,9 @@ stage markers or replay executions to undo a frontend release.
 No standing compute/networking, domain, SES sender, customer key or secret is
 added. Actual artifact size is approximately 0.4 MB uncompressed, with one
 JS/CSS pair and three nonhashed app files; the manifest supplies exact sizes.
-Generated site upload adds two small archive files and a public manifest.
-Ten releases are roughly 80 object uploads before skips/retries, substantially
+Generated site upload adds four small archive files (all three nonhashed app
+files plus the manifest) and a public manifest: ten uploaded objects per release.
+Ten releases are roughly 100 object uploads before skips/retries, substantially
 inside the accepted 2,000 PUT/LIST light allowance. The routing Function is
 below its 10 KiB code limit; KV probes/misses and administrative operations
 remain separately metered. No viewer-response Function is added.
@@ -219,6 +240,13 @@ Completed during this implementation:
 - Infrastructure fixture tests cover strict public config, artifact hashes and
   exclusions, signed/scoped bucket policy, cache/header/method settings, retained
   uploader, path exclusions and 30-day/current/previous retention planning.
+- A remote-only recovery regression creates A/B with different shell, startup
+  and 404 bytes, overwrites live roots with B, removes A's entire local archive,
+  reconstructs A using only simulated retained origin objects, verifies every
+  manifest hash, and prepares rollback with zero build calls. Removing or
+  corrupting each required object (including manifest/shared assets) fails
+  closed without a partial release. Retention covers all archived nonhashed
+  files and preserves shared assets referenced by retained releases.
 - Go tests cover both exact origins, all five preflight methods/required
   headers, readable application errors, foreign/suffix/null/duplicate origins,
   unsafe configuration and preserved local-only adapter behavior.
@@ -236,7 +264,7 @@ Completed during this implementation:
   and stage preserved. No AWS deployment/activation was performed.
 
 Final `npm run verify` passed formatting/gofmt, lint, **58 frontend** and
-**14 infrastructure** tests, TypeScript/Vite production build and tests/vet for
+**15 infrastructure** tests, TypeScript/Vite production build and tests/vet for
 all seven Go modules. The history race regression rejects a sign-in callback
 that finishes after pagehide. The guarded artifact rollback selector also
 reproduced the retained release identity without rebuilding. The final preview

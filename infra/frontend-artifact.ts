@@ -5,6 +5,9 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
+  mkdtempSync,
+  renameSync,
+  rmSync,
   readFileSync,
   readdirSync,
   writeFileSync,
@@ -17,6 +20,10 @@ export const htmlCache =
 export const assetCache = "public, max-age=31536000, immutable";
 export function sha256(value: string | Buffer) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+export function retainedObjectKey(releaseId: string, file: string) {
+  return file.startsWith("assets/") ? file : `_releases/${releaseId}/${file}`;
 }
 
 export function inspectArtifact(
@@ -68,6 +75,7 @@ export function inspectArtifact(
   const html = readFileSync(path.join(directory, "index.html"), "utf8");
   if (
     !files.some((f) => f.path === "startup.js") ||
+    !files.some((f) => f.path === "404.html") ||
     !files.some((f) => f.path.endsWith(".css")) ||
     !files.some((f) => f.path.startsWith("assets/") && f.path.endsWith(".js"))
   )
@@ -124,7 +132,10 @@ export function buildFrontendArtifact(environment: Record<string, unknown>) {
   cpSync(app, site, { recursive: true });
   const archive = path.join(site, "_releases", manifest.releaseId);
   mkdirSync(archive, { recursive: true });
-  cpSync(path.join(app, "index.html"), path.join(archive, "index.html"));
+  for (const file of manifest.files.filter(
+    (f) => !f.path.startsWith("assets/"),
+  ))
+    cpSync(path.join(app, file.path), path.join(archive, file.path));
   const json = JSON.stringify(manifest, null, 2) + "\n";
   writeFileSync(path.join(site, "artifact.json"), json);
   writeFileSync(path.join(archive, "artifact.json"), json);
@@ -166,7 +177,7 @@ export function planFrontendRetention(
     for (const f of payload.files)
       if (
         !/^[a-f0-9]{64}$/.test(f.sha256) ||
-        (f.path.startsWith("assets/") &&
+        (!["index.html", "startup.js", "404.html"].includes(f.path) &&
           !/^assets\/[A-Za-z0-9_-]+-[A-Za-z0-9_-]{8,}\.(js|css)$/.test(f.path))
       )
         throw Error("Invalid retained asset.");
@@ -181,7 +192,9 @@ export function planFrontendRetention(
   return [
     ...new Set(
       expired.flatMap(({ manifest }) => [
-        `_releases/${manifest.releaseId}/index.html`,
+        ...manifest.files
+          .filter((f) => !f.path.startsWith("assets/"))
+          .map((f) => retainedObjectKey(manifest.releaseId, f.path)),
         `_releases/${manifest.releaseId}/artifact.json`,
         ...manifest.files
           .filter((f) => f.path.startsWith("assets/") && !keep.has(f.path))
@@ -189,4 +202,79 @@ export function planFrontendRetention(
       ]),
     ),
   ].sort();
+}
+
+// Reads only retained origin objects. Never fall back to mutable root files or build.
+export function restoreFrontendArtifact(
+  releaseId: string,
+  environment: Record<string, unknown>,
+  readObject: (key: string) => Buffer,
+) {
+  const config = hostedPublicConfig(environment);
+  if (!/^[a-f0-9]{64}$/.test(releaseId))
+    throw Error("Invalid rollback release.");
+  const raw = readObject(`_releases/${releaseId}/artifact.json`);
+  if (raw.length > 65536) throw Error("Historical manifest exceeds bounds.");
+  const manifest: ReturnType<typeof inspectArtifact> = JSON.parse(
+    raw.toString(),
+  );
+  const { releaseId: declared, ...payload } = manifest;
+  if (
+    declared !== releaseId ||
+    sha256(JSON.stringify(payload)) !== releaseId ||
+    payload.schemaVersion !== 1 ||
+    !Array.isArray(payload.files) ||
+    payload.files.length > 128 ||
+    JSON.stringify(hostedPublicConfig(payload.publicConfig)) !==
+      JSON.stringify(config)
+  )
+    throw Error("Historical manifest/config hash mismatch.");
+  const root = path.join(process.cwd(), ".build/frontend-releases");
+  mkdirSync(root, { recursive: true });
+  const release = path.join(root, releaseId);
+  if (existsSync(release))
+    throw Error("Local release already exists; verify it separately.");
+  const temporary = mkdtempSync(path.join(root, ".restore-"));
+  try {
+    const app = path.join(temporary, "app");
+    mkdirSync(app);
+    let total = 0;
+    const names = new Set<string>();
+    for (const file of payload.files) {
+      if (
+        (!["index.html", "startup.js", "404.html"].includes(file.path) &&
+          !/^assets\/[A-Za-z0-9_-]+-[A-Za-z0-9_-]{8,}\.(js|css)$/.test(
+            file.path,
+          )) ||
+        names.has(file.path) ||
+        !Number.isSafeInteger(file.bytes) ||
+        file.bytes < 0 ||
+        file.bytes > 8 * 1024 * 1024 ||
+        !/^[a-f0-9]{64}$/.test(file.sha256)
+      )
+        throw Error("Invalid historical file.");
+      names.add(file.path);
+      total += file.bytes;
+      if (total > 20 * 1024 * 1024)
+        throw Error("Historical artifact exceeds bounds.");
+      const bytes = readObject(retainedObjectKey(releaseId, file.path));
+      if (bytes.length !== file.bytes || sha256(bytes) !== file.sha256)
+        throw Error("Historical file hash mismatch.");
+      const target = path.join(app, file.path);
+      mkdirSync(path.dirname(target), { recursive: true });
+      writeFileSync(target, bytes);
+    }
+    if (
+      !names.has("404.html") ||
+      JSON.stringify(inspectArtifact(app, config)) !== JSON.stringify(manifest)
+    )
+      throw Error(
+        "Historical artifact is incomplete or differs from manifest.",
+      );
+    writeFileSync(path.join(temporary, "artifact.json"), raw);
+    renameSync(temporary, release);
+    return manifest;
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
 }

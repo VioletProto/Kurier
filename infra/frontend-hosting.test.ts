@@ -53,6 +53,7 @@ it("content-addresses only bounded public files and rejects maps, bypasses and s
     '<script src="/startup.js"></script><script src="/assets/app-abcdefgh.js"></script>',
   );
   writeFileSync(path.join(dir, "startup.js"), "// public startup");
+  writeFileSync(path.join(dir, "404.html"), "Missing");
   writeFileSync(path.join(dir, "assets/app-abcdefgh.js"), "// application");
   writeFileSync(path.join(dir, "assets/app-abcdefgh.css"), "body{}");
   const a = inspectArtifact(dir, config);
@@ -181,6 +182,10 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
   for (const uri of [
     "/api/v1/projects",
     "/_releases/release/index.html",
+    "/_releases/release/startup.js",
+    "/_releases/release/404.html",
+    "/_releases/release/artifact.json",
+    "/%5freleases/release/startup.js",
     "/missing.js",
     "/%2e%2e/index.html",
     "/bad%",

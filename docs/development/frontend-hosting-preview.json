@@ -1,6 +1,22 @@
 {
+  "releaseUpload": {
+    "releaseId": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+    "sharedHashedObjects": [
+      "assets/index-CAjex_6u.css",
+      "assets/index-TwEBpFzH.js"
+    ],
+    "privateArchiveObjects": [
+      "_releases/acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e/404.html",
+      "_releases/acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e/artifact.json",
+      "_releases/acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e/index.html",
+      "_releases/acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e/startup.js"
+    ],
+    "publicManifest": "artifact.json",
+    "viewerArchiveAccess": "denied by viewer-request function",
+    "recovery": "verify all retained bytes before preparing rollback; no build or mutable-root fallback"
+  },
   "inventory": {
-    "checkedAt": "2026-10-16T22:28:47.159Z",
+    "checkedAt": "2026-10-16T22:38:50.810Z",
     "account": "747336059622",
     "nonRoot": true,
     "region": "us-east-2",
@@ -109,12 +125,6 @@
   },
   "resources": [
     {
-      "name": "FrontendWebHeaders",
-      "type": "aws:cloudfront/responseHeadersPolicy:ResponseHeadersPolicy",
-      "operation": "create",
-      "changedProperties": []
-    },
-    {
       "name": "FrontendWebAssets",
       "type": "aws:s3/bucketV2:BucketV2",
       "operation": "create",
@@ -127,8 +137,14 @@
       "changedProperties": []
     },
     {
-      "name": "FrontendWebOwnership",
-      "type": "aws:s3/bucketOwnershipControls:BucketOwnershipControls",
+      "name": "FrontendWebHeaders",
+      "type": "aws:cloudfront/responseHeadersPolicy:ResponseHeadersPolicy",
+      "operation": "create",
+      "changedProperties": []
+    },
+    {
+      "name": "FrontendWebPublicAccess",
+      "type": "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock",
       "operation": "create",
       "changedProperties": []
     },
@@ -139,8 +155,8 @@
       "changedProperties": []
     },
     {
-      "name": "FrontendWebPublicAccess",
-      "type": "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock",
+      "name": "FrontendWebOwnership",
+      "type": "aws:s3/bucketOwnershipControls:BucketOwnershipControls",
       "operation": "create",
       "changedProperties": []
     },
@@ -181,7 +197,25 @@
       "changedProperties": []
     },
     {
+      "name": "ExecutionControlledEndpointCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "operation": "replace",
+      "changedProperties": ["key", "source", "versionId"]
+    },
+    {
+      "name": "CloudExecutionWorkerCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "operation": "replace",
+      "changedProperties": ["key", "source", "versionId"]
+    },
+    {
       "name": "UsersProjectsApiCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "operation": "replace",
+      "changedProperties": ["key", "source", "versionId"]
+    },
+    {
+      "name": "EmptyProjectCleanupCode",
       "type": "aws:s3/bucketObjectv2:BucketObjectv2",
       "operation": "replace",
       "changedProperties": ["key", "source", "versionId"]
@@ -191,6 +225,18 @@
       "type": "aws:cloudfront/distribution:Distribution",
       "operation": "create",
       "changedProperties": []
+    },
+    {
+      "name": "ExecutionControlledEndpointFunction",
+      "type": "aws:lambda/function:Function",
+      "operation": "update",
+      "changedProperties": ["lastModified", "s3Key"]
+    },
+    {
+      "name": "CloudExecutionWorkerFunction",
+      "type": "aws:lambda/function:Function",
+      "operation": "update",
+      "changedProperties": ["lastModified", "s3Key"]
     },
     {
       "name": "FrontendWebLinkRef",
@@ -205,6 +251,12 @@
       "changedProperties": []
     },
     {
+      "name": "EmptyProjectCleanupFunction",
+      "type": "aws:lambda/function:Function",
+      "operation": "update",
+      "changedProperties": ["lastModified", "s3Key"]
+    },
+    {
       "name": "FrontendWebCdnWaiter.sst.aws.DistributionDeploymentWaiter",
       "type": "pulumi-nodejs:dynamic:Resource",
       "operation": "create",
@@ -215,42 +267,6 @@
       "type": "aws:lambda/function:Function",
       "operation": "update",
       "changedProperties": ["environment.variables", "lastModified", "s3Key"]
-    },
-    {
-      "name": "EmptyProjectCleanupCode",
-      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
-      "operation": "replace",
-      "changedProperties": ["key", "source", "versionId"]
-    },
-    {
-      "name": "EmptyProjectCleanupFunction",
-      "type": "aws:lambda/function:Function",
-      "operation": "update",
-      "changedProperties": ["lastModified", "s3Key"]
-    },
-    {
-      "name": "ExecutionControlledEndpointCode",
-      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
-      "operation": "replace",
-      "changedProperties": ["key", "source", "versionId"]
-    },
-    {
-      "name": "ExecutionControlledEndpointFunction",
-      "type": "aws:lambda/function:Function",
-      "operation": "update",
-      "changedProperties": ["lastModified", "s3Key"]
-    },
-    {
-      "name": "CloudExecutionWorkerCode",
-      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
-      "operation": "replace",
-      "changedProperties": ["key", "source", "versionId"]
-    },
-    {
-      "name": "CloudExecutionWorkerFunction",
-      "type": "aws:lambda/function:Function",
-      "operation": "update",
-      "changedProperties": ["lastModified", "s3Key"]
     }
   ],
   "runtimeIamChanges": false,
@@ -264,7 +280,7 @@
       "defaultTtl": 0,
       "maxTtl": 31536000,
       "minTtl": 0,
-      "name": "FrontendWebCache-d323bf8",
+      "name": "FrontendWebCache-68dd24d",
       "parametersInCacheKeyAndForwardedToOrigin": {
         "cookiesConfig": {
           "cookieBehavior": "none"
@@ -289,7 +305,7 @@
           }
         ]
       },
-      "name": "FrontendWebHeaders-c851e85",
+      "name": "FrontendWebHeaders-044d41e",
       "securityHeadersConfig": {
         "contentSecurityPolicy": {
           "contentSecurityPolicy": "default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com https://cognito-idp.us-east-2.amazonaws.com; form-action 'self'; manifest-src 'self'; worker-src 'none'; upgrade-insecure-requests",

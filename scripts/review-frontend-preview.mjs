@@ -51,7 +51,28 @@ const policies = {
   headers: find("FrontendWebHeaders"),
 };
 for (const value of Object.values(policies)) delete value.__defaults;
+const artifact = JSON.parse(
+  readFileSync(".sst/frontend-hosting-artifact.json", "utf8"),
+);
 const report = {
+  releaseUpload: {
+    releaseId: artifact.releaseId,
+    sharedHashedObjects: artifact.files
+      .filter((f) => f.path.startsWith("assets/"))
+      .map((f) => f.path),
+    privateArchiveObjects: [
+      "artifact.json",
+      ...artifact.files
+        .filter((f) => !f.path.startsWith("assets/"))
+        .map((f) => f.path),
+    ]
+      .sort()
+      .map((f) => `_releases/${artifact.releaseId}/${f}`),
+    publicManifest: "artifact.json",
+    viewerArchiveAccess: "denied by viewer-request function",
+    recovery:
+      "verify all retained bytes before preparing rollback; no build or mutable-root fallback",
+  },
   inventory: JSON.parse(
     readFileSync(".sst/frontend-hosting-inventory.json", "utf8"),
   ),

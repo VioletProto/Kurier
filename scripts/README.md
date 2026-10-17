@@ -94,5 +94,8 @@ passphrase/state, account, plan, quotas, consumers, auth and stage/accounting.
 `review-frontend-preview.mjs` publishes selected public evidence from that preview.
 `frontend-retention.mjs <current-id> <previous-known-good-id>` is a read-only
 30-day/current/previous retention planner; it never deletes objects.
+`restore-frontend-artifact.mjs <verified-release-id>` reads the complete private
+release archive and shared hashed assets, verifies every manifest hash, and
+atomically restores a local rollback candidate without building or uploading.
 See the [operating and rollback guide](../docs/development/frontend-hosting.md).
 No helper grants deployment or general-public signup authorization.
