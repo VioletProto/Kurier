@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   buildFrontendArtifact,
   assetCache,
@@ -29,6 +30,11 @@ export function createDevelopmentWeb(
   client: string,
 ) {
   return $output(apiUrl).apply((apiOrigin) => {
+    // Match the pinned StaticSite namespace; no additional KV store/resource.
+    const kvNamespace = createHash("md5")
+      .update(`${$app.name}-${$app.stage}-FrontendWeb`)
+      .digest("hex")
+      .slice(0, 4);
     const artifact = buildFrontendArtifact({
       VITE_API_URL: apiOrigin,
       VITE_COGNITO_USER_POOL_ID: pool,
@@ -108,12 +114,19 @@ export function createDevelopmentWeb(
           viewerRequest: {
             injection: `
 // No protected API, archives, credentials or arbitrary files at this origin.
+var missingStatic = { statusCode: 404, statusDescription: "Not Found", headers: { "content-security-policy": { value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" }, "permissions-policy": { value: "camera=(), microphone=(), geolocation=()" }, "cache-control": { value: "no-store" }, "content-type": { value: "text/plain; charset=utf-8" }, "x-content-type-options": { value: "nosniff" }, "x-frame-options": { value: "DENY" }, "referrer-policy": { value: "no-referrer" }, "strict-transport-security": { value: "max-age=31536000" } }, body: "Not found." };
 var uri;
 try { uri = decodeURIComponent(event.request.uri); } catch (e) { uri = ""; }
 if (!uri || uri.indexOf("..") !== -1 || uri.indexOf("\\\\") !== -1 || uri.indexOf("//") !== -1 ||
     uri === "/api" || uri.indexOf("/api/") === 0 || uri.indexOf("/_releases") === 0 ||
     (uri.split("/").pop().indexOf(".") !== -1 && uri !== "/404.html" && uri !== "/index.html" && uri !== "/startup.js" && uri !== "/artifact.json" && !/^\\/assets\\/[A-Za-z0-9_-]+-[A-Za-z0-9_-]{8,}\\.(js|css)$/.test(uri))) {
-  return { statusCode: 404, statusDescription: "Not Found", headers: { "content-security-policy": { value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" }, "permissions-policy": { value: "camera=(), microphone=(), geolocation=()" }, "cache-control": { value: "no-store" }, "content-type": { value: "text/plain; charset=utf-8" }, "x-content-type-options": { value: "nosniff" }, "x-frame-options": { value: "DENY" }, "referrer-policy": { value: "no-referrer" }, "strict-transport-security": { value: "max-age=31536000" } }, body: "Not found." };
+  return missingStatic;
+}
+// SST uses a placeholder default origin, which cannot serve custom error pages.
+// Admit hashed requests only when a retained per-file KV entry exists.
+if (uri.indexOf("/assets/") === 0) {
+  try { await cf.kvs().get("${kvNamespace}:" + uri); }
+  catch (e) { return missingStatic; }
 }
 delete event.request.headers.authorization;
 delete event.request.headers.cookie;
@@ -162,6 +175,24 @@ event.request.cookies = {};
               return {
                 props: resource.props,
                 opts: { ...resource.opts, retainOnDelete: true },
+              };
+            if (
+              resource.type === "pulumi-nodejs:dynamic:Resource" &&
+              resource.name === "FrontendWebKvKeys.sst.aws.KvKeys"
+            )
+              return {
+                props: {
+                  ...resource.props,
+                  entries: $output(resource.props.entries).apply((entries) => ({
+                    ...entries,
+                    ...Object.fromEntries(
+                      artifact.manifest.files
+                        .filter((f) => f.path.startsWith("assets/"))
+                        .map((f) => ["/" + f.path, "s3"]),
+                    ),
+                  })),
+                },
+                opts: resource.opts,
               };
             return undefined;
           },

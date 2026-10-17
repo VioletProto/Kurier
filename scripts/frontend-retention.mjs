@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { planFrontendRetention } from "../infra/frontend-artifact.ts";
@@ -50,13 +51,23 @@ const releases = (objects.Contents ?? [])
       throw Error("Archive identity mismatch.");
     return { manifest, uploadedAt: o.LastModified };
   });
+const candidates = planFrontendRetention(releases, current, previous);
+const namespace = createHash("md5")
+  .update("kurier-dev-api-FrontendWeb")
+  .digest("hex")
+  .slice(0, 4);
 console.log(
   JSON.stringify(
     {
       bucket,
       current,
       previous,
-      deleteCandidates: planFrontendRetention(releases, current, previous),
+      deleteCandidates: candidates,
+      kvDeleteCandidates: candidates
+        .filter((key) => key.startsWith("assets/"))
+        .map((key) => namespace + ":/" + key),
+      cleanupOrder:
+        "After separate cleanup approval: remove only expired hashed-file KV keys, invalidate and wait, then delete reviewed S3 candidates; never remove current/previous or retained references.",
       deletionPerformed: false,
     },
     null,

@@ -26,6 +26,10 @@ declare module "sst" {
       name: string;
       type: "sst.aws.Function";
     };
+    FrontendWeb: {
+      type: "sst.aws.StaticSite";
+      url: string;
+    };
     Protected: {
       name: string;
       type: "sst.aws.Dynamo";

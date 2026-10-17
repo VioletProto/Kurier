@@ -7,11 +7,16 @@ including the AWS-hostname TLS limitation, development-only Cognito default
 sender exception, release retention and costs. Scoped static hosting/CORS/public
 configuration implementation, local tests and documentation synchronization are
 authorized, as are read-only AWS inventory and SST preview using the verified
-existing bootstrap. Bootstrap creation/replacement, plan upgrades and product
-deployment during preview are prohibited. **Deployment remains on hold** for
-actual resource/IAM changes, artifact manifest, release ordering/rollback and
-refreshed cost review. [Implementation/preview evidence](../development/frontend-hosting.md)
-keeps local/fixture results distinct from unperformed genuine hosted validation.
+existing bootstrap. Davian subsequently approved scoped development/demo
+hosting deployment including `21c24be` and the refreshed preview, plus a harmless
+public-marker A→B→A exercise. The host is
+https://d2kpq905qyh9zg.cloudfront.net. No schema activation or general-public
+signup launch is authorized. Bootstrap replacement, plan upgrades, quota and
+concurrency changes remain prohibited. The
+[deployment record](../development/frontend-hosting-validation.md) separates
+actual AWS/hosted checks from participant auth/email/product/agent/MCP acceptance
+still pending. [Implementation details](../development/frontend-hosting.md)
+retain the original preview and review boundaries.
 
 ## Accepted read-only MCP continuation
 

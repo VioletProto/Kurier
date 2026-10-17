@@ -4,9 +4,12 @@ Davian accepted [contract `6b026a7`](../architecture/frontend-hosting-contract.m
 including the default AWS-hostname TLS policy, development-only Cognito sender
 exception, release retention and cost allowances. Scoped implementation, local
 verification, documentation synchronization, read-only AWS inventory and
-existing-bootstrap-only SST preview are authorized. **Product deployment is
-still on hold.** No hosted URL has been allocated and no genuine hosted browser,
-email, CDN, OAC or IAM runtime success is claimed.
+existing-bootstrap-only SST preview were authorized. Davian then approved the
+scoped development/demo deployment including correction `21c24be` and the
+refreshed preview. The host is **https://d2kpq905qyh9zg.cloudfront.net**.
+See the [deployment and genuine validation record](frontend-hosting-validation.md)
+for performed checks, generated identifiers and participant checks still open.
+This is not authorization for a general-public signup launch.
 
 ## Implementation
 
@@ -18,8 +21,8 @@ and bootstrap buckets are never site origins. CloudFront uses the default AWS
 certificate, PriceClass_100, static GET/HEAD, compression and HTTPS redirect.
 It has no API behavior, custom domain, WAF subscription, Lambda@Edge or logs.
 Its routing Function strips viewer credentials and rejects API/archive paths,
-malformed paths and unknown file extensions. Missing hashed chunks use a real
-404 page; application navigation uses the SPA shell without adding semantic
+malformed paths and unknown file extensions. Missing hashed chunks return a no-store
+404; application navigation uses the SPA shell without adding semantic
 project routes.
 
 The custom cache policy has min/default TTL zero, maximum one year, and no
@@ -92,7 +95,7 @@ and changed VCS build metadata (`916ea23` live versus `6b026a7` worktree preview
 Their package bytes differ; do not claim binary equality. No Go dependency,
 worker permission, trigger, concurrency, timeout or memory change is requested.
 
-First-create preview limitations are explicit in the JSON: generated names,
+First-create preview limitations were explicit in the JSON: generated names,
 policy IDs, distribution ARN and API origin environment are unknown until AWS
 resolves them. StaticSite registers its AssetFiles/Invalidation providers inside
 applies after the new bucket read resolves, so they are **deferred**, absent
@@ -126,7 +129,7 @@ The rollback archive correction leaves the app manifest/release identity unchang
 The refreshed guarded preview adds no resources/IAM changes beyond the original
 hosting proposal; its `releaseUpload` section lists the complete private archive
 and shared hashed keys. All generated upload app bytes were checked against the
-manifest locally. Actual remote S3 recovery remains a postdeployment check.
+manifest locally. The deployment record separates actual remote recovery from the earlier fixture proof.
 
 ## Upload order, retention and rollback
 
@@ -169,7 +172,12 @@ preserved release. Expired release candidates include every archived nonhashed
 file and its manifest; shared hashed assets are candidates only when no retained
 release references them. Incomplete/malformed
 inventory fails closed. It never deletes anything; an operator must review
-candidates and separately authorize deliberate cleanup. Existing scheduled
+candidates and separately authorize deliberate cleanup. The existing KV store now
+also has retained per-file hashed keys: the planner lists their corresponding
+`kvDeleteCandidates`. Under separate cleanup approval, remove only expired-file
+KV keys, invalidate and wait, then delete the reviewed S3 candidates. Leaving a
+KV key for a deleted object would admit a request to S3's error path. Never
+remove retained/current/previous keys. Existing scheduled
 application maintenance gets no web-bucket permissions or new duty.
 
 Concrete rollback, after deployment authorization:
@@ -274,15 +282,14 @@ SST/Pulumi type errors and the historical root `@pulumi/pulumi` import; it is no
 a configured passing repository gate. SST preview/bundling and project tests
 remain separate checks, not a claim that vendor source type-checks cleanly.
 
-Still pending deployment: real hostname/TLS/CSP and OAC policy readback, exact
-hosted-origin preflight/errors/ETag/Location behavior, genuine Cognito
-signup/verify/resend/reset/automatic rotating refresh/sign-out, elapsed code/
-one-day expiry, real edge cache/invalidation/rollback/stale-tab behavior,
-browser history privacy on real engines, Vivaldi/Firefox/WebKit accessibility,
-real hosted agent pairing/private target and Codex stdio acceptance, negative
-IAM checks, account abuse/load and metered cost verification. General-public
-signup/SES readiness remains separately scoped. No elapsed/runtime result is
-inferred from fixtures or earlier localhost operator reports.
+The [deployment validation record](frontend-hosting-validation.md) supersedes
+this packet's historical deployment hold and local-only status. Genuine Cognito
+signup/email verification/reset, automatic refresh/sign-out, authenticated
+ETag/Location behavior, product regression, hosted agent pairing/private target
+and Codex stdio acceptance still require the participant checks there. Additional
+engines/accessibility, elapsed code/one-day expiry, account abuse/load and metered
+costs remain open. General-public signup/SES readiness is separately scoped.
+No elapsed/runtime result is inferred from fixtures or earlier localhost reports.
 
 ## Documentation synchronization
 
@@ -291,5 +298,29 @@ rule/hosting continuation were updated in place under revision guards and read
 back. They record acceptance, four public fields, exact CORS, memory-only auth,
 development-demo sender exception, static-only CDN, retention/rollback,
 local-agent/stdio boundaries, existing-bootstrap-only preview and deployment
-hold. Unrelated content and milestone structure were preserved. Trello tracks
-implementation/preview separately from deployment and genuine hosted checks.
+hold. The deployment continuation was subsequently synchronized in place with
+revision guards and verified readback: live URL, complete archive/remote rollback,
+automated checks and remaining participant acceptance. Unrelated content and
+milestone structure were preserved. Trello separates deployed checks from
+genuine participant authentication/product/agent/MCP acceptance.
+
+## Live missing-asset correction
+
+A genuine unknown hashed-file probe exposed a 502: SST 4.17.1's default origin
+is `placeholder.sst.dev`, so CloudFront's custom-error subrequest could not fetch
+`/404.html` through the viewer-request origin switch. Known assets and the SPA
+already worked. The correction updates only the existing routing Function and
+existing KV resource: retain a per-file key for every published hashed JS/CSS
+file, reject unknown hashed files with a no-store 404 before origin routing,
+and preserve historical keys with `purge=false`. The namespace matches pinned
+SST's app/stage/site MD5 convention. No new resource, IAM, origin, compute or
+network was added. KV entry updates and asset uploads complete before waited
+invalidation. Fixture coverage checks missing-file denial, preserved keys and
+current-file admission; real HTTP coverage checks the 404 after deployment.
+
+[AWS custom-error response routing](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CustomErrorResponse.html)
+requires the error page's actual origin behavior; it does not repeat the viewer
+Function's origin override for that subrequest. Retained keys and objects must
+therefore be cleaned up together in the deliberate order above. This guard adds
+one KV lookup per hashed-file request; conservative accepted hosting/validation
+allowances remain unchanged, and actual metered charges remain unverified.

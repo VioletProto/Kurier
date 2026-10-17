@@ -12,9 +12,10 @@ remains `dev-api-initial-v1`. Code and validation live on
 ## Foreground startup
 
 The [accepted frontend-hosting continuation](frontend-hosting.md) is implemented
-locally and previewed; its deployment remains held. Continue using the local UI
-below until a verified hosted `siteUrl` is published. After approved deployment,
-that HTTPS UI can issue/manage the same local-agent credential. Hidden-terminal
+and deployed for development/demo at https://d2kpq905qyh9zg.cloudfront.net.
+Use that HTTPS UI, or the local UI below, to issue/manage the same local-agent
+credential. Hosted-origin pairing/private-target acceptance still requires the
+[participant checks](frontend-hosting-validation.md#participant-browser-checks). Hidden-terminal
 pairing, outbound HTTPS polling and explicit destination consent remain unchanged;
 the browser never contacts a localhost/private-network control server. A separate
 hosted-origin pairing/private-target check remains required.
@@ -25,8 +26,8 @@ Requires Go 1.26. Build from the checked-out repository root:
 go -C services/local-agent build -o /tmp/kurier-agent .
 ```
 
-1. Start the existing local React development frontend with `npm run dev:cloud`
-   and sign in through Cognito. Open an owned project's execution panel.
+1. Open https://d2kpq905qyh9zg.cloudfront.net (or start the local React UI
+   with `npm run dev:cloud`) and sign in through Cognito. Open an owned project's execution panel.
 2. Refresh pairing status. Choose the device name, loopback/private address class
    and exact origins for this project, and explicitly approve their scope.
    Create the credential and enter its one-time token into the CLI hidden prompt.

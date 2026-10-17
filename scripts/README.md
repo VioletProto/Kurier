@@ -99,3 +99,31 @@ release archive and shared hashed assets, verifies every manifest hash, and
 atomically restores a local rollback candidate without building or uploading.
 See the [operating and rollback guide](../docs/development/frontend-hosting.md).
 No helper grants deployment or general-public signup authorization.
+
+The development/demo frontend is https://d2kpq905qyh9zg.cloudfront.net.
+`deploy-frontend-hosting.mjs --deploy` requires an explicitly approved scoped
+plan and a fresh guarded preview; `--recheck-and-deploy` combines a fresh preview
+with a strict allowlist of updates to the four existing static hosting resources.
+It refuses creations, deletions and backend/IAM changes. It never activates a
+schema marker. Reusing either command requires authorization for that release.
+`verify-frontend-hosting-deployment.mjs --capture-baseline PATH` captures public
+fingerprints before initial hosting deployment; `--verify-baseline PATH` proves
+exact built packages, unchanged runtime IAM/configuration/controls and only the
+API's hosted-origin addition against that baseline and a fresh inventory.
+
+`inspect-frontend-hosting-state.mjs` exports read-only ignored state and lists
+public resource metadata. `verify-frontend-hosting-resources.mjs` checks the
+exported deferred upload/invalidation dependencies and actual generated AWS
+policies, live routing Function/KV entries and completed distribution/invalidations.
+`validate-frontend-hosting-http.mjs` checks genuine public HTTP/CDN/S3/CORS
+without account creation or product writes. `test-frontend-hosting-live-browser.mjs`
+checks real signed-out Chromium rendering/CSP/CORS/persistence.
+
+`prepare-frontend-marker-release.mjs` creates local public marker B bytes only.
+`exercise-frontend-hosting-rollback.mjs --deploy` is an explicitly authorized real
+A→B→A deployment exercise, using the strict static-update preview guard, a real
+browser, remote-only A reconstruction and no rebuild. If inspection confirms B
+is deployed and recovery has not begun, `--resume-b` can resume that state using
+prior genuine A HTTP evidence; it never blindly retries an uncertain deployment.
+An interrupted recovery requires inspecting local archive/backup state before
+continuing. See [deployment results and participant checks](../docs/development/frontend-hosting-validation.md).

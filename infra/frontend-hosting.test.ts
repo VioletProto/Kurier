@@ -108,6 +108,7 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
       args.transform.cdn(cdn);
     }
   }
+  vi.stubGlobal("$app", { name: "kurier", stage: "dev-api" });
   vi.stubGlobal("$output", output);
   vi.stubGlobal("$jsonStringify", JSON.stringify);
   vi.stubGlobal(
@@ -128,7 +129,11 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
   vi.stubGlobal("sst", { aws: { StaticSite: Site } });
   build.mockReturnValue({
     directory: "/public-artifact",
-    manifest: { releaseId: "a".repeat(64), publicConfig: config },
+    manifest: {
+      releaseId: "a".repeat(64),
+      publicConfig: config,
+      files: [{ path: "assets/app-abcdefgh.js" }, { path: "index.html" }],
+    },
   });
   const result = createDevelopmentWeb(
     config.VITE_API_URL,
@@ -162,7 +167,22 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
     opts: {},
   });
   expect(retained.opts.retainOnDelete).toBe(true);
-  const run = (uri: string) => {
+  const keys = staticOpts.transformations[0]({
+    type: "pulumi-nodejs:dynamic:Resource",
+    name: "FrontendWebKvKeys.sst.aws.KvKeys",
+    props: {
+      entries: { metadata: "existing", "/assets/old-abcdefgh.js": "s3" },
+      purge: false,
+    },
+    opts: {},
+  });
+  expect(keys.props.entries).toEqual({
+    metadata: "existing",
+    "/assets/old-abcdefgh.js": "s3",
+    "/assets/app-abcdefgh.js": "s3",
+  });
+  expect(keys.props.purge).toBe(false);
+  const run = async (uri: string) => {
     const event = {
       request: {
         uri,
@@ -173,9 +193,19 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
         cookies: {},
       },
     };
-    const response = vm.runInNewContext(
-      `(function(){${staticArgs.edge.viewerRequest.injection}})()`,
-      { event },
+    const response = await vm.runInNewContext(
+      `(async function(){${staticArgs.edge.viewerRequest.injection}})()`,
+      {
+        event,
+        cf: {
+          kvs: () => ({
+            get: async (key: string) => {
+              if (key.endsWith(":/assets/app-abcdefgh.js")) return "s3";
+              throw Error("Missing");
+            },
+          }),
+        },
+      },
     );
     return { response, event };
   };
@@ -187,19 +217,20 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
     "/_releases/release/artifact.json",
     "/%5freleases/release/startup.js",
     "/missing.js",
+    "/assets/missing-abcdefgh.js",
     "/%2e%2e/index.html",
     "/bad%",
     "/foo//bar",
   ])
-    expect(run(uri).response.statusCode).toBe(404);
+    expect((await run(uri)).response.statusCode).toBe(404);
   for (const uri of [
     "/",
     "/project/opaque",
     "/startup.js",
     "/assets/app-abcdefgh.js",
   ]) {
-    expect(run(uri).response).toBeUndefined();
-    expect(run(uri).event.request.headers).toEqual({});
+    expect((await run(uri)).response).toBeUndefined();
+    expect((await run(uri)).event.request.headers).toEqual({});
   }
 });
 
