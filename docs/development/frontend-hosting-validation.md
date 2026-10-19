@@ -1,5 +1,11 @@
 # Development/demo frontend deployment and validation
 
+This is the historical deployment validation. Davian subsequently authorized the
+[2026-10-19 live account/data reset](development-data-reset.md); prior six-project
+accounting fingerprints and version 11 describe the deployment baseline, not
+the reset state. The reset leaves the host/configuration intact and advances
+the maintenance-fenced stage to version 13 without schema activation.
+
 Davian approved the deployment documented in [the hosting guide](frontend-hosting.md),
 including `21c24be`, the refreshed preview and a harmless public-marker rollback
 exercise. The development/demo URL is **https://d2kpq905qyh9zg.cloudfront.net**.

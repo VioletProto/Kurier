@@ -127,3 +127,14 @@ is deployed and recovery has not begun, `--resume-b` can resume that state using
 prior genuine A HTTP evidence; it never blindly retries an uncertain deployment.
 An interrupted recovery requires inspecting local archive/backup state before
 continuing. See [deployment results and participant checks](../docs/development/frontend-hosting-validation.md).
+
+`reset-development-data.mjs --clear` is a destructive, explicitly authorized,
+one-time `dev-api` test-data reset with exact resource/version guards. It closes
+the stage, deletes Cognito users and all live application data/credentials,
+drains Lambda writers, purges queues and clears application log streams. It
+keeps the stage closed through the previous access-token expiry window.
+`--finish` verifies empty stores and preserved configuration before a conditioned
+reopen; failures stay closed for inspection. It preserves infrastructure,
+frontend releases and existing PITR history. Never use this as schema activation
+or automatically retry an uncertain reset. See the
+[authorization, scope and reset result](../docs/development/development-data-reset.md).

@@ -119,7 +119,7 @@ const stage = aws([
 ]).Item;
 if (
   stage.state?.S !== "active" ||
-  stage.version?.N !== "11" ||
+  stage.version?.N !== "13" ||
   stage.savedRequestsSchemaVersion?.N !== "7" ||
   stage.mcpReadOnlySchemaVersion?.N !== "1" ||
   stage.recoveryGeneration?.S !== "dev-api-initial-v1"

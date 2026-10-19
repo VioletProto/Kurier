@@ -1,5 +1,15 @@
 # Accepted architecture
 
+## Authorized development-data reset
+
+Davian authorized clearing all development accounts and live application data on
+2026-10-19 to repeat genuine signup with existing test emails. The
+[reset record](../development/development-data-reset.md) distinguishes this
+intentional data/accounting reset from the earlier deployment preservation
+checks. Infrastructure, capability schemas, recovery generation, Free plan,
+quotas and concurrency are preserved. The close/reopen maintenance fence
+advances the durable stage version from 11 to 13 without schema activation.
+
 ## Accepted frontend hosting continuation
 
 Davian accepted [frontend-hosting contract `6b026a7`](frontend-hosting-contract.md),
@@ -27,7 +37,8 @@ seven tools, hosted authorization/audit and cleanup integration, API-contract
 synchronization, tests and AWS preview/cost preparation are authorized.
 Davian subsequently approved scoped development deployment and guarded
 activation, including `916ea23`. Development is active at savedRequests7/MCP1,
-version 11, with recovery generation/accounting/existing capabilities preserved.
+version 11 at activation, with recovery generation/accounting/existing capabilities
+preserved then. The later authorized data reset above advances version to 13.
 The [deployment record](read-only-mcp-validation.md) separates genuine AWS results
 from installed-Codex fixture tests and Davian's 2026-10-16 deployed-client
 connection/read/redaction/revocation confirmation.
