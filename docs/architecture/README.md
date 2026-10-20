@@ -12,6 +12,12 @@ authorized [deployment review](../development/workflow-assertions-deployment-rev
 records read-only inventory and a guarded SST preview of implementation
 `55cd061c0f6607037ebd61e200fe54ab296237c4`. Deployment, capability activation and
 genuine runtime tests remain on hold for separate review.
+Davian accepted that deployment approach, including closure and rollback
+limitations. The [execution preparation package](../development/workflow-assertions-execution-package.md)
+pins clean artifacts and a fresh equivalent preview, provides a guarded
+read-only-default activator and bounds future runtime tests. Deployment, stage
+writes, activation and target requests remain held until that package is reviewed;
+the numeric controlled-fixture extension requires its own review.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

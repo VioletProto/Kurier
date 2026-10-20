@@ -1,0 +1,96 @@
+{
+  "account": "747336059622",
+  "region": "us-east-2",
+  "stage": "dev-api",
+  "functions": [
+    {
+      "resource": "UsersProjectsApi",
+      "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+      "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3",
+      "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+      "state": "Active",
+      "update": "Successful",
+      "runtime": "provided.al2023",
+      "architecture": ["arm64"],
+      "memory": 256,
+      "timeout": 15,
+      "reserved": null,
+      "configurationHash": "1e6a8d703a0f74558e2fec2352068aec8743829950336da06e6540217983ef35",
+      "mcp": "1",
+      "savedRequests": "7"
+    },
+    {
+      "resource": "EmptyProjectCleanup",
+      "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+      "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb",
+      "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+      "state": "Active",
+      "update": "Successful",
+      "runtime": "provided.al2023",
+      "architecture": ["arm64"],
+      "memory": 256,
+      "timeout": 60,
+      "reserved": null,
+      "configurationHash": "ed4630178b877a255c805a1bc04d25a435f7b7b0d0e8e3808137c91f508d7f8b",
+      "mcp": "1",
+      "savedRequests": "7"
+    },
+    {
+      "resource": "CloudExecutionWorker",
+      "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+      "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66",
+      "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+      "state": "Active",
+      "update": "Successful",
+      "runtime": "provided.al2023",
+      "architecture": ["arm64"],
+      "memory": 256,
+      "timeout": 90,
+      "reserved": null,
+      "configurationHash": "6d5df901054de62344c765581620c4d8160acbaff2c04b22db23a8afd05d5981",
+      "mcp": "1",
+      "savedRequests": null
+    },
+    {
+      "resource": "ExecutionControlledEndpoint",
+      "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+      "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81",
+      "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+      "state": "Active",
+      "update": "Successful",
+      "runtime": "provided.al2023",
+      "architecture": ["arm64"],
+      "memory": 128,
+      "timeout": 65,
+      "reserved": null,
+      "configurationHash": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+      "mcp": null,
+      "savedRequests": null
+    }
+  ],
+  "controls": {
+    "plan": {
+      "type": "FREE",
+      "status": "ACTIVE"
+    },
+    "quota": 10,
+    "unreserved": 10,
+    "queue": {
+      "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+      "state": "Enabled",
+      "batch": 1,
+      "max": 2,
+      "pollers": null,
+      "responses": ["ReportBatchItemFailures"]
+    },
+    "schedule": {
+      "state": "ENABLED",
+      "expression": "rate(1 minute)",
+      "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+    }
+  }
+}

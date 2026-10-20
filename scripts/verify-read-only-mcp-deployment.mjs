@@ -82,7 +82,7 @@ export function marker() {
     "--consistent-read",
   ]).Item;
 }
-function snapshot() {
+export function snapshot() {
   const functions = [];
   for (const [resource, name] of [
     ["UsersProjectsApi", outputs.apiFunction],
