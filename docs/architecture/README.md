@@ -1,5 +1,14 @@
 # Accepted architecture
 
+## Workflow assertions awaiting review
+
+The [workflow assertions review packet](workflow-assertions-contract.md) is
+**Proposed**, based on the supplied draft and current implementation. It covers
+cloud-workflow assertion authoring, exact evaluation semantics, safe immutable
+results and coordinated compatibility. Preparation/publication is authorized;
+acceptance, implementation, external contract synchronization and deployment
+follow separately. Existing accepted contracts remain authoritative.
+
 ## Authorized development-data reset
 
 Davian authorized clearing all development accounts and live application data on
