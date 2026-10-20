@@ -82,4 +82,6 @@ checkpoints, not deleted user data. This one-time operation must not be rerun,
 rebaseline itself, or delete a receipt without fresh reset authorization.
 
 Trello synchronization could not be performed because its connector was unavailable
-during this reset. Existing hosted participant acceptance remains pending.
+during this reset. The subsequent [hosting acceptance record](frontend-hosting-validation.md)
+and [parent card](https://trello.com/c/piZAWsGf) record the reset history and
+completed operator acceptance; this reset result remains a historical snapshot.

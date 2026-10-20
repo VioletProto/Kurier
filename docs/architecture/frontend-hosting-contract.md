@@ -6,9 +6,12 @@ Cognito sender exception, release retention and cost allowances. Davian authoriz
 scoped hosting/CORS/config implementation, local verification and documentation
 synchronization, plus read-only AWS inventory and scoped SST preview using the
 verified existing bootstrap. No bootstrap creation/replacement, account-plan
-upgrade or product deployment during preview. **Deployment remains on hold.**
+upgrade or product deployment during preview. This was the original review
+boundary. Davian subsequently approved the scoped development/demo deployment
+and accepted the hosted slice; the [validation record](../development/frontend-hosting-validation.md)
+records performed checks, operator reports and separately tracked follow-ups.
 The [implementation/preview record](../development/frontend-hosting.md) distinguishes
-local/fixture results, actual read-only AWS observations and remaining hosted
+local/fixture results, actual read-only AWS observations and subsequent hosted
 validation. The body below preserves the accepted review packet; proposed
 wording describes those accepted choices, not completed runtime checks.
 

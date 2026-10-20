@@ -193,3 +193,22 @@ costs are not established by this acceptance. Readback of unchanged runtime IAM
 is distinct from every possible negative permission test. Native proposal/API
 hosting paragraphs and repository guides were synchronized with the operator
 acceptance and disclosed gaps; Trello records the local-agent follow-up as complete.
+
+## Tracked follow-ups
+
+The accepted development/demo slice remains closed. These separate To Do cards
+track work beyond its individually reported coverage; none authorizes a public
+launch, AWS changes or an account-plan/quota/concurrency increase:
+
+- [Broader browser and accessibility coverage](https://trello.com/c/ckyXtYHL):
+  intended browser engines and authenticated keyboard/focus/zoom/mobile paths.
+- [Elapsed refresh and expiry](https://trello.com/c/DgLGyfIc): actual 15-minute
+  access-token refresh, subsequent rotation, one-day refresh and email-code expiry.
+- [Measured hosting costs and usage](https://trello.com/c/Uu64lmoe): compare real
+  metered usage and shared credits/allowances with the accepted planning ranges.
+- [Public-signup and SES readiness](https://trello.com/c/NDZlpMRh): separately
+  reviewed verified sender, regional delivery/quotas and public-launch readiness.
+
+Full branch review and integration are tracked in
+[PR #12](https://github.com/VioletProto/Kurier/pull/12). Historical deployment and
+reset evidence above remains separate from present live state and operator reports.
