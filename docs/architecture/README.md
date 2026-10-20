@@ -5,8 +5,10 @@
 The [workflow assertions review packet](workflow-assertions-contract.md) is
 **Proposed**, based on the supplied draft and current implementation. It covers
 cloud-workflow assertion authoring, exact evaluation semantics, safe immutable
-results and coordinated compatibility. Preparation/publication is authorized;
-acceptance, implementation, external contract synchronization and deployment
+results and coordinated compatibility. Numeric expectations use a tagged decimal
+string preserved through browser/API, frozen storage, reopening, unrelated edits
+and whole-run reruns. Preparation/publication is authorized; acceptance,
+implementation, external contract synchronization and deployment
 follow separately. Existing accepted contracts remain authoritative.
 
 ## Authorized development-data reset

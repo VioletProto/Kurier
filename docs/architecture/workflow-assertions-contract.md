@@ -14,6 +14,11 @@ The supplied [review draft](drafts/workflow-assertions-review-draft.md) is
 preserved as input; this packet resolves its open choices and takes precedence
 for this review. Neither document is accepted.
 
+Review revision: numeric expectations now use an explicit decimal-string tag.
+This supersedes the primitive-only numeric DTO at review commit `f9371f9` and
+closes its browser round-trip precision gap. The product scope, Proposed status,
+implementation hold and deployment/activation holds remain unchanged.
+
 ## Authority and scope
 
 Read the current [proposal](https://docs.google.com/document/d/1tatrrhqytTxAZxlrOnbSQRymmqjL2MmGq7Tdj0-1T60/edit)
@@ -99,12 +104,42 @@ step, stable on reorder; it is an identifier, never authority. All shown fields
 are required; reject unknown, duplicate, mis-cased fields and invalid kind
 combinations. `statusEquals` has no path; expected is a JSON integer token
 100–599 (no decimal or exponent notation). `jsonExists` has no expected field.
-`jsonEquals.expected` is a required JSON primitive including explicit null;
-omission is distinct from null. Reject arrays/objects. No names, free-text
-diagnostics, secret refs, variable operands or expression fields.
+`jsonEquals.expected` is required and has this revised transport union:
+
+| Logical expected type | Exact wire representation                                             |
+| --------------------- | --------------------------------------------------------------------- |
+| String                | JSON string, for example `"0.1"` (compares to a response string only) |
+| Boolean               | JSON `true` or `false`                                                |
+| Null                  | Explicit JSON `null`; omission remains invalid                        |
+| Number                | Exactly `{"type":"number","decimal":"0.10000000000000001"}`           |
+
+The number tag is the **only** allowed expected object: both fields are required,
+`type` must equal `"number"`, `decimal` must be a string, and unknown/duplicate/
+mis-cased fields are invalid. Reject bare JSON numbers for `jsonEquals.expected`,
+including small integers; no alternate raw-number input or automatic conversion.
+Reject arrays and all other objects. This is an explicit change from the draft
+and first packet's primitive-only wire DTO, while retaining primitive-only
+logical comparisons: the tag represents a response JSON number, never response
+object equality. Missing, null and empty-string `decimal` are invalid. A plain
+expected string `"0.1"` never becomes a numeric expectation. The bounded status
+integer remains the existing `statusEquals.expected:200`; its 100–599 domain is
+exactly representable in JavaScript and does not use this tag. No names,
+free-text diagnostics, secret refs, variable operands or expression fields.
+
+For example, this rule compares the response's numeric `ratio` exactly:
+
+```json
+{
+  "assertionId": "7cf58bb1-7649-44e5-9482-d519d9e4b1fd",
+  "kind": "jsonEquals",
+  "path": "$.ratio",
+  "expected": { "type": "number", "decimal": "0.10000000000000001" }
+}
+```
 
 Bounds apply together: eight assertions/step, at most one status assertion,
-2 KiB serialized expected primitive, 512 UTF-8 bytes/32 selectors per path,
+2 KiB complete serialized `expected` value (including the numeric tag's keys,
+quotes and braces), 512 UTF-8 bytes/32 selectors per path,
 and **8 KiB complete compact serialized assertion array per step**. All fields,
 escaping and commas count. The extra array cap resolves the draft's independent
 maxima problem; not every combination of scalar maxima is admissible. The
@@ -121,6 +156,83 @@ reruns, alongside frozen rules/plans and fresh identities. Definition changes
 cannot affect accepted runs. Legacy reruns retain legacy absence and behavior;
 do not invent evaluations for them. Existing source-bound seven-day admission
 receipts and consent/current eligible stable secret input rules remain.
+
+## Lossless numeric expectations across the complete lifecycle
+
+The decoded `decimal` string is the authoritative authored token. Preserve its
+ASCII characters exactly, including exponent letter/case/sign/leading zeros,
+fractional trailing zeros and signed zero, at every configuration boundary.
+It must be one complete JSON-number token matching
+`-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?`, anchored at both ends, and
+must satisfy the exact numeric bounds below. Do not trim whitespace, apply
+locale formatting or canonicalize the stored token. JSON string escape spelling,
+outer object key order and whitespace are not preserved; the decoded decimal
+characters are. Canonical coefficient/exponent normalization is only a transient
+evaluation operation, never an authoring, storage or serialization operation.
+
+`0.10000000000000001` and `0.1` are distinct valid expectations throughout this
+chain. `1`, `1.0`, `1e0` and `1E+00` keep distinct authored spellings but compare
+as equal numeric values. An explicit user edit between equivalent spellings is
+an ordinary revisioned configuration edit; unrelated edits never rewrite them.
+
+| Boundary                              | Required lossless behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Browser authoring                     | Separate the logical number choice from string/boolean/null. Use text input and string state for the decimal token, including incomplete drafts. Do not use `valueAsNumber`, JavaScript `number`, `Number`, `parseFloat`, arithmetic coercion or numeric formatting as an intermediate. Reject invalid/incomplete drafts on save without silently repairing/rounding them; keep existing safe error policy. Browser validation works on strings/exact decimal components, with API validation authoritative. |
+| Browser API encode/decode             | Planned numeric expectation type is `{type:"number";decimal:string}` within the expected union, with no `number` arm. `JSON.stringify`/normal JSON response decoding are safe because the decimal travels as string data. Check the tag/string at runtime too; do not parse/stringify a decimal as a bare numeric literal or repair an unexpected numeric arm. A reviver after ordinary `JSON.parse` cannot recover a rounded number.                                                                        |
+| API validation and serialization      | Strictly decode the union, then the numeric tag into string fields (or a raw tagged value decoded without float conversion). Check decoded ASCII grammar/length/exponent/domain with bounded exact arithmetic. Do not decode expected numerics through float32/float64 or marshal them through `json.Number` as bare JSON numbers. Every owner workflow/list/detail/run response re-emits the same tagged decimal string. Revalidate frozen data without changing its token.                                 |
+| Saved definition and frozen admission | Preserve the tag/string in existing `ConfigurationJSON` and frozen run step rules; no DynamoDB numeric attribute, float or numeric canonicalization for the expectation. Existing JSON-string storage may re-escape framing, but the decoded decimal string must be identical. Freeze every rule at admission with semantics version 1; exact comparison uses a temporary parsed form, never a replacement stored value.                                                                                     |
+| Reopening and unrelated edits         | Rehydrate directly from the tagged string into text state and display the exact accepted token. Preserve it through editor clones, reorder, name/request/binding/other-rule edits, PATCH omission, and whole-steps replacement. Do not rebuild unchanged assertions from an inferred numeric form. Definition and frozen-run context both use this representation; inspecting an execution must not reconstruct its expectation from a displayed response.                                                   |
+| Whole-run rerun                       | Server copies the retained frozen tag/string and semantics version into the new run unchanged. Do not rebuild from the current workflow, response evidence, browser numbers or normalized comparison values. New run/execution identities and current eligible stable secret inputs remain as already specified. Editing the live definition afterward cannot change original or rerun expectations.                                                                                                         |
+| Worker comparison                     | Read raw response number lexemes through the strict parser's `json.Number`/equivalent lossless token path and apply the exact bounds/comparison below. Do not obtain actual numbers from browser-parsed or sanitized evidence. The expected numeric tag and an actual JSON number share logical number type; an actual string/object is a type mismatch.                                                                                                                                                     |
+
+The existing browser WorkflowStep has no assertion field; current
+`structuredClone` editing and JSON API transport can preserve a future tagged
+string, but are not implementation evidence. Go's existing strict decoder uses
+`UseNumber`, which preserves raw response number tokens; that alone does not
+solve a browser-rounded expectation. The new transport tag is required on both
+write and read paths. Neither a string containing a decimal without its tag nor
+a bare numeric expectation is a compatibility fallback.
+
+There are no deployed assertion definitions to migrate. The earlier packet and
+source draft are Proposed artifacts, not an accepted raw-number format. Thus
+keep the proposed savedRequests8/assertions1, evidence2/assertions1 and frozen
+semantics1 version plan, defining their initial numeric format by this revised
+packet. Legacy absent assertions remain valid. Do not rewrite historical schema-1
+evidence or introduce compatibility with a never-deployed numeric DTO. Acceptance
+must explicitly include this DTO revision; synchronize external contracts only
+after acceptance and separate authorization. Tagged expected values remain public
+configuration and remain absent from evidence results, polling, logs and MCP.
+
+### Planned lossless round-trip and rejection tests
+
+These tests are mandatory follow-up implementation work, not completed tests.
+For every accepted fixture, assert identical decoded `decimal` bytes through:
+browser typing -> outbound JSON -> API decoded DTO -> saved definition -> owner
+GET -> editor reopen -> unrelated edit/PATCH or whole-steps replacement ->
+admitted frozen run -> worker rule read -> run-context GET -> whole-run rerun.
+Check type/tag identity and exact token equality at every boundary, not merely
+numeric equality or UI formatting. After admission edit the live definition and
+verify both original and rerun retain the original token. Exercise at least one
+unrelated edit and rerun after a full API/storage read, not just a client clone.
+
+| Fixtures                                                                                                                     | Required round-trip/comparison or rejection result                                                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `0.10000000000000001` and `0.1`                                                                                              | Store and reopen each exactly; compare each against raw response numbers of both spellings: equal spelling passes, the other value fails. Repeat after unrelated edits and whole-run reruns. Include a regression showing a JavaScript-number-based encode would collapse them, so a rounded implementation fails these tests. |
+| `1`, `1.0`, `1e0`, `1E+00`, `10e-1`, `1e-000`                                                                                | Preserve each exact token on every read/write/rerun while all compare numerically equal to raw response `1`; no stored exponent/trailing-zero normalization.                                                                                                                                                                   |
+| `0`, `-0`, `-0.0`, `0E+308`                                                                                                  | Preserve sign/fraction/exponent spelling and compare equal to numeric zero. `0e309` is still invalid because the exponent bound applies even to zero.                                                                                                                                                                          |
+| `9007199254740991`, `-9007199254740991`, `9007199254740990.999999999999999999`                                               | Accept and preserve exactly; the fractional value stays distinct from the positive integer bound. Reject `9007199254740992`, `-9007199254740992` and `9007199254740991.1` before persistence/admission without rounding into range.                                                                                            |
+| `1e-308`, `-1E-308`, `10e-308`                                                                                               | Accept/preserve exactly; compare using exact domain/value rules. Reject `1e-309`, `1e309`, `1e308` (magnitude too large), and `1e-999999999999999999` without unbounded exponent allocation or underflow-to-zero.                                                                                                              |
+| `1.` followed by 126 zero digits (128 token bytes), then the same with 127 zeros (129 bytes)                                 | Accept/preserve the first (numeric value 1), reject the second before persistence. Check the 2 KiB expected-value wrapper budget and 8 KiB array/cumulative budgets with actual serializers too.                                                                                                                               |
+| Empty/incomplete token, surrounding whitespace, `+1`, `01`, `.1`, `1.`, `NaN`, `Infinity`, localized `0,1`, non-ASCII digits | Reject unchanged, without coercion, trimming, locale repair, echoed inputs or partial persistence.                                                                                                                                                                                                                             |
+| Bare `expected:0.1`, `decimal:0.1`, missing/wrong tag, null/extra/duplicate fields, arbitrary expected object/array          | Reject the invalid DTO; plain `expected:"0.1"` remains a valid string expectation and mismatches a numeric response. Verify `expected:null`, boolean/string expectations and bounded status integer behavior remain intact.                                                                                                    |
+
+Pair browser component/API tests with Go strict decode/encode and DynamoDB Local
+saved/frozen/rerun integration tests. Chromium must cover numeric text entry,
+reopen, unrelated edit and the precision-distinction case through the real local
+API fixture. Include lossless decoding of response actuals and assertion-only
+domain rejection; rendered response evidence may use another numeric spelling
+and must never supply comparison operands. These fixture tests do not establish
+AWS, Cognito or genuine deployed runtime validation.
 
 ## Evaluation semantics and bounded numbers
 
@@ -143,10 +255,13 @@ Number semantics are an explicit assertion-only refinement of the draft, rather
 than claiming exactness from extraction's float64 predicate:
 
 - JSON number token <=128 ASCII bytes; exponent absolute value <=308; valid JSON
-  syntax only. Expected numbers also fit the 2 KiB primitive cap.
+  syntax only. For expectations, the token is the decoded `expected.decimal`
+  string; its complete tagged expected value also fits the 2 KiB cap. For actuals,
+  the token comes from the raw response parser without floating-point conversion.
 - Normalize sign, decimal coefficient and exponent using bounded integer/decimal
-  arithmetic. Compare exact mathematical decimal values: `1`, `1.0`, `1e0`
-  agree, `-0` equals `0`, and distinct fractional values never round together.
+  arithmetic in evaluation memory only. Compare exact mathematical decimal
+  values: `1`, `1.0`, `1e0` agree, `-0` equals `0`, and distinct fractional values
+  never round together. Preserve the stored expectation's original token.
 - Permit zero and nonzero magnitudes from `1e-308` through `9007199254740991`,
   inclusive. Reject all larger magnitudes, including unsafe integers, and
   nonzero smaller values. No infinity, NaN, overflow, underflow-to-zero or
@@ -412,6 +527,14 @@ compact UTF-8 sizes were:
 | Eight result objects using maximum field widths, with assertion wrapper                       |         1,155 |
 | Bodyless schema-2 evidence with that result-width fixture / owner API envelope                | 1,926 / 1,948 |
 
+The unchanged size fixtures above use boolean/string expectations, so remain
+valid for the revised DTO. Numeric expectations add their tag framing, counted
+inside the same caps; a 128-character token contains no JSON-special characters,
+so its compact `{"type":"number","decimal":"..."}` value is at most 158 bytes,
+well below 2 KiB. Eight such tagged numbers with short paths also fit the 8 KiB
+array cap. Follow-up must measure full numeric-rule/definition/frozen row and
+transaction shapes too, including wrapper keys and every copy.
+
 The width fixture deliberately combines longest enum strings to overestimate
 legal combinations; it is not a valid rule evaluation. IDs are synthetic UUIDs;
 the plan uses HTTPS example.com with empty field collections. These measurements
@@ -463,7 +586,7 @@ checklists; Doing is empty, with configured WIP limit three. Only preparation
 evidence is to be checked complete after verification and remote publication.
 Keep acceptance, implementation, contract synchronization and actual runtime
 validation items open. The current proposal/API contracts were read, not edited.
-Preparation verification passed repository Prettier/gofmt, frontend ESLint,
+Initial preparation verification at `f9371f9` passed repository Prettier/gofmt, frontend ESLint,
 58 frontend tests, 15 infrastructure tests, TypeScript/Vite production build,
 and tests/vet across all seven Go modules (five product modules plus two preserved
 spikes). The initial Go verification stopped because its build cache was outside
@@ -472,6 +595,15 @@ fences, JSON examples and local links were checked. These are baseline/document
 checks and isolated serializer/decimal feasibility calculations, not assertion
 implementation tests, DynamoDB Local race/browser integration, or genuine
 AWS/Cognito/email/IAM/runtime validation. No deployment or activation occurred.
+
+Numeric DTO revision verification also passed repository formatting/gofmt, lint,
+58 frontend tests, 15 infrastructure tests, production build, and tests/vet across
+all seven Go modules, with Go using the approved outside-sandbox build cache.
+Markdown/JSON/local-link checks and the 158-byte numeric-wrapper bound passed.
+Only the packet and architecture index changed in this revision; the imported
+draft remains historical input. The planned numeric lifecycle, DynamoDB Local
+and Chromium round-trip tests above remain unimplemented/unperformed, alongside
+all deployment/runtime holds. Baseline checks do not validate proposed behavior.
 
 ## Decisions requiring explicit acceptance
 
@@ -486,7 +618,8 @@ All remain **Proposed**:
    overlaps, runtime sensitive_input fail-closed behavior, and owner-only sensitive
    existence presence disclosure without new MCP bits.
 4. Existing path grammar with assertion-specific presence/type/null/string rules,
-   plus the bounded exact decimal domain (a new assertion-only restriction).
+   plus the bounded exact decimal domain and lossless tagged decimal-string
+   expectation DTO/lifecycle (explicitly replacing bare numeric primitives).
 5. Evidence v2/assertions v1 and frozen semantics v1; eight checks, 2 KiB expected,
    8 KiB arrays, 2 KiB results and cumulative measured budgets; byte-identical
    legacy evidence and no independent assertion history.
