@@ -26,7 +26,8 @@ concurrency changes remain prohibited. The
 [deployment record](../development/frontend-hosting-validation.md) separates
 actual AWS/hosted checks from Davian’s 2026-10-19 operator-reported auth, request/
 redaction, deletion and MCP successes. The development/demo slice is accepted;
-hosted local-agent execution remains untested, and omitted cases were accepted
+Davian subsequently reported successful local-agent execution against a local echo
+endpoint, redacted response fields and revocation. Omitted cases were accepted
 without individual verification. [Implementation details](../development/frontend-hosting.md)
 retain the original preview and review boundaries.
 

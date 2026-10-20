@@ -94,8 +94,8 @@ HTTP and signed-out Chromium checks.
 
 ## Operator acceptance — 2026-10-19
 
-Davian accepted the hosted slice and considered its testing complete, with
-hosted local-agent execution explicitly untested. The following results are
+Davian accepted the hosted slice and considered its testing complete. He then
+completed the previously deferred hosted local-agent check. The following results are
 operator-reported browser observations, separate from the automated and AWS
 evidence above; no credentials, email addresses or protected values are recorded.
 
@@ -105,12 +105,13 @@ evidence above; no credentials, email addresses or protected values are recorded
 | Requests and evidence   | Sending a request and receiving redacted values reported successful.                                                                                                                                                                                                                                    |
 | Projects                | Project deletion reported successful in the UI. Physical deletion/drain completion was not independently rechecked after this testing.                                                                                                                                                                  |
 | Codex MCP               | MCP reported working. Individual tool coverage, scope denial and revocation were not separately reported in this hosted session.                                                                                                                                                                        |
-| Local-agent execution   | Not performed: Davian did not set up a local listener, and the previously built agent in `/tmp` appeared to have been cleared. Deferred without blocking hosting acceptance.                                                                                                                            |
+| Local-agent execution   | Davian subsequently reported a successful local-agent request to a local echo endpoint, redacted fields in the response and working revocation. The previously deferred check is complete. A separate private-LAN target and exact target-send count were not individually reported.                    |
 | Remaining planned cases | Davian accepted the slice based on his testing and judgment that remaining behavior would continue working after the frontend move. No individual pass is claimed for automatic rotating refresh/expiry, authenticated ETag/Location, the complete product matrix, additional engines or accessibility. |
 
 This closes the development/demo hosting acceptance gate with the disclosed
 coverage limits. Earlier fixture/backend results remain valid evidence within
-their original scopes; they do not establish hosted local-agent execution.
+their original scopes; the hosted local-agent result above is operator-reported,
+not an independently observed automation result.
 No listener, new deployment or further data deletion was performed for this
 closeout. The earlier account/data reset is historical, not evidence that live
 stores remain empty after participant testing. General-public signup and SES
@@ -120,9 +121,9 @@ readiness remain separate work.
 
 The original numbered plan below is retained for reference and future regression
 work. It is not a list of outstanding hosting acceptance blockers: use the
-operator acceptance table above for actual coverage. Local-agent execution remains
-an explicitly unperformed follow-up; other omitted cases were accepted without
-individual verification.
+operator acceptance table above for actual coverage. The deferred local-agent
+echo/redaction/revocation check is now complete; other omitted cases were accepted
+without individual verification.
 
 **All numbered steps require Davian's participation**: a controlled inbox and
 real account, local/private service consent, or a Codex session on his machine.
@@ -186,10 +187,9 @@ key. AWS Free plan, quotas and concurrency are preserved. Actual account-wide
 allowances, metered charges and billing ceilings have not been verified.
 
 The development/demo slice is accepted with the operator coverage limits above.
-Hosted local-agent execution remains unperformed; broader abuse/load testing,
+Hosted local-agent echo/redaction/revocation is reported successful. Broader abuse/load testing,
 arbitrary negative runtime IAM probes, elapsed email/refresh expiry and metered
 costs are not established by this acceptance. Readback of unchanged runtime IAM
 is distinct from every possible negative permission test. Native proposal/API
 hosting paragraphs and repository guides were synchronized with the operator
-acceptance and disclosed gaps; Trello records completion with the local-agent
-follow-up left unchecked.
+acceptance and disclosed gaps; Trello records the local-agent follow-up as complete.

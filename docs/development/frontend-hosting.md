@@ -9,7 +9,7 @@ scoped development/demo deployment including correction `21c24be` and the
 refreshed preview. The host is **https://d2kpq905qyh9zg.cloudfront.net**.
 See the [deployment and genuine validation record](frontend-hosting-validation.md)
 for performed checks, generated identifiers and Davian’s acceptance with disclosed
-coverage limits, including untested hosted local-agent execution.
+coverage limits, including the subsequently completed local-agent check.
 This is not authorization for a general-public signup launch.
 
 ## Implementation
@@ -287,8 +287,10 @@ The [deployment validation record](frontend-hosting-validation.md) supersedes
 this packet's historical deployment hold and local-only status. On 2026-10-19
 Davian accepted the development/demo slice and reported successful signup,
 login/sign-out, password reset, request execution with redacted values, project
-deletion and MCP. Hosted local-agent execution was explicitly not performed;
-remaining planned cases were accepted without individual verification. The
+deletion and MCP. He subsequently reported local-agent execution against a local
+echo endpoint, redacted response fields and successful revocation, completing the
+previously deferred check. Remaining planned cases were accepted without
+individual verification. The
 record distinguishes these operator reports from automated/AWS checks and does
 not claim elapsed refresh/expiry, full product/cross-engine/accessibility coverage
 or independent physical cleanup of participant data. General-public signup/SES
@@ -304,7 +306,8 @@ local-agent/stdio boundaries, existing-bootstrap-only preview and deployment
 hold. The deployment continuation was subsequently synchronized in place with
 revision guards and verified readback: live URL, complete archive/remote rollback,
 automated checks and participant coverage. The closeout synchronization records
-Davian’s acceptance, reported successes and the deferred hosted local-agent check.
+Davian’s acceptance and reported successes, including the subsequently completed
+hosted local-agent echo/redaction/revocation check.
 Unrelated content and milestone structure were preserved. Trello distinguishes
 reported passes, acceptance without individual verification and unperformed work.
 
