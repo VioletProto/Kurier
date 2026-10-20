@@ -8,7 +8,8 @@ existing-bootstrap-only SST preview were authorized. Davian then approved the
 scoped development/demo deployment including correction `21c24be` and the
 refreshed preview. The host is **https://d2kpq905qyh9zg.cloudfront.net**.
 See the [deployment and genuine validation record](frontend-hosting-validation.md)
-for performed checks, generated identifiers and participant checks still open.
+for performed checks, generated identifiers and Davian’s acceptance with disclosed
+coverage limits, including untested hosted local-agent execution.
 This is not authorization for a general-public signup launch.
 
 ## Implementation
@@ -283,13 +284,15 @@ a configured passing repository gate. SST preview/bundling and project tests
 remain separate checks, not a claim that vendor source type-checks cleanly.
 
 The [deployment validation record](frontend-hosting-validation.md) supersedes
-this packet's historical deployment hold and local-only status. Genuine Cognito
-signup/email verification/reset, automatic refresh/sign-out, authenticated
-ETag/Location behavior, product regression, hosted agent pairing/private target
-and Codex stdio acceptance still require the participant checks there. Additional
-engines/accessibility, elapsed code/one-day expiry, account abuse/load and metered
-costs remain open. General-public signup/SES readiness is separately scoped.
-No elapsed/runtime result is inferred from fixtures or earlier localhost reports.
+this packet's historical deployment hold and local-only status. On 2026-10-19
+Davian accepted the development/demo slice and reported successful signup,
+login/sign-out, password reset, request execution with redacted values, project
+deletion and MCP. Hosted local-agent execution was explicitly not performed;
+remaining planned cases were accepted without individual verification. The
+record distinguishes these operator reports from automated/AWS checks and does
+not claim elapsed refresh/expiry, full product/cross-engine/accessibility coverage
+or independent physical cleanup of participant data. General-public signup/SES
+readiness, abuse/load testing and metered costs remain separately scoped.
 
 ## Documentation synchronization
 
@@ -300,9 +303,10 @@ development-demo sender exception, static-only CDN, retention/rollback,
 local-agent/stdio boundaries, existing-bootstrap-only preview and deployment
 hold. The deployment continuation was subsequently synchronized in place with
 revision guards and verified readback: live URL, complete archive/remote rollback,
-automated checks and remaining participant acceptance. Unrelated content and
-milestone structure were preserved. Trello separates deployed checks from
-genuine participant authentication/product/agent/MCP acceptance.
+automated checks and participant coverage. The closeout synchronization records
+Davian’s acceptance, reported successes and the deferred hosted local-agent check.
+Unrelated content and milestone structure were preserved. Trello distinguishes
+reported passes, acceptance without individual verification and unperformed work.
 
 ## Live missing-asset correction
 

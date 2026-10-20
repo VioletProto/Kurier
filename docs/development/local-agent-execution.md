@@ -14,11 +14,14 @@ remains `dev-api-initial-v1`. Code and validation live on
 The [accepted frontend-hosting continuation](frontend-hosting.md) is implemented
 and deployed for development/demo at https://d2kpq905qyh9zg.cloudfront.net.
 Use that HTTPS UI, or the local UI below, to issue/manage the same local-agent
-credential. Hosted-origin pairing/private-target acceptance still requires the
-[participant checks](frontend-hosting-validation.md#participant-browser-checks). Hidden-terminal
+credential. Davian accepted the hosting slice with hosted local-agent execution
+explicitly untested: no local listener was set up and the `/tmp` agent build
+appeared to have been cleared. The [participant checks](frontend-hosting-validation.md#participant-browser-checks)
+remain a deferred follow-up. Hidden-terminal
 pairing, outbound HTTPS polling and explicit destination consent remain unchanged;
 the browser never contacts a localhost/private-network control server. A separate
-hosted-origin pairing/private-target check remains required.
+hosted-origin pairing/private-target check remains unperformed; it does not block
+the accepted development/demo hosting slice.
 
 Requires Go 1.26. Build from the checked-out repository root:
 

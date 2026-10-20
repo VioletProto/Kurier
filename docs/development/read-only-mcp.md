@@ -90,7 +90,9 @@ The scoped development backend was approved for deployment/activation including
 `916ea23`. The [deployment validation record](../architecture/read-only-mcp-validation.md)
 records the active marker and live results. The development/demo React host is
 https://d2kpq905qyh9zg.cloudfront.net; localhost remains supported. Hosted-origin
-pairing still needs the [participant checks](frontend-hosting-validation.md#participant-browser-checks).
+MCP was reported working by Davian on 2026-10-19 as part of
+[hosting acceptance](frontend-hosting-validation.md#operator-acceptance--2026-10-19).
+Individual hosted tool/revocation cases were not separately reported.
 These are separate setup steps; only the final `serve` process is launched by Codex.
 
 1. **Build once, in a setup terminal**, from `/home/king/Neumont/Kurier`:

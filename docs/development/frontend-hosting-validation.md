@@ -18,7 +18,7 @@ The predeployment plan matched the reviewed 16 creates, four deployment ZIP
 replacements and four existing Lambda updates. Only the API environment adds
 `KURIER_HOSTED_FRONTEND_ORIGIN`; the local origin remains
 `http://localhost:5173`. The existing Ohio bootstrap version 5 was inspected and
-reused. No bootstrap infrastructure was created/replaced. The live stage remains
+reused. No bootstrap infrastructure was created/replaced. The deployment-time stage was
 version 11/schema 7/MCP 1 with generation `dev-api-initial-v1`.
 
 Generated distribution: `EMNTWD8Q14ZLM`; private web bucket:
@@ -50,7 +50,8 @@ Genuine hosted Chromium checks signed-out rendering/deep links, enforced CSP,
 a real cross-origin readable API 401, keyboard/mobile smoke behavior and empty
 localStorage/sessionStorage/IndexedDB/Cache Storage. These are not authenticated
 product or email results. Actual ETag/Location values on authenticated create/read
-responses remain participant checks; exposure policy alone is already tested.
+responses were not individually reported in participant acceptance; exposure
+policy alone is already tested.
 
 The rollback exercise uses public comment markers in the shell/startup/404 and
 a harmless comment in a separately hashed JS file. B has the same public API,
@@ -82,7 +83,8 @@ public-archive backup is removed after successful rollback. The public B archive
 and hashed chunk are intentionally retained under the accepted 30-day/current/
 previous policy, not treated as disposable product data. No cleanup worker,
 schedule, accounting counter, capability or generation is activated/reset.
-Participant data created below still needs its own cleanup/readback. Final web
+Davian later reported project deletion; physical cleanup of subsequent participant
+data was not independently rechecked. The historical final web
 inventory is 15 public-only objects / 816,817 bytes, including both complete
 private release archives; the retention planner returned no deletion or KV
 removal candidates. Final `npm run verify` passed formatting/gofmt, lint,
@@ -90,7 +92,37 @@ removal candidates. Final `npm run verify` passed formatting/gofmt, lint,
 for seven Go modules. These local checks remain distinct from genuine hosted
 HTTP and signed-out Chromium checks.
 
+## Operator acceptance — 2026-10-19
+
+Davian accepted the hosted slice and considered its testing complete, with
+hosted local-agent execution explicitly untested. The following results are
+operator-reported browser observations, separate from the automated and AWS
+evidence above; no credentials, email addresses or protected values are recorded.
+
+| Area                    | Acceptance evidence                                                                                                                                                                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication          | Signup, login, sign-out and password reset reported successful. Verification/resend and code-expiry cases were not individually reported.                                                                                                                                                               |
+| Requests and evidence   | Sending a request and receiving redacted values reported successful.                                                                                                                                                                                                                                    |
+| Projects                | Project deletion reported successful in the UI. Physical deletion/drain completion was not independently rechecked after this testing.                                                                                                                                                                  |
+| Codex MCP               | MCP reported working. Individual tool coverage, scope denial and revocation were not separately reported in this hosted session.                                                                                                                                                                        |
+| Local-agent execution   | Not performed: Davian did not set up a local listener, and the previously built agent in `/tmp` appeared to have been cleared. Deferred without blocking hosting acceptance.                                                                                                                            |
+| Remaining planned cases | Davian accepted the slice based on his testing and judgment that remaining behavior would continue working after the frontend move. No individual pass is claimed for automatic rotating refresh/expiry, authenticated ETag/Location, the complete product matrix, additional engines or accessibility. |
+
+This closes the development/demo hosting acceptance gate with the disclosed
+coverage limits. Earlier fixture/backend results remain valid evidence within
+their original scopes; they do not establish hosted local-agent execution.
+No listener, new deployment or further data deletion was performed for this
+closeout. The earlier account/data reset is historical, not evidence that live
+stores remain empty after participant testing. General-public signup and SES
+readiness remain separate work.
+
 ## Participant browser checks
+
+The original numbered plan below is retained for reference and future regression
+work. It is not a list of outstanding hosting acceptance blockers: use the
+operator acceptance table above for actual coverage. Local-agent execution remains
+an explicitly unperformed follow-up; other omitted cases were accepted without
+individual verification.
 
 **All numbered steps require Davian's participation**: a controlled inbox and
 real account, local/private service consent, or a Codex session on his machine.
@@ -153,10 +185,11 @@ There is no new standing compute, paid networking, sender, domain or customer
 key. AWS Free plan, quotas and concurrency are preserved. Actual account-wide
 allowances, metered charges and billing ceilings have not been verified.
 
-The participant checks above, broader abuse/load testing, arbitrary negative
-runtime IAM probes and elapsed email/refresh expiry remain open. This record
-separates readback of unchanged runtime IAM from performing every possible
-negative permission test. Native proposal/API hosting paragraphs were updated in place under revision
-guards and read back, including the hosted URL, complete archive/recovery,
-performed checks and participant gaps. Repository guides and Trello were updated
-as part of this deployment task.
+The development/demo slice is accepted with the operator coverage limits above.
+Hosted local-agent execution remains unperformed; broader abuse/load testing,
+arbitrary negative runtime IAM probes, elapsed email/refresh expiry and metered
+costs are not established by this acceptance. Readback of unchanged runtime IAM
+is distinct from every possible negative permission test. Native proposal/API
+hosting paragraphs and repository guides were synchronized with the operator
+acceptance and disclosed gaps; Trello records completion with the local-agent
+follow-up left unchecked.

@@ -24,8 +24,10 @@ https://d2kpq905qyh9zg.cloudfront.net. No schema activation or general-public
 signup launch is authorized. Bootstrap replacement, plan upgrades, quota and
 concurrency changes remain prohibited. The
 [deployment record](../development/frontend-hosting-validation.md) separates
-actual AWS/hosted checks from participant auth/email/product/agent/MCP acceptance
-still pending. [Implementation details](../development/frontend-hosting.md)
+actual AWS/hosted checks from Davian’s 2026-10-19 operator-reported auth, request/
+redaction, deletion and MCP successes. The development/demo slice is accepted;
+hosted local-agent execution remains untested, and omitted cases were accepted
+without individual verification. [Implementation details](../development/frontend-hosting.md)
 retain the original preview and review boundaries.
 
 ## Accepted read-only MCP continuation
