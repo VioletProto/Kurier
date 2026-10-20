@@ -1,15 +1,16 @@
 # Accepted architecture
 
-## Workflow assertions awaiting review
+## Accepted workflow assertions continuation
 
-The [workflow assertions review packet](workflow-assertions-contract.md) is
-**Proposed**, based on the supplied draft and current implementation. It covers
-cloud-workflow assertion authoring, exact evaluation semantics, safe immutable
-results and coordinated compatibility. Numeric expectations use a tagged decimal
-string preserved through browser/API, frozen storage, reopening, unrelated edits
-and whole-run reruns. Preparation/publication is authorized; acceptance,
-implementation, external contract synchronization and deployment
-follow separately. Existing accepted contracts remain authoritative.
+Davian accepted the [workflow assertions contract](workflow-assertions-contract.md)
+at `31de3929aa1423c25b264d9e459aec48728e1c90`, including its lossless numeric DTO
+and MCP legacy projection. Scoped cloud-workflow implementation, local tests and
+verification, API-contract synchronization and Trello updates are authorized.
+Numeric expectations use tagged decimal strings preserved through browser/API,
+frozen storage, reopening, unrelated edits and whole-run reruns. AWS preview,
+deployment and capability activation remain on hold for separate review.
+The [implementation guide](../development/workflow-assertions.md) distinguishes
+local fixtures from actual deployment/runtime evidence.
 
 ## Authorized development-data reset
 

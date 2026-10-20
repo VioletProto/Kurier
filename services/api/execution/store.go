@@ -60,6 +60,8 @@ type SecretSource struct {
 	Revision int64  `dynamodbav:"revision"`
 }
 type row struct {
+	WorkflowAssertionsSchemaVersion  int      `dynamodbav:"workflowAssertionsSchemaVersion,omitempty"`
+	AssertionSemanticsVersion        int      `dynamodbav:"assertionSemanticsVersion,omitempty"`
 	MCPTokenID                       string   `dynamodbav:"mcpTokenId,omitempty"`
 	MCPProjectIDs                    []string `dynamodbav:"mcpProjectIds,omitempty"`
 	MCPTool                          string   `dynamodbav:"mcpTool,omitempty"`
@@ -292,7 +294,15 @@ func transactionConflict(err error) bool {
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
-	if e != nil || r.State != "active" || (r.MCPReadOnlySchemaVersion != 0 && (r.MCPReadOnlySchemaVersion != 1 || r.SavedRequestsSchemaVersion != 7)) || (r.SequentialWorkflowsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 6 && r.SavedRequestsSchemaVersion != 7) || (r.LocalAgentExecutionsSchemaVersion != 0 && r.SavedRequestsSchemaVersion != 5 && r.SavedRequestsSchemaVersion != 6 && r.SavedRequestsSchemaVersion != 7) || r.RecoveryGeneration == "" || !((r.SavedRequestsSchemaVersion == 3 && r.EvidencePinningSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0) || (r.SavedRequestsSchemaVersion == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0) || ((r.SavedRequestsSchemaVersion == 6 || r.SavedRequestsSchemaVersion == 7 && r.MCPReadOnlySchemaVersion == 1) && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
+	// Version 8 preserves the version-7 baseline and adds assertions exactly once.
+	schema := r.SavedRequestsSchemaVersion
+	if schema == 8 {
+		schema = 7
+	}
+	if (r.SavedRequestsSchemaVersion == 8) != (r.WorkflowAssertionsSchemaVersion == 1) || r.WorkflowAssertionsSchemaVersion < 0 || r.WorkflowAssertionsSchemaVersion > 1 {
+		return row{}, safeError()
+	}
+	if e != nil || r.State != "active" || (r.MCPReadOnlySchemaVersion != 0 && (r.MCPReadOnlySchemaVersion != 1 || schema != 7)) || (r.SequentialWorkflowsSchemaVersion != 0 && schema != 6 && schema != 7) || (r.LocalAgentExecutionsSchemaVersion != 0 && schema != 5 && schema != 6 && schema != 7) || r.RecoveryGeneration == "" || !((schema == 3 && r.EvidencePinningSchemaVersion == 0) || (schema == 4 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 0) || (schema == 5 && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 0) || ((schema == 6 || schema == 7 && r.MCPReadOnlySchemaVersion == 1) && r.EvidencePinningSchemaVersion == 1 && r.LocalAgentExecutionsSchemaVersion == 1 && r.SequentialWorkflowsSchemaVersion == 1)) || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 1 {
 		return row{}, safeError()
 	}
 	return r, nil
@@ -319,6 +329,12 @@ func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
 	} else {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(mcpReadOnlySchemaVersion)")
 	}
+	if stage.WorkflowAssertionsSchemaVersion == 1 {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND workflowAssertionsSchemaVersion = :c")
+	} else {
+		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(workflowAssertionsSchemaVersion)")
+	}
+
 	return guard
 }
 func (s *Service) project(ctx context.Context, owner, project string) (row, error) {

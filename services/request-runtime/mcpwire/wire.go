@@ -228,14 +228,14 @@ type Step struct {
 	EvidenceExpired bool            `json:"evidenceExpired"`
 }
 type Evidence struct {
-	View           string           `json:"view"`
-	Complete       bool             `json:"complete"`
-	Truncated      bool             `json:"truncated"`
-	OmissionReason *string          `json:"omissionReason"`
-	OmittedFields  []string         `json:"omittedFields"`
-	Retention      *Retention       `json:"retention"`
-	Capture        *runner.Evidence `json:"capture,omitempty"`
-	Summary        *CaptureSummary  `json:"summary,omitempty"`
+	View           string                 `json:"view"`
+	Complete       bool                   `json:"complete"`
+	Truncated      bool                   `json:"truncated"`
+	OmissionReason *string                `json:"omissionReason"`
+	OmittedFields  []string               `json:"omittedFields"`
+	Retention      *Retention             `json:"retention"`
+	Capture        *runner.LegacyEvidence `json:"capture,omitempty"`
+	Summary        *CaptureSummary        `json:"summary,omitempty"`
 }
 type CaptureSummary struct {
 	ProjectID    string           `json:"projectId"`

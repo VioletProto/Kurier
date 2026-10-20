@@ -56,6 +56,9 @@ func pointer[T any](v T) *T                 { return &v }
 func emptyBody() Body                       { return Body{Kind: "none"} }
 func omitted(reason string) Body            { return Body{Kind: "omitted", OmissionReason: &reason} }
 func EncodeEvidence(e *Evidence) ([]byte, []byte, error) {
+	if runner.ValidateEvidenceVersion(e) != nil {
+		return nil, nil, safeError()
+	}
 	for attempt := 0; attempt < 2; attempt++ {
 		raw, err := json.Marshal(e)
 		if err != nil {

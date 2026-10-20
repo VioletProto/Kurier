@@ -99,9 +99,13 @@ func TestInstalledCodexMCPIntegration(t *testing.T) {
 			d.Run = &run
 		case "get_execution_evidence":
 			v := &wire.Evidence{View: args.View, OmittedFields: []string{}}
+			// A schema-2 hosted capture is projected to the frozen legacy DTO;
+			// the installed client must accept the explicit omission metadata.
+			v.OmittedFields = append(v.OmittedFields, "assertions")
 			if args.View == "complete" {
 				v.Complete = true
-				v.Capture = &runner.Evidence{SchemaVersion: 1, ProjectID: project, ExecutionID: execution, Target: "cloud", Status: "failed", Source: runner.Source{RequestID: request}, SubmittedAt: stamp, CompletedAt: stamp, Request: runner.RequestCapture{Headers: []runner.Header{}, Body: runner.Body{Kind: "none"}}, Response: runner.ResponseCapture{Headers: []runner.Header{}, Body: runner.Body{Kind: "none"}}}
+				v.OmissionReason = func() *string { s := "assertions_not_exposed"; return &s }()
+				v.Capture = &runner.LegacyEvidence{SchemaVersion: 1, ProjectID: project, ExecutionID: execution, Target: "cloud", Status: "failed", Source: runner.Source{RequestID: request}, SubmittedAt: stamp, CompletedAt: stamp, Request: runner.RequestCapture{Headers: []runner.Header{}, Body: runner.Body{Kind: "none"}}, Response: runner.ResponseCapture{Headers: []runner.Header{}, Body: runner.Body{Kind: "none"}}}
 			} else {
 				v.OmissionReason = func() *string { s := "mcp_summary_view"; return &s }()
 				v.Summary = &wire.CaptureSummary{ProjectID: project, ExecutionID: execution, Status: "failed", SubmittedAt: stamp, CompletedAt: stamp}

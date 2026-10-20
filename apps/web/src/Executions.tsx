@@ -1,3 +1,4 @@
+import { AssertionResults } from "./Assertions";
 import { LocalAgents } from "./LocalAgents";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -857,6 +858,7 @@ export function Executions({
           </button>
         </div>
       )}
+      {evidence && <AssertionResults evidence={evidence} />}
       {evidence && (
         <div className="execution-evidence">
           <h4>Immutable sanitized capture</h4>

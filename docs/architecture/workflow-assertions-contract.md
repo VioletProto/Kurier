@@ -1,9 +1,13 @@
 # Workflow assertions review contract
 
-Status: **Proposed**, prepared 2026-10-20 for Davian's review. Publication is
-not acceptance, implementation authorization, or deployment authorization.
-This packet changes documentation only. Assertion behavior below is required
-future behavior, not a description of deployed functionality.
+Status: **Accepted** by Davian on 2026-10-20 at
+`31de3929aa1423c25b264d9e459aec48728e1c90`, explicitly including the lossless
+numeric DTO and MCP legacy-projection amendment. Scoped implementation, local
+tests/verification, API-contract synchronization and Trello updates are
+authorized. **AWS preview, deployment and capability activation remain on hold**
+for separate review. Acceptance does not claim deployed assertion behavior.
+The original preparation/revision milestones below are historical; this
+acceptance supersedes their Proposed status and implementation hold.
 
 Review baseline: freshly fetched `origin/main`
 `f4d1f3b84d3bbf04c451ba927ad9b4853468fed5`; initially clean working tree.
@@ -12,7 +16,8 @@ Tracking: [assertions card](https://trello.com/c/8RUxoJyt), with
 [API-contract coordination](https://trello.com/c/b5LdvuTo).
 The supplied [review draft](drafts/workflow-assertions-review-draft.md) is
 preserved as input; this packet resolves its open choices and takes precedence
-for this review. Neither document is accepted.
+for this review. The imported draft remains historical Proposed input; this
+packet at the accepted commit is authoritative for the scoped implementation.
 
 Review revision: numeric expectations now use an explicit decimal-string tag.
 This supersedes the primitive-only numeric DTO at review commit `f9371f9` and
@@ -605,9 +610,9 @@ draft remains historical input. The planned numeric lifecycle, DynamoDB Local
 and Chromium round-trip tests above remain unimplemented/unperformed, alongside
 all deployment/runtime holds. Baseline checks do not validate proposed behavior.
 
-## Decisions requiring explicit acceptance
+## Accepted decisions
 
-All remain **Proposed**:
+Davian accepted all six decisions at `31de3929aa1423c25b264d9e459aec48728e1c90`:
 
 1. Cloud-workflow-only first slice; standalone/local targets and MCP assertion
    reporting remain backlog; browser inspection uses frozen context plus evidence.
@@ -626,6 +631,8 @@ All remain **Proposed**:
 6. Coordinated savedRequests8/assertions1 capability and all-reader cleanup
    rollout, including the explicit MCP complete legacy projection amendment.
 
-Acceptance must identify the exact review commit and authorized follow-up scope.
-Implementation, external contract synchronization, AWS preview, deployment and
-activation follow separately; preparation/push does not authorize them.
+Scoped implementation, external API-contract synchronization and local
+verification are authorized by that acceptance. AWS preview, deployment and
+activation require separate review; no preview or activation is implied by code
+publication. The [implementation guide](../development/workflow-assertions.md)
+records actual checks and their limits separately from this accepted contract.

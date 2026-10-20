@@ -39,7 +39,48 @@ type WorkflowStep struct {
 	RequestRevision int64        `json:"requestRevision"`
 	Extract         []Extraction `json:"extract"`
 	Bindings        []Binding    `json:"bindings"`
+	Assertions      []Assertion  `json:"assertions,omitempty"`
 }
+
+func (s WorkflowStep) MarshalJSON() ([]byte, error) {
+	type plain WorkflowStep
+	assertions := s.Assertions
+	if assertions == nil {
+		assertions = []Assertion{}
+	}
+	return json.Marshal(struct {
+		plain
+		Assertions []Assertion `json:"assertions"`
+	}{plain(s), assertions})
+}
+
+func (s *WorkflowStep) UnmarshalJSON(raw []byte) error {
+	type plain WorkflowStep
+	var fields map[string]json.RawMessage
+	if StrictJSON(raw, &fields) != nil || fields == nil {
+		return workflowInvalid()
+	}
+	for k, v := range fields {
+		switch k {
+		case "stepId", "requestId", "requestRevision", "extract", "bindings", "assertions":
+		default:
+			return workflowInvalid()
+		}
+		if string(v) == "null" {
+			return workflowInvalid()
+		}
+	}
+	var v plain
+	if err := StrictJSON(raw, &v); err != nil {
+		return err
+	}
+	*s = WorkflowStep(v)
+	if s.Assertions == nil {
+		s.Assertions = []Assertion{}
+	}
+	return nil
+}
+
 type RuntimeValue struct {
 	Value     json.RawMessage `json:"value"`
 	Sensitive bool            `json:"sensitive"`
@@ -200,6 +241,9 @@ func ValidateWorkflow(steps []WorkflowStep, plans []Plan) error {
 	producers := map[string]map[string]string{}
 	revisions := map[string]int64{}
 	for pos, step := range steps {
+		if e := ValidateAssertions(step, plans[pos].Options.ResponseRedaction); e != nil {
+			return e
+		}
 		if !workflowUUID.MatchString(step.StepID) || !workflowUUID.MatchString(step.RequestID) || step.RequestRevision < 0 || producers[step.StepID] != nil || len(step.Extract) > 8 || len(step.Bindings) > 8 || step.Extract == nil || step.Bindings == nil {
 			return workflowInvalid()
 		}
@@ -411,6 +455,7 @@ func ApplyWorkflowBindings(plan Plan, step WorkflowStep, outputs map[string]Runt
 
 // ExtractionCapture stays in worker memory and is never a wire DTO or Plan field.
 type ExtractionCapture struct {
+	AssertionSemanticsVersion int
 	// Seal is a worker-memory callback; encryption must precede raw-buffer disposal.
 	Seal    func(map[string]RuntimeValue) error
 	Step    WorkflowStep

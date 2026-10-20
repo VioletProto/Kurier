@@ -257,6 +257,9 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence, outp
 	if job.Target == "local" && !job.RecoveryWriter {
 		return s.publishLocal(ctx, job, evidence)
 	}
+	if e := s.workflowEvidence(ctx, job, evidence, true); e != nil {
+		return e
+	}
 	raw, _, e := EncodeEvidence(evidence)
 	if e != nil {
 		return e
@@ -333,6 +336,9 @@ func (s *Service) publish(ctx context.Context, job row, evidence *Evidence, outp
 	return e
 }
 func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *Evidence, outputs ...*Envelope) error {
+	if e := s.workflowEvidence(ctx, expected, evidence, false); e != nil {
+		return e
+	}
 	stage, p, job, e := s.liveWriter(ctx, expected)
 	if e != nil {
 		return e
@@ -471,6 +477,14 @@ func (s *Service) Evidence(ctx context.Context, owner, project, execution string
 	}
 	hash := sha256.Sum256(raw)
 	if int64(len(raw)) != manifest.Bytes || hex.EncodeToString(hash[:]) != manifest.Checksum {
+		return nil, s.evidenceUnavailable(ctx, owner, project, execution)
+	}
+	var stored Evidence
+	if StrictJSON(raw, &stored) != nil {
+		return nil, s.evidenceUnavailable(ctx, owner, project, execution)
+	}
+	anchor, err := s.get(ctx, s.Table, "P#"+project, "EXEC#"+execution)
+	if err != nil || s.workflowEvidence(ctx, anchor, &stored, false) != nil {
 		return nil, s.evidenceUnavailable(ctx, owner, project, execution)
 	}
 	api, e := json.Marshal(map[string]any{"data": map[string]any{"evidence": json.RawMessage(raw)}})

@@ -16,6 +16,9 @@ const (
 // Only server-side rerun admission sets this provenance after retained-context
 // authorization. Legacy runs without provenance remain definition-backed.
 func validWorkflowSubmission(run row) bool {
+	if run.AssertionSemanticsVersion < 0 || run.AssertionSemanticsVersion > 1 {
+		return false
+	}
 	switch run.WorkflowSubmission {
 	case "", workflowDefinitionSubmission:
 		return run.RerunSourceRunID == ""
@@ -24,6 +27,35 @@ func validWorkflowSubmission(run row) bool {
 	default:
 		return false
 	}
+}
+
+// Upgrade only newly produced fallback evidence, never retained bytes. A lost
+// worker buffer yields unavailable checks with the original dispatch certainty.
+func (s *Service) workflowEvidence(ctx context.Context, job row, evidence *Evidence, initialize bool) error {
+	if job.RunID == "" {
+		return runner.ValidateEvidenceVersion(evidence)
+	}
+	run, err := s.get(ctx, s.Table, job.PK, "RUN#"+job.RunID)
+	if err != nil || job.Position < 0 || job.Position >= run.StepCount {
+		return safeError()
+	}
+	var def WorkflowDefinition
+	if StrictJSON([]byte(run.ConfigurationJSON), &def) != nil || len(def.Steps) != run.StepCount {
+		return safeError()
+	}
+	step := def.Steps[job.Position]
+	if initialize && run.AssertionSemanticsVersion == 1 && evidence.SchemaVersion == 1 {
+		reason := "not_dispatched"
+		if evidence.Outcome.Certainty != "not_dispatched" {
+			reason = "evaluation_unavailable"
+		}
+		evidence.SchemaVersion = 2
+		evidence.Assertions = runner.NewAssertionEvaluation(step, reason)
+	}
+	if runner.ValidateFrozenAssertions(evidence, step, run.AssertionSemanticsVersion) != nil {
+		return safeError()
+	}
+	return nil
 }
 
 func (s *Service) workflowRuntime(ctx context.Context, job row, plan Plan) (Plan, map[string]string, *runner.ExtractionCapture, error) {
@@ -116,7 +148,7 @@ func (s *Service) workflowRuntime(ctx context.Context, job row, plan Plan) (Plan
 		clear(values)
 		return plan, nil, nil, e
 	}
-	capture := &runner.ExtractionCapture{Step: definition.Steps[job.Position], Steps: definition.Steps, Plans: plans, Outputs: map[string]runner.RuntimeValue{}, Values: values}
+	capture := &runner.ExtractionCapture{AssertionSemanticsVersion: run.AssertionSemanticsVersion, Step: definition.Steps[job.Position], Steps: definition.Steps, Plans: plans, Outputs: map[string]runner.RuntimeValue{}, Values: values}
 	return resolved, values, capture, nil
 }
 func (s *Service) workflowIntent(ctx context.Context, job row) ([]dt.TransactWriteItem, error) {

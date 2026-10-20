@@ -1,3 +1,5 @@
+import { AssertionEditor, AssertionResults } from "./Assertions";
+import { validStepAssertions } from "./assertions";
 import { useEffect, useRef, useState } from "react";
 import {
   api,
@@ -354,6 +356,12 @@ export function Workflows({
                 >
                   Remove step
                 </button>
+                <AssertionEditor
+                  checks={step.assertions ?? []}
+                  onChange={(assertions) =>
+                    change(pos, (s) => ({ ...s, assertions }))
+                  }
+                />
                 {step.extract.map((x, i) => (
                   <fieldset key={i}>
                     <legend>Output {i + 1}</legend>
@@ -644,6 +652,7 @@ export function Workflows({
               busy ||
               draft.steps.length < 2 ||
               !draft.name.trim() ||
+              !draft.steps.every(validStepAssertions) ||
               draft.steps.some((s, pos) =>
                 s.bindings.some(
                   (b) =>
@@ -807,6 +816,23 @@ export function Workflows({
                         HTTP replay.
                       </strong>
                     )}
+                    {s.state === "skipped" ? (
+                      <span> Skipped; no assertion evaluation.</span>
+                    ) : (
+                      (s.assertions ?? []).map((a) => (
+                        <span key={a.assertionId}>
+                          {" "}
+                          Check {a.assertionId}: {a.kind}
+                          {a.kind !== "statusEquals" ? ` at ${a.path}` : ""}
+                          {a.kind === "jsonEquals"
+                            ? `; public expected ${JSON.stringify(a.expected)}`
+                            : a.kind === "statusEquals"
+                              ? `; expected ${a.expected}`
+                              : ""}
+                          .
+                        </span>
+                      ))
+                    )}
                     {s.extract.map((x) => (
                       <span key={x.name}>
                         {" "}
@@ -895,6 +921,7 @@ export function Workflows({
               </button>
             </section>
           )}
+          {evidence && <AssertionResults evidence={evidence} />}
           {evidence && (
             <pre aria-label="Workflow evidence">
               {JSON.stringify(evidence, null, 2)}

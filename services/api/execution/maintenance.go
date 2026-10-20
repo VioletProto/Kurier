@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	wire "github.com/VioletProto/Kurier/services/request-runtime/mcpwire"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -319,6 +320,9 @@ func (s *Service) expire(ctx context.Context, ret row) error {
 	return s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), remove})
 }
 func knownExecution(item map[string]dt.AttributeValue, r row) bool {
+	if r.WorkflowAssertionsSchemaVersion != 0 || r.AssertionSemanticsVersion < 0 || r.AssertionSemanticsVersion > 1 || r.AssertionSemanticsVersion != 0 && r.Kind != "executionWorkflowRun" {
+		return false
+	}
 	if (r.SchemaVersion != 1 && !(r.SchemaVersion == 2 && (r.Kind == "executionJob" && r.Target == "local" || r.Kind == "execution" && r.Plan != nil && r.Plan.Target == "local"))) || !strings.HasPrefix(r.Kind, "execution") || r.ProjectID == "" || r.PK != "P#"+r.ProjectID {
 		return false
 	}
@@ -355,7 +359,19 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 	case "executionWorkflow":
 		return r.SK == "WF#"+r.WorkflowID && uuidPattern.MatchString(r.WorkflowID)
 	case "executionWorkflowRun":
-		return validWorkflowSubmission(r) && r.SK == "RUN#"+r.RunID && uuidPattern.MatchString(r.RunID) && r.StepCount >= 2 && r.StepCount <= 10
+		if !validWorkflowSubmission(r) || r.SK != "RUN#"+r.RunID || !uuidPattern.MatchString(r.RunID) || r.StepCount < 2 || r.StepCount > 10 {
+			return false
+		}
+		var def WorkflowDefinition
+		if StrictJSON([]byte(r.ConfigurationJSON), &def) != nil || len(def.Steps) != r.StepCount {
+			return false
+		}
+		for _, step := range def.Steps {
+			if r.AssertionSemanticsVersion == 0 && len(step.Assertions) > 0 || runner.ValidateAssertions(step, runner.RedactionPolicy{}) != nil {
+				return false
+			}
+		}
+		return true
 	case "executionWorkflowStep":
 		return r.SK == stepKey(r.RunID, r.Position) && r.Position >= 0 && r.Position < 10 && r.Plan != nil
 	case "executionWorkflowInputs":

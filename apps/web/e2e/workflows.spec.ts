@@ -39,6 +39,26 @@ test("cloud workflow editor freezes revisions, configures Bearer rendering and s
   await first.getByRole("button", { name: "Add output", exact: true }).click();
   await first.getByLabel("Output name").fill("token");
   await first.getByLabel("JSON path").fill("$.token");
+  for (const [index, token] of [
+    "0.10000000000000001",
+    "0.1",
+    "1E+00",
+    "-0.0",
+    "1e-308",
+    "9007199254740991",
+  ].entries()) {
+    await first
+      .getByRole("button", { name: "Add assertion", exact: true })
+      .click();
+    const check = first.getByRole("group", {
+      name: `Assertion ${index + 1}`,
+      exact: true,
+    });
+    await check.getByLabel("Assertion kind").selectOption("jsonEquals");
+    await check.getByLabel("Assertion JSON path").fill(`$.ratio${index}`);
+    await check.getByLabel("Expected type").selectOption("number");
+    await check.getByLabel("Expected decimal").fill(token);
+  }
   await panel.getByRole("button", { name: "Add step", exact: true }).click();
   let second = panel.getByRole("group", { name: "Step 2", exact: true });
   await second
@@ -67,6 +87,42 @@ test("cloud workflow editor freezes revisions, configures Bearer rendering and s
   await expect(second.getByLabel("Public literal prefix")).toHaveValue(
     "Bearer ",
   );
+  // Reopening comes from the saved API DTO, not a retained numeric JS value.
+  await panel
+    .getByRole("button", {
+      name: "Browser login workflow (revision 0)",
+      exact: true,
+    })
+    .click();
+  first = panel.getByRole("group", { name: "Step 1", exact: true });
+  for (const [index, token] of [
+    "0.10000000000000001",
+    "0.1",
+    "1E+00",
+    "-0.0",
+    "1e-308",
+    "9007199254740991",
+  ].entries()) {
+    await expect(
+      first
+        .getByRole("group", { name: `Assertion ${index + 1}`, exact: true })
+        .getByLabel("Expected decimal"),
+    ).toHaveValue(token);
+  }
+  await panel
+    .getByLabel("Workflow name")
+    .fill("Browser login workflow renamed");
+  const edited = page.waitForResponse(
+    (r) => r.request().method() === "PATCH" && r.url().includes("/workflows/"),
+  );
+  await panel
+    .getByRole("button", { name: "Save workflow", exact: true })
+    .click();
+  const editResponse = await edited;
+  expect(editResponse.status()).toBe(200);
+  expect(
+    editResponse.request().postDataJSON().steps[0].assertions[0].expected,
+  ).toEqual({ type: "number", decimal: "0.10000000000000001" });
   const admitted = page.waitForResponse(
     (r) => r.request().method() === "POST" && r.url().endsWith("/runs"),
   );
@@ -80,6 +136,24 @@ test("cloud workflow editor freezes revisions, configures Bearer rendering and s
   await expect(
     panel.getByRole("region", { name: "Workflow run" }),
   ).toContainText("value never displayed");
+  const run = panel.getByRole("region", { name: "Workflow run" });
+  await expect(run).toContainText("0.10000000000000001");
+  await expect(run).toContainText("1E+00");
+  page.once("dialog", (dialog) => dialog.accept());
+  const rerun = page.waitForResponse(
+    (r) => r.request().method() === "POST" && r.url().endsWith("/rerun"),
+  );
+  await run
+    .getByRole("button", { name: "Rerun entire workflow", exact: true })
+    .click();
+  const rerunResponse = await rerun;
+  expect(rerunResponse.status()).toBe(202);
+  const frozen = (await rerunResponse.json()).data.run.steps[0].assertions;
+  expect(frozen[0].expected).toEqual({
+    type: "number",
+    decimal: "0.10000000000000001",
+  });
+  expect(frozen[1].expected).toEqual({ type: "number", decimal: "0.1" });
   await page.reload();
   await expect(
     page.getByRole("button", { name: "Sign in", exact: true }),
