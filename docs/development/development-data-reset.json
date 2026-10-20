@@ -1,0 +1,115 @@
+{
+  "authorizedBy": "Davian explicitly requested deletion of all development accounts and live application data to reuse test emails",
+  "scope": {
+    "account": "747336059622",
+    "stage": "dev-api",
+    "region": "us-east-2",
+    "cognitoPool": "us-east-2_qTDZQT1FE",
+    "controlTable": "kurier-dev-api-ControlTable-bdxbaoxb",
+    "protectedTable": "kurier-dev-api-ProtectedTable-szbvcchc",
+    "evidenceBucket": "executionevidence-71a0f7a"
+  },
+  "startedAt": "2026-10-19T15:56:13.552Z",
+  "completedAt": "2026-10-19T16:45:02.014Z",
+  "before": {
+    "cognitoUsers": 2,
+    "controlRows": 487,
+    "protectedRows": 1
+  },
+  "deletedEvidenceObjects": 8,
+  "deletedApplicationLogStreams": 279,
+  "after": {
+    "cognitoUsers": 0,
+    "controlRows": 1,
+    "protectedRows": 0,
+    "evidenceObjects": 0,
+    "queueMessages": 0,
+    "configurationPreserved": true
+  },
+  "stage": {
+    "beforeVersion": "11",
+    "closedVersion": "12",
+    "activeVersion": "13",
+    "state": "active",
+    "generation": "dev-api-initial-v1",
+    "schemaVersion": "7",
+    "mcpSchemaVersion": "1"
+  },
+  "oldTokenFence": {
+    "usersDeletedAt": "2026-10-19T15:56:16.293Z",
+    "notBeforeReopen": "2026-10-19T16:12:21.293Z",
+    "earlyReopenRefused": true
+  },
+  "preserved": {
+    "resourceSettingsMatchedBeforeReopen": true,
+    "functionConfigurationHashes": [
+      {
+        "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+        "hash": "4e034a873b68eb3f612a92fc4876fb35eac23f321adafa826c9de9c8c492be78"
+      },
+      {
+        "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+        "hash": "5c455803e0546bbc9f4a7e7bae35fa990497e71526615099b946bb7cc0810345"
+      },
+      {
+        "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+        "hash": "a14a07d692d2f00e3a3a5e5bba3fa44ba23e78b516a79f6adb9b4cdb12b36b85"
+      },
+      {
+        "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+        "hash": "d88d3eef4ecce545f200767ef92a87f0520d4d402097ce1622a746f569646f17"
+      }
+    ],
+    "freePlan": {
+      "type": "FREE",
+      "status": "ACTIVE"
+    },
+    "accountConcurrency": 10,
+    "bootstrapHash": "5249bda55341970d4e7a11f852d01011e6982541b3ee1c7c08902f42a4d46754",
+    "webObjectsHash": "1cb5a7b85ac0acae7bf540a425d546de0e10e99709063e3d099b7d59faf79e89",
+    "distributionHash": "bd8959734df30a1f9eccab8592d741301d18b3c0e43e2b48198f49996516dc59"
+  },
+  "recoveryHistory": {
+    "pitrEnabled": true,
+    "retentionDays": 35,
+    "onDemandBackupsFound": 0,
+    "historyDeleted": false
+  },
+  "localVerification": {
+    "command": "npm run verify",
+    "passed": true,
+    "frontendTests": 58,
+    "infrastructureTests": 15,
+    "goModulesTestAndVet": 7
+  },
+  "trelloSynchronization": "connector unavailable; no update performed",
+  "postResetHostedChecks": {
+    "httpPassed": true,
+    "signedOutChromiumPassed": true,
+    "publicReleaseUnchanged": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+    "authenticatedFlowsTested": false
+  },
+  "postResetInventory": {
+    "checkedAt": "2026-10-19T16:46:22.004Z",
+    "stageVersion": "13",
+    "generation": "dev-api-initial-v1",
+    "projectAccounting": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "quotaHash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "reviewedRuntimeIamFingerprintsUnchanged": true,
+    "bootstrapUnchanged": true,
+    "freePlan": {
+      "type": "FREE",
+      "status": "ACTIVE",
+      "expiration": "2026-12-29T21:05:52.776000+00:00"
+    },
+    "accountConcurrency": 10,
+    "worker": {
+      "batch": 1,
+      "max": 2,
+      "standardPollers": true
+    }
+  }
+}

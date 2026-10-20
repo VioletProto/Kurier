@@ -1,3 +1,5 @@
+import { createDevelopmentWeb } from "./frontend-hosting";
+
 // Scoped users/projects slice; existing Cognito is read, never managed here.
 export async function createDevelopmentApi() {
   const account = process.env.KURIER_AWS_ACCOUNT_ID;
@@ -229,6 +231,35 @@ export async function createDevelopmentApi() {
     KURIER_EVIDENCE_BUCKET: evidence.bucket,
     KURIER_EXECUTION_QUEUE_URL: queue.url,
   };
+  const api = new sst.aws.ApiGatewayV2("DevelopmentHttpApi", {
+    cors: false,
+    accessLog: { retention: "1 week" },
+    transform: {
+      api(args) {
+        // SST cors:false normalizes to {}; AWS treats that as configured CORS
+        // and strips Lambda CORS headers. Omit the configuration entirely.
+        args.corsConfiguration = undefined;
+      },
+      stage(args) {
+        args.defaultRouteSettings = {
+          throttlingBurstLimit: 20,
+          throttlingRateLimit: 10,
+        };
+        // Static route templates and status only; no paths, headers, query strings,
+        // IP addresses, user agents, bodies or integration error text.
+        args.accessLogSettings = {
+          ...args.accessLogSettings,
+          format: JSON.stringify({
+            requestId: "$context.requestId",
+            route: "$context.routeKey",
+            status: "$context.status",
+            latency: "$context.responseLatency",
+          }),
+        };
+      },
+    },
+  });
+  const web = createDevelopmentWeb(api.url, poolId!, clientId!);
   const environment = {
     ...executionEnvironment,
     KURIER_STAGE: "dev-api",
@@ -249,7 +280,10 @@ export async function createDevelopmentApi() {
     memory: "256 MB",
     timeout: "15 seconds",
     dev: false,
-    environment,
+    environment: {
+      ...environment,
+      KURIER_HOSTED_FRONTEND_ORIGIN: web.apply((value) => value.siteUrl),
+    },
     logging: { retention: "1 week" },
     permissions: [
       ...tablePermissions,
@@ -304,34 +338,6 @@ export async function createDevelopmentApi() {
         ],
       },
     ],
-  });
-  const api = new sst.aws.ApiGatewayV2("DevelopmentHttpApi", {
-    cors: false,
-    accessLog: { retention: "1 week" },
-    transform: {
-      api(args) {
-        // SST cors:false normalizes to {}; AWS treats that as configured CORS
-        // and strips Lambda CORS headers. Omit the configuration entirely.
-        args.corsConfiguration = undefined;
-      },
-      stage(args) {
-        args.defaultRouteSettings = {
-          throttlingBurstLimit: 20,
-          throttlingRateLimit: 10,
-        };
-        // Static route templates and status only; no paths, headers, query strings,
-        // IP addresses, user agents, bodies or integration error text.
-        args.accessLogSettings = {
-          ...args.accessLogSettings,
-          format: JSON.stringify({
-            requestId: "$context.requestId",
-            route: "$context.routeKey",
-            status: "$context.status",
-            latency: "$context.responseLatency",
-          }),
-        };
-      },
-    },
   });
   for (const route of [
     "POST /api/v1/mcp/tokens",
@@ -522,6 +528,8 @@ export async function createDevelopmentApi() {
     cleanupFunction: maintenance.name,
     cleanupSchedule: schedule.nodes.rule.name,
     frontendOrigin: origin,
+    hostedFrontendOrigin: web.apply((value) => value.siteUrl),
+    frontendHosting: web,
     cursorKeyParameter: parameterName,
     cognitoUserPoolId: poolId!,
     cognitoClientId: clientId!,

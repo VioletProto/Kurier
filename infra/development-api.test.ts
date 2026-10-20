@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDevelopmentApi } from "./development-api";
+vi.mock("./frontend-hosting", () => ({
+  createDevelopmentWeb: () => ({
+    apply: (fn: any) => fn({ siteUrl: "https://dexample.cloudfront.net" }),
+  }),
+}));
 const resources: Record<string, any>[] = [];
 const identity = vi.fn();
 class Resource {

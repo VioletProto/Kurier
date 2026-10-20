@@ -8,3 +8,4 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </StrictMode>,
 );
+window.dispatchEvent(new Event("kurier:ready"));

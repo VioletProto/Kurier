@@ -24,3 +24,15 @@ The authorized `dev-api` stage in [development-api.ts](development-api.ts) adds
 the retained on-demand Control table/indexes, ARM64 Go API/HTTP API and scheduled
 empty-project maintenance. It reads the existing development Cognito pool; the
 frontend remains local. See [deployment, cost and validation](../docs/development/aws-users-projects.md).
+
+## Frontend hosting continuation
+
+The accepted [frontend-hosting contract](../docs/architecture/frontend-hosting-contract.md)
+adds a static React site to existing `dev-api` through
+[frontend-hosting.ts](frontend-hosting.ts). Its dedicated private bucket is
+separate from evidence and SST bootstrap storage. The API gains one exact hosted
+origin while preserving its explicit localhost origin and existing authorization.
+The [implementation/preview record](../docs/development/frontend-hosting.md)
+contains public artifact, IAM/resource, ordering, rollback and cost evidence.
+Implementation and existing-bootstrap-only preview are authorized; deployment
+remains held. Historical stage descriptions above record their earlier scope.

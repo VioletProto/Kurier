@@ -1,5 +1,36 @@
 # Accepted architecture
 
+## Authorized development-data reset
+
+Davian authorized clearing all development accounts and live application data on
+2026-10-19 to repeat genuine signup with existing test emails. The
+[reset record](../development/development-data-reset.md) distinguishes this
+intentional data/accounting reset from the earlier deployment preservation
+checks. Infrastructure, capability schemas, recovery generation, Free plan,
+quotas and concurrency are preserved. The close/reopen maintenance fence
+advances the durable stage version from 11 to 13 without schema activation.
+
+## Accepted frontend hosting continuation
+
+Davian accepted [frontend-hosting contract `6b026a7`](frontend-hosting-contract.md),
+including the AWS-hostname TLS limitation, development-only Cognito default
+sender exception, release retention and costs. Scoped static hosting/CORS/public
+configuration implementation, local tests and documentation synchronization are
+authorized, as are read-only AWS inventory and SST preview using the verified
+existing bootstrap. Davian subsequently approved scoped development/demo
+hosting deployment including `21c24be` and the refreshed preview, plus a harmless
+public-marker A→B→A exercise. The host is
+https://d2kpq905qyh9zg.cloudfront.net. No schema activation or general-public
+signup launch is authorized. Bootstrap replacement, plan upgrades, quota and
+concurrency changes remain prohibited. The
+[deployment record](../development/frontend-hosting-validation.md) separates
+actual AWS/hosted checks from Davian’s 2026-10-19 operator-reported auth, request/
+redaction, deletion and MCP successes. The development/demo slice is accepted;
+Davian subsequently reported successful local-agent execution against a local echo
+endpoint, redacted response fields and revocation. Omitted cases were accepted
+without individual verification. [Implementation details](../development/frontend-hosting.md)
+retain the original preview and review boundaries.
+
 ## Accepted read-only MCP continuation
 
 Davian accepted [the read-only MCP contract](read-only-mcp-contract.md) at
@@ -9,7 +40,8 @@ seven tools, hosted authorization/audit and cleanup integration, API-contract
 synchronization, tests and AWS preview/cost preparation are authorized.
 Davian subsequently approved scoped development deployment and guarded
 activation, including `916ea23`. Development is active at savedRequests7/MCP1,
-version 11, with recovery generation/accounting/existing capabilities preserved.
+version 11 at activation, with recovery generation/accounting/existing capabilities
+preserved then. The later authorized data reset above advances version to 13.
 The [deployment record](read-only-mcp-validation.md) separates genuine AWS results
 from installed-Codex fixture tests and Davian's 2026-10-16 deployed-client
 connection/read/redaction/revocation confirmation.

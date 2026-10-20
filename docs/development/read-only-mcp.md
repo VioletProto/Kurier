@@ -79,10 +79,21 @@ client bytes/transcripts cannot be recalled by revocation.
 
 ## Pairing and Codex TUI setup
 
+The [accepted hosting continuation](frontend-hosting.md) is deployed for
+development/demo at https://d2kpq905qyh9zg.cloudfront.net. Open that HTTPS UI
+instead of starting Terminal A's local frontend; the local option remains
+available. Steps for browser consent, hidden-prompt `pair`,
+Codex registration and Codex-launched `serve` remain the same and use the existing
+API origin. The browser never controls localhost and MCP remains local stdio.
+
 The scoped development backend was approved for deployment/activation including
 `916ea23`. The [deployment validation record](../architecture/read-only-mcp-validation.md)
-records the active marker and live results. React still runs locally. These are
-separate setup steps; only the final `serve` process is launched by Codex.
+records the active marker and live results. The development/demo React host is
+https://d2kpq905qyh9zg.cloudfront.net; localhost remains supported. Hosted-origin
+MCP was reported working by Davian on 2026-10-19 as part of
+[hosting acceptance](frontend-hosting-validation.md#operator-acceptance--2026-10-19).
+Individual hosted tool/revocation cases were not separately reported.
+These are separate setup steps; only the final `serve` process is launched by Codex.
 
 1. **Build once, in a setup terminal**, from `/home/king/Neumont/Kurier`:
 
@@ -91,13 +102,14 @@ separate setup steps; only the final `serve` process is launched by Codex.
    go -C services/mcp build -o /home/king/Neumont/Kurier/bin/kurier-mcp .
    ```
 
-2. **Start the browser app in Terminal A** and leave it running:
+2. **Open the hosted browser app** at https://d2kpq905qyh9zg.cloudfront.net.
+   Alternatively, start the local app in Terminal A and leave it running:
 
    ```sh
    npm run dev:cloud
    ```
 
-   Open `http://localhost:5173`. If already running, leave that terminal running
+   For the local option, open `http://localhost:5173`. If already running, leave that terminal running
    and refresh the browser so it uses the current UI; do not start a second copy. This local frontend connects to the deployed development API.
 
 3. **In the browser**, sign in and select the owned project you want Codex to

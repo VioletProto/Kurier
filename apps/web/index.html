@@ -10,7 +10,11 @@
     <title>Kurier</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><p role="status">Loading Kurier…</p></div>
+    <noscript
+      >Kurier requires JavaScript to sign in and inspect evidence.</noscript
+    >
+    <script src="/startup.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

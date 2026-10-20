@@ -80,3 +80,61 @@ SRP users, deployed HTTPS/worker/storage and scheduled project cleanup. Its
 `--cleanup RECEIPT` reconciles only that disposable fixture. Values remain in
 memory; receipts contain IDs/status only. See the
 [deployment/validation record](../docs/architecture/read-only-mcp-validation.md).
+
+## Frontend hosting
+
+Use Node 22.18+ (native TypeScript stripping) for the frontend helper scripts.
+`build-frontend-artifact.mjs` reads only the public `dev-api` output fields and
+builds a fail-closed hosted artifact with a filtered build environment and no
+dotenv loading. `test-frontend-hosting-browser.mjs` runs production assets against
+a local Chromium/CSP/cache fixture with all AWS requests blocked.
+`preview-frontend-hosting.mjs` is inventory-only by default; `--diff` additionally
+runs only SST diff after verifying the existing version-5 Ohio bootstrap,
+passphrase/state, account, plan, quotas, consumers, auth and stage/accounting.
+`review-frontend-preview.mjs` publishes selected public evidence from that preview.
+`frontend-retention.mjs <current-id> <previous-known-good-id>` is a read-only
+30-day/current/previous retention planner; it never deletes objects.
+`restore-frontend-artifact.mjs <verified-release-id>` reads the complete private
+release archive and shared hashed assets, verifies every manifest hash, and
+atomically restores a local rollback candidate without building or uploading.
+See the [operating and rollback guide](../docs/development/frontend-hosting.md).
+No helper grants deployment or general-public signup authorization.
+
+The development/demo frontend is https://d2kpq905qyh9zg.cloudfront.net.
+`deploy-frontend-hosting.mjs --deploy` requires an explicitly approved scoped
+plan and a fresh guarded preview; `--recheck-and-deploy` combines a fresh preview
+with a strict allowlist of updates to the four existing static hosting resources.
+It refuses creations, deletions and backend/IAM changes. It never activates a
+schema marker. Reusing either command requires authorization for that release.
+`verify-frontend-hosting-deployment.mjs --capture-baseline PATH` captures public
+fingerprints before initial hosting deployment; `--verify-baseline PATH` proves
+exact built packages, unchanged runtime IAM/configuration/controls and only the
+API's hosted-origin addition against that baseline and a fresh inventory.
+
+`inspect-frontend-hosting-state.mjs` exports read-only ignored state and lists
+public resource metadata. `verify-frontend-hosting-resources.mjs` checks the
+exported deferred upload/invalidation dependencies and actual generated AWS
+policies, live routing Function/KV entries and completed distribution/invalidations.
+`validate-frontend-hosting-http.mjs` checks genuine public HTTP/CDN/S3/CORS
+without account creation or product writes. `test-frontend-hosting-live-browser.mjs`
+checks real signed-out Chromium rendering/CSP/CORS/persistence.
+
+`prepare-frontend-marker-release.mjs` creates local public marker B bytes only.
+`exercise-frontend-hosting-rollback.mjs --deploy` is an explicitly authorized real
+A→B→A deployment exercise, using the strict static-update preview guard, a real
+browser, remote-only A reconstruction and no rebuild. If inspection confirms B
+is deployed and recovery has not begun, `--resume-b` can resume that state using
+prior genuine A HTTP evidence; it never blindly retries an uncertain deployment.
+An interrupted recovery requires inspecting local archive/backup state before
+continuing. See [deployment results and participant checks](../docs/development/frontend-hosting-validation.md).
+
+`reset-development-data.mjs --clear` is a destructive, explicitly authorized,
+one-time `dev-api` test-data reset with exact resource/version guards. It closes
+the stage, deletes Cognito users and all live application data/credentials,
+drains Lambda writers, purges queues and clears application log streams. It
+keeps the stage closed through the previous access-token expiry window.
+`--finish` verifies empty stores and preserved configuration before a conditioned
+reopen; failures stay closed for inspection. It preserves infrastructure,
+frontend releases and existing PITR history. Never use this as schema activation
+or automatically retry an uncertain reset. See the
+[authorization, scope and reset result](../docs/development/development-data-reset.md).

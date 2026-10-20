@@ -4,17 +4,33 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
-// LocalCORS permits only the configured loopback frontend. It never grants
-// cookie credentials or authenticates a request; the wrapped API verifies JWTs.
+// LocalCORS preserves the local-only adapter used by development fixtures.
 func LocalCORS(next http.Handler, origin string) (http.Handler, error) {
-	u, err := url.Parse(origin)
+	return FrontendCORS(next, origin, "")
+}
+
+// FrontendCORS adds one explicit hosted CloudFront origin to deliberate local access.
+// It never grants cookie credentials or authenticates a request.
+func FrontendCORS(next http.Handler, local, hosted string) (http.Handler, error) {
+	// Local development remains an explicit loopback origin.
+	u, err := url.Parse(local)
 	if err != nil || u.Scheme != "http" || u.User != nil || u.Port() == "" ||
 		(u.Hostname() != "localhost" && u.Hostname() != "127.0.0.1" && u.Hostname() != "::1") ||
-		u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.String() != origin {
+		u.Path != "" || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.String() != local {
 		return nil, errors.New("frontend origin must be an explicit HTTP loopback origin with port")
+	}
+	allowed := map[string]bool{local: true}
+	if hosted != "" {
+		u, err := url.Parse(hosted)
+		if err != nil || u.Scheme != "https" || u.User != nil || u.Port() != "" ||
+			!hostedFrontendHost.MatchString(u.Host) || u.Path != "" || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.String() != hosted {
+			return nil, errors.New("hosted frontend must be one exact HTTPS CloudFront origin")
+		}
+		allowed[hosted] = true
 	}
 	methods := map[string]bool{"GET": true, "POST": true, "PATCH": true, "PUT": true, "DELETE": true}
 	headers := map[string]bool{"authorization": true, "content-type": true, "if-match": true, "idempotency-key": true}
@@ -26,11 +42,11 @@ func LocalCORS(next http.Handler, origin string) (http.Handler, error) {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if len(origins) != 1 || origins[0] != origin {
+		if len(origins) != 1 || !allowed[origins[0]] {
 			writeError(w, apiError(403, "forbidden", "Frontend origin is not allowed."))
 			return
 		}
-		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Origin", origins[0])
 		w.Header().Set("Access-Control-Expose-Headers", "ETag, Location, Retry-After")
 		if r.Method == "OPTIONS" {
 			w.Header().Add("Vary", "Access-Control-Request-Method")
@@ -53,3 +69,5 @@ func LocalCORS(next http.Handler, origin string) (http.Handler, error) {
 		next.ServeHTTP(w, r)
 	}), nil
 }
+
+var hostedFrontendHost = regexp.MustCompile(`^d[a-z0-9]+\.cloudfront\.net$`)

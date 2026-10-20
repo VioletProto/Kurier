@@ -1,4 +1,5 @@
 import { MCPCredentials } from "./MCPCredentials";
+import { flushSync } from "react-dom";
 import { Workflows } from "./Workflows";
 import { Requests } from "./Requests";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -26,12 +27,39 @@ export function App() {
   const [signedIn, setSignedIn] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [authFormGeneration, setAuthFormGeneration] = useState(0);
+  const lifecycle = useRef(0);
   const [dark, setDark] = useState(
     () => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false,
   );
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);
+  useEffect(() => {
+    // Clear rendered data before a history snapshot can preserve the workspace.
+    const clear = () => {
+      lifecycle.current++;
+      flushSync(() => {
+        setSignedIn(false);
+        setLeaving(true);
+        setNotice("Your session ended. Please sign in again.");
+        setAuthFormGeneration(lifecycle.current);
+      });
+      void auth
+        .logout()
+        .catch(() => undefined)
+        .finally(() => setLeaving(false));
+    };
+    const restore = (event: PageTransitionEvent) => {
+      if (event.persisted) clear();
+    };
+    window.addEventListener("pagehide", clear);
+    window.addEventListener("pageshow", restore);
+    return () => {
+      window.removeEventListener("pagehide", clear);
+      window.removeEventListener("pageshow", restore);
+    };
+  }, []);
   async function logout(expired = false) {
     setSignedIn(false);
     setLeaving(true);
@@ -82,7 +110,12 @@ export function App() {
           <p role="status">Signing out…</p>
         ) : (
           <AuthForm
+            key={authFormGeneration}
             onSignedIn={() => {
+              if (authFormGeneration !== lifecycle.current) {
+                void auth.logout().catch(() => undefined);
+                return;
+              }
               setNotice("");
               setSignedIn(true);
             }}

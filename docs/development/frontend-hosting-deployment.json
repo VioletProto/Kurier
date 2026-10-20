@@ -1,0 +1,305 @@
+{
+  "scope": "development/demo only; general-public signup launch not authorized",
+  "schemaActivationPerformed": false,
+  "resources": {
+    "checkedAt": "2026-10-17T19:02:05.012Z",
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "webBucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+    "distributionId": "EMNTWD8Q14ZLM",
+    "distributionArn": "arn:aws:cloudfront::747336059622:distribution/EMNTWD8Q14ZLM",
+    "distributionStatus": "Deployed",
+    "cachePolicyId": "b30e44b6-18cf-47c5-9ed3-684cbfeb609e",
+    "headersPolicyId": "f4376fb2-acf4-4eae-8833-777ab8b87143",
+    "functionName": "FrontendWebCloudfrontFunctionRequest-16c0fcc",
+    "functionArn": "arn:aws:cloudfront::747336059622:function/FrontendWebCloudfrontFunctionRequest-16c0fcc",
+    "functionCodeBytes": 7739,
+    "functionCodeSha256": "b61f6392a0b2e8d95e23f7c177949986c8a8c518b6290f297aebb93a23049684",
+    "keyValueStoreArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+    "kvNamespace": "76ef",
+    "viewerCertificate": {
+      "CloudFrontDefaultCertificate": true,
+      "SSLSupportMethod": "vip",
+      "MinimumProtocolVersion": "TLSv1",
+      "CertificateSource": "cloudfront"
+    },
+    "cachePolicy": {
+      "Name": "FrontendWebCache-d6136e0",
+      "DefaultTTL": 0,
+      "MaxTTL": 31536000,
+      "MinTTL": 0,
+      "ParametersInCacheKeyAndForwardedToOrigin": {
+        "EnableAcceptEncodingGzip": true,
+        "EnableAcceptEncodingBrotli": true,
+        "HeadersConfig": {
+          "HeaderBehavior": "none"
+        },
+        "CookiesConfig": {
+          "CookieBehavior": "none"
+        },
+        "QueryStringsConfig": {
+          "QueryStringBehavior": "none"
+        }
+      }
+    },
+    "privateBucketPolicy": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": {
+            "Service": "cloudfront.amazonaws.com"
+          },
+          "Action": "s3:GetObject",
+          "Resource": "arn:aws:s3:::kurier-dev-api-web-fc2927a49a0b246240e5a17774/*",
+          "Condition": {
+            "StringEquals": {
+              "AWS:SourceArn": "arn:aws:cloudfront::747336059622:distribution/EMNTWD8Q14ZLM"
+            }
+          }
+        },
+        {
+          "Effect": "Deny",
+          "Principal": "*",
+          "Action": "s3:*",
+          "Resource": [
+            "arn:aws:s3:::kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+            "arn:aws:s3:::kurier-dev-api-web-fc2927a49a0b246240e5a17774/*"
+          ],
+          "Condition": {
+            "Bool": {
+              "aws:SecureTransport": "false"
+            }
+          }
+        }
+      ]
+    },
+    "deferred": {
+      "uploadFiles": 10,
+      "purge": false,
+      "retainOnDelete": true,
+      "invalidationPaths": ["/*"],
+      "invalidationWait": true,
+      "invalidationDependencies": [
+        "FrontendWebAssetFiles.sst.aws.BucketFiles",
+        "FrontendWebAssets",
+        "FrontendWebKvKeys.sst.aws.KvKeys",
+        "FrontendWebCdnDistribution"
+      ]
+    },
+    "invalidations": [
+      {
+        "id": "IAKR38PE6RXQCKFN35YU8JVK34",
+        "status": "Completed"
+      },
+      {
+        "id": "I34LAWSZ1NVGB3O8KDZVOG2MXM",
+        "status": "Completed"
+      },
+      {
+        "id": "I93706Z2MEDVNGYXKX23ZQD8IS",
+        "status": "Completed"
+      }
+    ],
+    "signedS3Origin": true,
+    "noApiOrigin": true
+  },
+  "preservation": {
+    "checkedAt": "2026-10-17T19:03:00.668Z",
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "runtimeIamUnchanged": true,
+    "onlyApiHostedOriginAdded": true,
+    "exactBuiltPackages": true,
+    "capabilitiesGenerationAccountingUnchanged": true,
+    "freePlanQuotasConcurrencyBootstrapUnchanged": true,
+    "functions": [
+      {
+        "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+        "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+        "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3"
+      },
+      {
+        "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+        "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+        "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb"
+      },
+      {
+        "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+        "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+        "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66"
+      },
+      {
+        "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+        "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+        "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81"
+      }
+    ],
+    "controls": {
+      "plan": {
+        "type": "FREE",
+        "status": "ACTIVE"
+      },
+      "quota": 10,
+      "unreserved": 10,
+      "queue": {
+        "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+        "state": "Enabled",
+        "batch": 1,
+        "max": 2,
+        "pollers": null,
+        "responses": ["ReportBatchItemFailures"]
+      },
+      "schedule": {
+        "state": "ENABLED",
+        "expression": "rate(1 minute)",
+        "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+      }
+    }
+  },
+  "http": {
+    "checkedAt": "2026-10-17T19:02:04.736Z",
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "releaseId": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+    "genuineAwsHttp": true,
+    "privateS3Denied": true,
+    "signedCdnAssetAccess": true,
+    "exactHostedAndLocalCors": true,
+    "foreignOriginsDenied": true,
+    "securityHeadersAndCsp": true,
+    "spaDeepLinks": true,
+    "missingFilesAndApi404": true,
+    "httpRedirect": true,
+    "appFiles": [
+      {
+        "path": "404.html",
+        "status": 200,
+        "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+        "contentType": "text/html;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "assets/index-CAjex_6u.css",
+        "status": 200,
+        "sha256": "89dd6331058a55d3bb75930baa3d6554ceaf73abaaff99b5913f904b07661ec9",
+        "contentType": "text/css;charset=UTF-8",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "assets/index-TwEBpFzH.js",
+        "status": 200,
+        "sha256": "732f0ea17731aea8df067ee62504695392101f2f201fd1e7cd6a108dbaf3c2ba",
+        "contentType": "text/javascript;charset=UTF-8",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "sha256": "5bca705b875131871c17c9c296aa7de5130d78fbabe905217399c2226b85c850",
+        "contentType": "text/html;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "startup.js",
+        "status": 200,
+        "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+        "contentType": "text/javascript;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      }
+    ],
+    "authenticatedBrowserValidated": false,
+    "disposableApplicationDataCreated": false
+  },
+  "browser": {
+    "checkedAt": "2026-10-17T19:02:06.377Z",
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "genuineHostedChromium": true,
+    "signedOutDeepLink": true,
+    "realCrossOriginReadable401": true,
+    "enforcedCspNoViolations": true,
+    "emptyBrowserPersistence": true,
+    "keyboardAndMobileSmoke": true,
+    "authEmailRefreshValidated": false,
+    "proof": {
+      "origin": "https://d2kpq905qyh9zg.cloudfront.net",
+      "status": 401,
+      "exposed": "no-store",
+      "bodyReadable": true,
+      "localStorage": 0,
+      "sessionStorage": 0,
+      "indexedDb": 0,
+      "caches": 0
+    }
+  },
+  "rollback": {
+    "a": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+    "b": "734b353c1b67b348389e53e1e9e9ac2b0a99ed3cb58545b870c49352f47b6963",
+    "marker": "Kurier harmless hosting rollback probe B",
+    "changedFiles": [
+      "index.html",
+      "startup.js",
+      "404.html",
+      "assets/index-d852e749cfe9.js"
+    ],
+    "retainedOldHashedJs": "assets/index-TwEBpFzH.js",
+    "markerHashedJs": "assets/index-d852e749cfe9.js",
+    "publicConfigurationUnchanged": true,
+    "retainedHashedAssetsPreserved": true,
+    "deploymentPerformed": true,
+    "completedAt": "2026-10-17T19:01:31.416Z",
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "genuineAwsAndChromium": true,
+    "resumedFromVerifiedB": true,
+    "retainedAssetProbe": "script preload permitted by script-src self; no connect-src change",
+    "phases": [
+      {
+        "phase": "A-before",
+        "releaseId": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+        "verifiedFiles": 5,
+        "checkedAt": "2026-10-17T18:53:46.663Z",
+        "source": "prior genuine HTTP validation"
+      },
+      {
+        "phase": "B",
+        "releaseId": "734b353c1b67b348389e53e1e9e9ac2b0a99ed3cb58545b870c49352f47b6963",
+        "verifiedFiles": 5,
+        "checkedAt": "2026-10-17T19:00:03.920Z"
+      },
+      {
+        "phase": "A-restored",
+        "releaseId": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+        "verifiedFiles": 5,
+        "checkedAt": "2026-10-17T19:01:30.277Z"
+      }
+    ],
+    "retainedAAssetAvailableDuringB": true,
+    "oldBAssetAvailableAfterRollback": true,
+    "remoteOnlyARecovery": true,
+    "verifiedEveryRecoveredHash": true,
+    "rollbackRebuilt": false,
+    "finalRelease": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+    "temporaryLocalBackupRemoved": true,
+    "disposableAccountsProjectsExecutionsCreated": 0,
+    "retainedBArchiveIntentional": true,
+    "deploymentsPerformed": ["B", "A-restored"]
+  },
+  "cleanup": {
+    "checkedAt": "2026-10-17T19:08:40.934Z",
+    "webObjects": 15,
+    "webBytes": 816817,
+    "completeAAndBArchives": true,
+    "localBackupRemoved": true,
+    "disposableAccountsProjectsExecutionsCreated": 0,
+    "productCleanupRequired": false,
+    "bRetainedByAcceptedPolicy": true
+  },
+  "localVerification": {
+    "command": "npm run verify",
+    "passed": true,
+    "frontendTests": 58,
+    "infrastructureTests": 15,
+    "goModulesTestAndVet": 7
+  },
+  "documentationSynchronization": {
+    "nativeProposalAndApiContracts": "updated in place under revision guards; verified readback",
+    "repositoryGuides": true
+  }
+}

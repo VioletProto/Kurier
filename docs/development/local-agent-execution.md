@@ -11,14 +11,26 @@ remains `dev-api-initial-v1`. Code and validation live on
 
 ## Foreground startup
 
+The [accepted frontend-hosting continuation](frontend-hosting.md) is implemented
+and deployed for development/demo at https://d2kpq905qyh9zg.cloudfront.net.
+Use that HTTPS UI, or the local UI below, to issue/manage the same local-agent
+credential. After initially deferring this check, Davian reported successful
+hosted local-agent execution against a local echo endpoint, redacted response
+fields and working revocation. This completes the deferred hosting check; see
+[operator acceptance](frontend-hosting-validation.md#operator-acceptance--2026-10-19).
+A separate private-LAN target and exact target-send count were not individually
+reported. Hidden-terminal pairing, outbound HTTPS polling and explicit destination
+consent remain unchanged; the browser never contacts a localhost/private-network
+control server.
+
 Requires Go 1.26. Build from the checked-out repository root:
 
 ```sh
 go -C services/local-agent build -o /tmp/kurier-agent .
 ```
 
-1. Start the existing local React development frontend with `npm run dev:cloud`
-   and sign in through Cognito. Open an owned project's execution panel.
+1. Open https://d2kpq905qyh9zg.cloudfront.net (or start the local React UI
+   with `npm run dev:cloud`) and sign in through Cognito. Open an owned project's execution panel.
 2. Refresh pairing status. Choose the device name, loopback/private address class
    and exact origins for this project, and explicitly approve their scope.
    Create the credential and enter its one-time token into the CLI hidden prompt.
