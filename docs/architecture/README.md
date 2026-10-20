@@ -7,8 +7,11 @@ at `31de3929aa1423c25b264d9e459aec48728e1c90`, including its lossless numeric DT
 and MCP legacy projection. Scoped cloud-workflow implementation, local tests and
 verification, API-contract synchronization and Trello updates are authorized.
 Numeric expectations use tagged decimal strings preserved through browser/API,
-frozen storage, reopening, unrelated edits and whole-run reruns. AWS preview,
-deployment and capability activation remain on hold for separate review.
+frozen storage, reopening, unrelated edits and whole-run reruns. The separately
+authorized [deployment review](../development/workflow-assertions-deployment-review.md)
+records read-only inventory and a guarded SST preview of implementation
+`55cd061c0f6607037ebd61e200fe54ab296237c4`. Deployment, capability activation and
+genuine runtime tests remain on hold for separate review.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

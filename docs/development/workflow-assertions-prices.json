@@ -1,0 +1,136 @@
+{
+  "retrievedOn": "2026-10-20",
+  "currency": "USD",
+  "region": "us-east-2",
+  "beforeCreditsAndAllowances": true,
+  "catalogs": [
+    {
+      "service": "AWSLambda",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSLambda/current/us-east-2/index.json",
+      "publicationDate": "2026-10-16T18:23:59Z",
+      "sha256": "65fda01ecb393ba5a0d10ac8f769e1a5fdc260dfc171198979af422bdc37a5e0",
+      "rates": [
+        {
+          "sku": "CHGDQQ3YSPF93CBA",
+          "usageType": "USE2-Lambda-GB-Second-ARM",
+          "unit": "Lambda-GB-Second",
+          "beginRange": "0",
+          "endRange": "7500000000",
+          "usd": "0.0000133334"
+        },
+        {
+          "sku": "CHGDQQ3YSPF93CBA",
+          "usageType": "USE2-Lambda-GB-Second-ARM",
+          "unit": "Lambda-GB-Second",
+          "beginRange": "7500000000",
+          "endRange": "18750000000",
+          "usd": "0.0000120001"
+        },
+        {
+          "sku": "CHGDQQ3YSPF93CBA",
+          "usageType": "USE2-Lambda-GB-Second-ARM",
+          "unit": "Lambda-GB-Second",
+          "beginRange": "18750000000",
+          "endRange": "Inf",
+          "usd": "0.0000106667"
+        },
+        {
+          "sku": "DMJPKNDPVRPMG2E7",
+          "usageType": "USE2-Request-ARM",
+          "unit": "Requests",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "usd": "0.0000002000"
+        }
+      ]
+    },
+    {
+      "service": "AmazonDynamoDB",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonDynamoDB/current/us-east-2/index.json",
+      "publicationDate": "2026-09-11T12:44:22Z",
+      "sha256": "6fb852c04a82fb5b92affa62d4b25d2c2e22f4ef6c961b49b98d42309ce73cf3",
+      "rates": [
+        {
+          "sku": "GGQSXTNTRBHRVS56",
+          "usageType": "USE2-WriteRequestUnits",
+          "unit": "WriteRequestUnits",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "usd": "0.0000006250"
+        },
+        {
+          "sku": "SGMZJPDKSWXTY4VE",
+          "usageType": "USE2-ReadRequestUnits",
+          "unit": "ReadRequestUnits",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "usd": "0.0000001250"
+        },
+        {
+          "sku": "GAHPNMT39TQ47AGG",
+          "usageType": "USE2-TimedStorage-ByteHrs",
+          "unit": "GB-Mo",
+          "beginRange": "0",
+          "endRange": "25",
+          "usd": "0.0000000000"
+        },
+        {
+          "sku": "GAHPNMT39TQ47AGG",
+          "usageType": "USE2-TimedStorage-ByteHrs",
+          "unit": "GB-Mo",
+          "beginRange": "25",
+          "endRange": "Inf",
+          "usd": "0.2500000000"
+        }
+      ]
+    },
+    {
+      "service": "AmazonS3",
+      "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/us-east-2/index.json",
+      "publicationDate": "2026-10-15T17:35:40Z",
+      "sha256": "52b93329ad3e132d8195b27b027907322a7a142fafef301d55073605826452da",
+      "rates": [
+        {
+          "sku": "YPGKVRB2EKTVDJDT",
+          "usageType": "USE2-TimedStorage-ByteHrs",
+          "unit": "GB-Mo",
+          "beginRange": "0",
+          "endRange": "51200",
+          "usd": "0.0230000000"
+        },
+        {
+          "sku": "YPGKVRB2EKTVDJDT",
+          "usageType": "USE2-TimedStorage-ByteHrs",
+          "unit": "GB-Mo",
+          "beginRange": "51200",
+          "endRange": "512000",
+          "usd": "0.0220000000"
+        },
+        {
+          "sku": "YPGKVRB2EKTVDJDT",
+          "usageType": "USE2-TimedStorage-ByteHrs",
+          "unit": "GB-Mo",
+          "beginRange": "512000",
+          "endRange": "Inf",
+          "usd": "0.0210000000"
+        },
+        {
+          "sku": "GJKK9PMSTKPNGZS9",
+          "usageType": "USE2-Requests-Tier1",
+          "unit": "Requests",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "usd": "0.0000050000"
+        },
+        {
+          "sku": "DJEKB32FV4HNZJZY",
+          "usageType": "USE2-Requests-Tier2",
+          "unit": "Requests",
+          "beginRange": "0",
+          "endRange": "Inf",
+          "usd": "0.0000004000"
+        }
+      ]
+    }
+  ]
+}
