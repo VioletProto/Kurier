@@ -9,5 +9,7 @@
   "readersReady": false,
   "backendReadersReady": false,
   "frontendReady": false,
-  "writes": 0
+  "writes": 0,
+  "releaseSourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "releaseManifestSha256": "920667777eb69cabfb7800910451062a18e6ff06ce22ad4fb543f96c78321dd6"
 }

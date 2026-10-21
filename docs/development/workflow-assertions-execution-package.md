@@ -1,5 +1,13 @@
 # Workflow assertions execution preparation
 
+**Historical preparation accepted at `c9f55d4980e24c1ec8d57e96a722fd06f7f0271f`.**
+Davian subsequently approved implementation of the controlled-fixture extension.
+The [fixture-inclusive final packet](workflow-assertions-fixture-review.md) now
+supersedes this document's release pins and H–L prerequisite status, preserving
+its campaign limits, activation procedure and deployment/runtime holds. The
+original manifest and artifacts are recorded in that accepted Git revision;
+the current manifest includes the approved fixture implementation.
+
 Davian accepted the deployment approach, temporary maintenance closure and
 rollback limitations in packet `0f38a19998c5e50f064b7fb588d0a099a8ba9ce3`.
 This continuation prepares clean artifacts, an equivalent read-only preview,

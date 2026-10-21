@@ -16,8 +16,12 @@ Davian accepted that deployment approach, including closure and rollback
 limitations. The [execution preparation package](../development/workflow-assertions-execution-package.md)
 pins clean artifacts and a fresh equivalent preview, provides a guarded
 read-only-default activator and bounds future runtime tests. Deployment, stage
-writes, activation and target requests remain held until that package is reviewed;
-the numeric controlled-fixture extension requires its own review.
+writes, activation and target requests remain held. Davian accepted that execution
+preparation at `c9f55d4980e24c1ec8d57e96a722fd06f7f0271f` and approved the
+controlled-fixture extension. The [fixture-inclusive final review](../development/workflow-assertions-fixture-review.md)
+records its local tests, refreshed clean release/preview and updated activator
+pins. Deployment, stage closure, activation, identity creation and live target
+requests remain held; the 28-step/two-identity/two-project/$1 campaign is unchanged.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

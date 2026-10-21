@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { verifyReleasePins } from "./lib/workflow-assertions-release.mjs";
 import {
   execute,
   projectionFields,
@@ -24,37 +25,12 @@ const bytesHash = (b) => createHash("sha256").update(b).digest("hex");
 const raw = readFileSync(
   new URL("docs/development/workflow-assertions-release.json", root),
 );
-const release = JSON.parse(raw);
 const baselineRaw = readFileSync(
   new URL("docs/development/workflow-assertions-reader-baseline.json", root),
 );
-if (
-  bytesHash(baselineRaw) !== release.readerBaselineSha256 ||
-  release.releaseSourceCommit !== "0f38a19998c5e50f064b7fb588d0a099a8ba9ce3" ||
-  release.applicationCommit !== "55cd061c0f6607037ebd61e200fe54ab296237c4" ||
-  release.artifactDirectory !==
-    ".build/workflow-assertions-release/0f38a19998c5e50f064b7fb588d0a099a8ba9ce3" ||
-  release.preview.packages.length !== 4
-)
-  throw Error("Pinned release/baseline mismatch.");
-for (const pkg of release.preview.packages) {
-  if (
-    ![
-      "UsersProjectsApi",
-      "EmptyProjectCleanup",
-      "CloudExecutionWorker",
-      "ExecutionControlledEndpoint",
-    ].includes(pkg.name) ||
-    bytesHash(
-      readFileSync(
-        new URL(`${release.artifactDirectory}/${pkg.name}/code.zip`, root),
-      ),
-    ) !== pkg.sha256 ||
-    release.packageBuilds.find((x) => x.name === pkg.name)?.vcsModified !==
-      false
-  )
-    throw Error("Clean pinned local release archive required.");
-}
+const release = verifyReleasePins(raw, baselineRaw, (relative) =>
+  readFileSync(new URL(relative, root)),
+);
 const git = (args) =>
   execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 const action = mode.slice(2);

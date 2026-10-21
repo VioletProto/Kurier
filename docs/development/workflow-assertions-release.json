@@ -1,7 +1,7 @@
 {
   "inventory": {
-    "sourceCommit": "55cd061c0f6607037ebd61e200fe54ab296237c4",
-    "checkedAt": "2026-10-20T18:40:49.347Z",
+    "sourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+    "checkedAt": "2026-10-21T02:22:15.307Z",
     "account": "747336059622",
     "nonRoot": true,
     "region": "us-east-2",
@@ -121,7 +121,7 @@
     "resourceChanges": 11,
     "resources": [
       {
-        "name": "CloudExecutionWorkerCode",
+        "name": "UsersProjectsApiCode",
         "type": "aws:s3/bucketObjectv2:BucketObjectv2",
         "operation": "replace",
         "changedProperties": ["key", "source", "versionId"]
@@ -133,25 +133,13 @@
         "changedProperties": ["key", "source", "versionId"]
       },
       {
-        "name": "CloudExecutionWorkerFunction",
+        "name": "UsersProjectsApiFunction",
         "type": "aws:lambda/function:Function",
         "operation": "update",
         "changedProperties": ["lastModified", "s3Key"]
       },
       {
         "name": "EmptyProjectCleanupFunction",
-        "type": "aws:lambda/function:Function",
-        "operation": "update",
-        "changedProperties": ["lastModified", "s3Key"]
-      },
-      {
-        "name": "UsersProjectsApiCode",
-        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
-        "operation": "replace",
-        "changedProperties": ["key", "source", "versionId"]
-      },
-      {
-        "name": "UsersProjectsApiFunction",
         "type": "aws:lambda/function:Function",
         "operation": "update",
         "changedProperties": ["lastModified", "s3Key"]
@@ -164,6 +152,18 @@
       },
       {
         "name": "ExecutionControlledEndpointFunction",
+        "type": "aws:lambda/function:Function",
+        "operation": "update",
+        "changedProperties": ["lastModified", "s3Key"]
+      },
+      {
+        "name": "CloudExecutionWorkerCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "operation": "replace",
+        "changedProperties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "CloudExecutionWorkerFunction",
         "type": "aws:lambda/function:Function",
         "operation": "update",
         "changedProperties": ["lastModified", "s3Key"]
@@ -216,31 +216,31 @@
     "packages": [
       {
         "name": "UsersProjectsApi",
-        "bytes": 9250902,
-        "sha256": "da71939d375ea757380f33444552917984823a94fa87847bcd02e19be324b4fb",
+        "bytes": 9251049,
+        "sha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
         "oldKey": "assets/UsersProjectsApi-code-cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e.zip",
-        "newKey": "assets/UsersProjectsApi-code-da71939d375ea757380f33444552917984823a94fa87847bcd02e19be324b4fb.zip"
+        "newKey": "assets/UsersProjectsApi-code-f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32.zip"
       },
       {
         "name": "EmptyProjectCleanup",
-        "bytes": 9250902,
-        "sha256": "da71939d375ea757380f33444552917984823a94fa87847bcd02e19be324b4fb",
+        "bytes": 9251049,
+        "sha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
         "oldKey": "assets/EmptyProjectCleanup-code-cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e.zip",
-        "newKey": "assets/EmptyProjectCleanup-code-da71939d375ea757380f33444552917984823a94fa87847bcd02e19be324b4fb.zip"
+        "newKey": "assets/EmptyProjectCleanup-code-f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32.zip"
       },
       {
         "name": "CloudExecutionWorker",
-        "bytes": 8684843,
-        "sha256": "9ab72e89f5366904c9e9516aa1dec05e04ddff020ac08cc3431d4db1ef57d436",
+        "bytes": 8687530,
+        "sha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
         "oldKey": "assets/CloudExecutionWorker-code-2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900.zip",
-        "newKey": "assets/CloudExecutionWorker-code-9ab72e89f5366904c9e9516aa1dec05e04ddff020ac08cc3431d4db1ef57d436.zip"
+        "newKey": "assets/CloudExecutionWorker-code-15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379.zip"
       },
       {
         "name": "ExecutionControlledEndpoint",
-        "bytes": 8684843,
-        "sha256": "9ab72e89f5366904c9e9516aa1dec05e04ddff020ac08cc3431d4db1ef57d436",
+        "bytes": 8687530,
+        "sha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
         "oldKey": "assets/ExecutionControlledEndpoint-code-2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900.zip",
-        "newKey": "assets/ExecutionControlledEndpoint-code-9ab72e89f5366904c9e9516aa1dec05e04ddff020ac08cc3431d4db1ef57d436.zip"
+        "newKey": "assets/ExecutionControlledEndpoint-code-15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379.zip"
       }
     ]
   },
@@ -286,9 +286,10 @@
     ],
     "releaseId": "bd511e3f9979d2ef7dd6b73d183dcf7620a423b62659ac89c64e4a1a08981cde"
   },
-  "releaseSourceCommit": "0f38a19998c5e50f064b7fb588d0a099a8ba9ce3",
-  "applicationCommit": "55cd061c0f6607037ebd61e200fe54ab296237c4",
-  "artifactDirectory": ".build/workflow-assertions-release/0f38a19998c5e50f064b7fb588d0a099a8ba9ce3",
+  "releaseSourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "applicationCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "assertionsImplementationCommit": "55cd061c0f6607037ebd61e200fe54ab296237c4",
+  "artifactDirectory": ".build/workflow-assertions-release/68d9f218225c7092a1e4fca0b66a21421d862a22",
   "packageBuilds": [
     {
       "name": "UsersProjectsApi",
@@ -298,11 +299,11 @@
       "cgoEnabled": false,
       "goarm64": "v8.0",
       "ldflags": "-s -w",
-      "vcsRevision": "0f38a19998c5e50f064b7fb588d0a099a8ba9ce3",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
       "vcsModified": false,
       "bootstrapBytes": 22741152,
-      "bootstrapSha256": "d1ca6c1a2f2a205451e4df5543d8c7863ec27b42ecc90da17e17263cd3eece4a",
-      "zipSha256": "da71939d375ea757380f33444552917984823a94fa87847bcd02e19be324b4fb"
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32"
     },
     {
       "name": "EmptyProjectCleanup",
@@ -312,11 +313,11 @@
       "cgoEnabled": false,
       "goarm64": "v8.0",
       "ldflags": "-s -w",
-      "vcsRevision": "0f38a19998c5e50f064b7fb588d0a099a8ba9ce3",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
       "vcsModified": false,
       "bootstrapBytes": 22741152,
-      "bootstrapSha256": "d1ca6c1a2f2a205451e4df5543d8c7863ec27b42ecc90da17e17263cd3eece4a",
-      "zipSha256": "da71939d375ea757380f33444552917984823a94fa87847bcd02e19be324b4fb"
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32"
     },
     {
       "name": "CloudExecutionWorker",
@@ -326,11 +327,11 @@
       "cgoEnabled": false,
       "goarm64": "v8.0",
       "ldflags": "-s -w",
-      "vcsRevision": "0f38a19998c5e50f064b7fb588d0a099a8ba9ce3",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
       "vcsModified": false,
       "bootstrapBytes": 21430432,
-      "bootstrapSha256": "c09642a07eb76f5ede4bf75385d7f2fee661410c100e9f1072aa8fb135d1f238",
-      "zipSha256": "9ab72e89f5366904c9e9516aa1dec05e04ddff020ac08cc3431d4db1ef57d436"
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379"
     },
     {
       "name": "ExecutionControlledEndpoint",
@@ -340,17 +341,18 @@
       "cgoEnabled": false,
       "goarm64": "v8.0",
       "ldflags": "-s -w",
-      "vcsRevision": "0f38a19998c5e50f064b7fb588d0a099a8ba9ce3",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
       "vcsModified": false,
       "bootstrapBytes": 21430432,
-      "bootstrapSha256": "c09642a07eb76f5ede4bf75385d7f2fee661410c100e9f1072aa8fb135d1f238",
-      "zipSha256": "9ab72e89f5366904c9e9516aa1dec05e04ddff020ac08cc3431d4db1ef57d436"
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379"
     }
   ],
   "readerBaselineSha256": "710fc11abae5abecc696402b4ee9be19e5c436c32a516c2b4fa324bef89033a2",
   "equivalentToAcceptedPreview": true,
+  "supersedesExecutionPreparation": "c9f55d4980e24c1ec8d57e96a722fd06f7f0271f",
   "sourceTrees": {
-    "services": "6845e5d57fcb747a5ae03a08a441d0e1e97d7e99",
+    "services": "6fe8d29a838d5c3ae8a14216a39f4f7d7592a05d",
     "apps": "281696959fb1bd82a9ddc62f067556d4ee10f306",
     "infra": "1657dec95552fc856308ef5537a710c857424f5a"
   },
@@ -366,5 +368,54 @@
       "services/request-runtime/go.mod": "a1d1b1e1b5cad391f044362101c1bb20d42dd23905eeef67ecb309968de29675",
       "services/request-runtime/go.sum": "58730b20987bf6b84b27522506a03686cce87600a04f742c66e64f1f71e36de3"
     }
+  },
+  "controlledFixtures": {
+    "schemaVersion": 1,
+    "auditFields": [
+      "kurierWorkflowFixture",
+      "fixtureId",
+      "mode",
+      "authorized",
+      "requestId"
+    ],
+    "responses": [
+      {
+        "mode": "assertions-values",
+        "status": 200,
+        "literalUtf8": "{\"precise\":0.10000000000000001,\"short\":0.1,\"exponent\":1E-01,\"min\":1e-308,\"max\":9007199254740991,\"zero\":-0.0,\"exists\":null,\"flag\":true,\"text\":\"public\"}",
+        "bodyBytes": 150,
+        "bodySha256": "be88eeacbd302fd531b18b44713578f9d2b3420b628f3595c2201baa5df4ddc8",
+        "requiresFixtureUUID": true,
+        "reflectsCallerInput": false,
+        "auditAuthorizedAlwaysFalse": true
+      },
+      {
+        "mode": "assertions-not-found",
+        "status": 404,
+        "literalUtf8": "{\"unavailable\":true}",
+        "bodyBytes": 20,
+        "bodySha256": "1bbc5eb53033fa10f526c0245b6032760000674c4a28b7df6dd4c2989bb39c52",
+        "requiresFixtureUUID": true,
+        "reflectsCallerInput": false,
+        "auditAuthorizedAlwaysFalse": true
+      }
+    ]
+  },
+  "campaignLimits": {
+    "plannedAdmittedSteps": 24,
+    "reservedAdmittedSteps": 4,
+    "maximumAdmittedSteps": 28,
+    "maximumTwoStepSubmissions": 14,
+    "maximumTargetSends": 28,
+    "disposableIdentities": 2,
+    "disposableProjects": 2,
+    "incrementalAllowanceUsd": "1.00",
+    "maximumApiCalls": 500,
+    "maximumStatusPolls": 240,
+    "minimumPollIntervalSeconds": 2,
+    "maximumAwsReads": 1500,
+    "windowHours": 2,
+    "cleanupObservationMinutes": 20,
+    "directFixtureProbes": 0
   }
 }
