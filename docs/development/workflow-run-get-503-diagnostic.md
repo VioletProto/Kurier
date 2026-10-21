@@ -172,8 +172,8 @@ the local fixture.
 
 ## Verification, release and review boundary
 
-`npm run test:workflow-poll` runs 16 deterministic policy tests, including HTTP
-date forms, minimum/Retry-After delays, persistent 503 bounds, other status
+`npm run test:workflow-poll` runs 17 deterministic policy tests, including HTTP
+date forms and two-digit-year/century boundaries, minimum/Retry-After delays, persistent 503 bounds, other status
 rejection, uncertain/malformed responses, shared limits, cleanup reserve/deadlines,
 durable-accounting failure, stop latching, parallel polls and write-route denial.
 It is included in `npm test`/`npm run verify` so CI exercises the correction.

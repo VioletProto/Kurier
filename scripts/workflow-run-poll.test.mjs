@@ -24,7 +24,7 @@ const success = (state = "completed") => ({
 
 function fixture(responses, options = {}) {
   let time = 0;
-  const epoch = Date.UTC(2026, 9, 21);
+  const epoch = options.epoch ?? Date.UTC(2026, 9, 21);
   const ledger = {
     startedAt: new Date(epoch).toISOString(),
     apiCalls: 0,
@@ -137,6 +137,27 @@ test("persistent503 stops after three additional attempts and cannot resume", as
   assert.deepEqual(f.waits, [2_000, 2_000, 4_000, 8_000]);
   await rejects(f.poll(), "latched-stop");
   assert.equal(f.calls.length, 4);
+});
+
+test("RFC850 years cannot turn a future wait into an early retry, including century rollover", async () => {
+  const future = fixture([
+    retryable("Monday, 21-Oct-75 00:00:11 GMT"),
+    success(),
+  ]);
+  await rejects(future.poll(), "retry-after-exceeds-bound");
+  assert.equal(future.calls.length, 1);
+  const past = fixture([
+    retryable("Friday, 21-Oct-94 00:00:11 GMT"),
+    success(),
+  ]);
+  await past.poll();
+  assert.deepEqual(past.waits, [2_000, 2_000]);
+  const rollover = fixture(
+    [retryable("Friday, 01-Jan-00 00:00:04 GMT"), success()],
+    { epoch: Date.UTC(2099, 11, 31, 23, 59, 57) },
+  );
+  await rollover.poll();
+  assert.deepEqual(rollover.waits, [2_000, 5_000]);
 });
 
 test("successful nonterminal reads reset only consecutive backoff, never total attempts", async () => {

@@ -51,12 +51,30 @@ function retryAfterMs(value, wallNow) {
     ];
     if (!shapes.some((s) => new RegExp(`^${s}$`).test(text)))
       stop("invalid-retry-after");
-    // asctime omits the timezone but HTTP-date is always UTC. Date.parse would
-    // otherwise interpret that form in the operator machine's local timezone.
-    delay = Math.max(
-      0,
-      Date.parse(text.endsWith("GMT") ? text : `${text} GMT`) - wallNow,
+    let date;
+    const oldDate = text.match(
+      /^[A-Za-z]+, (\d{2})-([A-Za-z]{3})-(\d{2}) (\d{2}:\d{2}:\d{2}) GMT$/,
     );
+    if (oldDate) {
+      // RFC850 years use a rolling50-year future boundary, not Date.parse's
+      // fixed two-digit-year cutoff. Never mistake a future hint for the past.
+      const currentYear = new Date(wallNow).getUTCFullYear();
+      let year =
+        currentYear + ((Number(oldDate[3]) - (currentYear % 100) + 100) % 100);
+      const parse = () =>
+        Date.parse(`${oldDate[1]} ${oldDate[2]} ${year} ${oldDate[4]} GMT`);
+      const boundary = new Date(wallNow);
+      boundary.setUTCFullYear(currentYear + 50);
+      date = parse();
+      if (date > boundary.getTime()) {
+        year -= 100;
+        date = parse();
+      }
+    } else {
+      // asctime omits the timezone but HTTP-date is always UTC.
+      date = Date.parse(text.endsWith("GMT") ? text : `${text} GMT`);
+    }
+    delay = Math.max(0, date - wallNow);
   }
   if (!Number.isFinite(delay)) stop("invalid-retry-after");
   if (delay > workflowPollLimits.maximumDelayMs)
