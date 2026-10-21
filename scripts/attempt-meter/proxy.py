@@ -7,12 +7,26 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from budget import Budget, MeterStop
+from cleanup import parent_proof, cleanup_allowed, validate_scope
 from mitmproxy import http
 
 
 class AttemptMeter:
     def __init__(self):
-        self.budget = Budget(os.environ["KURIER_METER_LEDGER"])
+        parent = os.environ.get("KURIER_METER_CLEANUP_PARENT")
+        self.cleanup_scope = (
+            validate_scope(
+                json.load(
+                    open(os.environ["KURIER_METER_CLEANUP_SCOPE"], encoding="utf8")
+                )
+            )
+            if parent
+            else None
+        )
+        self.budget = Budget(
+            os.environ["KURIER_METER_LEDGER"],
+            cleanup_parent=parent_proof(parent) if parent else None,
+        )
 
     def request(self, flow):
         try:
@@ -32,7 +46,35 @@ class AttemptMeter:
                 open(os.environ["KURIER_METER_CONTROL"], encoding="utf8")
             )
             allowed = control.get("writeCategories", [])
-            if category == "aws" and write:
+            if self.cleanup_scope:
+                if category == "static" or (
+                    category == "api"
+                    and not cleanup_allowed(
+                        category,
+                        request.method,
+                        request.host,
+                        request.path,
+                        operation,
+                        request.raw_content or b"",
+                        self.cleanup_scope,
+                    )
+                ):
+                    self.budget.stop("cleanup-only-scope")
+                if write:
+                    allowed = (
+                        [category]
+                        if cleanup_allowed(
+                            category,
+                            request.method,
+                            request.host,
+                            request.path,
+                            operation,
+                            request.raw_content or b"",
+                            self.cleanup_scope,
+                        )
+                        else []
+                    )
+            if category == "aws" and write and not self.cleanup_scope:
                 if operation not in control.get("awsWriteOperations", []):
                     allowed = []
                 # IAM/bootstrap/account/plan changes are never part of rollout.

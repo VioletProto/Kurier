@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = Path(__file__).resolve().parent
@@ -61,6 +62,10 @@ class Origin(http.server.BaseHTTPRequestHandler):
             result["LastEvaluatedKey"] = {"PK": {"S": "next"}, "SK": {"S": "next"}}
         self.reply(200, json.dumps(result))
 
+    def do_DELETE(self):
+        counts["api-delete"] += 1
+        self.reply(202, '{"data":{"deletionOperation":{"operationId":"local"}}}')
+
     def do_GET(self):
         if "list-type=2" in self.path:
             counts["node-sdk"] += 1
@@ -107,7 +112,7 @@ def unused_port():
         return s.getsockname()[1]
 
 
-def main():
+def main(mode="normal"):
     origin = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Origin)
     threading.Thread(target=origin.serve_forever, daemon=True).start()
     processes = []
@@ -122,6 +127,51 @@ def main():
             KURIER_METER_CONTROL=str(d / "control.json"),
             KURIER_METER_LOCAL_ORIGIN=str(origin.server_port),
         )
+        if mode == "cleanup":
+            parent = d / "parent.jsonl"
+            prior = {"api": 62, "aws": 766, "poll": 7, "static": 9}
+            parent.write_text(
+                "\n".join(
+                    json.dumps(e)
+                    for e in [
+                        {"event": "meter-created"},
+                        {
+                            "event": "attempt",
+                            "sequence": 2,
+                            "at": time.time() - 300,
+                            "write": False,
+                            "counts": prior,
+                        },
+                        {
+                            "event": "outcome",
+                            "attempt": 2,
+                            "status": 200,
+                            "transportError": False,
+                        },
+                        {"event": "stop", "reason": "write-held", "counts": prior},
+                    ]
+                )
+                + "\n"
+            )
+            scope = d / "scope.json"
+            scope.write_text(
+                json.dumps(
+                    {
+                        "projects": [
+                            "11111111-1111-4111-8111-111111111111",
+                            "22222222-2222-4222-8222-222222222222",
+                        ],
+                        "users": [
+                            "kurier-assertions-11111111-1111-4111-8111-111111111111-0@example.invalid",
+                            "kurier-assertions-11111111-1111-4111-8111-111111111111-1@example.invalid",
+                        ],
+                    }
+                )
+            )
+            env.update(
+                KURIER_METER_CLEANUP_PARENT=str(parent),
+                KURIER_METER_CLEANUP_SCOPE=str(scope),
+            )
         proxy = subprocess.Popen(
             [
                 str(MITM),
@@ -233,6 +283,55 @@ def main():
             return result.stdout
 
         try:
+            if mode == "preflight":
+                browser = """const{chromium}=await import('@playwright/test');const b=await chromium.launch({headless:true,proxy:{server:'http://127.0.0.1:18080'}});try{const c=await b.newContext({ignoreHTTPSErrors:true});const p=await c.newPage();await p.goto('https://d2kpq905qyh9zg.cloudfront.net');const blocked=await p.evaluate(async()=>{try{await fetch('https://cognito-idp.us-east-2.amazonaws.com/',{method:'POST',headers:{'Content-Type':'application/x-amz-json-1.1','X-Amz-Target':'AWSCognitoIdentityProviderService.InitiateAuth'},body:'{}'});return false}catch{return true}});if(!blocked)throw Error('expected known preflight gap');await c.close()}finally{await b.close()}"""
+                run(["node", "--input-type=module", "-e", browser])
+                log = [
+                    json.loads(line)
+                    for line in (d / "ledger.jsonl").read_text().splitlines()
+                ]
+                assert any(e.get("reason") == "write-held" for e in log)
+                assert not any(e.get("category") == "aws" for e in log)
+                assert counts["cli"] == 0 and counts["api-write"] == 0
+                print(
+                    json.dumps(
+                        {
+                            "browserCognitoPreflightHeldLocally": True,
+                            "awsCalls": 0,
+                            "forwardedAuthWrites": 0,
+                        }
+                    )
+                )
+                return
+            if mode == "cleanup":
+                raw = parent.read_bytes()
+                client = """const root='https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com/api/v1/projects/11111111-1111-4111-8111-111111111111';for(const [method,status]of [['GET',200],['DELETE',202],['POST',599]]){const r=await fetch(root,{method});if(r.status!==status)throw Error('cleanup transport guard')}"""
+                run(["node", "--input-type=module", "-e", client])
+                log = [
+                    json.loads(line)
+                    for line in (d / "ledger.jsonl").read_text().splitlines()
+                ]
+                attempts = [e for e in log if e["event"] == "attempt"]
+                assert len(attempts) == 2 and attempts[-1]["counts"] == {
+                    **prior,
+                    "api": 64,
+                }
+                assert counts["api-delete"] == 1 and counts["api-write"] == 0
+                assert any(e.get("reason") == "cleanup-only-scope" for e in log)
+                assert parent.read_bytes() == raw
+                print(
+                    json.dumps(
+                        {
+                            "cleanupOnlyTransport": True,
+                            "inheritedApiCalls": 62,
+                            "inheritedAwsAttempts": 766,
+                            "campaignPostBlocked": True,
+                            "parentUnchanged": True,
+                            "awsCalls": 0,
+                        }
+                    )
+                )
+                return
             run(
                 [
                     "node",
@@ -346,4 +445,4 @@ func main(){c:=context.Background();cfg,e:=config.LoadDefaultConfig(c,config.Wit
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1] if len(sys.argv) > 1 else "normal")

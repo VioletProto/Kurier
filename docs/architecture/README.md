@@ -48,6 +48,15 @@ billing remain unknown. The [local diagnosis and GET-only polling correction](..
 reproduces stale transactional-read rejection and a successful fresh read,
 without establishing the historical cause. Its bounded operator retry helper
 changes no application release and authorizes no new live execution.
+Davian accepted that reader correction and authorized one final attempt. The
+[final rollout record](../development/workflow-assertions-final-rollout.md)
+reports the unchanged pinned release deployed and active at version 15,
+savedRequests8/assertions1, with preserved generation and verified IAM/platform
+controls. Genuine A–G passed; a fail-closed browser transport denial stopped
+execution before H admission. Both provider users and the second project are
+proved cleaned; the first physical cascade and final post-cleanup accounting
+remain unverified within the bounded window. All live calls stopped. No campaign
+restart or further execution is authorized by unused admission capacity.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

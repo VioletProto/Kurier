@@ -42,3 +42,9 @@ Local verification: full `npm run verify`;10meter budget tests;18Node polling an
 coordinator tests; isolated actual CLI/Go/Node/browser transport regression;
 Python formatting and core lint. Trello synchronization currently fails with
 “MCP authentication required.” Runtime results will be published separately.
+
+The [final rollout result](workflow-assertions-final-rollout.md) supersedes this
+preparation status. Deployment/activation completed, A–G passed, H–L stopped
+before admission, and bounded cleanup left one physical-cascade proof and final
+accounting verification outstanding. The initial browser GET transport test did
+not cover Cognito CORS preflights; that gap was reproduced locally after the stop.

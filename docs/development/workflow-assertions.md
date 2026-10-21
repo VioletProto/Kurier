@@ -10,6 +10,12 @@ preview or capability mutation was performed by this implementation task.
 The implementation branch is `feat/workflow-assertions`, based on that accepted
 review commit. Deployment state is not inferred from merged/published code.
 
+The later authorized [final rollout](workflow-assertions-final-rollout.md)
+deployed the unchanged pinned release and activated assertions at version 15.
+Genuine A–G passed, then the browser transport guard stopped H–L before admission.
+Its bounded cleanup and remaining physical/accounting verification gaps are
+recorded there; the original implementation-only holds above are historical.
+
 ## Implemented behavior
 
 Workflow steps accept up to eight revisioned assertions: one optional final

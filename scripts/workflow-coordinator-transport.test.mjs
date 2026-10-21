@@ -98,3 +98,37 @@ test("actual coordinator reserve wiring blocks GET before transport and preserve
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("cleanup budget uses frozen parent clock and counters before its first exchange", () => {
+  const directory = mkdtempSync(tmpdir() + "/kurier-cleanup-budget-");
+  try {
+    const ledger = {
+      startedAt: new Date(100000).toISOString(),
+      apiCalls: 62,
+      polls: 7,
+    };
+    const path = directory + "/attempts.jsonl";
+    writeFileSync(
+      path,
+      JSON.stringify({
+        event: "meter-created",
+        cleanupParent: {
+          firstAttemptAt: 100,
+          counts: { api: 62, aws: 766, poll: 7, static: 9 },
+        },
+      }) + "\n",
+    );
+    const budget = coordinatorBudget({
+      ledger,
+      meterPath: path,
+      now: () => 200000,
+    });
+    assert.throws(() => budget(), /Cleanup-only/);
+    budget({ cleanup: true });
+    assert.equal(ledger.meterCounts.aws, 766);
+    writeFileSync(path, readFileSync(path) + '{"event":"stop"}\n');
+    assert.throws(() => budget({ cleanup: true }));
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});

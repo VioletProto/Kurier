@@ -21,6 +21,7 @@ class Budget:
         aws_limit=1500,
         poll_limit=240,
         seconds=7200,
+        cleanup_parent=None,
     ):
         self.clock = clock
         self.elapsed_clock = time.monotonic if clock is time.time else clock
@@ -29,6 +30,16 @@ class Budget:
         self.limits = dict(api=api_limit, aws=aws_limit, poll=poll_limit, static=200)
         self.seconds = seconds
         self.counts = dict(api=0, aws=0, poll=0, static=0)
+        self.cleanup_parent = cleanup_parent
+        if cleanup_parent:
+            self.counts = cleanup_parent["counts"].copy()
+            elapsed = self.clock() - cleanup_parent["firstAttemptAt"]
+            if elapsed < 0 or elapsed >= seconds:
+                raise MeterStop("cleanup-parent-window-invalid")
+            self.started = self.elapsed_clock() - elapsed
+            self.seconds = min(seconds, elapsed + 1200)
+            self.limits["api"] = min(api_limit, self.counts["api"] + 60)
+            self.limits["aws"] = min(aws_limit, self.counts["aws"] + 200)
         self.stopped = False
         self.poll_times = {}
         self.sequence = 0
@@ -44,6 +55,7 @@ class Budget:
                 priorKnownSecondAttemptAwsCharges=574,
                 priorAwsReads=None,
                 priorBillingUsd=None,
+                cleanupParent=cleanup_parent,
             )
         )
 

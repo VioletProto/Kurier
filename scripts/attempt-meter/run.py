@@ -69,7 +69,7 @@ def events(directory):
     ]
 
 
-def serve(directory):
+def serve(directory, cleanup_parent=None, cleanup_scope=None):
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
     write_json(directory / "control.json", PHASES["inspect"])
     processes = []
@@ -99,6 +99,15 @@ def serve(directory):
         KURIER_METER_LEDGER=str(directory / "attempts.jsonl"),
         KURIER_METER_CONTROL=str(directory / "control.json"),
     )
+    if cleanup_parent:
+        from cleanup import parent_proof, validate_scope
+
+        parent_proof(cleanup_parent)
+        validate_scope(json.loads(cleanup_scope.read_text()))
+        env.update(
+            KURIER_METER_CLEANUP_PARENT=str(cleanup_parent),
+            KURIER_METER_CLEANUP_SCOPE=str(cleanup_scope),
+        )
 
     def terminate(_signum=None, _frame=None):
         raise KeyboardInterrupt
@@ -183,13 +192,23 @@ def serve(directory):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["serve", "exec", "phase", "stats"])
+    parser.add_argument(
+        "action", choices=["serve", "serve-cleanup", "exec", "phase", "stats"]
+    )
     parser.add_argument("directory", type=Path)
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     directory = args.directory.resolve()
     if args.action == "serve":
         return serve(directory)
+    if args.action == "serve-cleanup":
+        if len(args.command) != 2:
+            raise RuntimeError(
+                "Stopped parent ledger and explicit cleanup scope required"
+            )
+        return serve(
+            directory, Path(args.command[0]).resolve(), Path(args.command[1]).resolve()
+        )
     state = json.loads((directory / "state.json").read_text())
     for pid in [state["proxyPid"], state["relayPid"]]:
         os.kill(pid, 0)
