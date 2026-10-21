@@ -127,6 +127,8 @@ def main(mode="normal", scenario=None):
             KURIER_METER_CONTROL=str(d / "control.json"),
             KURIER_METER_LOCAL_ORIGIN=str(origin.server_port),
         )
+        if mode == "hl":
+            env["KURIER_METER_HL_ONLY"] = "1"
         if mode == "verify":
             env["KURIER_METER_VERIFY_ONLY"] = "1"
         if mode == "cleanup":

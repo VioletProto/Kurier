@@ -62,6 +62,12 @@ proves the first project's current physical cleanup and current accounting
 consistency. It preserves the missing historical readbacks. Collector corrections
 and the complete pinned-browser authentication flow passed local metered tests;
 H–L remain held, with no redeployment or A–G replay.
+Davian subsequently authorized the H–L-only continuation from `2c9c24b`, with one
+additional disposable owner/project and the retained bounds. Its
+[preflight record](../development/workflow-assertions-hl-rollout.md) reports a stop
+before resource creation: stage monthly count22/version52/reserved3302 differs
+from the retained count20/version48/reserved0. Attribution is unestablished;
+H–L remain unperformed, with known campaign totals18steps/16sends unchanged.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

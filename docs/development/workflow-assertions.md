@@ -19,6 +19,9 @@ The subsequent [focused verification](workflow-assertions-cleanup-verification.m
 closes current physical cleanup verification and corrects operator collection
 and browser metering locally. Missing historical observations remain missing,
 and H–L remain held.
+The later authorized [H–L-only preflight](workflow-assertions-hl-rollout.md)
+stopped on changed stage accounting before creating resources or admitting work.
+It adds no campaign steps/sends; the changed global quota usage is unattributed.
 
 ## Implemented behavior
 

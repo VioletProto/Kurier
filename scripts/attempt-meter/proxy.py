@@ -14,6 +14,8 @@ from mitmproxy import http
 
 class AttemptMeter:
     def __init__(self):
+        self.hl_only = os.environ.get("KURIER_METER_HL_ONLY") == "1"
+        self.hl_creations = set()
         self.verify_only = os.environ.get("KURIER_METER_VERIFY_ONLY") == "1"
         parent = os.environ.get("KURIER_METER_CLEANUP_PARENT")
         self.cleanup_scope = (
@@ -48,6 +50,22 @@ class AttemptMeter:
                     },
                 }
                 if self.verify_only
+                else {
+                    "history": {
+                        "purpose": "H-L-only-continuation",
+                        "priorSteps": 18,
+                        "priorSends": 16,
+                        "priorIdentitiesAndProjects": 6,
+                        "priorKnownApiCalls": 116,
+                        "priorKnownPolls": 11,
+                        "priorKnownFinalAttemptAwsCharges": 917,
+                        "priorKnownSecondAttemptAwsCharges": 574,
+                        "priorCleanupVerificationAwsCharges": 20,
+                        "priorAwsReads": None,
+                        "priorBillingUsd": None,
+                    }
+                }
+                if self.hl_only
                 else {}
             ),
         )
@@ -118,6 +136,24 @@ class AttemptMeter:
                     ("iam.", "organizations.", "servicequotas.", "freetier.")
                 ):
                     allowed = []
+            if self.hl_only and category == "aws" and write:
+                if operation not in (
+                    "CreateOAuth2Token",
+                    "InitiateAuth",
+                    "RespondToAuthChallenge",
+                    "RevokeToken",
+                    "GetTokensFromRefreshToken",
+                    "AdminCreateUser",
+                    "AdminSetUserPassword",
+                    "AdminUserGlobalSignOut",
+                    "AdminDeleteUser",
+                ):
+                    self.budget.stop("H-L-resource-write-forbidden")
+                if operation == "AdminCreateUser":
+                    # Count before forwarding; even an uncertain outcome cannot replay.
+                    if self.hl_creations:
+                        self.budget.stop("H-L-single-disposable-identity")
+                    self.hl_creations.add("creation-attempted")
             key = hashlib.sha256(
                 (request.method + request.host + request.path).encode()
             ).digest()

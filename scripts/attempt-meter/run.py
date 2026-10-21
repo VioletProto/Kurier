@@ -69,7 +69,9 @@ def events(directory):
     ]
 
 
-def serve(directory, cleanup_parent=None, cleanup_scope=None, verify_only=False):
+def serve(
+    directory, cleanup_parent=None, cleanup_scope=None, verify_only=False, hl_only=False
+):
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
     write_json(directory / "control.json", PHASES["inspect"])
     processes = []
@@ -101,6 +103,8 @@ def serve(directory, cleanup_parent=None, cleanup_scope=None, verify_only=False)
     )
     if verify_only:
         env["KURIER_METER_VERIFY_ONLY"] = "1"
+    if hl_only:
+        env["KURIER_METER_HL_ONLY"] = "1"
     if cleanup_parent:
         from cleanup import parent_proof, validate_scope
 
@@ -174,6 +178,7 @@ def serve(directory, cleanup_parent=None, cleanup_scope=None, verify_only=False)
                 "loginCacheFile": str(cache_file),
                 "acceptedExecutionPacket": "f3a698d565fa29e99cd7f89517252994c32e44ef",
                 "verifyOnly": verify_only,
+                "hlOnly": hl_only,
             },
         )
         print(
@@ -197,7 +202,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "action",
-        choices=["serve", "serve-cleanup", "serve-verify", "exec", "phase", "stats"],
+        choices=[
+            "serve",
+            "serve-cleanup",
+            "serve-verify",
+            "serve-hl",
+            "exec",
+            "phase",
+            "stats",
+        ],
     )
     parser.add_argument("directory", type=Path)
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -205,6 +218,10 @@ def main():
     directory = args.directory.resolve()
     if args.action == "serve":
         return serve(directory)
+    if args.action == "serve-hl":
+        if args.command:
+            raise RuntimeError("Fixed H-L continuation scope required")
+        return serve(directory, hl_only=True)
     if args.action == "serve-verify":
         if args.command:
             raise RuntimeError(
@@ -240,6 +257,11 @@ def main():
     if args.action == "phase":
         if state.get("verifyOnly"):
             raise RuntimeError("Verification meter cannot enable write phases")
+        if state.get("hlOnly") and (
+            len(args.command) != 1
+            or args.command[0] not in ("inspect", "seed", "runtime", "cleanup")
+        ):
+            raise RuntimeError("H-L cannot close, deploy or activate")
         if len(args.command) != 1 or args.command[0] not in PHASES:
             raise RuntimeError("Explicit known phase required")
         write_json(directory / "control.json", PHASES[args.command[0]])

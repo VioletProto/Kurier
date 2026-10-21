@@ -1,0 +1,384 @@
+{
+  "kind": "kurier-H-L-stopped-preflight-v1",
+  "authorization": "H-L-only continuation from 2c9c24ba68e4876d4049618478c534ad528f2a6d",
+  "status": "stopped-prerequisite-drift",
+  "coordinator": {
+    "kind": "kurier-assertions-H-L-v1",
+    "authorization": "H-L-only continuation from 2c9c24ba68e4876d4049618478c534ad528f2a6d",
+    "tag": "6e8da378-9b31-4a8b-8a5d-abb88c4a16f6",
+    "users": [],
+    "projects": [],
+    "runs": [],
+    "events": [],
+    "apiCalls": 0,
+    "polls": 0,
+    "awsReads": 7,
+    "admittedSteps": 18,
+    "expectedSends": 16,
+    "prior": {
+      "admittedSteps": 18,
+      "targetSends": 16,
+      "identitiesCreatedAndCleaned": 6,
+      "projectsCreatedAndCleaned": 6,
+      "knownApiCalls": 116,
+      "knownPolls": 11,
+      "knownSecondAttemptAwsCharges": 574,
+      "knownFinalAttemptAwsCharges": 917,
+      "cleanupVerificationAwsCharges": 20,
+      "awsReadTotal": null,
+      "billedIncrementalUsd": null
+    },
+    "startedAt": "2026-10-21T23:29:56.399Z",
+    "meterCounts": {
+      "api": 0,
+      "aws": 47,
+      "poll": 0,
+      "static": 0
+    },
+    "stoppedAt": "2026-10-21T23:30:46.896Z",
+    "stopReason": "Retained accounting drift before campaign"
+  },
+  "readOnlyDiagnostic": {
+    "kind": "kurier-H-L-preflight-accounting-drift-v1",
+    "observedAt": "2026-10-21T23:31:20.939Z",
+    "retainedSnapshotSha256": "739508d26d9b62807892fac3d4a4254a66eb4ea563a2864fb69ca58f340c013a",
+    "current": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "version": {
+            "N": "52"
+          },
+          "SK": {
+            "S": "QUOTA"
+          },
+          "storageReservedBytes": {
+            "N": "3302"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "count": {
+            "N": "22"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "version": {
+            "N": "0"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          }
+        },
+        {
+          "count": {
+            "N": "14"
+          },
+          "version": {
+            "N": "6"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "U#b8b36faf-2c6c-4618-9351-9cacf513a4df"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "0"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "PK": {
+            "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "a61b2e5f27577c2df5b1ad6fde27372f24102311d412a07dc284425404ad1538"
+    },
+    "stage": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "8"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "15"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "workflowAssertionsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    },
+    "stageMatchesRetained": true,
+    "differences": [
+      {
+        "key": "STAGE#dev-api/QUOTA",
+        "retained": {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          },
+          "count": {
+            "N": "20"
+          },
+          "version": {
+            "N": "48"
+          }
+        },
+        "current": {
+          "version": {
+            "N": "52"
+          },
+          "SK": {
+            "S": "QUOTA"
+          },
+          "storageReservedBytes": {
+            "N": "3302"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "count": {
+            "N": "22"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          }
+        }
+      }
+    ],
+    "identitiesCreated": 0,
+    "projectsCreated": 0,
+    "admittedSteps": 0,
+    "targetSends": 0,
+    "causeEstablished": false
+  },
+  "meter": {
+    "attempts": 54,
+    "outcomes": 54,
+    "counts": {
+      "api": 0,
+      "aws": 54,
+      "poll": 0,
+      "static": 0
+    },
+    "firstAttemptAt": 1792625396.3995085,
+    "lastOutcomeAt": 1792625480.8657033,
+    "elapsedSeconds": 84.466195,
+    "operations": {
+      "GetCallerIdentity": 2,
+      "GET": 14,
+      "ListRolePolicies": 4,
+      "ListAttachedRolePolicies": 4,
+      "GetRolePolicy": 3,
+      "GetPolicy": 4,
+      "GetPolicyVersion": 4,
+      "GetRole": 4,
+      "GetAccountPlanState": 1,
+      "DescribeRule": 1,
+      "ListTargetsByRule": 1,
+      "GetItem": 2,
+      "Query": 10
+    },
+    "allOutcomesAcknowledged200": true,
+    "writes": 0,
+    "stops": [],
+    "ledger": "workflow-assertions-hl-attempts.jsonl",
+    "ledgerSha256": "50318328c26aecc98f776e41768931d3d693c23a3b103c8bbf2f7b5282fdece1"
+  },
+  "limits": {
+    "seconds": 7200,
+    "cleanupReserveSeconds": 1200,
+    "apiCalls": 500,
+    "polls": 240,
+    "awsAttempts": 1500,
+    "proceduralIncrementalUsd": 1,
+    "additionalIdentitiesAndProjects": 1,
+    "newAdmittedSteps": 10,
+    "expectedNewSends": 8,
+    "reserveSubmissions": 0
+  },
+  "results": {
+    "H": "not-admitted",
+    "I": "not-admitted",
+    "J": "not-admitted",
+    "K": "not-admitted",
+    "L": "not-admitted",
+    "identitiesCreated": 0,
+    "projectsCreated": 0,
+    "newAdmittedSteps": 0,
+    "newTargetSends": 0,
+    "cumulativeKnownSteps": 18,
+    "cumulativeKnownSends": 16,
+    "cumulativeIdentitiesProjects": 6
+  },
+  "localVerification": {
+    "repositoryVerify": true,
+    "pythonUnitCases": 16,
+    "H-LAdmissionPolicy": true,
+    "realMeterSingleIdentityFence": true,
+    "stageWriteDenialDespiteChangedPhase": true,
+    "completePinnedBrowserFixtureAuthentication": true,
+    "fixtureCognitoOptions": 4,
+    "fixtureCognitoPosts": 4,
+    "localRealAwsCalls": 0
+  },
+  "localCleanup": {
+    "coordinatorExited": true,
+    "meterExited": true,
+    "relayAndProxyAbsent": true,
+    "temporaryCaRemoved": true,
+    "applicationResourceCleanupRequired": false
+  },
+  "gaps": [
+    "Current stage quota changes are unattributed; no claim of historical cause or H-L usage",
+    "Full platform check passed in RAM before accounting rejection; its detailed snapshot was not persisted by the incomplete preflight",
+    "Hosted-byte and queue checks occur after accounting and were not reached",
+    "H-L remain unperformed; no deployment or A-G replay occurred",
+    "Historical missing readbacks, first-attempt read totals and all actual billing totals remain unknown"
+  ],
+  "operatorObservations": {
+    "platformAndPinnedReaderCheckPassedInMemory": true,
+    "laterAccountingGuardStoppedBeforeResourceCreation": true
+  },
+  "independentlyRetainedReadbacks": [
+    "fresh current accounting projection",
+    "fresh stage marker",
+    "metered request/outcome ledger"
+  ]
+}
