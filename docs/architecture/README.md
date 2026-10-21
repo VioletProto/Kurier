@@ -57,6 +57,11 @@ execution before H admission. Both provider users and the second project are
 proved cleaned; the first physical cascade and final post-cleanup accounting
 remain unverified within the bounded window. All live calls stopped. No campaign
 restart or further execution is authorized by unused admission capacity.
+The later [focused cleanup verification](../development/workflow-assertions-cleanup-verification.md)
+proves the first project's current physical cleanup and current accounting
+consistency. It preserves the missing historical readbacks. Collector corrections
+and the complete pinned-browser authentication flow passed local metered tests;
+H–L remain held, with no redeployment or A–G replay.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

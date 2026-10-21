@@ -8,11 +8,13 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 from budget import Budget, MeterStop
 from cleanup import parent_proof, cleanup_allowed, validate_scope
+from cognito import held_diagnostics
 from mitmproxy import http
 
 
 class AttemptMeter:
     def __init__(self):
+        self.verify_only = os.environ.get("KURIER_METER_VERIFY_ONLY") == "1"
         parent = os.environ.get("KURIER_METER_CLEANUP_PARENT")
         self.cleanup_scope = (
             validate_scope(
@@ -26,11 +28,34 @@ class AttemptMeter:
         self.budget = Budget(
             os.environ["KURIER_METER_LEDGER"],
             cleanup_parent=parent_proof(parent) if parent else None,
+            **(
+                {
+                    "aws_limit": 100,
+                    "api_limit": 0,
+                    "poll_limit": 0,
+                    "seconds": 600,
+                    "history": {
+                        "purpose": "focused-read-only-cleanup-verification",
+                        "priorSteps": 18,
+                        "priorSends": 16,
+                        "priorIdentitiesAndProjects": 6,
+                        "priorKnownApiCalls": 116,
+                        "priorKnownPolls": 11,
+                        "priorKnownFinalAttemptAwsCharges": 917,
+                        "priorKnownSecondAttemptAwsCharges": 574,
+                        "priorAwsReads": None,
+                        "priorBillingUsd": None,
+                    },
+                }
+                if self.verify_only
+                else {}
+            ),
         )
 
     def request(self, flow):
+        request = flow.request
+        diagnostic = held_diagnostics(request.method, request.host)
         try:
-            request = flow.request
             if request.scheme != "https" or request.port != 443:
                 self.budget.stop("insecure-origin")
             category, operation, write, poll = self.budget.classify(
@@ -40,12 +65,23 @@ class AttemptMeter:
                 request.headers,
                 request.raw_content or b"",
             )
+            diagnostic = held_diagnostics(
+                request.method, request.host, category, operation
+            )
+            if self.verify_only and (
+                category != "aws"
+                or operation == "CognitoAuthPreflight"
+                or (write and operation != "CreateOAuth2Token")
+            ):
+                self.budget.stop("verification-read-only")
             # Default read-only. The explicit phase file is non-secret local
             # operator state; AWS stage writes still use the reviewed activator.
             control = json.load(
                 open(os.environ["KURIER_METER_CONTROL"], encoding="utf8")
             )
             allowed = control.get("writeCategories", [])
+            if self.verify_only:
+                allowed = ["aws"] if operation == "CreateOAuth2Token" else []
             if self.cleanup_scope:
                 if category == "static" or (
                     category == "api"
@@ -104,7 +140,16 @@ class AttemptMeter:
                     "127.0.0.1",
                     int(test_origin),
                 )
-        except (MeterStop, OSError, ValueError, KeyError):
+        except (MeterStop, OSError, ValueError, KeyError) as error:
+            self.budget.record(
+                {
+                    "event": "held-request",
+                    **diagnostic,
+                    "reason": str(error)
+                    if isinstance(error, MeterStop)
+                    else "meter-input-or-persistence-failure",
+                }
+            )
             self.budget.stopped = True
             flow.response = http.Response.make(
                 599, b'{"meterStopped":true}', {"Content-Type": "application/json"}

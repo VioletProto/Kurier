@@ -69,7 +69,7 @@ def events(directory):
     ]
 
 
-def serve(directory, cleanup_parent=None, cleanup_scope=None):
+def serve(directory, cleanup_parent=None, cleanup_scope=None, verify_only=False):
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
     write_json(directory / "control.json", PHASES["inspect"])
     processes = []
@@ -99,6 +99,8 @@ def serve(directory, cleanup_parent=None, cleanup_scope=None):
         KURIER_METER_LEDGER=str(directory / "attempts.jsonl"),
         KURIER_METER_CONTROL=str(directory / "control.json"),
     )
+    if verify_only:
+        env["KURIER_METER_VERIFY_ONLY"] = "1"
     if cleanup_parent:
         from cleanup import parent_proof, validate_scope
 
@@ -171,6 +173,7 @@ def serve(directory, cleanup_parent=None, cleanup_scope=None):
                 "relayPid": relay.pid,
                 "loginCacheFile": str(cache_file),
                 "acceptedExecutionPacket": "f3a698d565fa29e99cd7f89517252994c32e44ef",
+                "verifyOnly": verify_only,
             },
         )
         print(
@@ -193,7 +196,8 @@ def serve(directory, cleanup_parent=None, cleanup_scope=None):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "action", choices=["serve", "serve-cleanup", "exec", "phase", "stats"]
+        "action",
+        choices=["serve", "serve-cleanup", "serve-verify", "exec", "phase", "stats"],
     )
     parser.add_argument("directory", type=Path)
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -201,6 +205,12 @@ def main():
     directory = args.directory.resolve()
     if args.action == "serve":
         return serve(directory)
+    if args.action == "serve-verify":
+        if args.command:
+            raise RuntimeError(
+                "Fixed 100-attempt/10-minute verification scope required"
+            )
+        return serve(directory, verify_only=True)
     if args.action == "serve-cleanup":
         if len(args.command) != 2:
             raise RuntimeError(
@@ -228,6 +238,8 @@ def main():
     if any(e["event"] == "stop" for e in log):
         raise RuntimeError("Meter stop is latched; no automatic resume/reopen")
     if args.action == "phase":
+        if state.get("verifyOnly"):
+            raise RuntimeError("Verification meter cannot enable write phases")
         if len(args.command) != 1 or args.command[0] not in PHASES:
             raise RuntimeError("Explicit known phase required")
         write_json(directory / "control.json", PHASES[args.command[0]])

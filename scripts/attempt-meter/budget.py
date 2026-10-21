@@ -5,6 +5,7 @@ import os
 import re
 import time
 from urllib.parse import parse_qs, urlsplit
+from cognito import HOST as COGNITO_HOST, auth_preflight
 
 
 class MeterStop(Exception):
@@ -22,6 +23,7 @@ class Budget:
         poll_limit=240,
         seconds=7200,
         cleanup_parent=None,
+        history=None,
     ):
         self.clock = clock
         self.elapsed_clock = time.monotonic if clock is time.time else clock
@@ -47,15 +49,22 @@ class Budget:
         self.record(
             dict(
                 event="meter-created",
-                priorSteps=4,
-                priorSends=4,
-                priorIdentitiesAndProjects=4,
-                priorKnownApiCalls=48,
-                priorKnownPolls=4,
-                priorKnownSecondAttemptAwsCharges=574,
-                priorAwsReads=None,
-                priorBillingUsd=None,
+                **(
+                    history
+                    or dict(
+                        priorSteps=4,
+                        priorSends=4,
+                        priorIdentitiesAndProjects=4,
+                        priorKnownApiCalls=48,
+                        priorKnownPolls=4,
+                        priorKnownSecondAttemptAwsCharges=574,
+                        priorAwsReads=None,
+                        priorBillingUsd=None,
+                    )
+                ),
                 cleanupParent=cleanup_parent,
+                limits=self.limits.copy(),
+                seconds=self.seconds,
             )
         )
 
@@ -79,6 +88,10 @@ class Budget:
 
     def classify(self, method, host, path, headers, content):
         host = host.lower()
+        if method == "OPTIONS" and host == COGNITO_HOST:
+            if not auth_preflight(host, path, headers, content):
+                self.stop("cognito-preflight-scope")
+            return "aws", "CognitoAuthPreflight", False, False
         if host == "8dnymkcoa0.execute-api.us-east-2.amazonaws.com":
             if not urlsplit(path).path.startswith("/api/v1/"):
                 self.stop("non-application-route-or-direct-target")

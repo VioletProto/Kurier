@@ -15,6 +15,10 @@ deployed the unchanged pinned release and activated assertions at version 15.
 Genuine A–G passed, then the browser transport guard stopped H–L before admission.
 Its bounded cleanup and remaining physical/accounting verification gaps are
 recorded there; the original implementation-only holds above are historical.
+The subsequent [focused verification](workflow-assertions-cleanup-verification.md)
+closes current physical cleanup verification and corrects operator collection
+and browser metering locally. Missing historical observations remain missing,
+and H–L remain held.
 
 ## Implemented behavior
 

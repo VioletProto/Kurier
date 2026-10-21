@@ -112,7 +112,7 @@ def unused_port():
         return s.getsockname()[1]
 
 
-def main(mode="normal"):
+def main(mode="normal", scenario=None):
     origin = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Origin)
     threading.Thread(target=origin.serve_forever, daemon=True).start()
     processes = []
@@ -127,6 +127,8 @@ def main(mode="normal"):
             KURIER_METER_CONTROL=str(d / "control.json"),
             KURIER_METER_LOCAL_ORIGIN=str(origin.server_port),
         )
+        if mode == "verify":
+            env["KURIER_METER_VERIFY_ONLY"] = "1"
         if mode == "cleanup":
             parent = d / "parent.jsonl"
             prior = {"api": 62, "aws": 766, "poll": 7, "static": 9}
@@ -283,20 +285,25 @@ def main(mode="normal"):
             return result.stdout
 
         try:
+            if scenario:
+                scenario(run, d, child_env)
+                return
             if mode == "preflight":
-                browser = """const{chromium}=await import('@playwright/test');const b=await chromium.launch({headless:true,proxy:{server:'http://127.0.0.1:18080'}});try{const c=await b.newContext({ignoreHTTPSErrors:true});const p=await c.newPage();await p.goto('https://d2kpq905qyh9zg.cloudfront.net');const blocked=await p.evaluate(async()=>{try{await fetch('https://cognito-idp.us-east-2.amazonaws.com/',{method:'POST',headers:{'Content-Type':'application/x-amz-json-1.1','X-Amz-Target':'AWSCognitoIdentityProviderService.InitiateAuth'},body:'{}'});return false}catch{return true}});if(!blocked)throw Error('expected known preflight gap');await c.close()}finally{await b.close()}"""
+                browser = """const{chromium}=await import('@playwright/test');const b=await chromium.launch({headless:true,proxy:{server:'http://127.0.0.1:18080'}});try{const c=await b.newContext({ignoreHTTPSErrors:true});const p=await c.newPage();await p.goto('https://d2kpq905qyh9zg.cloudfront.net');const blocked=await p.evaluate(async()=>{try{await fetch('https://cognito-idp.us-east-2.amazonaws.com/',{method:'POST',headers:{'Content-Type':'application/x-amz-json-1.1','X-Amz-Target':'AWSCognitoIdentityProviderService.InitiateAuth','Authorization':'Bearer local-private-canary'},body:'{}'});return false}catch{return true}});if(!blocked)throw Error('expected invalid preflight rejection');await c.close()}finally{await b.close()}"""
                 run(["node", "--input-type=module", "-e", browser])
                 log = [
                     json.loads(line)
                     for line in (d / "ledger.jsonl").read_text().splitlines()
                 ]
-                assert any(e.get("reason") == "write-held" for e in log)
-                assert not any(e.get("category") == "aws" for e in log)
+                assert any(e.get("reason") == "cognito-preflight-scope" for e in log)
+                assert not any(
+                    e.get("category") == "aws" and e["event"] == "attempt" for e in log
+                )
                 assert counts["cli"] == 0 and counts["api-write"] == 0
                 print(
                     json.dumps(
                         {
-                            "browserCognitoPreflightHeldLocally": True,
+                            "invalidBrowserCognitoPreflightHeldLocally": True,
                             "awsCalls": 0,
                             "forwardedAuthWrites": 0,
                         }
