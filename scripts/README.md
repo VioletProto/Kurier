@@ -3,6 +3,14 @@
 Add cross-project development scripts here when a repeated workflow cannot be
 expressed clearly through the root package scripts.
 
+`lib/workflow-run-poll.mjs` supplies the operator coordinator's bounded status
+GET policy and acknowledged-submission reader adapter. It retries only the
+allowlisted `503 service_unavailable` response, honors Retry-After and shares
+the original API/poll/time budgets. It cannot issue submission or stage writes.
+`npm run test:workflow-poll` and the local Go HTTP bridge verify this policy.
+See the [diagnosis and integration contract](../docs/development/workflow-run-get-503-diagnostic.md).
+This helper does not authorize live execution or resume a stopped rollout.
+
 `local-dev.mjs` consumes public `dev-auth` SST outputs and starts the local Go API
 (`npm run dev:api`) or React (`npm run dev:auth`). It generates the private cursor
 key only in process memory and refuses historical spike outputs. See the

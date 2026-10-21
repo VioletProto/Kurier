@@ -39,6 +39,15 @@ the unchanged cumulative 28-step/28-send ceilings and retains unknown historical
 AWS-read/billing totals. Application ZIPs/manifest are unchanged. Deployment,
 closure, activation, identity/project creation and live requests are held for
 review; this correction task performs local verification only.
+Davian accepted that replacement and conditionally authorized execution after
+complete operator attempt metering. The [metered replacement record](../development/workflow-assertions-replacement-rollout.md)
+reports its stop on a legacy-A status GET 503 before closure/deployment/activation.
+The run later proved completed without replay; both disposable pairs are now
+cleaned, with four cumulative consumed steps/sends. Unknown historical reads and
+billing remain unknown. The [local diagnosis and GET-only polling correction](../development/workflow-run-get-503-diagnostic.md)
+reproduces stale transactional-read rejection and a successful fresh read,
+without establishing the historical cause. Its bounded operator retry helper
+changes no application release and authorizes no new live execution.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 
