@@ -36,8 +36,12 @@ class Budget:
         self.record(
             dict(
                 event="meter-created",
-                priorSteps=2,
-                priorSends=2,
+                priorSteps=4,
+                priorSends=4,
+                priorIdentitiesAndProjects=4,
+                priorKnownApiCalls=48,
+                priorKnownPolls=4,
+                priorKnownSecondAttemptAwsCharges=574,
                 priorAwsReads=None,
                 priorBillingUsd=None,
             )

@@ -161,7 +161,7 @@ def serve(directory):
                 "proxyPid": proxy.pid,
                 "relayPid": relay.pid,
                 "loginCacheFile": str(cache_file),
-                "acceptedExecutionPacket": "e702f434eab1837cecc5ccfab100b861067b39e5",
+                "acceptedExecutionPacket": "f3a698d565fa29e99cd7f89517252994c32e44ef",
             },
         )
         print(

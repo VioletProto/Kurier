@@ -30,6 +30,14 @@ class Origin(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(raw)))
         self.send_header("Access-Control-Allow-Origin", "*")
+
+        if code == 302:
+            self.send_header(
+                "Location",
+                "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com/api/v1/must-not-follow",
+            )
+        if code == 503 and self.path.startswith("/api/v1/"):
+            self.send_header("Retry-After", "2")
         self.end_headers()
         self.wfile.write(raw)
 
@@ -75,6 +83,20 @@ class Origin(http.server.BaseHTTPRequestHandler):
                 + "</ListBucketResult>",
                 "application/xml",
             )
+        if "/workflow-runs/" in self.path:
+            counts["coordinator-poll"] += 1
+            if counts["coordinator-poll"] == 1:
+                return self.reply(503, '{"error":{"code":"service_unavailable"}}')
+            return self.reply(
+                200,
+                '{"data":{"run":{"workflowRunId":"22222222-2222-4222-8222-222222222222","state":"completed"}}}',
+            )
+        if self.path == "/api/v1/redirect":
+            counts["redirect"] += 1
+            return self.reply(302, "{}")
+        if self.path == "/api/v1/must-not-follow":
+            counts["followed"] += 1
+            return self.reply(500, "{}")
         counts["api"] += 1
         self.reply(200, '{"data":{"items":[]}}')
 
@@ -272,6 +294,19 @@ func main(){c:=context.Background();cfg,e:=config.LoadDefaultConfig(c,config.Wit
             assert any(e.get("protocol", "").startswith("HTTP/2") for e in api), (
                 "HTTP/2 request counting not exercised"
             )
+            child_env["KURIER_LOCAL_COORDINATOR_TEST"] = str(d)
+            run(["node", "scripts/fixtures/workflow-coordinator-transport.mjs"])
+            assert counts["coordinator-poll"] == 2 and counts["redirect"] == 1
+            assert counts["followed"] == 0 and counts["api-write"] == 0
+            updated = [
+                json.loads(line)
+                for line in (d / "ledger.jsonl").read_text().splitlines()
+            ]
+            api_updated = [
+                e for e in updated if e["event"] == "attempt" and e["category"] == "api"
+            ]
+            assert len(api_updated) == 6 and sum(e["poll"] for e in api_updated) == 2
+            assert "local-private-canary" not in (d / "ledger.jsonl").read_text()
             # The origin accepts one write, then loses its ACK. The proxy must
             # latch before a client can replay it, independently of client logic.
             (d / "control.json").write_text('{"writeCategories":["api"]}')
@@ -290,7 +325,10 @@ func main(){c:=context.Background();cfg,e:=config.LoadDefaultConfig(c,config.Wit
                     dict(
                         passed=True,
                         sdkRetryAndPaginationAttempts=9,
-                        apiAttempts=3,
+                        apiAttempts=6,
+                        coordinator503Then200=True,
+                        redirectRejected=True,
+                        admissionsAndTargetSends=0,
                         directNetworkBypassBlocked=True,
                         browserCovered=True,
                         http2Covered=True,

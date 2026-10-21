@@ -1,0 +1,100 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import {
+  coordinatorBudget,
+  persistCoordinatorLedger,
+  createCoordinatorTransport,
+} from "./lib/workflow-coordinator-transport.mjs";
+test("actual coordinator reserve wiring blocks GET before transport and preserves cleanup", async () => {
+  const dir = mkdtempSync(tmpdir() + "/kurier-coordinator-");
+  try {
+    const start = Date.now();
+    const ledger = {
+      startedAt: new Date(start).toISOString(),
+      apiCalls: 0,
+      polls: 0,
+    };
+    const meter = dir + "/attempts.jsonl";
+    let counts = { api: 0, aws: 0, poll: 0 };
+    const save = () =>
+      writeFileSync(
+        meter,
+        [
+          { event: "meter-created" },
+          { event: "attempt", at: start / 1000, counts },
+        ]
+          .map(JSON.stringify)
+          .join("\n") + "\n",
+      );
+    save();
+    let now = start;
+    const budget = coordinatorBudget({
+      ledger,
+      meterPath: meter,
+      now: () => now,
+    });
+    for (const key of ["api", "aws", "time"]) {
+      counts = {
+        api: key === "api" ? 440 : 0,
+        aws: key === "aws" ? 1300 : 0,
+        poll: 0,
+      };
+      now = start + (key === "time" ? 100 * 60000 : 0);
+      save();
+      budget({ cleanup: true });
+      assert.throws(() => budget(), /reserve/);
+      const transport = createCoordinatorTransport({
+        origin: "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+        ledger,
+        token: () => {
+          throw Error("MUST NOT CALL AUTH OR NETWORK");
+        },
+        budget,
+        persist: () =>
+          persistCoordinatorLedger(dir + "/coordinator.json", ledger),
+      });
+      await assert.rejects(
+        transport.pollSubmitted("11111111-1111-4111-8111-111111111111", {
+          status: 202,
+          data: {
+            run: {
+              workflowRunId: "22222222-2222-4222-8222-222222222222",
+              state: "queued",
+            },
+          },
+          headers: new Headers(),
+        }),
+      );
+      assert.equal(ledger.apiCalls, 0);
+      assert.equal(ledger.polls, 0);
+    }
+    now = start;
+    counts = { api: 500, aws: 0, poll: 0 };
+    save();
+    assert.throws(() => budget({ cleanup: true }));
+    counts = { api: 0, aws: 1500, poll: 0 };
+    save();
+    assert.throws(() => budget({ cleanup: true }));
+    counts = { api: 0, aws: 0, poll: 240 };
+    save();
+    budget({ cleanup: true });
+    assert.throws(() => budget());
+    counts = { api: 0, aws: 0, poll: 0 };
+    now = start + 120 * 60000;
+    save();
+    assert.throws(() => budget({ cleanup: true }));
+    now = start;
+    save();
+    writeFileSync(meter, readFileSync(meter) + '{"event":"stop"}\n');
+    assert.throws(() => budget({ cleanup: true }));
+    persistCoordinatorLedger(dir + "/coordinator.json", ledger);
+    assert.equal(
+      JSON.parse(readFileSync(dir + "/coordinator.json")).apiCalls,
+      0,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
