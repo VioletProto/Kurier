@@ -1,0 +1,521 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped-before-closure-cleanup-verified",
+  "acceptedReviewCommit": "7b5e847b6929e1b0006aede823fcb43b1926b9f8",
+  "releaseSourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "releaseManifestSha256": "920667777eb69cabfb7800910451062a18e6ff06ce22ad4fb543f96c78321dd6",
+  "scope": {
+    "account": "747336059622",
+    "region": "us-east-2",
+    "stage": "dev-api",
+    "nonRootVerified": true
+  },
+  "campaign": {
+    "tag": "74bcd9d2-b869-4ae7-88b0-4b090616932a",
+    "startedAt": "2026-10-21T02:42:48.224Z",
+    "cleanupStartedAt": "2026-10-21T02:47:11.828Z",
+    "finishedAt": "2026-10-21T02:51:09.862Z",
+    "elapsedSeconds": 501.638,
+    "cleanupSeconds": 238.034,
+    "limits": {
+      "admittedSteps": 28,
+      "targetSends": 28,
+      "identities": 2,
+      "projects": 2,
+      "apiCalls": 500,
+      "polls": 240,
+      "minimumPollIntervalSeconds": 2,
+      "scopedAwsReads": 1500,
+      "incrementalUsd": "1.00",
+      "totalMinutes": 120,
+      "cleanupMinutes": 20
+    },
+    "actual": {
+      "admittedSteps": 2,
+      "targetSends": 2,
+      "identitiesCreated": 2,
+      "projectsCreated": 2,
+      "apiCalls": 25,
+      "statusPolls": 2,
+      "coordinatorAwsOperationsIncludingMutations": 89,
+      "directTargetProbes": 0,
+      "submissions": 1,
+      "savedRequests": 2,
+      "workflowDefinitions": 1,
+      "mcpCredentials": 0
+    },
+    "measurementGaps": [
+      "End-to-end AWS CLI/SDK read count not independently metered; coordinator counter includes mutations and excludes external preflights/preview.",
+      "Incremental billed cost not independently verified; accepted rates are planning estimates."
+    ]
+  },
+  "approvals": {
+    "close": null,
+    "activation": null,
+    "reason": "Exact reviewed inspect failed before a valid closure approval could be created."
+  },
+  "execution": {
+    "closure": false,
+    "deployment": false,
+    "activation": false,
+    "stageWrites": 0,
+    "automaticReopen": false,
+    "httpReplay": false,
+    "runs": [
+      {
+        "key": "A",
+        "id": "e2adb249-366b-4046-8444-28c70b222f3d",
+        "idempotency": "ce5b4c35-9c00-4a4c-a996-119b3306443e",
+        "expectedState": "completed",
+        "expectedSends": 2,
+        "steps": [
+          {
+            "position": 0,
+            "state": "completed",
+            "executionId": "9aaf8b93-d4ae-49bc-8971-37701cc21915"
+          },
+          {
+            "position": 1,
+            "state": "completed",
+            "executionId": "5e2ad155-f464-421b-a905-4a359072d135"
+          }
+        ],
+        "state": "completed"
+      }
+    ],
+    "notRun": ["B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+  },
+  "guardFailure": {
+    "command": "node scripts/activate-workflow-assertions.mjs --inspect",
+    "toolingCommit": "7b5e847b6929e1b0006aede823fcb43b1926b9f8",
+    "exitCode": 1,
+    "message": "Unsettled work or new assertion data; reconcile separately.",
+    "observedOutboxState": "published",
+    "guardRequiredState": "sent",
+    "settlement": {
+      "jobs": [
+        {
+          "id": "JOB#24021998-a37a-4b0e-ba4f-91454a7196f4",
+          "state": "completed"
+        },
+        {
+          "id": "JOB#eb000aac-e8ad-4b36-a235-dc60e45d2060",
+          "state": "completed"
+        }
+      ],
+      "outboxes": [
+        {
+          "id": "OUT#24021998-a37a-4b0e-ba4f-91454a7196f4",
+          "state": "published"
+        },
+        {
+          "id": "OUT#eb000aac-e8ad-4b36-a235-dc60e45d2060",
+          "state": "published"
+        }
+      ],
+      "uploads": [
+        {
+          "id": "UPLOAD#a06fef21-f151-4b1f-b033-4149a7d20ecf",
+          "state": "published",
+          "writeSettled": true
+        },
+        {
+          "id": "UPLOAD#dceb42e7-539e-408c-872c-92a90ca7abd0",
+          "state": "published",
+          "writeSettled": true
+        }
+      ],
+      "assertionSemanticsMarkerAbsent": true,
+      "protectedRows": 0
+    },
+    "guardChanged": false,
+    "applicationChanged": false
+  },
+  "runtime": {
+    "targetAudits": [
+      {
+        "fixtureId": "b24b284d-3ce4-4260-adeb-81ac181e4973",
+        "mode": "workflow-token",
+        "authorized": false,
+        "requestId": "Fkr7yh5tCYcEJIQ="
+      },
+      {
+        "fixtureId": "b24b284d-3ce4-4260-adeb-81ac181e4973",
+        "mode": "workflow-consume",
+        "authorized": true,
+        "requestId": "Fkr77i7vCYcEJYg="
+      }
+    ],
+    "legacyEvidence": [
+      {
+        "executionId": "5e2ad155-f464-421b-a905-4a359072d135",
+        "schemaVersion": 1,
+        "assertionsAbsent": true,
+        "storedBytes": 1322,
+        "sha256": "70192ed32d966527f0d75b40fdda46e2e95dc3a330991a44e53a388851189f15",
+        "manifestMatches": true,
+        "syntheticBindingRedacted": true
+      },
+      {
+        "executionId": "9aaf8b93-d4ae-49bc-8971-37701cc21915",
+        "schemaVersion": 1,
+        "assertionsAbsent": true,
+        "storedBytes": 1205,
+        "sha256": "1296b56813edba94f547b0a15282ac23a136bb56dcaa67ed1b5e24651ffce29c",
+        "manifestMatches": true,
+        "syntheticBindingRedacted": true
+      }
+    ],
+    "foreignOwnerRead": 404,
+    "anonymousRead": 401,
+    "genuineCognitoSrp": true,
+    "signupOrEmailDeliveryValidated": false,
+    "browserAuthoringValidated": false,
+    "mcpProjectionValidated": false,
+    "numericCloudRoundTripValidated": false
+  },
+  "cleanup": {
+    "complete": true,
+    "mechanism": "Normal API 202 deletion and scheduled maintenance only; no direct drain/row/object deletion.",
+    "projects": [
+      {
+        "id": "0b75681f-e013-4379-a521-85533b6f45b5",
+        "ownerIndex": 0,
+        "deletionOperationId": "2c59dac7-eb3b-4b58-bbec-8e0244042836",
+        "immediateOwnerDenied": true,
+        "controlTombstoneOnly": true,
+        "protectedChildren": 0,
+        "s3Objects": 0,
+        "deletionState": "deleted"
+      },
+      {
+        "id": "714eb543-1661-4042-82db-5b79fce7d093",
+        "ownerIndex": 1,
+        "deletionOperationId": "83df8e9d-be55-40c6-9cf4-a14c9524d3e6",
+        "immediateOwnerDenied": true,
+        "controlTombstoneOnly": true,
+        "protectedChildren": 0,
+        "s3Objects": 0,
+        "deletionState": "deleted"
+      }
+    ],
+    "identities": [
+      {
+        "ownerIndex": 0,
+        "applicationUserId": "12931237-a352-4734-99fa-41a2f4c89f26",
+        "globalSignedOut": true,
+        "providerDeleted": true,
+        "providerAbsenceConfirmed": true,
+        "retainedApplicationMetadata": [
+          {
+            "key": "EXECUTION_DAY#2026-10-21",
+            "kind": "executionQuota",
+            "count": "2"
+          },
+          {
+            "key": "META",
+            "kind": "user"
+          }
+        ]
+      },
+      {
+        "ownerIndex": 1,
+        "applicationUserId": "f3a38812-97b0-418c-852e-6d575b4b655e",
+        "globalSignedOut": true,
+        "providerDeleted": true,
+        "providerAbsenceConfirmed": true,
+        "retainedApplicationMetadata": [
+          {
+            "key": "META",
+            "kind": "user"
+          }
+        ]
+      }
+    ],
+    "credentialProcessExited": true,
+    "expectedRetainedData": [
+      "Project tombstones",
+      "Permanent executionResidual sweep registrations",
+      "Application user/identity metadata",
+      "Charged admission quota metadata",
+      "Normal maintenance cursors"
+    ],
+    "offlineAccessJwtImmediateInvalidationClaimed": false
+  },
+  "accounting": {
+    "baselineStageQuota": [
+      {
+        "SK": {
+          "S": "QUOTA"
+        },
+        "month": {
+          "S": "2026-10"
+        },
+        "pinnedCount": {
+          "N": "0"
+        },
+        "version": {
+          "N": "5"
+        },
+        "count": {
+          "N": "2"
+        },
+        "kind": {
+          "S": "executionQuota"
+        },
+        "pinnedBytes": {
+          "N": "0"
+        },
+        "PK": {
+          "S": "STAGE#dev-api"
+        }
+      }
+    ],
+    "finalStageQuota": [
+      {
+        "SK": {
+          "S": "QUOTA"
+        },
+        "version": {
+          "N": "10"
+        },
+        "month": {
+          "S": "2026-10"
+        },
+        "pinnedCount": {
+          "N": "0"
+        },
+        "count": {
+          "N": "4"
+        },
+        "kind": {
+          "S": "executionQuota"
+        },
+        "pinnedBytes": {
+          "N": "0"
+        },
+        "PK": {
+          "S": "STAGE#dev-api"
+        }
+      }
+    ],
+    "ownerDayQuota": [
+      {
+        "month": {
+          "S": "2026-10"
+        },
+        "PK": {
+          "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+        },
+        "SK": {
+          "S": "EXECUTION_DAY#2026-10-21"
+        },
+        "version": {
+          "N": "0"
+        },
+        "count": {
+          "N": "2"
+        },
+        "kind": {
+          "S": "executionQuota"
+        }
+      }
+    ],
+    "admittedDelta": 2,
+    "usageReset": false,
+    "storageReturnedToBaseline": true,
+    "pinnedCount": "0",
+    "pinnedBytes": "0"
+  },
+  "readback": {
+    "marker": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "13"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "7"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    },
+    "markerSha256": "dca180063fb02b0c7bf7b1a5e582ae4b5b19109cadaae8eea61983412a09d10d",
+    "platformBaselineMatches": true,
+    "platformCheckedAt": "2026-10-21T02:50:55.805Z",
+    "functions": [
+      {
+        "resource": "UsersProjectsApi",
+        "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+        "role": "arn:aws:iam::747336059622:role/kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+        "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3",
+        "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+        "state": "Active",
+        "update": "Successful",
+        "runtime": "provided.al2023",
+        "architecture": ["arm64"],
+        "memory": 256,
+        "timeout": 15,
+        "reserved": null,
+        "configurationHash": "1e6a8d703a0f74558e2fec2352068aec8743829950336da06e6540217983ef35",
+        "mcp": "1",
+        "savedRequests": "7"
+      },
+      {
+        "resource": "EmptyProjectCleanup",
+        "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+        "role": "arn:aws:iam::747336059622:role/kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+        "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb",
+        "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+        "state": "Active",
+        "update": "Successful",
+        "runtime": "provided.al2023",
+        "architecture": ["arm64"],
+        "memory": 256,
+        "timeout": 60,
+        "reserved": null,
+        "configurationHash": "ed4630178b877a255c805a1bc04d25a435f7b7b0d0e8e3808137c91f508d7f8b",
+        "mcp": "1",
+        "savedRequests": "7"
+      },
+      {
+        "resource": "CloudExecutionWorker",
+        "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+        "role": "arn:aws:iam::747336059622:role/kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+        "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66",
+        "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+        "state": "Active",
+        "update": "Successful",
+        "runtime": "provided.al2023",
+        "architecture": ["arm64"],
+        "memory": 256,
+        "timeout": 90,
+        "reserved": null,
+        "configurationHash": "6d5df901054de62344c765581620c4d8160acbaff2c04b22db23a8afd05d5981",
+        "mcp": "1",
+        "savedRequests": null
+      },
+      {
+        "resource": "ExecutionControlledEndpoint",
+        "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+        "role": "arn:aws:iam::747336059622:role/kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+        "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81",
+        "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+        "state": "Active",
+        "update": "Successful",
+        "runtime": "provided.al2023",
+        "architecture": ["arm64"],
+        "memory": 128,
+        "timeout": 65,
+        "reserved": null,
+        "configurationHash": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+        "mcp": null,
+        "savedRequests": null
+      }
+    ],
+    "controls": {
+      "plan": {
+        "type": "FREE",
+        "status": "ACTIVE"
+      },
+      "quota": 10,
+      "unreserved": 10,
+      "queue": {
+        "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+        "state": "Enabled",
+        "batch": 1,
+        "max": 2,
+        "pollers": null,
+        "responses": ["ReportBatchItemFailures"]
+      },
+      "schedule": {
+        "state": "ENABLED",
+        "expression": "rate(1 minute)",
+        "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+      }
+    },
+    "postCleanupInspection": {
+      "mode": "inspect",
+      "markerSha256": "dca180063fb02b0c7bf7b1a5e582ae4b5b19109cadaae8eea61983412a09d10d",
+      "accountingSha256": "5cf132afc2815c2eb4471a4cbde8e7a4f3d7620d36e148f36c1f1cb406dd1453",
+      "projects": 0,
+      "state": "active",
+      "version": "13",
+      "generation": "dev-api-initial-v1",
+      "readersReady": false,
+      "backendReadersReady": false,
+      "frontendReady": false,
+      "writes": 0
+    }
+  },
+  "rollback": {
+    "packages": [
+      {
+        "resource": "UsersProjectsApi",
+        "bytes": 9220494,
+        "sha256": "cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e"
+      },
+      {
+        "resource": "EmptyProjectCleanup",
+        "bytes": 9220494,
+        "sha256": "cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e"
+      },
+      {
+        "resource": "CloudExecutionWorker",
+        "bytes": 8658878,
+        "sha256": "2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900"
+      },
+      {
+        "resource": "ExecutionControlledEndpoint",
+        "bytes": 8658878,
+        "sha256": "2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900"
+      }
+    ],
+    "frontend": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+    "frontendManifestSha256": "81ad947856a3c9c6d5fcc722ba86abdfe02799c8e46f35ce905e753c9a5fe4f2"
+  },
+  "independentlyVerified": true,
+  "reportedOperatorObservations": [],
+  "remainingReview": [
+    "Repair/review actual outbox settlement guard with terminal linkage and full legacy-seed preflight regression.",
+    "Review new disposable identity/project and replacement legacy-seed allowance; previous pair was cleaned and its allowance consumed.",
+    "Fresh separate approval records after every reviewed guard passes; never reuse pre-seed approval.",
+    "B-L and compatible reader/frontend/activation validation remain unperformed.",
+    "Broad live fault injection, elapsed-retention/PITR and metered billing remain separate."
+  ]
+}

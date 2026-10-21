@@ -22,6 +22,15 @@ controlled-fixture extension. The [fixture-inclusive final review](../developmen
 records its local tests, refreshed clean release/preview and updated activator
 pins. Deployment, stage closure, activation, identity creation and live target
 requests remain held; the 28-step/two-identity/two-project/$1 campaign is unchanged.
+Davian subsequently accepted final packet `7b5e847b6929e1b0006aede823fcb43b1926b9f8`
+and authorized its scoped rollout and bounded runtime campaign. The
+[rollout record](../development/workflow-assertions-rollout.md) reports the actual
+attempt: genuine legacy A completed, but the exact reviewed activator rejected
+settled `published` outboxes because it expects `sent`. Execution stopped before
+closure/deployment/activation; normal disposable-fixture cleanup and its proof
+are recorded separately. The guard was not bypassed or changed. Further rollout
+requires review of that tooling incompatibility and revised fixture allowance;
+the existing stop/no-reopen/no-replay and broader fault/PITR boundaries remain.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

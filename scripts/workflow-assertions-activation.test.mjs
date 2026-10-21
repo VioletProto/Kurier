@@ -348,6 +348,38 @@ test("published upload requires matching terminal job and immutable manifest", (
   f.rows.at(-1).item.bytes = N(101);
   assert.throws(() => inspectRows(f.rows), /proof/);
 });
+test("rollout stop: actual published outboxes fail the reviewed closure guard without a write", async () => {
+  // services/api/execution/maintenance.go settles an outbox as "published".
+  // The accepted activator expects "sent". Keep that mismatch visible pending
+  // separate repair/review; this regression must not relax the deployed guard.
+  const f = fixture();
+  const base = { PK: S("P#legacy-seed"), schemaVersion: N(1) };
+  f.rows.push(
+    {
+      table: "control",
+      item: {
+        ...base,
+        SK: S("JOB#settled"),
+        kind: S("executionJob"),
+        state: S("completed"),
+      },
+    },
+    {
+      table: "control",
+      item: {
+        ...base,
+        SK: S("OUT#settled"),
+        kind: S("executionOutbox"),
+        state: S("published"),
+        jobId: S("settled"),
+      },
+    },
+  );
+  await assert.rejects(execute(f.adapter, f.options), /Unsettled work/);
+  assert.equal(f.calls.writes.length, 0);
+  assert.equal(f.marker().state.S, "active");
+  assert.equal(f.marker().version.N, "13");
+});
 test("permanent residual registration requires tombstone, no children and empty-prefix proof", () => {
   const f = fixture();
   const project = "11111111-1111-4111-8111-111111111111";
