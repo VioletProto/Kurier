@@ -66,7 +66,7 @@ func controlledEndpoint(_ context.Context, event events.APIGatewayV2HTTPRequest)
 	status := 200
 	var payload []byte
 	switch mode {
-	case "workflow-token", "workflow-consume", "workflow-failure", "workflow-delay":
+	case "workflow-token", "workflow-consume", "workflow-failure", "workflow-delay", "assertions-values", "assertions-not-found":
 		nonce := event.QueryStringParameters["fixture"]
 		if !workflowFixtureID.MatchString(nonce) {
 			status = 400
@@ -75,17 +75,27 @@ func controlledEndpoint(_ context.Context, event events.APIGatewayV2HTTPRequest)
 		}
 		// This is a disposable synthetic marker, never a real credential. Only
 		// opaque fixture metadata is logged; headers/body/token stay in memory.
-		sum := sha256.Sum256([]byte("kurier-workflow-fixture-v1/" + nonce))
-		token := hex.EncodeToString(sum[:])
+		var token string
 		authorized := false
-		for name, value := range event.Headers {
-			if strings.EqualFold(name, "Authorization") {
-				authorized = value == "Bearer "+token
+		if strings.HasPrefix(mode, "workflow-") {
+			sum := sha256.Sum256([]byte("kurier-workflow-fixture-v1/" + nonce))
+			token = hex.EncodeToString(sum[:])
+			for name, value := range event.Headers {
+				if strings.EqualFold(name, "Authorization") {
+					authorized = value == "Bearer "+token
+				}
 			}
 		}
 		record, _ := json.Marshal(map[string]any{"kurierWorkflowFixture": true, "fixtureId": nonce, "mode": mode, "authorized": authorized, "requestId": event.RequestContext.RequestID})
 		log.Print(string(record))
 		switch mode {
+		case "assertions-values":
+			// Preserve exact JSON numeric tokens; never route this through float64
+			// or a map encoder. No caller-supplied value enters either response.
+			payload = []byte(`{"precise":0.10000000000000001,"short":0.1,"exponent":1E-01,"min":1e-308,"max":9007199254740991,"zero":-0.0,"exists":null,"flag":true,"text":"public"}`)
+		case "assertions-not-found":
+			status = 404
+			payload = []byte(`{"unavailable":true}`)
 		case "workflow-token":
 			payload, _ = json.Marshal(map[string]string{"token": token})
 		case "workflow-consume":

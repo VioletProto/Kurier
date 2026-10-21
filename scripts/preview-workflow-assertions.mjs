@@ -1,12 +1,18 @@
-// Read-only review tooling for source 55cd061; no deploy/refresh/activation mode.
+// Read-only review tooling; no deploy/refresh/activation mode.
 // See docs/development/workflow-assertions-deployment-review.md before use.
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 
-const preview = process.argv[2] === "--diff";
-if (process.argv.length !== (preview ? 3 : 2))
-  throw Error("Choose inventory or --diff only.");
+const args = process.argv.slice(2);
+const preview = args[0] === "--diff";
+if (preview) args.shift();
+let source = "55cd061c0f6607037ebd61e200fe54ab296237c4";
+const pinned =
+  args.length === 2 && args[0] === "--source" && /^[a-f0-9]{40}$/.test(args[1]);
+if (pinned) source = args[1];
+else if (args.length)
+  throw Error("Choose inventory/--diff, optionally --source FULL_COMMIT.");
 if (process.env.KURIER_FRONTEND_ROLLBACK_RELEASE)
   throw Error("Rollback overrides are outside this review.");
 const root = new URL("../", import.meta.url);
@@ -27,9 +33,15 @@ function aws(args) {
     run("aws", [...args, "--region", "us-east-2", "--output", "json"]),
   );
 }
+if (
+  pinned &&
+  (run("git", ["rev-parse", "HEAD"]).trim() !== source ||
+    run("git", ["status", "--porcelain", "--untracked-files=all"]).trim())
+)
+  throw Error("Explicit release source requires its exact clean checkout.");
 const diff = run("git", [
   "diff",
-  "55cd061c0f6607037ebd61e200fe54ab296237c4",
+  source,
   "--",
   "services",
   "apps",
@@ -106,7 +118,7 @@ if (preview)
     readFileSync(new URL(".sst/frontend-hosting-diff.txt", root)),
   );
 const report = {
-  sourceCommit: "55cd061c0f6607037ebd61e200fe54ab296237c4",
+  sourceCommit: source,
   ...inventory,
   toolingMetadata: before,
   toolingMetadataUnchanged: true,
