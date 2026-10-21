@@ -19,6 +19,15 @@ for (const [module, Agent] of [
   const original = module.request;
   const agent = new Agent(process.env.HTTPS_PROXY);
   module.request = function (...args) {
+    const target =
+      typeof args[0] === "string" || args[0] instanceof URL
+        ? new URL(args[0])
+        : args[0];
+    const hostname = target?.hostname ?? target?.host;
+    // Pulumi's local RPC stays inside the isolated namespace. It cannot reach
+    // the host's loopback or any external service and needs no cloud allowance.
+    if (["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname))
+      return original.apply(this, args);
     if (typeof args[0] === "string" || args[0] instanceof URL) {
       if (typeof args[1] === "function" || args[1] === undefined)
         args.splice(1, 0, { agent });

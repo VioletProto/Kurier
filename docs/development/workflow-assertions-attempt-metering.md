@@ -17,6 +17,11 @@ either pass the meter or fail without reaching an external network. Node's
 preload explicitly replaces SDK-created agents, which otherwise bypass its
 environment proxy support. Proxy upstream certificate verification remains on.
 HTTP/2 streams are individually metered; unproxied UDP/QUIC cannot escape.
+Localhost RPC is exempt from the proxy inside that isolated namespace so Pulumi
+can communicate with its own children. It cannot reach host loopback services.
+The transport regression verifies this exception and external `ENETUNREACH`
+together. Explicit profile environment variables are cleared: the CLI reads its
+existing default profile, then SST receives the exported session in memory.
 
 Each request is synchronously appended and fsynced **before forwarding**. Each
 page, retry, failed request and authentication request is a separate attempt.

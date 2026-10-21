@@ -220,6 +220,8 @@ def main():
     for key in ("SSLKEYLOGFILE", "SSLKEYLOG", "QLOGDIR"):
         env.pop(key, None)
     for key in (
+        "AWS_PROFILE",
+        "AWS_DEFAULT_PROFILE",
         "AWS_ACCESS_KEY_ID",
         "AWS_SECRET_ACCESS_KEY",
         "AWS_SESSION_TOKEN",
@@ -230,7 +232,7 @@ def main():
     ):
         env.pop(key, None)
     for key in ("NO_PROXY", "no_proxy"):
-        env[key] = ""
+        env[key] = "127.0.0.1,localhost,::1"
     for key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy"):
         env[key] = "http://127.0.0.1:18080"
     env.update(
@@ -242,8 +244,6 @@ def main():
         KURIER_ATTEMPT_METER_DIRECTORY=str(directory),
         AWS_MAX_ATTEMPTS="1",
         AWS_LOGIN_CACHE_DIRECTORY=str(Path(state["loginCacheFile"]).parent),
-        AWS_PROFILE="default",
-        AWS_DEFAULT_PROFILE="default",
         AWS_CONFIG_FILE=str(Path.home() / ".aws/config"),
         AWS_SHARED_CREDENTIALS_FILE="/dev/null",
         AWS_REGION="us-east-2",

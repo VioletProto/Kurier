@@ -153,8 +153,8 @@ def main():
             HTTP_PROXY="http://127.0.0.1:18080",
             HTTPS_PROXY="http://127.0.0.1:18080",
             ALL_PROXY="http://127.0.0.1:18080",
-            NO_PROXY="",
-            no_proxy="",
+            NO_PROXY="127.0.0.1,localhost,::1",
+            no_proxy="127.0.0.1,localhost,::1",
             http_proxy="http://127.0.0.1:18080",
             https_proxy="http://127.0.0.1:18080",
             AWS_CA_BUNDLE=str(d / "ca/mitmproxy-ca-cert.pem"),
@@ -211,6 +211,14 @@ def main():
             return result.stdout
 
         try:
+            run(
+                [
+                    "node",
+                    "--input-type=module",
+                    "-e",
+                    "const http=await import('node:http');const s=http.createServer((q,r)=>r.end('local-rpc'));await new Promise(r=>s.listen(0,'127.0.0.1',r));try{const result=await new Promise((resolve,reject)=>http.get('http://127.0.0.1:'+s.address().port,r=>{let v='';r.on('data',x=>v+=x);r.on('end',()=>resolve(v));}).on('error',reject));if(result!=='local-rpc')throw Error('Local RPC failed')}finally{s.close()}",
+                ]
+            )
             # Prove proxy environment bypass cannot reach an external network.
             run(
                 [
