@@ -1,5 +1,11 @@
 # Workflow assertions execution preparation
 
+Current review: the [replacement execution packet](workflow-assertions-replacement-execution.md)
+corrects the outbox-settlement guard after the stopped first attempt and proposes
+one additional disposable pair with cumulative admission/send accounting.
+It preserves the fixture-inclusive pinned manifest and holds all live execution.
+The original preparation below is historical.
+
 **Historical preparation accepted at `c9f55d4980e24c1ec8d57e96a722fd06f7f0271f`.**
 Davian subsequently approved implementation of the controlled-fixture extension.
 The [fixture-inclusive final packet](workflow-assertions-fixture-review.md) now

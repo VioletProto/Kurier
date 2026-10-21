@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
   execute,
+  ActivationGuardError,
   inspectRows,
   transition,
   checkMarker,
@@ -348,37 +349,138 @@ test("published upload requires matching terminal job and immutable manifest", (
   f.rows.at(-1).item.bytes = N(101);
   assert.throws(() => inspectRows(f.rows), /proof/);
 });
-test("rollout stop: actual published outboxes fail the reviewed closure guard without a write", async () => {
-  // services/api/execution/maintenance.go settles an outbox as "published".
-  // The accepted activator expects "sent". Keep that mismatch visible pending
-  // separate repair/review; this regression must not relax the deployed guard.
+function publishedOutboxFixture(state = "completed") {
   const f = fixture();
-  const base = { PK: S("P#legacy-seed"), schemaVersion: N(1) };
-  f.rows.push(
-    {
-      table: "control",
-      item: {
-        ...base,
-        SK: S("JOB#settled"),
-        kind: S("executionJob"),
-        state: S("completed"),
-      },
+  const project = "11111111-1111-4111-8111-111111111111";
+  const job = "22222222-2222-4222-8222-222222222222";
+  const execution = "33333333-3333-4333-8333-333333333333";
+  const base = {
+    PK: S("P#" + project),
+    schemaVersion: N(1),
+    projectId: S(project),
+    executionId: S(execution),
+  };
+  const writer = {
+    ...base,
+    ownerId: S("owner"),
+    jobId: S(job),
+    recoveryGeneration: S("preserved-generation"),
+  };
+  const content = {
+    objectKey: S(
+      `dev-api/projects/${project}/evidence/${execution}/ticket.json`,
+    ),
+    checksum: S("f".repeat(64)),
+    bytes: N(100),
+  };
+  const items = {
+    job: {
+      ...writer,
+      SK: S("JOB#" + job),
+      kind: S("executionJob"),
+      state: S(state),
     },
-    {
-      table: "control",
-      item: {
-        ...base,
-        SK: S("OUT#settled"),
-        kind: S("executionOutbox"),
-        state: S("published"),
-        jobId: S("settled"),
-      },
+    anchor: {
+      ...writer,
+      SK: S("EXEC#" + execution),
+      kind: S("execution"),
+      state: S(state),
     },
-  );
-  await assert.rejects(execute(f.adapter, f.options), /Unsettled work/);
+    outbox: {
+      ...writer,
+      SK: S("OUT#" + job),
+      kind: S("executionOutbox"),
+      state: S("published"),
+    },
+    manifest: {
+      ...base,
+      SK: S("EXEC#" + execution + "#SNAP"),
+      kind: S("executionSnapshot"),
+      ...content,
+    },
+    upload: {
+      ...writer,
+      SK: S("UPLOAD#ticket"),
+      kind: S("executionUpload"),
+      state: S("published"),
+      writeSettled: { BOOL: true },
+      ...content,
+    },
+  };
+  for (const item of Object.values(items))
+    f.rows.push({ table: "control", item });
+  return { ...f, items };
+}
+for (const state of ["completed", "failed"])
+  test(`published outbox with matching ${state} writer and retained publication passes zero-write inspection`, async () => {
+    const f = publishedOutboxFixture(state);
+    const before = structuredClone(f.rows);
+    const result = await execute(f.adapter, f.options);
+    assert.equal(result.writes, 0);
+    assert.equal(f.calls.writes.length, 0);
+    assert.deepEqual(f.rows, before);
+    assert.equal(f.marker().state.S, "active");
+  });
+const invalidSettlement = {
+  "pending outbox": (x) => (x.outbox.state = S("pending")),
+  "unrecognized sent state": (x) => (x.outbox.state = S("sent")),
+  "unknown outbox state": (x) => (x.outbox.state = S("unknown")),
+  "running job": (x) => (x.job.state = S("running")),
+  "queued job": (x) => (x.job.state = S("queued")),
+  "deleted job": (x) => (x.job.state = S("deleted")),
+  "unknown job state": (x) => (x.job.state = S("unknown")),
+  "wrong job kind": (x) => (x.job.kind = S("request")),
+  "wrong job identity": (x) => (x.job.jobId = S("wrong")),
+  "wrong execution identity": (x) => (x.job.executionId = S("wrong")),
+  "wrong project": (x) => (x.job.projectId = S("wrong")),
+  "wrong owner": (x) => (x.job.ownerId = S("other")),
+  "wrong generation": (x) => (x.job.recoveryGeneration = S("other")),
+  "wrong run": (x) => (x.job.runId = S("other")),
+  "wrong position": (x) => (x.job.position = N(1)),
+  "inconsistent terminal anchor": (x) => (x.anchor.state = S("failed")),
+  "wrong anchor identity": (x) => (x.anchor.jobId = S("wrong")),
+  "wrong manifest kind": (x) => (x.manifest.kind = S("request")),
+  "wrong manifest identity": (x) => (x.manifest.executionId = S("wrong")),
+  "wrong manifest project": (x) => (x.manifest.projectId = S("wrong")),
+  "wrong object scope": (x) => (x.manifest.objectKey = S("other/prefix")),
+  "invalid checksum": (x) => (x.manifest.checksum = S("invalid")),
+  "zero bytes": (x) => (x.manifest.bytes = N(0)),
+  "excess bytes": (x) => (x.manifest.bytes = N(4194305)),
+  "unsettled upload": (x) => (x.upload.writeSettled = { BOOL: false }),
+  "writing upload": (x) => (x.upload.state = S("writing")),
+  "mismatched upload checksum": (x) => (x.upload.checksum = S("a".repeat(64))),
+  "mismatched upload job": (x) => (x.upload.jobId = S("wrong")),
+  "mismatched upload owner": (x) => (x.upload.ownerId = S("other")),
+  "mismatched upload generation": (x) =>
+    (x.upload.recoveryGeneration = S("other")),
+  "unknown record": (x) => (x.upload.kind = S("unknownKind")),
+};
+for (const [name, mutate] of Object.entries(invalidSettlement))
+  test(`outbox settlement rejects ${name} without writing`, async () => {
+    const f = publishedOutboxFixture();
+    mutate(f.items);
+    await assert.rejects(execute(f.adapter, f.options), ActivationGuardError);
+    assert.equal(f.calls.writes.length, 0);
+    assert.equal(f.marker().version.N, "13");
+  });
+for (const name of ["job", "anchor", "manifest", "upload"])
+  test(`outbox settlement rejects missing ${name} without writing`, async () => {
+    const f = publishedOutboxFixture();
+    f.rows.splice(
+      f.rows.findIndex((r) => r.item === f.items[name]),
+      1,
+    );
+    await assert.rejects(execute(f.adapter, f.options), ActivationGuardError);
+    assert.equal(f.calls.writes.length, 0);
+  });
+test("duplicate publication tickets cannot prove outbox settlement", async () => {
+  const f = publishedOutboxFixture();
+  f.rows.push({
+    table: "control",
+    item: { ...f.items.upload, SK: S("UPLOAD#duplicate") },
+  });
+  await assert.rejects(execute(f.adapter, f.options), ActivationGuardError);
   assert.equal(f.calls.writes.length, 0);
-  assert.equal(f.marker().state.S, "active");
-  assert.equal(f.marker().version.N, "13");
 });
 test("permanent residual registration requires tombstone, no children and empty-prefix proof", () => {
   const f = fixture();

@@ -31,6 +31,14 @@ closure/deployment/activation; normal disposable-fixture cleanup and its proof
 are recorded separately. The guard was not bypassed or changed. Further rollout
 requires review of that tooling incompatibility and revised fixture allowance;
 the existing stop/no-reopen/no-replay and broader fault/PITR boundaries remain.
+The [replacement execution review](../development/workflow-assertions-replacement-execution.md)
+corrects the outbox proof against actual terminal jobs and immutable publication,
+with an actual local-maintenance regression. It proposes one replacement pair
+(four identities/projects cumulative), carries the prior two steps/sends into
+the unchanged cumulative 28-step/28-send ceilings and retains unknown historical
+AWS-read/billing totals. Application ZIPs/manifest are unchanged. Deployment,
+closure, activation, identity/project creation and live requests are held for
+review; this correction task performs local verification only.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

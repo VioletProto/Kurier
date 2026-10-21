@@ -77,9 +77,11 @@ export const projectionFields = [
   "state",
   ...counterFields,
   "projectId",
+  "ownerId",
   "jobId",
   "executionId",
   "runId",
+  "position",
   "writeSettled",
   "objectKey",
   "checksum",
@@ -163,12 +165,93 @@ export function inspectRows(rows) {
         !terminal(state)) ||
       (kind === "executionWorkflowStep" &&
         !["completed", "failed", "skipped", "deleted"].includes(state)) ||
-      (kind === "executionOutbox" && state !== "sent") ||
+      (kind === "executionOutbox" && state !== "published") ||
       (kind === "executionRetention" && state !== "live") ||
       (kind === "project" && state !== "active") ||
       (r.assertionSemanticsVersion && r.assertionSemanticsVersion.N !== "0")
     )
       fail("Unsettled work or new assertion data; reconcile separately.");
+    if (kind === "executionOutbox") {
+      // publishOutbox also marks running jobs published. Delivery alone is not
+      // quiescence: require the exact terminal writer and its retained publication.
+      const get = (sk) => index.get(table + "/" + r.PK.S + "/" + sk);
+      const job = get("JOB#" + r.jobId?.S);
+      const anchor = get("EXEC#" + r.executionId?.S);
+      const snap = get("EXEC#" + r.executionId?.S + "#SNAP");
+      const tickets = rows.filter(
+        (x) =>
+          x.table === table &&
+          x.item.PK.S === r.PK.S &&
+          x.item.kind?.S === "executionUpload" &&
+          x.item.jobId?.S === r.jobId?.S,
+      );
+      const ticket = tickets.length === 1 ? tickets[0].item : undefined;
+      const same = (a, b, fields) =>
+        a &&
+        b &&
+        fields.every((k) => hash(a[k] ?? null) === hash(b[k] ?? null));
+      const identity = [
+        "projectId",
+        "ownerId",
+        "jobId",
+        "executionId",
+        "runId",
+        "position",
+        "recoveryGeneration",
+      ];
+      const uuid =
+        /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+      if (
+        r.schemaVersion.N !== "1" ||
+        ![r.projectId?.S, r.jobId?.S, r.executionId?.S].every((v) =>
+          uuid.test(v ?? ""),
+        ) ||
+        !r.ownerId?.S ||
+        !r.recoveryGeneration?.S ||
+        (r.runId
+          ? !uuid.test(r.runId.S ?? "") ||
+            (r.position !== undefined &&
+              (!nonnegative(r.position) || BigInt(r.position.N) > 9n))
+          : r.position !== undefined) ||
+        r.PK.S !== "P#" + r.projectId.S ||
+        r.SK.S !== "OUT#" + r.jobId.S ||
+        job?.kind?.S !== "executionJob" ||
+        job.schemaVersion?.N !== "1" ||
+        !["completed", "failed"].includes(job.state?.S) ||
+        !same(r, job, identity) ||
+        anchor?.kind?.S !== "execution" ||
+        anchor.schemaVersion?.N !== "1" ||
+        anchor.state?.S !== job.state.S ||
+        !same(r, anchor, identity) ||
+        snap?.kind?.S !== "executionSnapshot" ||
+        snap.schemaVersion?.N !== "1" ||
+        !same(r, snap, ["projectId", "executionId"]) ||
+        !snap.objectKey?.S?.startsWith(
+          "dev-api/projects/" +
+            r.projectId.S +
+            "/evidence/" +
+            r.executionId.S +
+            "/",
+        ) ||
+        !/^[a-f0-9]{64}$/.test(snap.checksum?.S ?? "") ||
+        !nonnegative(snap.bytes) ||
+        BigInt(snap.bytes.N) < 1n ||
+        BigInt(snap.bytes.N) > 4194304n ||
+        ticket?.schemaVersion?.N !== "1" ||
+        ticket.state?.S !== "published" ||
+        ticket.writeSettled?.BOOL !== true ||
+        !ticket.SK.S.startsWith("UPLOAD#") ||
+        !same(r, ticket, [
+          "projectId",
+          "ownerId",
+          "jobId",
+          "executionId",
+          "recoveryGeneration",
+        ]) ||
+        !same(snap, ticket, ["objectKey", "checksum", "bytes"])
+      )
+        fail("Published outbox terminal-job/publication proof incomplete.");
+    }
     if (kind === "executionResidual") {
       const project = r.projectId?.S;
       const tombstone = index.get(table + "/P#" + project + "/META");
