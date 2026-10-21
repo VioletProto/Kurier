@@ -1,0 +1,751 @@
+{
+  "schemaVersion": 1,
+  "outcome": "stopped-before-closure-normal-cleanup-complete",
+  "acceptedPacket": "e702f434eab1837cecc5ccfab100b861067b39e5",
+  "meteringCommits": [
+    "6066bc8b670e8f505c98d27fca1be7f514c33bfe",
+    "56e4cb26917713e99e5566651a6fdd5e21836790"
+  ],
+  "authorization": {
+    "twoAdditionalIdentitiesProjects": true,
+    "cumulativeIdentitiesProjectsMaximum": 4,
+    "cumulativeStepsMaximum": 28,
+    "absoluteSendsMaximum": 28,
+    "reviewedSequenceSendsMaximumWithReserve": 24,
+    "replacementMinutesMaximum": 120,
+    "cleanupReserveMinutes": 20,
+    "replacementAPIMaximum": 500,
+    "replacementPollMaximum": 240,
+    "minimumPollSeconds": 2,
+    "replacementAWSAttemptChargeMaximum": 1500,
+    "additionalAllowanceUsd": "1.00",
+    "automaticReopenOrTargetReplay": false,
+    "broadLiveFaultInjectionAndPITR": false
+  },
+  "release": {
+    "sourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+    "manifestSha256": "920667777eb69cabfb7800910451062a18e6ff06ce22ad4fb543f96c78321dd6",
+    "apiAndCleanupZipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
+    "workerAndFixtureZipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
+    "frontendReleaseId": "bd511e3f9979d2ef7dd6b73d183dcf7620a423b62659ac89c64e4a1a08981cde",
+    "unchanged": true,
+    "deploymentPerformed": false
+  },
+  "metering": {
+    "attemptLedgerSha256": "e3937c7f995b58e041bb42768bf2358ab89a436f82fdb56fec55b2eaf7ed8f9a",
+    "events": 1195,
+    "attempts": 597,
+    "counts": {
+      "api": 23,
+      "aws": 574,
+      "poll": 2,
+      "static": 0
+    },
+    "awsReadClassified": 551,
+    "awsWriteOrAuthenticationClassified": 23,
+    "allAWSAttemptsChargedToReadAllowance": true,
+    "allAttemptOutcomesRetained": true,
+    "allWritesAcknowledgedSuccess": true,
+    "awsHTTPProtocols": {
+      "HTTP/1.1": 507,
+      "HTTP/2.0": 67
+    },
+    "firstAttemptAt": "2026-10-21T04:10:35.225283+00:00",
+    "lastOutcomeAt": "2026-10-21T04:32:19.881212+00:00",
+    "elapsedSeconds": 1304.656,
+    "internalApplicationAWSCallsMeasured": false,
+    "credentialsHeadersBodiesURLsPersisted": false,
+    "meterTemporaryCARemoved": true
+  },
+  "priorHistory": {
+    "receipt": "workflow-assertions-rollout.json",
+    "admittedSteps": 2,
+    "auditedTargetSends": 2,
+    "identitiesAndProjectsCreatedAndCleaned": 2,
+    "applicationAPICalls": 25,
+    "polls": 2,
+    "totalAWSReads": null,
+    "actualIncrementalBillingUsd": null
+  },
+  "replacementUsage": {
+    "admittedSteps": 2,
+    "auditedTargetSends": 2,
+    "disposableIdentitiesCreated": 2,
+    "disposableProjectsCreated": 2,
+    "bothIdentitiesAndProjectsCleaned": true,
+    "actualIncrementalBillingUsd": null,
+    "extraTargetProbes": 0,
+    "targetReplay": false
+  },
+  "cumulativeKnownUsage": {
+    "admittedSteps": 4,
+    "auditedTargetSends": 4,
+    "disposableIdentitiesCreatedAndCleaned": 4,
+    "disposableProjectsCreatedAndCleaned": 4,
+    "applicationAPICalls": 48,
+    "polls": 4,
+    "totalAWSReads": null,
+    "actualIncrementalBillingUsd": null,
+    "unusedAllowanceDoesNotAuthorizeAnotherAttempt": true
+  },
+  "stop": {
+    "reason": "Unexpected HTTP GET /api/v1/projects/89e23639-6d02-4794-99ac-2760374ecc48/workflow-runs/37d1a805-d543-4f2e-a2cd-3032320cf2ba: 503 expected200 codeservice_unavailable",
+    "method": "GET",
+    "status": 503,
+    "code": "service_unavailable",
+    "workflowAdmittedOnce": true,
+    "rootCause": "not independently established",
+    "rolloutResumed": false,
+    "closeApprovalIssued": false,
+    "activationApprovalIssued": false,
+    "closurePerformed": false,
+    "deploymentPerformed": false,
+    "activationPerformed": false,
+    "stageWrites": 0
+  },
+  "legacyA": {
+    "runId": "37d1a805-d543-4f2e-a2cd-3032320cf2ba",
+    "state": "completed",
+    "terminalReadback": {
+      "marker": {
+        "protectedSecretsSchemaVersion": {
+          "N": "1"
+        },
+        "cloudExecutionsSchemaVersion": {
+          "N": "1"
+        },
+        "executionInputsSchemaVersion": {
+          "N": "1"
+        },
+        "mcpReadOnlySchemaVersion": {
+          "N": "1"
+        },
+        "schemaVersion": {
+          "N": "1"
+        },
+        "recoveryGeneration": {
+          "S": "dev-api-initial-v1"
+        },
+        "version": {
+          "N": "13"
+        },
+        "sequentialWorkflowsSchemaVersion": {
+          "N": "1"
+        },
+        "SK": {
+          "S": "META"
+        },
+        "kind": {
+          "S": "stage"
+        },
+        "savedRequestsSchemaVersion": {
+          "N": "7"
+        },
+        "evidencePinningSchemaVersion": {
+          "N": "1"
+        },
+        "localAgentExecutionsSchemaVersion": {
+          "N": "1"
+        },
+        "state": {
+          "S": "active"
+        },
+        "PK": {
+          "S": "STAGE#dev-api"
+        }
+      },
+      "markerSha256": "dca180063fb02b0c7bf7b1a5e582ae4b5b19109cadaae8eea61983412a09d10d",
+      "accountingSha256": "aa11b96e6c067fb00cdafc19fc9558b919ca970d000ac2dd84c3e87d5e8c3117",
+      "inspectionWrites": 0,
+      "completedRunId": "37d1a805-d543-4f2e-a2cd-3032320cf2ba",
+      "terminalJobs": [
+        {
+          "jobId": "13836f29-a033-483a-8718-78f7c03f8bb9",
+          "state": "completed"
+        },
+        {
+          "jobId": "f5c0fcc3-5944-4f58-a27f-291d2ca385c7",
+          "state": "completed"
+        }
+      ],
+      "outboxes": [
+        {
+          "jobId": "13836f29-a033-483a-8718-78f7c03f8bb9",
+          "state": "published"
+        },
+        {
+          "jobId": "f5c0fcc3-5944-4f58-a27f-291d2ca385c7",
+          "state": "published"
+        }
+      ],
+      "uploads": [
+        {
+          "state": "published",
+          "writeSettled": true
+        },
+        {
+          "state": "published",
+          "writeSettled": true
+        }
+      ],
+      "protectedRows": 0,
+      "targetAudits": [
+        {
+          "fixtureId": "1ac12633-7dc0-4fb8-93c3-cc7c6580ac95",
+          "mode": "workflow-token",
+          "authorized": false,
+          "requestId": "Fk6VpgsSCYcEP1g="
+        },
+        {
+          "fixtureId": "1ac12633-7dc0-4fb8-93c3-cc7c6580ac95",
+          "mode": "workflow-consume",
+          "authorized": true,
+          "requestId": "Fk6VxhBPCYcEPpQ="
+        }
+      ],
+      "stageUnchanged": true,
+      "noTargetReplay": true
+    },
+    "evidence": [
+      {
+        "executionId": "50c2f522-857c-4655-9abc-744020bb91a8",
+        "schemaVersion": 1,
+        "assertionsAbsent": true,
+        "storedBytes": 1322,
+        "sha256": "7993f297221b227dec107c109106988bef35da9a5fbb76c286cc29d5d1b4d6c2",
+        "manifestMatches": true,
+        "syntheticBindingRedacted": true
+      },
+      {
+        "executionId": "aacd438f-3e88-4d47-9ca8-b1668eca076f",
+        "schemaVersion": 1,
+        "assertionsAbsent": true,
+        "storedBytes": 1205,
+        "sha256": "67bd7a03d621ed97d5712f6be8a6308f62b7eb6aa35e592dcdba45016be13a54",
+        "manifestMatches": true,
+        "syntheticBindingRedacted": true
+      }
+    ],
+    "settlement": {
+      "jobs": [
+        {
+          "id": "JOB#13836f29-a033-483a-8718-78f7c03f8bb9",
+          "state": "completed"
+        },
+        {
+          "id": "JOB#f5c0fcc3-5944-4f58-a27f-291d2ca385c7",
+          "state": "completed"
+        }
+      ],
+      "outboxes": [
+        {
+          "id": "OUT#13836f29-a033-483a-8718-78f7c03f8bb9",
+          "state": "published"
+        },
+        {
+          "id": "OUT#f5c0fcc3-5944-4f58-a27f-291d2ca385c7",
+          "state": "published"
+        }
+      ],
+      "uploads": [
+        {
+          "id": "UPLOAD#0803fbd2-3f59-42be-a9e9-cd548ad89d0f",
+          "state": "published",
+          "writeSettled": true
+        },
+        {
+          "id": "UPLOAD#74457f76-191b-4f74-b2aa-6094ee76ab96",
+          "state": "published",
+          "writeSettled": true
+        }
+      ],
+      "assertionSemanticsMarkerAbsent": true,
+      "protectedRows": 0
+    },
+    "targetAudits": [
+      {
+        "fixtureId": "1ac12633-7dc0-4fb8-93c3-cc7c6580ac95",
+        "mode": "workflow-token",
+        "authorized": false,
+        "requestId": "Fk6VpgsSCYcEP1g="
+      },
+      {
+        "fixtureId": "1ac12633-7dc0-4fb8-93c3-cc7c6580ac95",
+        "mode": "workflow-consume",
+        "authorized": true,
+        "requestId": "Fk6VxhBPCYcEPpQ="
+      }
+    ],
+    "evidenceDeletedOnlyByNormalCleanup": true
+  },
+  "runtimeNotPerformed": [
+    "B-L",
+    "new backend/frontend deployment and reader verification",
+    "schema2 assertion runtime",
+    "hosted browser decimal author/reopen/unrelated-edit round trips",
+    "frozen assertion reruns",
+    "MCP legacy projection and pin/unpin runtime",
+    "broad live fault injection",
+    "elapsed retention/PITR"
+  ],
+  "cleanup": {
+    "startedAt": "2026-10-21T04:26:04.182Z",
+    "finishedAt": "2026-10-21T04:30:09.169Z",
+    "elapsedSeconds": 244.987,
+    "complete": true,
+    "projects": [
+      {
+        "id": "89e23639-6d02-4794-99ac-2760374ecc48",
+        "owner": 0,
+        "revision": 0,
+        "deletionOperationId": "d007b170-165f-46b7-89a8-3870d249d3f7",
+        "immediateOwnerDenied": true,
+        "cleaned": true,
+        "cleanupProof": {
+          "controlTombstoneOnly": true,
+          "protectedChildren": 0,
+          "s3Objects": 0,
+          "deletionState": "deleted"
+        }
+      },
+      {
+        "id": "454bed8d-6b9c-4d03-808d-7504593fe453",
+        "owner": 1,
+        "revision": 0,
+        "deletionOperationId": "be220a1d-58c5-4896-8799-c63f1186c604",
+        "immediateOwnerDenied": true,
+        "cleaned": true,
+        "cleanupProof": {
+          "controlTombstoneOnly": true,
+          "protectedChildren": 0,
+          "s3Objects": 0,
+          "deletionState": "deleted"
+        }
+      }
+    ],
+    "identities": [
+      {
+        "name": "kurier-assertions-b498dd62-d369-4343-a384-23ecf276ae47-0@example.invalid",
+        "created": true,
+        "owner": "c31af90f-008f-4184-b7f1-5f6da328117a",
+        "globalSignedOut": true,
+        "deleted": true,
+        "providerAbsent": true,
+        "retainedApplicationMetadata": [
+          {
+            "key": "EXECUTION_DAY#2026-10-21",
+            "kind": "executionQuota",
+            "count": "2"
+          },
+          {
+            "key": "META",
+            "kind": "user"
+          }
+        ]
+      },
+      {
+        "name": "kurier-assertions-b498dd62-d369-4343-a384-23ecf276ae47-1@example.invalid",
+        "created": true,
+        "owner": "b0dcbacd-e57a-4a89-94c8-968c098bfc39",
+        "globalSignedOut": true,
+        "deleted": true,
+        "providerAbsent": true,
+        "retainedApplicationMetadata": [
+          {
+            "key": "META",
+            "kind": "user"
+          }
+        ]
+      }
+    ],
+    "credentialRecovery": {
+      "existingUsersOnly": 2,
+      "newIdentities": 0,
+      "reason": "stopped coordinator disallows cleanup RPC",
+      "passwordsOrTokensPersisted": false,
+      "rolloutResumed": false
+    },
+    "residualRegistrations": [
+      {
+        "projectId": "89e23639-6d02-4794-99ac-2760374ecc48",
+        "kind": "executionResidual",
+        "schemaVersion": 1,
+        "registrationRetained": true
+      },
+      {
+        "projectId": "454bed8d-6b9c-4d03-808d-7504593fe453",
+        "kind": "executionResidual",
+        "schemaVersion": 1,
+        "registrationRetained": true
+      }
+    ],
+    "baselineStageQuota": [
+      {
+        "SK": {
+          "S": "QUOTA"
+        },
+        "version": {
+          "N": "10"
+        },
+        "month": {
+          "S": "2026-10"
+        },
+        "pinnedCount": {
+          "N": "0"
+        },
+        "count": {
+          "N": "4"
+        },
+        "kind": {
+          "S": "executionQuota"
+        },
+        "pinnedBytes": {
+          "N": "0"
+        },
+        "PK": {
+          "S": "STAGE#dev-api"
+        }
+      }
+    ],
+    "finalStageQuota": [
+      {
+        "version": {
+          "N": "15"
+        },
+        "count": {
+          "N": "6"
+        },
+        "SK": {
+          "S": "QUOTA"
+        },
+        "month": {
+          "S": "2026-10"
+        },
+        "pinnedCount": {
+          "N": "0"
+        },
+        "kind": {
+          "S": "executionQuota"
+        },
+        "pinnedBytes": {
+          "N": "0"
+        },
+        "PK": {
+          "S": "STAGE#dev-api"
+        }
+      }
+    ],
+    "ownerDayQuota": [
+      {
+        "kind": {
+          "S": "executionQuota"
+        },
+        "PK": {
+          "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+        },
+        "month": {
+          "S": "2026-10"
+        },
+        "version": {
+          "N": "0"
+        },
+        "SK": {
+          "S": "EXECUTION_DAY#2026-10-21"
+        },
+        "count": {
+          "N": "2"
+        }
+      }
+    ],
+    "priorOwnerUsagePreserved": [
+      {
+        "month": {
+          "S": "2026-10"
+        },
+        "PK": {
+          "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+        },
+        "SK": {
+          "S": "EXECUTION_DAY#2026-10-21"
+        },
+        "version": {
+          "N": "0"
+        },
+        "count": {
+          "N": "2"
+        },
+        "kind": {
+          "S": "executionQuota"
+        }
+      }
+    ],
+    "MCPCredentialCreated": false,
+    "manualDrainOrDurableRowRepair": false,
+    "RAMCredentialProcessesExited": true,
+    "offlineAccessJWTMayRemainValidUntilExpiry": true,
+    "taskDynamoDBLocalContainerAndNetworkRemoved": true
+  },
+  "finalInspection": {
+    "mode": "inspect",
+    "markerSha256": "dca180063fb02b0c7bf7b1a5e582ae4b5b19109cadaae8eea61983412a09d10d",
+    "accountingSha256": "0fd68e97ff8c01c8ba063b782eb7cffaa28c1ea9df053c1d46b2e64af52a4c8f",
+    "projects": 0,
+    "state": "active",
+    "version": "13",
+    "generation": "dev-api-initial-v1",
+    "readersReady": false,
+    "backendReadersReady": false,
+    "frontendReady": false,
+    "writes": 0
+  },
+  "finalPlatform": {
+    "checkedAt": "2026-10-21T04:31:22.436Z",
+    "baselineMatches": true,
+    "deploymentPerformed": false,
+    "activationPerformed": false,
+    "marker": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "13"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "7"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    },
+    "markerSha256": "dca180063fb02b0c7bf7b1a5e582ae4b5b19109cadaae8eea61983412a09d10d",
+    "snapshot": {
+      "account": "747336059622",
+      "region": "us-east-2",
+      "stage": "dev-api",
+      "functions": [
+        {
+          "resource": "UsersProjectsApi",
+          "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+          "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3",
+          "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 256,
+          "timeout": 15,
+          "reserved": null,
+          "configurationHash": "1e6a8d703a0f74558e2fec2352068aec8743829950336da06e6540217983ef35",
+          "mcp": "1",
+          "savedRequests": "7"
+        },
+        {
+          "resource": "EmptyProjectCleanup",
+          "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+          "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb",
+          "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 256,
+          "timeout": 60,
+          "reserved": null,
+          "configurationHash": "ed4630178b877a255c805a1bc04d25a435f7b7b0d0e8e3808137c91f508d7f8b",
+          "mcp": "1",
+          "savedRequests": "7"
+        },
+        {
+          "resource": "CloudExecutionWorker",
+          "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+          "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66",
+          "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 256,
+          "timeout": 90,
+          "reserved": null,
+          "configurationHash": "6d5df901054de62344c765581620c4d8160acbaff2c04b22db23a8afd05d5981",
+          "mcp": "1",
+          "savedRequests": null
+        },
+        {
+          "resource": "ExecutionControlledEndpoint",
+          "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+          "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81",
+          "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 128,
+          "timeout": 65,
+          "reserved": null,
+          "configurationHash": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+          "mcp": null,
+          "savedRequests": null
+        }
+      ],
+      "controls": {
+        "plan": {
+          "type": "FREE",
+          "status": "ACTIVE"
+        },
+        "quota": 10,
+        "unreserved": 10,
+        "queue": {
+          "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+          "state": "Enabled",
+          "batch": 1,
+          "max": 2,
+          "pollers": null,
+          "responses": ["ReportBatchItemFailures"]
+        },
+        "schedule": {
+          "state": "ENABLED",
+          "expression": "rate(1 minute)",
+          "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+        }
+      }
+    },
+    "currentLiveZipHashes": [
+      {
+        "resource": "UsersProjectsApi",
+        "sha256": "cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e"
+      },
+      {
+        "resource": "EmptyProjectCleanup",
+        "sha256": "cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e"
+      },
+      {
+        "resource": "CloudExecutionWorker",
+        "sha256": "2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900"
+      },
+      {
+        "resource": "ExecutionControlledEndpoint",
+        "sha256": "2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900"
+      }
+    ],
+    "frontendReleaseId": "acb951896da16807815751c0509b1f25647656d8a0963932c7fc1f3a8ccac67e",
+    "frontendFilesVerified": 5,
+    "queueEmpty": true,
+    "apiThrottleUnchanged": true,
+    "toolingMetadata": {
+      "passphraseMetadataSha256": "aa7f675d05f6577fd7805fbe968039afdef9a402e3a6f35d58126c84682a2dd8",
+      "stateBucketMetadataSha256": "f9707d4863afbfab126428a25c52631987ec2c231bda7661d884718574a3f353",
+      "stateObjects": 88
+    },
+    "toolingMetadataUnchanged": true,
+    "logScan": {
+      "start": "2026-10-21T04:10:35.225Z",
+      "end": "2026-10-21T04:30:09.169Z",
+      "completeBoundedPagination": true,
+      "functions": [
+        {
+          "function": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+          "logGroup": "/aws/lambda/kurier-dev-api-UsersProjectsApiFunction-orrftkzh",
+          "eventsScanned": 71,
+          "syntheticBindingAbsent": true
+        },
+        {
+          "function": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+          "logGroup": "/aws/lambda/kurier-dev-api-EmptyProjectCleanupFunction-conactwz",
+          "eventsScanned": 60,
+          "syntheticBindingAbsent": true
+        },
+        {
+          "function": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+          "logGroup": "/aws/lambda/kurier-dev-api-CloudExecutionWorkerFunction-dtfxzdew",
+          "eventsScanned": 21,
+          "syntheticBindingAbsent": true
+        },
+        {
+          "function": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+          "logGroup": "/aws/lambda/kurier-dev-api-ExecutionControlledEndpointFunction-drouvvsz",
+          "eventsScanned": 9,
+          "syntheticBindingAbsent": true
+        }
+      ],
+      "rawMessagesPersisted": false
+    },
+    "rootCauseOfPoll503": "not independently established"
+  },
+  "localVerification": {
+    "budgetTests": 10,
+    "SDKRetryAndPaginationAttempts": 9,
+    "nativeFetchAndBrowserAPIReadAttempts": 3,
+    "lostAcknowledgmentWriteForwards": 1,
+    "secondLostAcknowledgmentWriteBlocked": true,
+    "HTTP2Covered": true,
+    "directBypassErrno": "ENETUNREACH",
+    "isolatedLocalRPCVerified": true,
+    "transportTestAWSCalls": 0,
+    "cleanupMaximumReplacementSteps": 26,
+    "cleanupMaximumReplacementFixtureSends": 22,
+    "cleanupProjectSchedulerPasses": [19, 15],
+    "releasePinTests": 6,
+    "repositoryVerifyPassed": true
+  },
+  "evidenceDistinctions": {
+    "operatorProcessObservations": [
+      "Read-only preview initially failed on explicit profile credential selection.",
+      "Next preview failed on isolated localhost RPC proxying.",
+      "After local corrections, an IAM read timed out during post-preview verification; its attempt remains counted.",
+      "An IAM diagnostic used a mistyped role name and returned NoSuchEntity; the actual inventoried role was then verified readable.",
+      "A subsequent complete pinned preview passed and matched all reviewed resource/package/frontend changes.",
+      "The coordinator stopped on the first run status HTTP503; cleanup-only authentication rotated passwords of the same two disposable users without exporting the stopped process credentials."
+    ],
+    "independentEvidence": [
+      "597 metered transport attempts with outcomes; all writes acknowledged success",
+      "DynamoDB terminal identity/publication/settled-upload metadata",
+      "Two distinct gateway request IDs in controlled-fixture UUID auditing",
+      "Two stored immutable evidence byte lengths/SHA-256 values matching manifests before deletion",
+      "Normal tombstones, empty Protected/S3 prefixes, retained residual registrations and provider absence",
+      "Final code/IAM/configuration/controls snapshot matches accepted reader baseline",
+      "Unchanged stage marker and preserved admission usage",
+      "Complete bounded log pagination scans with no synthetic binding token"
+    ],
+    "externalOperatorReportsUsedAsProof": false,
+    "poll503RootCauseEstablished": false,
+    "actualBillingVerified": false
+  }
+}
