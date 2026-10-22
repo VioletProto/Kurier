@@ -18,6 +18,8 @@ secret storage exists. See the [saved-request guide](docs/development/saved-requ
 - `services/local-agent` — Go local execution agent and future MCP server
 - `infra` — isolated infrastructure spikes and future infrastructure
 - `docs` — architecture, decisions, spikes, and planning
+- `spikes/openapi-library-selection` — isolated Go parser/validator selection tests;
+  see the [proposed recommendation and contract](docs/spikes/openapi-library-selection.md)
 - `scripts` — future repository-level development scripts
 
 ## Prerequisites

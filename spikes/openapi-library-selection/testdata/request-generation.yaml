@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: Synthetic request generation compatibility
+  version: 1.0.0
+servers:
+  - url: https://example.invalid/v1
+paths:
+  /pets/{petId}:
+    parameters:
+      - $ref: "#/components/parameters/PetId"
+      - name: limit
+        in: query
+        schema: { type: string }
+        example: inherited
+    post:
+      operationId: updatePet
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer }
+          example: 5
+        - name: tags
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: { type: string }
+          examples:
+            basic:
+              value: [blue, green]
+        - name: active
+          in: query
+          schema: { type: boolean }
+          example: true
+        - name: X-Region
+          in: header
+          required: true
+          schema: { type: string }
+          examples:
+            ohio:
+              $ref: "#/components/examples/Region"
+      requestBody:
+        $ref: "#/components/requestBodies/Update"
+      responses:
+        "204":
+          description: No body
+components:
+  parameters:
+    PetId:
+      name: petId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: blue fox
+  requestBodies:
+    Update:
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Update"
+          examples:
+            basic:
+              $ref: "#/components/examples/Update"
+  examples:
+    Region:
+      value: ohio
+    Update:
+      value:
+        name: blue fox
+        active: true
+        ratio: 0.10000000000000001
+  schemas:
+    Update:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        active: { type: boolean }
+        ratio: { type: number }

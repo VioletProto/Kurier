@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: Synthetic selection fixture
+  version: 1.0.0
+servers:
+  - url: https://example.invalid
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      responses:
+        "200":
+          $ref: "#/components/responses/Pets"
+        "204":
+          description: Empty success
+components:
+  responses:
+    Pets:
+      description: Synthetic response
+      headers:
+        X-Trace:
+          required: true
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Pet"
+  schemas:
+    Pet:
+      type: object
+      required: [id, name]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        active:
+          type: boolean
+        score:
+          type: number
+        nickname:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
