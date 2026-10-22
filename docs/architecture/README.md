@@ -1,5 +1,94 @@
 # Accepted architecture
 
+## Accepted workflow assertions continuation
+
+Current status: Davian accepted scoped assertions functionality and cleanup from
+the retained A–G/H–L evidence at `4ffdaaf4cfb569a349ebd16ca739d8deb15aa973`, including
+the nine read-only OPTIONS stop-guard failures. Implementation and the authorized
+pinned dev-api deployment/activation are complete. The [PR review record](../development/workflow-assertions-pr-review.md)
+separates this acceptance from the [open tooling follow-up](https://trello.com/c/F47iWJY8)
+and locally-only teardown correction. Earlier holds below are historical. No
+additional live work is authorized by closeout.
+
+The accepted contract and subsequent rollout chronology follow.
+
+Davian accepted the [workflow assertions contract](workflow-assertions-contract.md)
+at `31de3929aa1423c25b264d9e459aec48728e1c90`, including its lossless numeric DTO
+and MCP legacy projection. Scoped cloud-workflow implementation, local tests and
+verification, API-contract synchronization and Trello updates are authorized.
+Numeric expectations use tagged decimal strings preserved through browser/API,
+frozen storage, reopening, unrelated edits and whole-run reruns. The separately
+authorized [deployment review](../development/workflow-assertions-deployment-review.md)
+records read-only inventory and a guarded SST preview of implementation
+`55cd061c0f6607037ebd61e200fe54ab296237c4`. Deployment, capability activation and
+genuine runtime tests remain on hold for separate review.
+Davian accepted that deployment approach, including closure and rollback
+limitations. The [execution preparation package](../development/workflow-assertions-execution-package.md)
+pins clean artifacts and a fresh equivalent preview, provides a guarded
+read-only-default activator and bounds future runtime tests. Deployment, stage
+writes, activation and target requests remain held. Davian accepted that execution
+preparation at `c9f55d4980e24c1ec8d57e96a722fd06f7f0271f` and approved the
+controlled-fixture extension. The [fixture-inclusive final review](../development/workflow-assertions-fixture-review.md)
+records its local tests, refreshed clean release/preview and updated activator
+pins. Deployment, stage closure, activation, identity creation and live target
+requests remain held; the 28-step/two-identity/two-project/$1 campaign is unchanged.
+Davian subsequently accepted final packet `7b5e847b6929e1b0006aede823fcb43b1926b9f8`
+and authorized its scoped rollout and bounded runtime campaign. The
+[rollout record](../development/workflow-assertions-rollout.md) reports the actual
+attempt: genuine legacy A completed, but the exact reviewed activator rejected
+settled `published` outboxes because it expects `sent`. Execution stopped before
+closure/deployment/activation; normal disposable-fixture cleanup and its proof
+are recorded separately. The guard was not bypassed or changed. Further rollout
+requires review of that tooling incompatibility and revised fixture allowance;
+the existing stop/no-reopen/no-replay and broader fault/PITR boundaries remain.
+The [replacement execution review](../development/workflow-assertions-replacement-execution.md)
+corrects the outbox proof against actual terminal jobs and immutable publication,
+with an actual local-maintenance regression. It proposes one replacement pair
+(four identities/projects cumulative), carries the prior two steps/sends into
+the unchanged cumulative 28-step/28-send ceilings and retains unknown historical
+AWS-read/billing totals. Application ZIPs/manifest are unchanged. Deployment,
+closure, activation, identity/project creation and live requests are held for
+review; this correction task performs local verification only.
+Davian accepted that replacement and conditionally authorized execution after
+complete operator attempt metering. The [metered replacement record](../development/workflow-assertions-replacement-rollout.md)
+reports its stop on a legacy-A status GET 503 before closure/deployment/activation.
+The run later proved completed without replay; both disposable pairs are now
+cleaned, with four cumulative consumed steps/sends. Unknown historical reads and
+billing remain unknown. The [local diagnosis and GET-only polling correction](../development/workflow-run-get-503-diagnostic.md)
+reproduces stale transactional-read rejection and a successful fresh read,
+without establishing the historical cause. Its bounded operator retry helper
+changes no application release and authorizes no new live execution.
+Davian accepted that reader correction and authorized one final attempt. The
+[final rollout record](../development/workflow-assertions-final-rollout.md)
+reports the unchanged pinned release deployed and active at version 15,
+savedRequests8/assertions1, with preserved generation and verified IAM/platform
+controls. Genuine A–G passed; a fail-closed browser transport denial stopped
+execution before H admission. Both provider users and the second project are
+proved cleaned; the first physical cascade and final post-cleanup accounting
+remain unverified within the bounded window. All live calls stopped. No campaign
+restart or further execution is authorized by unused admission capacity.
+The later [focused cleanup verification](../development/workflow-assertions-cleanup-verification.md)
+proves the first project's current physical cleanup and current accounting
+consistency. It preserves the missing historical readbacks. Collector corrections
+and the complete pinned-browser authentication flow passed local metered tests;
+H–L remain held, with no redeployment or A–G replay.
+Davian subsequently authorized the H–L-only continuation from `2c9c24b`, with one
+additional disposable owner/project and the retained bounds. Its
+[preflight record](../development/workflow-assertions-hl-rollout.md) reports a stop
+before resource creation: stage monthly count22/version52/reserved3302 differs
+from the retained count20/version48/reserved0. Attribution is unestablished;
+H–L remain unperformed, with known campaign totals18steps/16sends unchanged.
+The [instructor-cleanup continuation](../development/workflow-assertions-hl-continuation.md)
+observed the existing deletion and reconciled monthly22/version54/storage0,
+preserving both instructor dates. Full preflight passed, then browser authoring
+stopped before H admission. The additional disposable owner/project was normally
+cleaned; operator driver corrections passed local pinned-browser tests. H–L
+remains unperformed, known steps/sends remain18/16, and seven cumulative disposable
+identities/projects have been created and cleaned. The application pins are unchanged.
+The authorized replacement subsequently completed H–L and normal cleanup against the unchanged deployed release: [runtime and cleanup packet](../development/workflow-assertions-hl-replacement.md). Cumulative campaign admissions/sends are 28/24; instructor charges are preserved separately. The frozen audit retains nine read-only OPTIONS transport failures as an explicit review gap; the browser teardown correction passed locally only. No remaining reserve submissions or inferred authorization for further live work.
+The [implementation guide](../development/workflow-assertions.md) distinguishes
+local fixtures from actual deployment/runtime evidence.
+
 ## Authorized development-data reset
 
 Davian authorized clearing all development accounts and live application data on

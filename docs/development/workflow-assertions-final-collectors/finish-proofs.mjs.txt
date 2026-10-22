@@ -1,0 +1,4 @@
+import{readFileSync}from'node:fs';import{spawnSync}from'node:child_process';
+const directory='.build/workflow-assertions-final/';const start=JSON.parse(readFileSync(process.env.KURIER_ATTEMPT_METER_DIRECTORY+'/attempts.jsonl','utf8').split('\n')[0]).at*1000;const deadline=start+1200000;
+while(!JSON.parse(readFileSync(directory+'ledger.json')).finishedAt&&Date.now()+20000<deadline)await new Promise(r=>setTimeout(r,1000));
+for(const name of ['cleanup-last-proof.mjs','final-readback.mjs']){const remaining=deadline-Date.now()-5000;if(remaining<=0){console.log(JSON.stringify({proofNotRun:name,reason:'cleanup-window'}));break;}const result=spawnSync('node',[directory+name],{encoding:'utf8',timeout:remaining,maxBuffer:16*1024*1024});if(result.stdout)process.stdout.write(result.stdout);console.log(JSON.stringify({proof:name,exit:result.status,timedOut:result.error?.code==='ETIMEDOUT'}));if(result.status!==0)break;}

@@ -3,6 +3,7 @@ package execution
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"strconv"
 	"strings"
@@ -83,6 +84,10 @@ func StrictJSON(raw []byte, target any) error {
 	typed.DisallowUnknownFields()
 	typed.UseNumber()
 	if e := typed.Decode(target); e != nil {
+		var bounded *Error
+		if errors.As(e, &bounded) && bounded.Status == 413 {
+			return failure(413, "payload_too_large")
+		}
 		return failure(400, "invalid_request")
 	}
 	return nil

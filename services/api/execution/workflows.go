@@ -21,6 +21,40 @@ type WorkflowDefinition struct {
 	Name  string                `json:"name"`
 	Steps []runner.WorkflowStep `json:"steps"`
 }
+
+// Keep preactivation/legacy stored configurations readable by older binaries.
+// Owner DTOs always normalize omission to [], while legacy frozen runs stay v1.
+func workflowDefinitionJSON(d WorkflowDefinition, assertions bool) []byte {
+	raw, _ := json.Marshal(d)
+	if assertions {
+		return raw
+	}
+	var v map[string]json.RawMessage
+	_ = json.Unmarshal(raw, &v)
+	var steps []map[string]json.RawMessage
+	_ = json.Unmarshal(v["steps"], &steps)
+	for _, step := range steps {
+		delete(step, "assertions")
+	}
+	v["steps"], _ = json.Marshal(steps)
+	raw, _ = json.Marshal(v)
+	return raw
+}
+
+// Reserve metadata headroom for terminal timestamps, counters, outcome and
+// retention before the first send. Assertions add no finalization actions.
+func workflowAdmissionHeadroom(r row) error {
+	item, err := attributevalue.MarshalMap(r)
+	if err != nil {
+		return safeError()
+	}
+	raw, err := json.Marshal(item)
+	if err != nil || len(raw) > 128*1024-4096 {
+		return failure(413, "payload_too_large")
+	}
+	return nil
+}
+
 type Workflow struct {
 	WorkflowDefinition
 	WorkflowID string `json:"workflowId"`
@@ -38,6 +72,61 @@ type RunStep struct {
 	EvidenceExpired bool       `json:"evidenceExpired"`
 	LiveRequestID   *string    `json:"liveRequestId"`
 }
+
+func (s RunStep) MarshalJSON() ([]byte, error) {
+	// Do not promote WorkflowStep.MarshalJSON: it would hide run metadata.
+	type stepFields runner.WorkflowStep
+	step := s.WorkflowStep
+	if step.Assertions == nil {
+		step.Assertions = []runner.Assertion{}
+	}
+	return json.Marshal(struct {
+		stepFields
+		Assertions      []runner.Assertion `json:"assertions"`
+		Position        int                `json:"position"`
+		ExecutionID     *string            `json:"executionId"`
+		State           string             `json:"state"`
+		Summary         *Summary           `json:"summary"`
+		Retention       *Retention         `json:"retention"`
+		EvidenceExpired bool               `json:"evidenceExpired"`
+		LiveRequestID   *string            `json:"liveRequestId"`
+	}{stepFields(step), step.Assertions, s.Position, s.ExecutionID, s.State, s.Summary, s.Retention, s.EvidenceExpired, s.LiveRequestID})
+}
+
+func (s *RunStep) UnmarshalJSON(raw []byte) error {
+	// Separate the embedded authoring fields from the run-only DTO fields.
+	var fields map[string]json.RawMessage
+	if StrictJSON(raw, &fields) != nil {
+		return safeError()
+	}
+	step := map[string]json.RawMessage{}
+	for _, key := range []string{"stepId", "requestId", "requestRevision", "extract", "bindings", "assertions"} {
+		if v, ok := fields[key]; ok {
+			step[key] = v
+			delete(fields, key)
+		}
+	}
+	encoded, _ := json.Marshal(step)
+	if StrictJSON(encoded, &s.WorkflowStep) != nil {
+		return safeError()
+	}
+	var details struct {
+		Position        int        `json:"position"`
+		ExecutionID     *string    `json:"executionId"`
+		State           string     `json:"state"`
+		Summary         *Summary   `json:"summary"`
+		Retention       *Retention `json:"retention"`
+		EvidenceExpired bool       `json:"evidenceExpired"`
+		LiveRequestID   *string    `json:"liveRequestId"`
+	}
+	encoded, _ = json.Marshal(fields)
+	if StrictJSON(encoded, &details) != nil {
+		return safeError()
+	}
+	s.Position, s.ExecutionID, s.State, s.Summary, s.Retention, s.EvidenceExpired, s.LiveRequestID = details.Position, details.ExecutionID, details.State, details.Summary, details.Retention, details.EvidenceExpired, details.LiveRequestID
+	return nil
+}
+
 type WorkflowRun struct {
 	WorkflowRunID    string    `json:"workflowRunId"`
 	WorkflowID       string    `json:"workflowId"`
@@ -123,6 +212,13 @@ func (s *Service) SaveWorkflow(ctx context.Context, owner, project, workflow str
 	if e != nil {
 		return Workflow{}, e
 	}
+	if stage.WorkflowAssertionsSchemaVersion != 1 {
+		for _, step := range d.Steps {
+			if len(step.Assertions) > 0 {
+				return Workflow{}, safeError()
+			}
+		}
+	}
 	d.Name = strings.TrimSpace(d.Name)
 	if !validWorkflowName(d.Name) {
 		return Workflow{}, failure(400, "validation_failed")
@@ -131,7 +227,7 @@ func (s *Service) SaveWorkflow(ctx context.Context, owner, project, workflow str
 	if e != nil {
 		return Workflow{}, e
 	}
-	raw, _ := json.Marshal(d)
+	raw := workflowDefinitionJSON(d, stage.WorkflowAssertionsSchemaVersion == 1)
 	if len(raw) > ConfigLimit {
 		return Workflow{}, failure(413, "payload_too_large")
 	}
@@ -358,13 +454,25 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 		return WorkflowRun{}, failure(413, "payload_too_large")
 	}
 	now := stamp(s.now())
-	defRaw, _ := json.Marshal(definition)
+	semantics := stage.WorkflowAssertionsSchemaVersion
+	if rerun {
+		semantics = wf.AssertionSemanticsVersion
+	}
+	defRaw := workflowDefinitionJSON(definition, semantics == 1)
+	if len(defRaw) > ConfigLimit {
+		return WorkflowRun{}, failure(413, "payload_too_large")
+	}
 	run := row{PK: p.PK, SK: "RUN#" + runID, Kind: "executionWorkflowRun", SchemaVersion: 1, ProjectID: project, OwnerID: owner, RunID: runID, WorkflowID: wf.WorkflowID, WorkflowRevision: wf.Revision, State: "queued", StepCount: len(plans), ConfigurationJSON: string(defRaw), Sources: sources, SubmittedAt: now, RecoveryGeneration: stage.RecoveryGeneration, LPK: p.PK + "#RUN", LSK: now + "#" + runID}
+	run.AssertionSemanticsVersion = stage.WorkflowAssertionsSchemaVersion
 	run.WorkflowSubmission = workflowDefinitionSubmission
 	if rerun {
+		run.AssertionSemanticsVersion = wf.AssertionSemanticsVersion
 		run.WorkflowRevision = wf.WorkflowRevision
 		run.WorkflowSubmission = workflowFrozenRerun
 		run.RerunSourceRunID = source
+	}
+	if err := workflowAdmissionHeadroom(run); err != nil {
+		return WorkflowRun{}, err
 	}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), user, s.projectUpdate(p, 0, 1)}
 	// Fence the definition or retained source run against concurrent deletion.
@@ -377,6 +485,9 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	}
 	for i, plan := range plans {
 		step := row{PK: p.PK, SK: stepKey(runID, i), Kind: "executionWorkflowStep", SchemaVersion: 1, ProjectID: project, OwnerID: owner, RunID: runID, Position: i, State: "pending", Plan: &plan}
+		if err := workflowAdmissionHeadroom(step); err != nil {
+			return WorkflowRun{}, err
+		}
 		if i == 0 {
 			step.State = "queued"
 			step.ExecutionID = workflowIdentity(runID, i, "execution")
@@ -453,6 +564,9 @@ func workflowIdentity(run string, pos int, purpose string) string { // UUID-form
 func (s *Service) workflowJobActions(run row, plan Plan, pos int, now string) ([]dt.TransactWriteItem, error) {
 	exec, job := workflowIdentity(run.RunID, pos, "execution"), workflowIdentity(run.RunID, pos, "job")
 	anchor := row{PK: run.PK, SK: "EXEC#" + exec, Kind: "execution", SchemaVersion: 1, ProjectID: run.ProjectID, OwnerID: run.OwnerID, RunID: run.RunID, Position: pos, State: "queued", ExecutionID: exec, JobID: job, Plan: &plan, SubmittedAt: now, RecoveryGeneration: run.RecoveryGeneration, LPK: run.PK + "#EXEC", LSK: now + "#" + exec, HPK: run.PK + "#REQ#" + plan.RequestID, HSK: now + "#" + exec}
+	if err := workflowAdmissionHeadroom(anchor); err != nil {
+		return nil, err
+	}
 	j := row{PK: run.PK, SK: "JOB#" + job, Kind: "executionJob", SchemaVersion: 1, ProjectID: run.ProjectID, OwnerID: run.OwnerID, RunID: run.RunID, Position: pos, State: "queued", ExecutionID: exec, JobID: job, Sources: run.Sources, SubmittedAt: now, RecoveryGeneration: run.RecoveryGeneration, DPK: dueShard(run.ProjectID), DSK: stamp(s.now().Add(10*time.Minute)) + "#" + job}
 	out := row{PK: run.PK, SK: "OUT#" + job, Kind: "executionOutbox", SchemaVersion: 1, ProjectID: run.ProjectID, OwnerID: run.OwnerID, ExecutionID: exec, JobID: job, RunID: run.RunID, Position: pos, State: "pending", RecoveryGeneration: run.RecoveryGeneration, DPK: dueShard(run.ProjectID), DSK: now + "#" + job}
 	actions := []dt.TransactWriteItem{}

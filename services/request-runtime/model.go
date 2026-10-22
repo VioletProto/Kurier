@@ -133,20 +133,21 @@ type Outcome struct {
 	Certainty string  `json:"certainty"`
 }
 type Evidence struct {
-	SchemaVersion int             `json:"schemaVersion"`
-	ProjectID     string          `json:"projectId"`
-	ExecutionID   string          `json:"executionId"`
-	Source        Source          `json:"source"`
-	Target        string          `json:"target"`
-	SubmittedAt   string          `json:"submittedAt"`
-	StartedAt     *string         `json:"startedAt"`
-	CompletedAt   string          `json:"completedAt"`
-	Status        string          `json:"status"`
-	Outcome       Outcome         `json:"outcome"`
-	Request       RequestCapture  `json:"request"`
-	Response      ResponseCapture `json:"response"`
-	Timing        Timing          `json:"timing"`
-	Redaction     Redaction       `json:"redaction"`
+	SchemaVersion int                  `json:"schemaVersion"`
+	ProjectID     string               `json:"projectId"`
+	ExecutionID   string               `json:"executionId"`
+	Source        Source               `json:"source"`
+	Target        string               `json:"target"`
+	SubmittedAt   string               `json:"submittedAt"`
+	StartedAt     *string              `json:"startedAt"`
+	CompletedAt   string               `json:"completedAt"`
+	Status        string               `json:"status"`
+	Outcome       Outcome              `json:"outcome"`
+	Request       RequestCapture       `json:"request"`
+	Response      ResponseCapture      `json:"response"`
+	Timing        Timing               `json:"timing"`
+	Redaction     Redaction            `json:"redaction"`
+	Assertions    *AssertionEvaluation `json:"assertions,omitempty"`
 }
 
 func omitted(reason string) Body { return Body{Kind: "omitted", OmissionReason: &reason} }

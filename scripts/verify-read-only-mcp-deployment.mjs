@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
+import { runCollectorOnce } from "./lib/workflow-assertions-collectors.mjs";
 export const outputs = JSON.parse(
   readFileSync(new URL("../.sst/outputs.json", import.meta.url), "utf8"),
 );
@@ -23,7 +24,11 @@ export const hash = (v) =>
 // Node uses socketpairs for child stdio on Linux; AWS cannot reopen those
 // through /dev/stdin. Use an inherited, seekable anonymous RAM descriptor;
 // secret values never enter argv, persistent files, shell interpolation or logs.
-export function awsProcess(args, input) {
+export function awsProcess(
+  args,
+  input,
+  { deadlineMs, reserveMs = 5_000 } = {},
+) {
   const program = `import json, os, subprocess, sys
 v = json.load(sys.stdin)
 a = ["aws", *v["args"], "--region", "us-east-2", "--output", "json"]
@@ -43,10 +48,17 @@ sys.stdout.buffer.write(r.stdout)
 sys.stderr.buffer.write(r.stderr)
 sys.exit(r.returncode)
 `;
-  return spawnSync("python3", ["-c", program], {
+  const options = {
     input: JSON.stringify({ args, ...(input ? { input } : {}) }),
     maxBuffer: 16 * 1024 * 1024,
-  });
+  };
+  return deadlineMs === undefined
+    ? spawnSync("python3", ["-c", program], options)
+    : runCollectorOnce("python3", ["-c", program], {
+        ...options,
+        deadlineMs,
+        reserveMs,
+      });
 }
 export function aws(args, input) {
   const r = awsProcess(args, input);
@@ -82,7 +94,7 @@ export function marker() {
     "--consistent-read",
   ]).Item;
 }
-function snapshot() {
+export function snapshot() {
   const functions = [];
   for (const [resource, name] of [
     ["UsersProjectsApi", outputs.apiFunction],

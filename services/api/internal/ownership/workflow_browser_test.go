@@ -37,3 +37,18 @@ func configureBrowserWorkflows(t *testing.T, i *integration) {
 		t.Fatal(e)
 	}
 }
+
+func configureBrowserAssertions(t *testing.T, i *integration) {
+	t.Helper()
+	stage, e := i.store.get(context.Background(), "STAGE#local", "META")
+	if e != nil {
+		t.Fatal(e)
+	}
+	stage.SavedRequestsSchemaVersion = 8
+	stage.WorkflowAssertionsSchemaVersion = 1
+	stage.Version++
+	item, _ := encode(stage)
+	if _, e = i.client.PutItem(context.Background(), &dynamodb.PutItemInput{TableName: &i.store.table, Item: item}); e != nil {
+		t.Fatal(e)
+	}
+}

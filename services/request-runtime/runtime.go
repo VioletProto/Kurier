@@ -238,6 +238,11 @@ func (e *Evidence) Fail(code, certainty string) {
 	e.CompletedAt = stamp(time.Now())
 }
 func (p *Prepared) Run(ctx context.Context, e *Evidence) {
+	if p.workflow != nil && p.workflow.AssertionSemanticsVersion == 1 {
+		e.SchemaVersion = 2
+		e.Assertions = NewAssertionEvaluation(p.workflow.Step, "not_dispatched")
+		defer CompleteAssertionAttempt(e, p.workflow.Step)
+	}
 	defer p.transport.CloseIdleConnections()
 	started := p.preparedAt
 	ctx, cancel := context.WithDeadline(ctx, started.Add(p.timeout))
@@ -339,9 +344,14 @@ func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 		return
 	}
 	var workflowStorageError error
+	assertionsEvaluated := false
 	if p.workflow != nil && len(p.workflow.Step.Extract) > 0 {
 		paths, extractErr := p.workflow.capture(raw, response.Header.Get("Content-Type"))
-		if extractErr == nil && p.workflow.Seal != nil {
+		if e.Assertions != nil {
+			e.Assertions = EvaluateAssertions(p.workflow.Step, e.Response.HTTPStatus, raw, response.Header.Get("Content-Type"), p.policy, p.workflow.Values, "")
+			assertionsEvaluated = true
+		}
+		if extractErr == nil && p.workflow.Seal != nil && (e.Assertions == nil || e.Assertions.Passed()) {
 			workflowStorageError = p.workflow.Seal(p.workflow.Outputs)
 		}
 		p.sanitizer = newSanitizer(p.workflow.Values)
@@ -377,6 +387,9 @@ func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 			e.Fail("extraction_failed", "known")
 			return
 		}
+	}
+	if e.Assertions != nil && !assertionsEvaluated {
+		e.Assertions = EvaluateAssertions(p.workflow.Step, e.Response.HTTPStatus, raw, response.Header.Get("Content-Type"), p.policy, p.workflow.Values, "")
 	}
 	e.Response.Body = p.sanitizer.body(raw, response.Header.Get("Content-Type"), p.policy)
 	if p.workflow != nil && len(p.workflow.Step.Extract) > 0 && e.Response.Body.Kind == "omitted" {

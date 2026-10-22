@@ -1,0 +1,801 @@
+{
+  "kind": "kurier-assertions-closeout-offline-review-v1",
+  "base": "f4d1f3b84d3bbf04c451ba927ad9b4853468fed5",
+  "acceptedFunctionalEvidenceCommit": "4ffdaaf4cfb569a349ebd16ca739d8deb15aa973",
+  "baseIsMergeBase": true,
+  "reviewedPreCloseoutFiles": 149,
+  "validation": {
+    "json": 18,
+    "jsonl": 7,
+    "python": 20,
+    "mjs": 34
+  },
+  "applicationAndToolingDiffSha256": "2b50556706a9b877d10c3fbb89c67a6a34c8b0d574a919cb8c7298d119add475",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 1938,
+      "sha256": "0f9edb6f5d92e999d1049051b2c7f3b76d14a2afa351d8354e9ffa9fc026db68"
+    },
+    {
+      "path": "apps/web/e2e/workflows.spec.ts",
+      "bytes": 6170,
+      "sha256": "f7bd7b9a9039b92a754552b51c9b34fd0326fe57b7e6946f5e8f699b97782f5e"
+    },
+    {
+      "path": "apps/web/src/Assertions.tsx",
+      "bytes": 6979,
+      "sha256": "b8518c7ba9838f66da2e65370974763216e8085302c4e6dc3210acae73af1d32"
+    },
+    {
+      "path": "apps/web/src/Executions.tsx",
+      "bytes": 29470,
+      "sha256": "1d2cdad850f5f6a6f6e39ea68c1d14d0048a9f47cc00ab534adca01d3558a509"
+    },
+    {
+      "path": "apps/web/src/Workflows.test.tsx",
+      "bytes": 8586,
+      "sha256": "a84b5d17810b66bebce8be2e5dd66ed20574db20f53fa8240a9c2242eb5c59d4"
+    },
+    {
+      "path": "apps/web/src/Workflows.tsx",
+      "bytes": 33024,
+      "sha256": "2f718d0fe399506a7edcf7e70f045ba51a480e67eaa7ea99c20218a9dd0d4474"
+    },
+    {
+      "path": "apps/web/src/api.ts",
+      "bytes": 28919,
+      "sha256": "80a81a8b45a7d27b61510a00b23b51413e9d1dffd0b98fff765836989cd1c936"
+    },
+    {
+      "path": "apps/web/src/assertions.test.ts",
+      "bytes": 3214,
+      "sha256": "3858df7f6e06b4a9422724e89a33799a63953b7469c064bf0f41c201201bc5e1"
+    },
+    {
+      "path": "apps/web/src/assertions.ts",
+      "bytes": 3794,
+      "sha256": "7038d76442eb8e074562c424d22f09d1ce0eff269f3af1f9146790c7fd6b03aa"
+    },
+    {
+      "path": "docs/architecture/README.md",
+      "bytes": 20177,
+      "sha256": "4d22b789e2db6c42da5cff6b54454637989bdd0b67613d330d9244b0d486d8a5"
+    },
+    {
+      "path": "docs/architecture/drafts/workflow-assertions-review-draft.md",
+      "bytes": 11117,
+      "sha256": "9feaff3739f05cfddcf4704748972f45b0a15fa2f6e615cc5d42aee59c2f5b86"
+    },
+    {
+      "path": "docs/architecture/workflow-assertions-contract.md",
+      "bytes": 61695,
+      "sha256": "82abbec7489899f0eb8bd0994e3c1bce0e1de9e3629c8c3ab60a93172f9e3230"
+    },
+    {
+      "path": "docs/development/workflow-assertions-activation-preflight.json",
+      "bytes": 557,
+      "sha256": "29e93cfc40fdcf2d393bda1e1f8bfe0e4b10a63d6b57ee6d84f1bd5d10ee7915"
+    },
+    {
+      "path": "docs/development/workflow-assertions-attempt-metering.md",
+      "bytes": 7586,
+      "sha256": "f65f43a9fc56d7e1fb0516f7f74a0fc4b7ee5375f195b3bc8251a5c94145c28e"
+    },
+    {
+      "path": "docs/development/workflow-assertions-cleanup-verification-attempts.jsonl",
+      "bytes": 6409,
+      "sha256": "c7984a58bb150835436fc141bc82ce47f8e60f249c0f3613ca56b2813baca098",
+      "records": 41,
+      "transportErrorOutcomes": 0
+    },
+    {
+      "path": "docs/development/workflow-assertions-cleanup-verification.json",
+      "bytes": 13031,
+      "sha256": "b0734b7a8007f36e55249f68806cf907bd11feac8f053a782c82bd34acd01f25"
+    },
+    {
+      "path": "docs/development/workflow-assertions-cleanup-verification.md",
+      "bytes": 8606,
+      "sha256": "bcd7f3ffcdb64b2fcb425929a1202c7a0546ba9aad07d9716356165c132b94bc"
+    },
+    {
+      "path": "docs/development/workflow-assertions-cleanup-verification.sha256",
+      "bytes": 1899,
+      "sha256": "9eeb25074a13be78a9eecb3fba4374429bd762617aa1d6912698ccecc3f8b2f0"
+    },
+    {
+      "path": "docs/development/workflow-assertions-deployment-review.md",
+      "bytes": 27863,
+      "sha256": "a359f04e86fb4a202eca3d8c5ba2811dba669d9004bd0cc6221ff2556c2d2e33"
+    },
+    {
+      "path": "docs/development/workflow-assertions-execution-package.md",
+      "bytes": 23555,
+      "sha256": "36e64f109f01edc936e96921b6e7aa5d07c3006198e81a6ece4856c9eb3e2568"
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-attempts.jsonl",
+      "bytes": 257208,
+      "sha256": "75d3b383807449fe348281dc5b0dc0d199753613f23fe566414779a5f493beca",
+      "records": 1676,
+      "transportErrorOutcomes": 1
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-cleanup-attempts.jsonl",
+      "bytes": 48362,
+      "sha256": "5e0932c14180ca9b69bb490aa4b75635290186879bbcf6b5ca9bf485677fde19",
+      "records": 315,
+      "transportErrorOutcomes": 0
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-collectors/cleanup-observer.mjs.txt",
+      "bytes": 4597,
+      "sha256": "9c46da9761bc343e8002fadcdfac1ef0fee7d85d3b41235a0958e8d86f7866a9"
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-collectors/finish-proofs.mjs.txt",
+      "bytes": 921,
+      "sha256": "5ea2d5ffb5a5ce3849f09143a6bc4eb85c0bc01b2a2121e14207e6a9589395a6"
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-evidence.sha256",
+      "bytes": 1269,
+      "sha256": "665f7a340ff657422cffee4248c9809b56973c13cdaf9d43d1e5569356b5b667"
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-execution.md",
+      "bytes": 3432,
+      "sha256": "b8ac8f9e407787316c06788bab39be5e48634e181baa5b2ac3af9cab5eb4d591"
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-preview.json",
+      "bytes": 11200,
+      "sha256": "bd7a7ee2ee1a280f2e96d597e8147e65a589ce925c2402c90befc033327c5cc9"
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-rollout.json",
+      "bytes": 43919,
+      "sha256": "f8b20b3c63a0dff4e772ce6bec200415639770f94cefaa1d63e451ba9de829df"
+    },
+    {
+      "path": "docs/development/workflow-assertions-final-rollout.md",
+      "bytes": 12547,
+      "sha256": "7b725f666990d8bc34d0917cd3fb78a824b26b3c5b506b166688a0f6c7869e5c"
+    },
+    {
+      "path": "docs/development/workflow-assertions-fixture-review.md",
+      "bytes": 14691,
+      "sha256": "0029124b98fe38491edd2fb8997da634d87506d12617ed548a71b1ed1c3fb994"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-attempts.jsonl",
+      "bytes": 16812,
+      "sha256": "50318328c26aecc98f776e41768931d3d693c23a3b103c8bbf2f7b5282fdece1",
+      "records": 109,
+      "transportErrorOutcomes": 0
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-context-close-driver.mjs.txt",
+      "bytes": 6461,
+      "sha256": "14c6e1e402ec1b7e45d005f6c00502b35c02018f3fc59c2fd6120981b8193017"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-continuation-attempts.jsonl",
+      "bytes": 48999,
+      "sha256": "5672e5f765b66646d4812f50f2ade0c6abd06f2070cb6babb85ac65d261e2495",
+      "records": 319,
+      "transportErrorOutcomes": 0
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-continuation.json",
+      "bytes": 53929,
+      "sha256": "ef9200cbbd36beee38008896a6d0986fd675af052d243dfe9e62bafa5c06ac5a"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-continuation.md",
+      "bytes": 11115,
+      "sha256": "8dc33bb7596cd7dd93539fac44fc944f536286d29fcb81e5941c53e68154a48e"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-continuation.sha256",
+      "bytes": 2918,
+      "sha256": "da5bb60860214bfa2ac19fd00ea62f9ad66d24c86c340af7224e916d7d6489da"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-evidence.sha256",
+      "bytes": 1768,
+      "sha256": "abe074f684d4a186c18c87582e177cb7a8fd46ea5b1ea7da6531ea0b5c653175"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-failed-browser.mjs.txt",
+      "bytes": 5768,
+      "sha256": "5cf5dd7700912c6195b74f94f592635f3ff42ab655fe0c16a1447f9e308a51cd"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-replacement-attempts.jsonl",
+      "bytes": 114421,
+      "sha256": "66050c4e8d224556dd65b5a96401039a2d4b8af1f79a59778b1ffbb5be97652f",
+      "records": 741,
+      "transportErrorOutcomes": 9
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-replacement.json",
+      "bytes": 96829,
+      "sha256": "b72b4a1665419144953e8bb3144ea35a91d76a82782556aa4f96a44b97a8606a"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-replacement.md",
+      "bytes": 11400,
+      "sha256": "0dbd729f3105c7f64a02e6dc2f385b05c1482ba140de34c2bff785636e24bc8e"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-replacement.sha256",
+      "bytes": 2454,
+      "sha256": "2564bb323b8f73692566a014e0d79be4b09e569a36a23833ecce6a73c7ada958"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-rollout.json",
+      "bytes": 9301,
+      "sha256": "65c2c7a44c383010ae3f5709ebe36959320d78963255912d3b3a249aabe48753"
+    },
+    {
+      "path": "docs/development/workflow-assertions-hl-rollout.md",
+      "bytes": 7634,
+      "sha256": "25759fcd72959d3ff7ea98bfb1ed3f887172c528c6326ef83ee1e04cb10957e8"
+    },
+    {
+      "path": "docs/development/workflow-assertions-pr-review.md",
+      "bytes": 12029,
+      "sha256": "9ed2f574bdef7ec6e4292e26f1f1478d64b3f9a1a35da17cbc3bc1aa784b5ab8"
+    },
+    {
+      "path": "docs/development/workflow-assertions-preview.json",
+      "bytes": 11200,
+      "sha256": "8b5ffd11f9474444e4a5fd93d3a8a85a607534e37d3d7d0c1201008e59e25e6e"
+    },
+    {
+      "path": "docs/development/workflow-assertions-prices.json",
+      "bytes": 4115,
+      "sha256": "9f0f3c3869891260d0c9d3590902a19555f3d562f1001f701318ac16493b300f"
+    },
+    {
+      "path": "docs/development/workflow-assertions-reader-baseline.json",
+      "bytes": 3491,
+      "sha256": "710fc11abae5abecc696402b4ee9be19e5c436c32a516c2b4fa324bef89033a2"
+    },
+    {
+      "path": "docs/development/workflow-assertions-release.json",
+      "bytes": 16450,
+      "sha256": "920667777eb69cabfb7800910451062a18e6ff06ce22ad4fb543f96c78321dd6"
+    },
+    {
+      "path": "docs/development/workflow-assertions-replacement-allowance.json",
+      "bytes": 2367,
+      "sha256": "a2244199613cd242df1ca04673b06c293e97edae9114083d5200bde92b80ea03"
+    },
+    {
+      "path": "docs/development/workflow-assertions-replacement-attempts.jsonl",
+      "bytes": 183494,
+      "sha256": "e3937c7f995b58e041bb42768bf2358ab89a436f82fdb56fec55b2eaf7ed8f9a",
+      "records": 1195,
+      "transportErrorOutcomes": 1
+    },
+    {
+      "path": "docs/development/workflow-assertions-replacement-execution.md",
+      "bytes": 13545,
+      "sha256": "a9839c15c3a23702571a8e2878e0ee51d41ab37b5a5a9ad3796558f6f346fd2a"
+    },
+    {
+      "path": "docs/development/workflow-assertions-replacement-preview.json",
+      "bytes": 11200,
+      "sha256": "101ef3c5dd7def146d0d644f949fbc05a4e1eff36bde2da26a638508f230f6aa"
+    },
+    {
+      "path": "docs/development/workflow-assertions-replacement-rollout.json",
+      "bytes": 23521,
+      "sha256": "d35f18ff7a322f30b41249e3cb9368eb049d7c7565006c34a32454be3194bd5b"
+    },
+    {
+      "path": "docs/development/workflow-assertions-replacement-rollout.md",
+      "bytes": 10901,
+      "sha256": "2b265e61897a18ec327b5570616337598a562a64bee7a2f83b4a6a4643c81bc5"
+    },
+    {
+      "path": "docs/development/workflow-assertions-rollout-preview.json",
+      "bytes": 11280,
+      "sha256": "43167e0d03fe486d9666b60fe489356bda331a33d3bbb7e5ca277c108778fef5"
+    },
+    {
+      "path": "docs/development/workflow-assertions-rollout.json",
+      "bytes": 15670,
+      "sha256": "feb0dfa2938fc42f85adc8890fcb354a7792b60d5d403b4f7f668ddb5a2aee8a"
+    },
+    {
+      "path": "docs/development/workflow-assertions-rollout.md",
+      "bytes": 10150,
+      "sha256": "999bc14d6b89871b500e3ebdb8e8fcf5cdd80ee49c069c47449542a0fd92b4d7"
+    },
+    {
+      "path": "docs/development/workflow-assertions-tooling-verification.json",
+      "bytes": 1855,
+      "sha256": "c5c5c59c653cd0d3cbef6f98cd1191dea5c221861fbd46d353ca495dda5c9725"
+    },
+    {
+      "path": "docs/development/workflow-assertions.md",
+      "bytes": 13174,
+      "sha256": "b067b896c939f3eb6f6dd00718515c3266bfe7fe3f7ff4bfc2a5049c83b3dab2"
+    },
+    {
+      "path": "docs/development/workflow-run-get-503-diagnostic.md",
+      "bytes": 16032,
+      "sha256": "57818ad677986290ae8aa7e2cf9d932be60c2204d7ea44c22bd834ca06f17d60"
+    },
+    {
+      "path": "package.json",
+      "bytes": 3162,
+      "sha256": "5ce894b09653ad2e2112a1e8eccb1eb90efcbf9513b4a7e6dc337258e25bcb99"
+    },
+    {
+      "path": "scripts/README.md",
+      "bytes": 11201,
+      "sha256": "04a522de4355521fa0cf05f53371a3744338ca84a38eeff8b4b1884bb296db65"
+    },
+    {
+      "path": "scripts/activate-workflow-assertions.mjs",
+      "bytes": 7423,
+      "sha256": "6a9badab52c77e3f34e1496c949471c317e61bf1282e21fa3826de6f5a9d9781"
+    },
+    {
+      "path": "scripts/attempt-meter/.gitignore",
+      "bytes": 13,
+      "sha256": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b"
+    },
+    {
+      "path": "scripts/attempt-meter/budget.py",
+      "bytes": 8654,
+      "sha256": "c2236e711c0c255594d32a2261ebdbf3a557c8835d235a33d8b5b89dbbe12a6c"
+    },
+    {
+      "path": "scripts/attempt-meter/cleanup.py",
+      "bytes": 2856,
+      "sha256": "7b874929fcfc22dbe7c9e0a12e784b712e870efb4fa0e77747204f1b0ea9ffff"
+    },
+    {
+      "path": "scripts/attempt-meter/cognito.py",
+      "bytes": 2171,
+      "sha256": "9a2cc3daed6ea654e2868d3dab0cd035632f908b467d5212e433aefad0e4ff47"
+    },
+    {
+      "path": "scripts/attempt-meter/hl_replacement.py",
+      "bytes": 2432,
+      "sha256": "19609c97fe01e7b237d5551f5f64e75f01fd1221189b6811061847ba4f628440"
+    },
+    {
+      "path": "scripts/attempt-meter/hl_resume.py",
+      "bytes": 1260,
+      "sha256": "088d443a6625bc54ddb844bca3f01b0356c43fc377657917d0954505b2bdd68e"
+    },
+    {
+      "path": "scripts/attempt-meter/node-proxy.mjs",
+      "bytes": 1784,
+      "sha256": "ba4b3983f3b42f2ab1a4b72ef9148c08aa6a81c8185da270db531f61b5d0a353"
+    },
+    {
+      "path": "scripts/attempt-meter/proxy.py",
+      "bytes": 9225,
+      "sha256": "8b6ed25e2565f469d025d61af1d63f5235c8da188adfe3c726441a9d508ce72b"
+    },
+    {
+      "path": "scripts/attempt-meter/relay.py",
+      "bytes": 1448,
+      "sha256": "fb30198954288f2ff04b37a348dc07bd21c7c5208ba80534f26857b13044b106"
+    },
+    {
+      "path": "scripts/attempt-meter/requirements.txt",
+      "bytes": 734,
+      "sha256": "4987f848d22fccc69a230e5227de74e74fbeffec77a208b291de7c6b39527c3e"
+    },
+    {
+      "path": "scripts/attempt-meter/run.py",
+      "bytes": 12876,
+      "sha256": "9a9d8a880c78458e43b7e93268ce9e00dd4d4d772bfa476576734615abce3568"
+    },
+    {
+      "path": "scripts/attempt-meter/test_browser_auth.py",
+      "bytes": 11063,
+      "sha256": "d4a2c948ecacef599e0c00816e9b6f9824533c4eb4ef94cba4609ede889c09ba"
+    },
+    {
+      "path": "scripts/attempt-meter/test_browser_authoring.py",
+      "bytes": 7441,
+      "sha256": "51f15b1443f320c93ba644a2c5273f4d5d6c2ea9046598409147b5d63377ed41"
+    },
+    {
+      "path": "scripts/attempt-meter/test_budget.py",
+      "bytes": 5139,
+      "sha256": "bc618fb61cbd999c0321e9e6f4ee51964cf2ec7f8eb67c6bb3bd37886ce698d7"
+    },
+    {
+      "path": "scripts/attempt-meter/test_cleanup.py",
+      "bytes": 5998,
+      "sha256": "1250abcae4751ec791b3e90bb8dc34ac4de72d88b0a766882215c83d107ba4bd"
+    },
+    {
+      "path": "scripts/attempt-meter/test_cognito.py",
+      "bytes": 4064,
+      "sha256": "83b6506292eb855f61265378b6c4dbbbc5b6c76b8ff37f7538d0e799494a796a"
+    },
+    {
+      "path": "scripts/attempt-meter/test_hl_replacement.py",
+      "bytes": 2521,
+      "sha256": "e8844a6d6b0c947d613e8e9d6723a54522adc9fc418216b8666484d409e685b4"
+    },
+    {
+      "path": "scripts/attempt-meter/test_hl_replacement_transport.py",
+      "bytes": 1470,
+      "sha256": "54ebed8a709bd5989a252779391e4c9613707941072ea32e5ec4b6c409411fa9"
+    },
+    {
+      "path": "scripts/attempt-meter/test_hl_resume.py",
+      "bytes": 1721,
+      "sha256": "798c03417f813d1cb7d025b20661d2677d3b2a5d66d9902e4db21711610952b4"
+    },
+    {
+      "path": "scripts/attempt-meter/test_hl_resume_transport.py",
+      "bytes": 2075,
+      "sha256": "6f7e63c15577820ad8d821cba1a091b10aad8f28f2d34d7e176e3a10f80a3924"
+    },
+    {
+      "path": "scripts/attempt-meter/test_hl_transport.py",
+      "bytes": 2718,
+      "sha256": "1df5e57ec3b7f657c86a1bef60c1e15fa3471a489ae0ff1d45f5cfbcaaaaac3b"
+    },
+    {
+      "path": "scripts/attempt-meter/test_transport.py",
+      "bytes": 21298,
+      "sha256": "cf5b9a995c89b1ebb20fe30651ca6cac8030b813a4b8493793412f9411773655"
+    },
+    {
+      "path": "scripts/attempt-meter/test_verification.py",
+      "bytes": 2754,
+      "sha256": "0cde2b90750d0dd8800b79ce3cd9236f3211664fc48e73a13e81a8a89aa51fbf"
+    },
+    {
+      "path": "scripts/fixtures/workflow-assertions-settlement.mjs",
+      "bytes": 2062,
+      "sha256": "a65d95b9d379675338b634c570b10764c0601ddb1a5c11bfc8a6198de2430eff"
+    },
+    {
+      "path": "scripts/fixtures/workflow-browser-auth.mjs",
+      "bytes": 2213,
+      "sha256": "595b3702349957670378625e57d5c49d45f3c63e5611edb7849360aab34f5ed5"
+    },
+    {
+      "path": "scripts/fixtures/workflow-browser-authoring.mjs",
+      "bytes": 1232,
+      "sha256": "90c68336239d60e2bf27d18e755132ba4aba582c9203e82e5c58d330b6bae2e8"
+    },
+    {
+      "path": "scripts/fixtures/workflow-coordinator-transport.mjs",
+      "bytes": 2076,
+      "sha256": "e43b696f237f3300192378dd339d3f4352158eca39b79d03e5837a5306ec25a4"
+    },
+    {
+      "path": "scripts/fixtures/workflow-run-poll.mjs",
+      "bytes": 1724,
+      "sha256": "2144e1c5c7c40350143ccdf400fa3c5adbec95733ae385d28ee541e2087ab1cd"
+    },
+    {
+      "path": "scripts/lib/workflow-assertions-activation.mjs",
+      "bytes": 17446,
+      "sha256": "bc1a6974e73488f410e330bbc2af433e798715f87579afc732ef5daba35f9715"
+    },
+    {
+      "path": "scripts/lib/workflow-assertions-collectors.mjs",
+      "bytes": 3151,
+      "sha256": "a70c2557692b8d4dbda25bbca1cde00a589cd3f98391f941368a5ba16c6ec30c"
+    },
+    {
+      "path": "scripts/lib/workflow-assertions-hl-policy.mjs",
+      "bytes": 2217,
+      "sha256": "a759405c1f49fcb62da9541ffb58a107797b2303d1af22cb978b334f8ec7e309"
+    },
+    {
+      "path": "scripts/lib/workflow-assertions-release.mjs",
+      "bytes": 2250,
+      "sha256": "259f876193b07ffc11ca5c9d95eef958aceda1377c6d59e58f5e9899d0a39fd3"
+    },
+    {
+      "path": "scripts/lib/workflow-coordinator-transport.mjs",
+      "bytes": 4570,
+      "sha256": "5907c6077a1ae03a478e41fd8850bc216338793b2d91fb731d77c4d11611160b"
+    },
+    {
+      "path": "scripts/lib/workflow-run-poll.mjs",
+      "bytes": 9622,
+      "sha256": "d70919a52b52936de92652490b88dfda2259740089e88b762e6abfd9c8032040"
+    },
+    {
+      "path": "scripts/observe-workflow-assertions-instructor-cleanup.mjs",
+      "bytes": 11022,
+      "sha256": "421bf6775b33a44e322710a03e9d137980c3f0cec521f387f25d142de081c6f2"
+    },
+    {
+      "path": "scripts/preview-workflow-assertions.mjs",
+      "bytes": 4220,
+      "sha256": "c76ff93b457bbe8dfccfedea746816d6428b5dd8b01099282b192d62e11531d0"
+    },
+    {
+      "path": "scripts/review-workflow-assertions-preview.mjs",
+      "bytes": 4335,
+      "sha256": "980e02480155f10f51a97cc3eb845ccbb8248ed3ad2ec8c189460c8ac9792b60"
+    },
+    {
+      "path": "scripts/verify-read-only-mcp-deployment.mjs",
+      "bytes": 12424,
+      "sha256": "b40b669f9b031eee8c0b271edbcf3686d662c563c1781c42895b93e392e0ffea"
+    },
+    {
+      "path": "scripts/verify-workflow-assertions-cleanup.mjs",
+      "bytes": 12370,
+      "sha256": "a60c9e202269a1bb5b85a2b3b575eb6edfe53c8346b326ce3147c5c5d14b46d9"
+    },
+    {
+      "path": "scripts/verify-workflow-assertions-hl-final.mjs",
+      "bytes": 4601,
+      "sha256": "6d150521f5dfa76f22b29feea5b0803ed647ed7a2c861ede97ea5ee76a06f498"
+    },
+    {
+      "path": "scripts/workflow-assertions-activation.test.mjs",
+      "bytes": 24067,
+      "sha256": "f8e1e5b57a62b38f2ad1240d1ff9099eeb78bc248d3a1c8995523538cd67db58"
+    },
+    {
+      "path": "scripts/workflow-assertions-collector.test.mjs",
+      "bytes": 4774,
+      "sha256": "df5bafba68ac74d238beff09976c2ef3693784b2d18a2ce56e5b15733cdaff17"
+    },
+    {
+      "path": "scripts/workflow-assertions-coordinator.mjs",
+      "bytes": 11636,
+      "sha256": "9e77916fe4a5daa70555f77486c03ea09e67f2f6b80414d2282ee2d22e47fb0f"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl-coordinator.mjs",
+      "bytes": 13631,
+      "sha256": "cfb7ccd1a3f04f96728f536a98665b35aaedf85591c688ec13f4c4c4f2c1b094"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl.test.mjs",
+      "bytes": 3024,
+      "sha256": "1ed2440cc8c2109ca2cec623d3a32009e41788ef859a788bf2e6e3ead9dbdc07"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl/browser.mjs",
+      "bytes": 7161,
+      "sha256": "6decbc5951e7e25cc935207aac7fb2e519338219d9a65d60fb73c22a460ad185"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl/campaign-decimal.mjs",
+      "bytes": 4079,
+      "sha256": "101dcac37a6fff302e503d388ac801be57a7f812cff75786b2c979b0e733a7fb"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl/cleanup.mjs",
+      "bytes": 6597,
+      "sha256": "1c7cfa121c36eb9d8e8a014d7601b25e9e41ff3fe2abb58bbe8a0d3a75dfc51e"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl/helpers.mjs",
+      "bytes": 12005,
+      "sha256": "fb8f9b5a82502157f21afab38e285d2caf4cba61f0b78ffbd7e3929c73435202"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl/init.mjs",
+      "bytes": 1787,
+      "sha256": "61e9ba097f59a3f1a4e8421114967242d1016c102cde5b7946d694692bcfd2a8"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl/preflight.mjs",
+      "bytes": 5391,
+      "sha256": "cefcdd2f30b6abbfd6d1eddd7bca6e0e8f5a3eaa65c44f4340deec2f13668ac4"
+    },
+    {
+      "path": "scripts/workflow-assertions-hl/stopped-cleanup.mjs",
+      "bytes": 197,
+      "sha256": "ce06c4577dcf224a9bd2f7188362b13fb7e9045ff1ab4e8ee0de7980be8d9f89"
+    },
+    {
+      "path": "scripts/workflow-assertions-release.test.mjs",
+      "bytes": 4162,
+      "sha256": "697468bf65afae61c13d15de8ebe2fa2f8e78efdb11a331f00574cab54a0d3e7"
+    },
+    {
+      "path": "scripts/workflow-coordinator-transport.test.mjs",
+      "bytes": 6560,
+      "sha256": "368c7f0aa9fce5f4e66fccb6297e3b176e40b8d42c91673f0748071b3a2d35a7"
+    },
+    {
+      "path": "scripts/workflow-run-poll.test.mjs",
+      "bytes": 12261,
+      "sha256": "0cef3e9fddfe1fda9e962f23a23b1948a077778f3c3911a1e31f369cfadfc48f"
+    },
+    {
+      "path": "services/api/execution/activation_settlement_integration_test.go",
+      "bytes": 6454,
+      "sha256": "107131d56646fb795a3558790ca767ef4e2dbe2ff1142e2856a6662ed5b77083"
+    },
+    {
+      "path": "services/api/execution/assertions_integration_test.go",
+      "bytes": 11100,
+      "sha256": "008e027c98d4c566fdc19581b4497273bc38f247b61b811da0e7d34e9c6e6243"
+    },
+    {
+      "path": "services/api/execution/assertions_test.go",
+      "bytes": 2154,
+      "sha256": "87130c878b40c35901e17a9a07c231d9cad55a043d9c281b853bf375788ea4ee"
+    },
+    {
+      "path": "services/api/execution/campaign_cleanup_integration_test.go",
+      "bytes": 5462,
+      "sha256": "08ab0c674ed6010595c1678b53338b2e0829934a710ef4f25b6e7f4e79b1bd04"
+    },
+    {
+      "path": "services/api/execution/maintenance.go",
+      "bytes": 22326,
+      "sha256": "0014f148fa0c82399cfb25bc0a65f95b808fb6eb597d764a25aabd550826a7e6"
+    },
+    {
+      "path": "services/api/execution/mcp_credentials.go",
+      "bytes": 11080,
+      "sha256": "55091896d19a836de983de82ab6cf1f10d239e9f8aa5392f5c33a1cb8fccd7d6"
+    },
+    {
+      "path": "services/api/execution/mcp_read.go",
+      "bytes": 19336,
+      "sha256": "b0602b77b52acc57bcdb4020c02f0fcbf60bf2c40184f8dfb57b5260f652c813"
+    },
+    {
+      "path": "services/api/execution/model.go",
+      "bytes": 3495,
+      "sha256": "88ad986a5f01a6a07b1458085535c1fa8cc79c904dea0dea55b011c9b83fceb3"
+    },
+    {
+      "path": "services/api/execution/store.go",
+      "bytes": 35380,
+      "sha256": "353244dbfc6c9a1aa4a7ae80bac94d8953cda04b72553f1ff5140116c4da1862"
+    },
+    {
+      "path": "services/api/execution/worker.go",
+      "bytes": 21614,
+      "sha256": "dfeb90ec437f4ff0a76b03c6e8235ae51915c66617f130e4738be343e59846fa"
+    },
+    {
+      "path": "services/api/execution/workflow_detail_race_integration_test.go",
+      "bytes": 9804,
+      "sha256": "7c6f3058047175b413dcd0bd6260e31ce3525e3ff32c915c7f8e9019d708394b"
+    },
+    {
+      "path": "services/api/execution/workflow_execution.go",
+      "bytes": 15081,
+      "sha256": "6d15db3cc71deb1c7b8fe0bb73f5fd9b083fdc9aa29c75576f2d18a329228c30"
+    },
+    {
+      "path": "services/api/execution/workflows.go",
+      "bytes": 29456,
+      "sha256": "9fc75890afd4c53f66864a5317fa3dd1313acd51f2700fe63cd2b494a290667d"
+    },
+    {
+      "path": "services/api/internal/ownership/assertions_integration_test.go",
+      "bytes": 3702,
+      "sha256": "177248f728bc752a4b21c4c556c42919bb2ed7d36a1dbf97224d73134d8e4963"
+    },
+    {
+      "path": "services/api/internal/ownership/browser_test.go",
+      "bytes": 2811,
+      "sha256": "fb3f10f79a030a1dc920946578c577b240649570cac11f26ec55dbdce1c9883b"
+    },
+    {
+      "path": "services/api/internal/ownership/model.go",
+      "bytes": 6424,
+      "sha256": "c2a7f832215107beb456ffebe287cd382fc51877188847a5ae044712a96eb40f"
+    },
+    {
+      "path": "services/api/internal/ownership/secrets.go",
+      "bytes": 17534,
+      "sha256": "b5a7ea2b2f2c015dd749a2f5e2f7ead782c2444f85ea8d8ff5fef9c8db0bace3"
+    },
+    {
+      "path": "services/api/internal/ownership/store.go",
+      "bytes": 23971,
+      "sha256": "661b0456019cdf0fcb4a28d350675d2555866cd2673fd1590c2ee5ea89ba49f7"
+    },
+    {
+      "path": "services/api/internal/ownership/workflow_browser_test.go",
+      "bytes": 1640,
+      "sha256": "175d9bceec4f5586bc8f7069b90e77fc804237a8e1807299ed2c26e6a0c11d72"
+    },
+    {
+      "path": "services/api/internal/ownership/workflow_http.go",
+      "bytes": 5095,
+      "sha256": "d8df13e35e31b7fa18b4baa3b5642ba7976714139d9a6082e1f6cfdca62fcbc0"
+    },
+    {
+      "path": "services/mcp/codex_integration_test.go",
+      "bytes": 11264,
+      "sha256": "e24f829c53e2a8f8ba83e4e72c06661eca4c2d92b3bad377466cd7a2698f30d1"
+    },
+    {
+      "path": "services/request-runtime/assertions.go",
+      "bytes": 11743,
+      "sha256": "32cdc490f9069f1ede39771950eba4ef44f803598bf1418bdc9c62ec34775b27"
+    },
+    {
+      "path": "services/request-runtime/assertions_test.go",
+      "bytes": 12872,
+      "sha256": "58484095f2fd158e7c2f79dee46d521470d31674ff985b12a2910a33289f4295"
+    },
+    {
+      "path": "services/request-runtime/evidence_version.go",
+      "bytes": 3936,
+      "sha256": "c0e68790e5f53a6ee4f13e5fee74cf5a490e55fdafdcd0dc79d4f5164228f7de"
+    },
+    {
+      "path": "services/request-runtime/evidence_version_test.go",
+      "bytes": 2018,
+      "sha256": "c55e1f95b136de5c01eb8296b2c9121bbb801866a4914d97a301a83343091c6e"
+    },
+    {
+      "path": "services/request-runtime/json.go",
+      "bytes": 6288,
+      "sha256": "4b27d001087c07000b90df4a6a9069b0560a7965fcde5a9b95bba17fa536eb9a"
+    },
+    {
+      "path": "services/request-runtime/mcpwire/wire.go",
+      "bytes": 11941,
+      "sha256": "6be84afbd2cdfdc1d87f1996a95f17f27e8d925a2f4da42a8593df4f6c218735"
+    },
+    {
+      "path": "services/request-runtime/model.go",
+      "bytes": 7338,
+      "sha256": "48385321814333bac34af8364d587ac96bb3078f7ded6a7e26773a56241a1ace"
+    },
+    {
+      "path": "services/request-runtime/runtime.go",
+      "bytes": 13425,
+      "sha256": "b2c19b8d0a1d3bd909acde18a2b9ea3fa5466126fcc97b032dfacb1937c8edbb"
+    },
+    {
+      "path": "services/request-runtime/workflow.go",
+      "bytes": 14569,
+      "sha256": "ba58f11591de125ca7de55bd087d5d82408ed15b82d2de6fb935151bd759a5cf"
+    },
+    {
+      "path": "services/worker/cloud.go",
+      "bytes": 6576,
+      "sha256": "8f73a15f6f6358bb8c3dfd200c513634eff6690c155a6621975f8eee4e8ab6a0"
+    },
+    {
+      "path": "services/worker/cloud_test.go",
+      "bytes": 8058,
+      "sha256": "30a94b67db2e0bf111318966cde0a0616c9b3fd142c3fac937e0192055872622"
+    }
+  ],
+  "applicationChangesAfterPinnedSource": [
+    "services/api/execution/activation_settlement_integration_test.go",
+    "services/api/execution/campaign_cleanup_integration_test.go",
+    "services/api/execution/workflow_detail_race_integration_test.go"
+  ],
+  "liveCalls": 0,
+  "awsCalls": 0,
+  "admissions": 0,
+  "identityCreation": 0,
+  "deployments": 0,
+  "notes": [
+    "Offline syntax/structured-artifact checks do not establish live behavior",
+    "Nine H-L read-only OPTIONS failures remain preserved and accepted as functional exception",
+    "Local teardown correction is not live-verified; separate tooling follow-up remains open",
+    "Historical artifact hashes are interpreted at their retained commits, not rewritten when current indexes evolve"
+  ]
+}

@@ -1,0 +1,3318 @@
+{
+  "kind": "kurier-H-L-replacement-runtime-v1",
+  "status": "runtime-and-cleanup-verified-transport-review-gap",
+  "authorization": {
+    "acceptedCommit": "4803bd9d1c108dd8655574af55aff8aa1fc0e74b",
+    "newWindowSeconds": 7200,
+    "cleanupReserveSeconds": 1200,
+    "replacementOwnerProjectAllowance": 1,
+    "cumulativeIdentityProjectAllowance": 8,
+    "priorCampaignSteps": 18,
+    "priorCampaignSends": 16,
+    "newStepAllowance": 10,
+    "expectedNewSends": 8,
+    "reserveSubmissions": 0,
+    "additionalProceduralUsd": 1,
+    "historicalUnusedBalanceClaimed": false,
+    "counterReset": false
+  },
+  "coordinator": {
+    "kind": "kurier-assertions-H-L-v1",
+    "authorization": "Explicit H-L replacement accepted4803bd9d1c108dd8655574af55aff8aa1fc0e74b; new120min clock,173AWS/31API/9static retained",
+    "tag": "4f3047f8-f646-445f-9110-c95200d92ce6",
+    "users": [
+      {
+        "name": "kurier-assertions-hl-4f3047f8-f646-445f-9110-c95200d92ce6@example.invalid",
+        "created": true,
+        "owner": "60437238-b127-41ed-a71f-3c7ac4856f8c",
+        "globalSignedOut": true,
+        "deleted": true,
+        "providerAbsent": true
+      }
+    ],
+    "projects": [
+      {
+        "id": "e61757b5-feaf-4012-a78f-2a3a4d4df397",
+        "owner": 0,
+        "revision": 0,
+        "deletionOperationId": "a33872c0-b68d-4a51-bc38-9121b4d12d81",
+        "immediateOwnerDenied": true,
+        "cleaned": true,
+        "cleanupProof": {
+          "tombstone": {
+            "schemaVersion": {
+              "N": "1"
+            },
+            "deletionOperation": {
+              "M": {
+                "startedAt": {
+                  "S": "2026-10-22T00:54:56.868430216Z"
+                },
+                "operationId": {
+                  "S": "a33872c0-b68d-4a51-bc38-9121b4d12d81"
+                },
+                "completedAt": {
+                  "S": "2026-10-22T01:07:56.296123326Z"
+                },
+                "state": {
+                  "S": "completed"
+                },
+                "projectId": {
+                  "S": "e61757b5-feaf-4012-a78f-2a3a4d4df397"
+                },
+                "retryAfterSeconds": {
+                  "N": "0"
+                }
+              }
+            },
+            "version": {
+              "N": "42"
+            },
+            "PK": {
+              "S": "P#e61757b5-feaf-4012-a78f-2a3a4d4df397"
+            },
+            "kind": {
+              "S": "projectTombstone"
+            },
+            "SK": {
+              "S": "META"
+            },
+            "ownerId": {
+              "S": "60437238-b127-41ed-a71f-3c7ac4856f8c"
+            },
+            "state": {
+              "S": "deleted"
+            },
+            "projectId": {
+              "S": "e61757b5-feaf-4012-a78f-2a3a4d4df397"
+            }
+          },
+          "protectedChildren": 0,
+          "s3Objects": 0,
+          "uploadTickets": 0,
+          "residualRegistration": {
+            "kind": {
+              "S": "executionResidual"
+            },
+            "SK": {
+              "S": "RESIDUAL#e61757b5-feaf-4012-a78f-2a3a4d4df397"
+            },
+            "PK": {
+              "S": "MAINTENANCE#dev-api"
+            },
+            "projectId": {
+              "S": "e61757b5-feaf-4012-a78f-2a3a4d4df397"
+            }
+          },
+          "currentOnly": true
+        }
+      }
+    ],
+    "runs": [
+      {
+        "key": "H",
+        "id": "796db338-d12d-4d95-a84b-6538ecb7d001",
+        "idempotency": "78cae9fa-c7fd-4b8c-a4b7-6a99e2741ef3",
+        "expectedState": "completed",
+        "expectedSends": 2,
+        "projectIndex": 0,
+        "steps": [
+          {
+            "position": 0,
+            "state": "completed",
+            "executionId": "3782ef4f-d970-41ee-a56e-e785fd97cba5"
+          },
+          {
+            "position": 1,
+            "state": "completed",
+            "executionId": "74327834-761c-4a8c-900d-8835ed489dcf"
+          }
+        ],
+        "state": "completed"
+      },
+      {
+        "key": "I",
+        "id": "865b058a-dded-4d28-a217-2fd9c65d2423",
+        "idempotency": "e7c75482-0343-4c34-b9ba-558018d76067",
+        "expectedState": "completed",
+        "expectedSends": 2,
+        "projectIndex": 0,
+        "steps": [
+          {
+            "position": 0,
+            "state": "completed",
+            "executionId": "de7f7cbf-26af-4bfb-9f74-8ef7dcaa32f7"
+          },
+          {
+            "position": 1,
+            "state": "completed",
+            "executionId": "8bc7034f-d45d-49ee-aa25-43a76f8c9b7b"
+          }
+        ],
+        "state": "completed"
+      },
+      {
+        "key": "J",
+        "id": "f2ee4c3e-b612-4974-9293-63aec150731b",
+        "idempotency": "6a50e135-a9d4-4256-b926-0afa6e78a643",
+        "expectedState": "failed",
+        "expectedSends": 1,
+        "projectIndex": 0,
+        "steps": [
+          {
+            "position": 0,
+            "state": "failed",
+            "executionId": "fee67d25-19ac-4584-9ba5-71dee1cf237c"
+          },
+          {
+            "position": 1,
+            "state": "skipped",
+            "executionId": null
+          }
+        ],
+        "state": "failed"
+      },
+      {
+        "key": "K",
+        "id": "b81263ec-caac-452c-9606-945f7db12ee6",
+        "idempotency": "387147f0-caa9-4e03-b6be-1d8ca5aa545a",
+        "expectedState": "failed",
+        "expectedSends": 2,
+        "projectIndex": 0,
+        "steps": [
+          {
+            "position": 0,
+            "state": "completed",
+            "executionId": "efdffa01-3199-46ac-b957-9ba0ca9d204c"
+          },
+          {
+            "position": 1,
+            "state": "failed",
+            "executionId": "efde1ff6-9500-450e-8513-403c0337f215"
+          }
+        ],
+        "state": "failed"
+      },
+      {
+        "key": "L",
+        "id": "99e4f77e-4a65-49d4-ba3d-6dd9f1dbe931",
+        "idempotency": "4e2d9826-a752-42dc-9b27-5b60a67c03a0",
+        "expectedState": "failed",
+        "expectedSends": 1,
+        "projectIndex": 0,
+        "steps": [
+          {
+            "position": 0,
+            "state": "failed",
+            "executionId": "d909df2c-ba5c-4165-ac89-04440e5b1e06"
+          },
+          {
+            "position": 1,
+            "state": "skipped",
+            "executionId": null
+          }
+        ],
+        "state": "failed"
+      }
+    ],
+    "events": [
+      {
+        "at": "2026-10-22T00:51:51.180Z",
+        "event": "H-L-preflight-passed",
+        "pinnedReaders": 4,
+        "hostedFiles": 5,
+        "stageVersion": 15,
+        "historicalSteps": 18,
+        "historicalSends": 16
+      },
+      {
+        "at": "2026-10-22T00:52:08.689Z",
+        "event": "single-disposable-owner-project-created",
+        "owner": "60437238-b127-41ed-a71f-3c7ac4856f8c",
+        "projectId": "e61757b5-feaf-4012-a78f-2a3a4d4df397",
+        "cumulativeIdentities": 8,
+        "cumulativeProjects": 8
+      },
+      {
+        "at": "2026-10-22T00:52:35.926Z",
+        "event": "replacement-helpers-ready",
+        "historicalSteps": 18,
+        "historicalSends": 16,
+        "liveRequests": 0
+      },
+      {
+        "at": "2026-10-22T00:52:37.082Z",
+        "event": "request-created",
+        "key": "values",
+        "id": "2eb88f2a-1767-4ec8-bef6-cfede35a44c6",
+        "fixture": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values"
+      },
+      {
+        "at": "2026-10-22T00:52:37.332Z",
+        "event": "request-created",
+        "key": "notfound",
+        "id": "bddd9a5c-4fe7-4ee8-91f1-891e08668a83",
+        "fixture": "85be5e07-c0cc-4879-956a-6b81d5273d08",
+        "mode": "assertions-not-found"
+      },
+      {
+        "at": "2026-10-22T00:52:37.983Z",
+        "event": "workflow-created",
+        "key": "H",
+        "id": "f82f66f5-59a9-4b07-80ee-16697c21e4c6",
+        "revision": 0
+      },
+      {
+        "at": "2026-10-22T00:52:43.175Z",
+        "event": "hosted-decimal-roundtrip",
+        "mode": "author",
+        "revision": 1,
+        "decimalTokens": [
+          "0.10000000000000001",
+          "0.1",
+          "1e-1",
+          "1e-308",
+          "9007199254740991",
+          "-0.0",
+          "0.10000000000000001",
+          "0.1",
+          "1E-01",
+          "1e-308",
+          "9007199254740991",
+          "-0.0"
+        ],
+        "storageEmpty": true
+      },
+      {
+        "at": "2026-10-22T00:52:47.202Z",
+        "event": "hosted-decimal-roundtrip",
+        "mode": "rename-before",
+        "revision": 2,
+        "decimalTokens": [
+          "0.10000000000000001",
+          "0.1",
+          "1e-1",
+          "1e-308",
+          "9007199254740991",
+          "-0.0",
+          "0.10000000000000001",
+          "0.1",
+          "1E-01",
+          "1e-308",
+          "9007199254740991",
+          "-0.0"
+        ],
+        "storageEmpty": true
+      },
+      {
+        "at": "2026-10-22T00:52:47.216Z",
+        "event": "submission-intent",
+        "key": "H",
+        "idempotency": "78cae9fa-c7fd-4b8c-a4b7-6a99e2741ef3",
+        "source": "f82f66f5-59a9-4b07-80ee-16697c21e4c6",
+        "steps": 2,
+        "expectedSends": 2
+      },
+      {
+        "at": "2026-10-22T00:52:58.057Z",
+        "event": "run-terminal",
+        "key": "H",
+        "id": "796db338-d12d-4d95-a84b-6538ecb7d001",
+        "state": "completed",
+        "steps": [
+          {
+            "position": 0,
+            "state": "completed",
+            "executionId": "3782ef4f-d970-41ee-a56e-e785fd97cba5"
+          },
+          {
+            "position": 1,
+            "state": "completed",
+            "executionId": "74327834-761c-4a8c-900d-8835ed489dcf"
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:01.648Z",
+        "event": "immutable-case-proof",
+        "key": "H",
+        "runId": "796db338-d12d-4d95-a84b-6538ecb7d001",
+        "state": "completed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "d9418b1852fb728d4c39ff16cdebecd34c9d4cdc2b7897da86c29ddff678f621",
+        "evidence": [
+          {
+            "executionId": "3782ef4f-d970-41ee-a56e-e785fd97cba5",
+            "position": 0,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2325,
+            "sha256": "50d7b6602f349b8883a03b9f13779eb5962f0601098555de080a858348a1daf1",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "c1c2411c-7477-44ad-a545-5f22ebef1eb0",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6d971b11-4301-4dcb-adc7-7ebd2c2cc9f3",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6bd55889-cfe9-494a-a2d6-d7f4416ec566",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "a5b0a1f4-b89a-48b5-abdc-911cccd4811b",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "36c2d15b-e545-40c7-bb72-a11e44c174bf",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "02f484be-6815-495c-9970-eb2cda515440",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "da5bd9ba-ac9e-4d0d-a7dd-65f1938049a3",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "034e6a20-0dbc-419f-9249-221d86212068",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          },
+          {
+            "executionId": "74327834-761c-4a8c-900d-8835ed489dcf",
+            "position": 1,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2323,
+            "sha256": "bbff9109641317cfea5b6146133085155e98abb3e922428af5f9b6c869ba0f1b",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "ac9f5ed2-9646-44dc-99f0-db89416f0e75",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "bd5af193-b1c4-4a4b-8c3f-5beaa28e5b2e",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "91cf2832-b63e-48c3-9f6e-c16654172c42",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "e7af1b26-3e52-42b4-a8ef-1b57e6b26356",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "196a729f-0368-486e-82f5-f73644654a14",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "619cc113-01e2-4f9d-9d7c-4e7880822168",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6badfb7e-f012-47ed-a195-a4d32137a675",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "91330f29-81af-4b1a-8696-07e9c76cd970",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:03.455Z",
+        "event": "target-sends-verified",
+        "replacement": 2,
+        "cumulative": 18,
+        "expectedCumulative": 18
+      },
+      {
+        "at": "2026-10-22T00:53:07.056Z",
+        "event": "hosted-decimal-roundtrip",
+        "mode": "rename-after",
+        "revision": 3,
+        "decimalTokens": [
+          "0.10000000000000001",
+          "0.1",
+          "1e-1",
+          "1e-308",
+          "9007199254740991",
+          "-0.0",
+          "0.10000000000000001",
+          "0.1",
+          "1E-01",
+          "1e-308",
+          "9007199254740991",
+          "-0.0"
+        ],
+        "storageEmpty": true
+      },
+      {
+        "at": "2026-10-22T00:53:07.069Z",
+        "event": "submission-intent",
+        "key": "I",
+        "idempotency": "e7c75482-0343-4c34-b9ba-558018d76067",
+        "source": "796db338-d12d-4d95-a84b-6538ecb7d001",
+        "steps": 2,
+        "expectedSends": 2
+      },
+      {
+        "at": "2026-10-22T00:53:17.883Z",
+        "event": "run-terminal",
+        "key": "I",
+        "id": "865b058a-dded-4d28-a217-2fd9c65d2423",
+        "state": "completed",
+        "steps": [
+          {
+            "position": 0,
+            "state": "completed",
+            "executionId": "de7f7cbf-26af-4bfb-9f74-8ef7dcaa32f7"
+          },
+          {
+            "position": 1,
+            "state": "completed",
+            "executionId": "8bc7034f-d45d-49ee-aa25-43a76f8c9b7b"
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:21.358Z",
+        "event": "immutable-case-proof",
+        "key": "I",
+        "runId": "865b058a-dded-4d28-a217-2fd9c65d2423",
+        "state": "completed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "d9418b1852fb728d4c39ff16cdebecd34c9d4cdc2b7897da86c29ddff678f621",
+        "evidence": [
+          {
+            "executionId": "de7f7cbf-26af-4bfb-9f74-8ef7dcaa32f7",
+            "position": 0,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2325,
+            "sha256": "a9d47f6d0ee6d661e706a969536823f44e9d01369f6804f477622d6b42cf8fae",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "c1c2411c-7477-44ad-a545-5f22ebef1eb0",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6d971b11-4301-4dcb-adc7-7ebd2c2cc9f3",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6bd55889-cfe9-494a-a2d6-d7f4416ec566",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "a5b0a1f4-b89a-48b5-abdc-911cccd4811b",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "36c2d15b-e545-40c7-bb72-a11e44c174bf",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "02f484be-6815-495c-9970-eb2cda515440",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "da5bd9ba-ac9e-4d0d-a7dd-65f1938049a3",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "034e6a20-0dbc-419f-9249-221d86212068",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          },
+          {
+            "executionId": "8bc7034f-d45d-49ee-aa25-43a76f8c9b7b",
+            "position": 1,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2325,
+            "sha256": "aed8de2f63cb70e0ccc67fd7c6f30effcf9e1c51a14bfe526f19b686db6554c8",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "ac9f5ed2-9646-44dc-99f0-db89416f0e75",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "bd5af193-b1c4-4a4b-8c3f-5beaa28e5b2e",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "91cf2832-b63e-48c3-9f6e-c16654172c42",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "e7af1b26-3e52-42b4-a8ef-1b57e6b26356",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "196a729f-0368-486e-82f5-f73644654a14",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "619cc113-01e2-4f9d-9d7c-4e7880822168",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6badfb7e-f012-47ed-a195-a4d32137a675",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "91330f29-81af-4b1a-8696-07e9c76cd970",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:22.610Z",
+        "event": "target-sends-verified",
+        "replacement": 4,
+        "cumulative": 20,
+        "expectedCumulative": 20
+      },
+      {
+        "at": "2026-10-22T00:53:23.838Z",
+        "event": "source-evidence-unchanged",
+        "key": "H"
+      },
+      {
+        "at": "2026-10-22T00:53:23.987Z",
+        "event": "workflow-created",
+        "key": "J",
+        "id": "a03399f9-369e-4179-b288-40804bd2d56f",
+        "revision": 0
+      },
+      {
+        "at": "2026-10-22T00:53:23.990Z",
+        "event": "submission-intent",
+        "key": "J",
+        "idempotency": "6a50e135-a9d4-4256-b926-0afa6e78a643",
+        "source": "a03399f9-369e-4179-b288-40804bd2d56f",
+        "steps": 2,
+        "expectedSends": 1
+      },
+      {
+        "at": "2026-10-22T00:53:34.567Z",
+        "event": "run-terminal",
+        "key": "J",
+        "id": "f2ee4c3e-b612-4974-9293-63aec150731b",
+        "state": "failed",
+        "steps": [
+          {
+            "position": 0,
+            "state": "failed",
+            "executionId": "fee67d25-19ac-4584-9ba5-71dee1cf237c"
+          },
+          {
+            "position": 1,
+            "state": "skipped",
+            "executionId": null
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:36.507Z",
+        "event": "immutable-case-proof",
+        "key": "J",
+        "runId": "f2ee4c3e-b612-4974-9293-63aec150731b",
+        "state": "failed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "25e3586ea9815779e366f2144de83cc5198708bf947e0d906702b18634839fec",
+        "evidence": [
+          {
+            "executionId": "fee67d25-19ac-4584-9ba5-71dee1cf237c",
+            "position": 0,
+            "state": "failed",
+            "schemaVersion": 2,
+            "storedBytes": 1549,
+            "sha256": "74c1833c76a1864e682d08946e356537da26341917d689c608392270d3a7aa8d",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "8ba69acf-0734-4309-9983-d3dcdea2938d",
+                  "kind": "jsonEquals",
+                  "outcome": "failed",
+                  "reason": "value_mismatch"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:37.763Z",
+        "event": "target-sends-verified",
+        "replacement": 5,
+        "cumulative": 21,
+        "expectedCumulative": 21
+      },
+      {
+        "at": "2026-10-22T00:53:38.036Z",
+        "event": "workflow-created",
+        "key": "K",
+        "id": "e7e9f341-ed91-4e7e-b81c-a5bbe58b571a",
+        "revision": 0
+      },
+      {
+        "at": "2026-10-22T00:53:38.039Z",
+        "event": "submission-intent",
+        "key": "K",
+        "idempotency": "387147f0-caa9-4e03-b6be-1d8ca5aa545a",
+        "source": "e7e9f341-ed91-4e7e-b81c-a5bbe58b571a",
+        "steps": 2,
+        "expectedSends": 2
+      },
+      {
+        "at": "2026-10-22T00:53:48.787Z",
+        "event": "run-terminal",
+        "key": "K",
+        "id": "b81263ec-caac-452c-9606-945f7db12ee6",
+        "state": "failed",
+        "steps": [
+          {
+            "position": 0,
+            "state": "completed",
+            "executionId": "efdffa01-3199-46ac-b957-9ba0ca9d204c"
+          },
+          {
+            "position": 1,
+            "state": "failed",
+            "executionId": "efde1ff6-9500-450e-8513-403c0337f215"
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:52.255Z",
+        "event": "immutable-case-proof",
+        "key": "K",
+        "runId": "b81263ec-caac-452c-9606-945f7db12ee6",
+        "state": "failed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "2331ef73717e0bc77a65a924df7d8173639708788fe92d9f2564df21ef17e6d6",
+        "evidence": [
+          {
+            "executionId": "efdffa01-3199-46ac-b957-9ba0ca9d204c",
+            "position": 0,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 1871,
+            "sha256": "55f2ab388ff854fdaf627daa9a69339a82c07ed3047b3ef1be3a8e8bbab44ded",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "333ebbee-6dd7-4cc3-b8fc-e34f4ea2cc07",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "31bb2d8c-3b99-4318-a282-d1dfd8e69e86",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "78bf952b-59bb-485c-a848-3efc4180f929",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "a62ad6a1-e90b-4dd4-8e83-4a5a5aeff87f",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          },
+          {
+            "executionId": "efde1ff6-9500-450e-8513-403c0337f215",
+            "position": 1,
+            "state": "failed",
+            "schemaVersion": 2,
+            "storedBytes": 1514,
+            "sha256": "14cdb1da528902a3f24065948685df56ae3669a49cb59cb82ebcc4cb882f525e",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "3a43d655-3398-4487-82fe-b10df64fb782",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "5d33b7e6-67b9-4dd8-948e-09bc61f522a2",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:53:53.466Z",
+        "event": "target-sends-verified",
+        "replacement": 7,
+        "cumulative": 23,
+        "expectedCumulative": 23
+      },
+      {
+        "at": "2026-10-22T00:53:53.598Z",
+        "event": "workflow-created",
+        "key": "L",
+        "id": "a82759e5-b572-46b8-86f7-98342bd3999a",
+        "revision": 0
+      },
+      {
+        "at": "2026-10-22T00:53:53.600Z",
+        "event": "submission-intent",
+        "key": "L",
+        "idempotency": "4e2d9826-a752-42dc-9b27-5b60a67c03a0",
+        "source": "a82759e5-b572-46b8-86f7-98342bd3999a",
+        "steps": 2,
+        "expectedSends": 1
+      },
+      {
+        "at": "2026-10-22T00:54:04.301Z",
+        "event": "run-terminal",
+        "key": "L",
+        "id": "99e4f77e-4a65-49d4-ba3d-6dd9f1dbe931",
+        "state": "failed",
+        "steps": [
+          {
+            "position": 0,
+            "state": "failed",
+            "executionId": "d909df2c-ba5c-4165-ac89-04440e5b1e06"
+          },
+          {
+            "position": 1,
+            "state": "skipped",
+            "executionId": null
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:54:06.294Z",
+        "event": "immutable-case-proof",
+        "key": "L",
+        "runId": "99e4f77e-4a65-49d4-ba3d-6dd9f1dbe931",
+        "state": "failed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "88fa8362198afd70384f3c40ee087206eda574bc960b4c4f46ecc0f3a184defa",
+        "evidence": [
+          {
+            "executionId": "d909df2c-ba5c-4165-ac89-04440e5b1e06",
+            "position": 0,
+            "state": "failed",
+            "schemaVersion": 2,
+            "storedBytes": 1549,
+            "sha256": "d29810d856d0d0fc8abbbf0a3ffe62f186e36bf3db9fbaba924824198e1d6a08",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "2579a89f-8c0e-439b-a690-9356ea1762cc",
+                  "kind": "jsonEquals",
+                  "outcome": "failed",
+                  "reason": "path_missing"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "at": "2026-10-22T00:54:07.540Z",
+        "event": "target-sends-verified",
+        "replacement": 8,
+        "cumulative": 24,
+        "expectedCumulative": 24
+      },
+      {
+        "at": "2026-10-22T00:54:12.203Z",
+        "event": "normal-maintenance-settlement",
+        "jobs": 8,
+        "outboxes": 8,
+        "protectedRows": 0,
+        "inflight": 0
+      },
+      {
+        "at": "2026-10-22T00:54:13.412Z",
+        "event": "target-sends-verified",
+        "replacement": 8,
+        "cumulative": 24,
+        "expectedCumulative": 24
+      },
+      {
+        "at": "2026-10-22T00:54:13.415Z",
+        "event": "H-L-complete",
+        "cumulativeAdmitted": 28,
+        "cumulativeAuditedSends": 24,
+        "continuationSteps": 10,
+        "continuationSends": 8,
+        "reserveAdmittedSteps": 0,
+        "maximumCumulativeSteps": 28
+      },
+      {
+        "at": "2026-10-22T00:54:50.563Z",
+        "event": "normal-maintenance-settlement",
+        "jobs": 8,
+        "outboxes": 8,
+        "protectedRows": 0,
+        "inflight": 0
+      },
+      {
+        "at": "2026-10-22T00:54:51.903Z",
+        "event": "target-sends-verified",
+        "replacement": 8,
+        "cumulative": 24,
+        "expectedCumulative": 24
+      },
+      {
+        "at": "2026-10-22T01:08:05.079Z",
+        "event": "physical-project-cleanup-verified",
+        "projectId": "e61757b5-feaf-4012-a78f-2a3a4d4df397",
+        "controlTombstoneOnly": true,
+        "protectedChildren": 0,
+        "s3Objects": 0,
+        "uploadTickets": 0
+      },
+      {
+        "at": "2026-10-22T01:08:18.070Z",
+        "event": "target-sends-verified",
+        "replacement": 8,
+        "cumulative": 24,
+        "expectedCumulative": 24
+      },
+      {
+        "at": "2026-10-22T01:08:18.073Z",
+        "event": "H-L-cleanup-complete",
+        "newSteps": 10,
+        "newSends": 8,
+        "cumulativeSteps": 28,
+        "cumulativeSends": 24,
+        "physicalCleanup": true,
+        "providerAbsent": true,
+        "accountingVerified": true,
+        "cleanupSeconds": 801.599
+      }
+    ],
+    "apiCalls": 67,
+    "polls": 5,
+    "awsReads": 135,
+    "admittedSteps": 28,
+    "expectedSends": 24,
+    "prior": {
+      "admittedSteps": 18,
+      "targetSends": 16,
+      "identitiesCreatedAndCleaned": 7,
+      "projectsCreatedAndCleaned": 7,
+      "knownApiCalls": 147,
+      "knownPolls": 11,
+      "knownSecondAttemptAwsCharges": 574,
+      "knownFinalAttemptAwsCharges": 917,
+      "cleanupVerificationAwsCharges": 20,
+      "awsReadTotal": null,
+      "billedIncrementalUsd": null
+    },
+    "startedAt": "2026-10-22T00:51:04.321Z",
+    "continuationParent": null,
+    "replacementParent": {
+      "sha256": "5672e5f765b66646d4812f50f2ade0c6abd06f2070cb6babb85ac65d261e2495",
+      "receiptSha256": "ef9200cbbd36beee38008896a6d0986fd675af052d243dfe9e62bafa5c06ac5a",
+      "counts": {
+        "api": 31,
+        "aws": 173,
+        "poll": 0,
+        "static": 9
+      },
+      "historicalFirstAttemptAt": 1792625396.3995085,
+      "historicalLastOutcomeAt": 1792626681.8631682,
+      "authorization": "accepted4803bd9: one replacement owner/project, new120min clock, counters retained",
+      "additionalProceduralUsd": 1,
+      "historicalUnusedBalanceClaimed": false
+    },
+    "meterCounts": {
+      "api": 130,
+      "aws": 376,
+      "poll": 5,
+      "static": 26
+    },
+    "preflightPlatform": {
+      "at": "2026-10-22T00:51:39.101Z",
+      "platform": {
+        "account": "747336059622",
+        "region": "us-east-2",
+        "stage": "dev-api",
+        "functions": [
+          {
+            "resource": "UsersProjectsApi",
+            "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+            "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3",
+            "codeSha256": "9L568XkEnHD0eaRd0m5K4koZw6noAWqGUxj6epaWXDI=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 256,
+            "timeout": 15,
+            "reserved": null,
+            "configurationHash": "1e6a8d703a0f74558e2fec2352068aec8743829950336da06e6540217983ef35",
+            "mcp": "1",
+            "savedRequests": "7"
+          },
+          {
+            "resource": "EmptyProjectCleanup",
+            "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+            "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb",
+            "codeSha256": "9L568XkEnHD0eaRd0m5K4koZw6noAWqGUxj6epaWXDI=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 256,
+            "timeout": 60,
+            "reserved": null,
+            "configurationHash": "ed4630178b877a255c805a1bc04d25a435f7b7b0d0e8e3808137c91f508d7f8b",
+            "mcp": "1",
+            "savedRequests": "7"
+          },
+          {
+            "resource": "CloudExecutionWorker",
+            "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+            "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66",
+            "codeSha256": "Fefm20ON48Gf6WLJW+DTydUtF/gbIaC1jNRgOXQCE3k=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 256,
+            "timeout": 90,
+            "reserved": null,
+            "configurationHash": "6d5df901054de62344c765581620c4d8160acbaff2c04b22db23a8afd05d5981",
+            "mcp": "1",
+            "savedRequests": null
+          },
+          {
+            "resource": "ExecutionControlledEndpoint",
+            "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+            "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81",
+            "codeSha256": "Fefm20ON48Gf6WLJW+DTydUtF/gbIaC1jNRgOXQCE3k=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 128,
+            "timeout": 65,
+            "reserved": null,
+            "configurationHash": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+            "mcp": null,
+            "savedRequests": null
+          }
+        ],
+        "controls": {
+          "plan": {
+            "type": "FREE",
+            "status": "ACTIVE"
+          },
+          "quota": 10,
+          "unreserved": 10,
+          "queue": {
+            "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+            "state": "Enabled",
+            "batch": 1,
+            "max": 2,
+            "pollers": null,
+            "responses": ["ReportBatchItemFailures"]
+          },
+          "schedule": {
+            "state": "ENABLED",
+            "expression": "rate(1 minute)",
+            "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+          }
+        }
+      }
+    },
+    "instructorCleanupReceiptSha256": "04f086cc3c7be9aa2077cff422c94fd57808eb97d0f432aca7e9cf220e002afc",
+    "instructorCleanup": {
+      "projectId": "530b7e83-1c4b-4ec5-a878-1510afa709ed",
+      "chargedOctober20": 2,
+      "chargedOctober21": 2,
+      "monthlyStageUsage": 22,
+      "reservedBytes": 0
+    },
+    "cleanup": true,
+    "baselineMarker": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "8"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "15"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "workflowAssertionsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    },
+    "baselineStageQuota": [
+      {
+        "SK": {
+          "S": "QUOTA"
+        },
+        "month": {
+          "S": "2026-10"
+        },
+        "pinnedCount": {
+          "N": "0"
+        },
+        "version": {
+          "N": "54"
+        },
+        "count": {
+          "N": "22"
+        },
+        "kind": {
+          "S": "executionQuota"
+        },
+        "pinnedBytes": {
+          "N": "0"
+        },
+        "schemaVersion": {
+          "N": "1"
+        },
+        "PK": {
+          "S": "STAGE#dev-api"
+        }
+      }
+    ],
+    "baselineAccounting": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "version": {
+            "N": "54"
+          },
+          "count": {
+            "N": "22"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "version": {
+            "N": "0"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          }
+        },
+        {
+          "count": {
+            "N": "14"
+          },
+          "version": {
+            "N": "6"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "U#b8b36faf-2c6c-4618-9351-9cacf513a4df"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "0"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "PK": {
+            "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-20"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "d3794504a5a0af7566816f95509737272a71fdc1235a676799a0acba30a52485"
+    },
+    "preflight": {
+      "at": "2026-10-22T00:51:51.178Z",
+      "identity": {
+        "account": "747336059622",
+        "arn": "arn:aws:iam::747336059622:user/davian-admin"
+      },
+      "platform": {
+        "account": "747336059622",
+        "region": "us-east-2",
+        "stage": "dev-api",
+        "functions": [
+          {
+            "resource": "UsersProjectsApi",
+            "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+            "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3",
+            "codeSha256": "9L568XkEnHD0eaRd0m5K4koZw6noAWqGUxj6epaWXDI=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 256,
+            "timeout": 15,
+            "reserved": null,
+            "configurationHash": "1e6a8d703a0f74558e2fec2352068aec8743829950336da06e6540217983ef35",
+            "mcp": "1",
+            "savedRequests": "7"
+          },
+          {
+            "resource": "EmptyProjectCleanup",
+            "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+            "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb",
+            "codeSha256": "9L568XkEnHD0eaRd0m5K4koZw6noAWqGUxj6epaWXDI=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 256,
+            "timeout": 60,
+            "reserved": null,
+            "configurationHash": "ed4630178b877a255c805a1bc04d25a435f7b7b0d0e8e3808137c91f508d7f8b",
+            "mcp": "1",
+            "savedRequests": "7"
+          },
+          {
+            "resource": "CloudExecutionWorker",
+            "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+            "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66",
+            "codeSha256": "Fefm20ON48Gf6WLJW+DTydUtF/gbIaC1jNRgOXQCE3k=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 256,
+            "timeout": 90,
+            "reserved": null,
+            "configurationHash": "6d5df901054de62344c765581620c4d8160acbaff2c04b22db23a8afd05d5981",
+            "mcp": "1",
+            "savedRequests": null
+          },
+          {
+            "resource": "ExecutionControlledEndpoint",
+            "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+            "role": "arn:aws:iam::747336059622:role/kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+            "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81",
+            "codeSha256": "Fefm20ON48Gf6WLJW+DTydUtF/gbIaC1jNRgOXQCE3k=",
+            "state": "Active",
+            "update": "Successful",
+            "runtime": "provided.al2023",
+            "architecture": ["arm64"],
+            "memory": 128,
+            "timeout": 65,
+            "reserved": null,
+            "configurationHash": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+            "mcp": null,
+            "savedRequests": null
+          }
+        ],
+        "controls": {
+          "plan": {
+            "type": "FREE",
+            "status": "ACTIVE"
+          },
+          "quota": 10,
+          "unreserved": 10,
+          "queue": {
+            "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+            "state": "Enabled",
+            "batch": 1,
+            "max": 2,
+            "pollers": null,
+            "responses": ["ReportBatchItemFailures"]
+          },
+          "schedule": {
+            "state": "ENABLED",
+            "expression": "rate(1 minute)",
+            "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+          }
+        }
+      },
+      "hosted": [
+        {
+          "path": "404.html",
+          "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+          "bytes": 344
+        },
+        {
+          "path": "assets/index-CAjex_6u.css",
+          "sha256": "89dd6331058a55d3bb75930baa3d6554ceaf73abaaff99b5913f904b07661ec9",
+          "bytes": 2955
+        },
+        {
+          "path": "assets/index-CD_8s4hz.js",
+          "sha256": "726345aab32ea3f11a8a3075942223794cf33c1c8ad99095dd2fc652bfb97fee",
+          "bytes": 408338
+        },
+        {
+          "path": "index.html",
+          "sha256": "919cfe5e83225f18b97601b72a1c94a107847f0f1c6541f2281a455c413a6cab",
+          "bytes": 666
+        },
+        {
+          "path": "startup.js",
+          "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+          "bytes": 1030
+        }
+      ],
+      "queue": {
+        "ApproximateNumberOfMessages": "0",
+        "ApproximateNumberOfMessagesNotVisible": "0",
+        "ApproximateNumberOfMessagesDelayed": "0"
+      },
+      "anonymousDenied": true
+    },
+    "preflightVerified": true,
+    "runtimeStartedAt": "2026-10-22T00:52:05.244Z",
+    "results": [
+      {
+        "key": "H",
+        "runId": "796db338-d12d-4d95-a84b-6538ecb7d001",
+        "state": "completed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "d9418b1852fb728d4c39ff16cdebecd34c9d4cdc2b7897da86c29ddff678f621",
+        "evidence": [
+          {
+            "executionId": "3782ef4f-d970-41ee-a56e-e785fd97cba5",
+            "position": 0,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2325,
+            "sha256": "50d7b6602f349b8883a03b9f13779eb5962f0601098555de080a858348a1daf1",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "c1c2411c-7477-44ad-a545-5f22ebef1eb0",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6d971b11-4301-4dcb-adc7-7ebd2c2cc9f3",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6bd55889-cfe9-494a-a2d6-d7f4416ec566",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "a5b0a1f4-b89a-48b5-abdc-911cccd4811b",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "36c2d15b-e545-40c7-bb72-a11e44c174bf",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "02f484be-6815-495c-9970-eb2cda515440",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "da5bd9ba-ac9e-4d0d-a7dd-65f1938049a3",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "034e6a20-0dbc-419f-9249-221d86212068",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          },
+          {
+            "executionId": "74327834-761c-4a8c-900d-8835ed489dcf",
+            "position": 1,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2323,
+            "sha256": "bbff9109641317cfea5b6146133085155e98abb3e922428af5f9b6c869ba0f1b",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "ac9f5ed2-9646-44dc-99f0-db89416f0e75",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "bd5af193-b1c4-4a4b-8c3f-5beaa28e5b2e",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "91cf2832-b63e-48c3-9f6e-c16654172c42",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "e7af1b26-3e52-42b4-a8ef-1b57e6b26356",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "196a729f-0368-486e-82f5-f73644654a14",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "619cc113-01e2-4f9d-9d7c-4e7880822168",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6badfb7e-f012-47ed-a195-a4d32137a675",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "91330f29-81af-4b1a-8696-07e9c76cd970",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "key": "I",
+        "runId": "865b058a-dded-4d28-a217-2fd9c65d2423",
+        "state": "completed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "d9418b1852fb728d4c39ff16cdebecd34c9d4cdc2b7897da86c29ddff678f621",
+        "evidence": [
+          {
+            "executionId": "de7f7cbf-26af-4bfb-9f74-8ef7dcaa32f7",
+            "position": 0,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2325,
+            "sha256": "a9d47f6d0ee6d661e706a969536823f44e9d01369f6804f477622d6b42cf8fae",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "c1c2411c-7477-44ad-a545-5f22ebef1eb0",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6d971b11-4301-4dcb-adc7-7ebd2c2cc9f3",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6bd55889-cfe9-494a-a2d6-d7f4416ec566",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "a5b0a1f4-b89a-48b5-abdc-911cccd4811b",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "36c2d15b-e545-40c7-bb72-a11e44c174bf",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "02f484be-6815-495c-9970-eb2cda515440",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "da5bd9ba-ac9e-4d0d-a7dd-65f1938049a3",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "034e6a20-0dbc-419f-9249-221d86212068",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          },
+          {
+            "executionId": "8bc7034f-d45d-49ee-aa25-43a76f8c9b7b",
+            "position": 1,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 2325,
+            "sha256": "aed8de2f63cb70e0ccc67fd7c6f30effcf9e1c51a14bfe526f19b686db6554c8",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "ac9f5ed2-9646-44dc-99f0-db89416f0e75",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "bd5af193-b1c4-4a4b-8c3f-5beaa28e5b2e",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "91cf2832-b63e-48c3-9f6e-c16654172c42",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "e7af1b26-3e52-42b4-a8ef-1b57e6b26356",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "196a729f-0368-486e-82f5-f73644654a14",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "619cc113-01e2-4f9d-9d7c-4e7880822168",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "6badfb7e-f012-47ed-a195-a4d32137a675",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "91330f29-81af-4b1a-8696-07e9c76cd970",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "key": "J",
+        "runId": "f2ee4c3e-b612-4974-9293-63aec150731b",
+        "state": "failed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "25e3586ea9815779e366f2144de83cc5198708bf947e0d906702b18634839fec",
+        "evidence": [
+          {
+            "executionId": "fee67d25-19ac-4584-9ba5-71dee1cf237c",
+            "position": 0,
+            "state": "failed",
+            "schemaVersion": 2,
+            "storedBytes": 1549,
+            "sha256": "74c1833c76a1864e682d08946e356537da26341917d689c608392270d3a7aa8d",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "8ba69acf-0734-4309-9983-d3dcdea2938d",
+                  "kind": "jsonEquals",
+                  "outcome": "failed",
+                  "reason": "value_mismatch"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "key": "K",
+        "runId": "b81263ec-caac-452c-9606-945f7db12ee6",
+        "state": "failed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "2331ef73717e0bc77a65a924df7d8173639708788fe92d9f2564df21ef17e6d6",
+        "evidence": [
+          {
+            "executionId": "efdffa01-3199-46ac-b957-9ba0ca9d204c",
+            "position": 0,
+            "state": "completed",
+            "schemaVersion": 2,
+            "storedBytes": 1871,
+            "sha256": "55f2ab388ff854fdaf627daa9a69339a82c07ed3047b3ef1be3a8e8bbab44ded",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "333ebbee-6dd7-4cc3-b8fc-e34f4ea2cc07",
+                  "kind": "jsonExists",
+                  "outcome": "passed",
+                  "reason": "exists"
+                },
+                {
+                  "assertionId": "31bb2d8c-3b99-4318-a282-d1dfd8e69e86",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "78bf952b-59bb-485c-a848-3efc4180f929",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "a62ad6a1-e90b-4dd4-8e83-4a5a5aeff87f",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          },
+          {
+            "executionId": "efde1ff6-9500-450e-8513-403c0337f215",
+            "position": 1,
+            "state": "failed",
+            "schemaVersion": 2,
+            "storedBytes": 1514,
+            "sha256": "14cdb1da528902a3f24065948685df56ae3669a49cb59cb82ebcc4cb882f525e",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "3a43d655-3398-4487-82fe-b10df64fb782",
+                  "kind": "statusEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                },
+                {
+                  "assertionId": "5d33b7e6-67b9-4dd8-948e-09bc61f522a2",
+                  "kind": "jsonEquals",
+                  "outcome": "passed",
+                  "reason": "matched"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "key": "L",
+        "runId": "99e4f77e-4a65-49d4-ba3d-6dd9f1dbe931",
+        "state": "failed",
+        "semanticsMarker": "1",
+        "frozenAssertionSha256": "88fa8362198afd70384f3c40ee087206eda574bc960b4c4f46ecc0f3a184defa",
+        "evidence": [
+          {
+            "executionId": "d909df2c-ba5c-4165-ac89-04440e5b1e06",
+            "position": 0,
+            "state": "failed",
+            "schemaVersion": 2,
+            "storedBytes": 1549,
+            "sha256": "d29810d856d0d0fc8abbbf0a3ffe62f186e36bf3db9fbaba924824198e1d6a08",
+            "assertions": {
+              "schemaVersion": 1,
+              "state": "evaluated",
+              "results": [
+                {
+                  "assertionId": "2579a89f-8c0e-439b-a690-9356ea1762cc",
+                  "kind": "jsonEquals",
+                  "outcome": "failed",
+                  "reason": "path_missing"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "targetAudits": [
+      {
+        "fixtureId": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values",
+        "authorized": false,
+        "requestId": "FnuvMj60iYcEM9A="
+      },
+      {
+        "fixtureId": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values",
+        "authorized": false,
+        "requestId": "FnuvVj96iYcEM9A="
+      },
+      {
+        "fixtureId": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values",
+        "authorized": false,
+        "requestId": "FnuyJhngCYcEMEQ="
+      },
+      {
+        "fixtureId": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values",
+        "authorized": false,
+        "requestId": "FnuyOjtoCYcEM1A="
+      },
+      {
+        "fixtureId": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values",
+        "authorized": false,
+        "requestId": "Fnu0wjt4CYcEMag="
+      },
+      {
+        "fixtureId": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values",
+        "authorized": false,
+        "requestId": "Fnu29jQPCYcEMEQ="
+      },
+      {
+        "fixtureId": "85be5e07-c0cc-4879-956a-6b81d5273d08",
+        "mode": "assertions-not-found",
+        "authorized": false,
+        "requestId": "Fnu3BiuriYcEMNg="
+      },
+      {
+        "fixtureId": "b1d5fbc7-4af3-4cdf-bfbb-dc919a4b51ec",
+        "mode": "assertions-values",
+        "authorized": false,
+        "requestId": "Fnu5ZhLliYcEM4w="
+      }
+    ],
+    "publicationProof": {
+      "at": "2026-10-22T00:54:50.560Z",
+      "outboxes": 8,
+      "exactTerminalIdentityAndImmutableTicketProof": true
+    },
+    "preCleanupAccounting": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "storageReservedBytes": {
+            "N": "15781"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "count": {
+            "N": "32"
+          },
+          "version": {
+            "N": "67"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "version": {
+            "N": "0"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          }
+        },
+        {
+          "count": {
+            "N": "14"
+          },
+          "version": {
+            "N": "6"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "U#b8b36faf-2c6c-4618-9351-9cacf513a4df"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "0"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "PK": {
+            "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-20"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "72e268214b03fa98dc21a81b546d53f2d1d332f0aab59ae81900cc4748e07d49"
+    },
+    "ownerDailyBefore": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "count": {
+            "N": "10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-22"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "4"
+          },
+          "PK": {
+            "S": "U#60437238-b127-41ed-a71f-3c7ac4856f8c"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "20f0e3b1df0dc6ebe8d1ff35196a145c499e3fb28b21dd627684b8157b80f1a0"
+    },
+    "projectAccountingBefore": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "inflightCount": {
+            "N": "0"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "version": {
+            "N": "30"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "kind": {
+            "S": "project"
+          },
+          "state": {
+            "S": "active"
+          },
+          "PK": {
+            "S": "P#e61757b5-feaf-4012-a78f-2a3a4d4df397"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "storageReservedBytes": {
+            "N": "15781"
+          },
+          "SK": {
+            "S": "META"
+          },
+          "ownerId": {
+            "S": "60437238-b127-41ed-a71f-3c7ac4856f8c"
+          },
+          "projectId": {
+            "S": "e61757b5-feaf-4012-a78f-2a3a4d4df397"
+          }
+        }
+      ],
+      "sha256": "21e8dbc8272911e2563cc95e10a41cde087ca5bf790de505520882558068fcd1"
+    },
+    "cleanupStartedAt": "2026-10-22T00:54:56.474Z",
+    "finalAccounting": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "version": {
+            "N": "75"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "count": {
+            "N": "32"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "version": {
+            "N": "0"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          }
+        },
+        {
+          "count": {
+            "N": "14"
+          },
+          "version": {
+            "N": "6"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "U#b8b36faf-2c6c-4618-9351-9cacf513a4df"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "0"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "PK": {
+            "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-20"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "114ae32cc35d06d5fce94499f5fca9d8609cb310d6875a72245720beb5cfe385"
+    },
+    "cleanupComplete": true,
+    "finishedAt": "2026-10-22T01:08:18.073Z"
+  },
+  "finalIndependentReadOnlyVerification": {
+    "kind": "kurier-H-L-final-read-only-verification-v1",
+    "at": "2026-10-22T01:09:37.059Z",
+    "platform": {
+      "account": "747336059622",
+      "region": "us-east-2",
+      "stage": "dev-api",
+      "functions": [
+        {
+          "resource": "UsersProjectsApi",
+          "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+          "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3",
+          "codeSha256": "9L568XkEnHD0eaRd0m5K4koZw6noAWqGUxj6epaWXDI=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 256,
+          "timeout": 15,
+          "reserved": null,
+          "configurationHash": "1e6a8d703a0f74558e2fec2352068aec8743829950336da06e6540217983ef35",
+          "mcp": "1",
+          "savedRequests": "7"
+        },
+        {
+          "resource": "EmptyProjectCleanup",
+          "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+          "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb",
+          "codeSha256": "9L568XkEnHD0eaRd0m5K4koZw6noAWqGUxj6epaWXDI=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 256,
+          "timeout": 60,
+          "reserved": null,
+          "configurationHash": "ed4630178b877a255c805a1bc04d25a435f7b7b0d0e8e3808137c91f508d7f8b",
+          "mcp": "1",
+          "savedRequests": "7"
+        },
+        {
+          "resource": "CloudExecutionWorker",
+          "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+          "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66",
+          "codeSha256": "Fefm20ON48Gf6WLJW+DTydUtF/gbIaC1jNRgOXQCE3k=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 256,
+          "timeout": 90,
+          "reserved": null,
+          "configurationHash": "6d5df901054de62344c765581620c4d8160acbaff2c04b22db23a8afd05d5981",
+          "mcp": "1",
+          "savedRequests": null
+        },
+        {
+          "resource": "ExecutionControlledEndpoint",
+          "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+          "role": "arn:aws:iam::747336059622:role/kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+          "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81",
+          "codeSha256": "Fefm20ON48Gf6WLJW+DTydUtF/gbIaC1jNRgOXQCE3k=",
+          "state": "Active",
+          "update": "Successful",
+          "runtime": "provided.al2023",
+          "architecture": ["arm64"],
+          "memory": 128,
+          "timeout": 65,
+          "reserved": null,
+          "configurationHash": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+          "mcp": null,
+          "savedRequests": null
+        }
+      ],
+      "controls": {
+        "plan": {
+          "type": "FREE",
+          "status": "ACTIVE"
+        },
+        "quota": 10,
+        "unreserved": 10,
+        "queue": {
+          "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+          "state": "Enabled",
+          "batch": 1,
+          "max": 2,
+          "pollers": null,
+          "responses": ["ReportBatchItemFailures"]
+        },
+        "schedule": {
+          "state": "ENABLED",
+          "expression": "rate(1 minute)",
+          "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+        }
+      }
+    },
+    "stageBefore": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "8"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "15"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "workflowAssertionsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    },
+    "stageAfter": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "8"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "15"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "workflowAssertionsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    },
+    "accounting": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "version": {
+            "N": "75"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "count": {
+            "N": "32"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "version": {
+            "N": "0"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          }
+        },
+        {
+          "count": {
+            "N": "10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-22"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "4"
+          },
+          "PK": {
+            "S": "U#60437238-b127-41ed-a71f-3c7ac4856f8c"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "count": {
+            "N": "14"
+          },
+          "version": {
+            "N": "6"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "U#b8b36faf-2c6c-4618-9351-9cacf513a4df"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "0"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "PK": {
+            "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-20"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#ec04b675-818d-4f1b-a294-5a6330acb432"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "version": {
+            "N": "1"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "fe34e2f145493a4737af5c9c2b6fa92138947df3b0eddd63b426130372d189d0"
+    },
+    "checks": {
+      "pinnedReadersUnchanged": true,
+      "iamAndPlatformControlsUnchanged": true,
+      "stageGenerationCapabilitiesUnchanged": true,
+      "oldAndNewChargedUsagePreserved": true,
+      "monthlyUsage32Reconciles": true,
+      "reservedStoragePinsZero": true,
+      "quotaVersion75MatchesEightReleases": true
+    },
+    "resourceWrites": 0,
+    "stageWrites": 0,
+    "identityCreation": 0,
+    "targetRequests": 0
+  },
+  "readOnlyCleanupProgress": {
+    "at": "2026-10-22T01:04:22.104Z",
+    "kind": "read-only-normal-cleanup-progress",
+    "projectId": "e61757b5-feaf-4012-a78f-2a3a4d4df397",
+    "rows": 46,
+    "remainingKinds": {
+      "executionSnapshot": 2,
+      "execution": 1,
+      "executionRetention": 1,
+      "executionReceipt": 5,
+      "executionJob": 8,
+      "project": 1,
+      "executionOutbox": 8,
+      "executionWorkflowRun": 5,
+      "executionWorkflowStep": 10,
+      "executionWorkflow": 4,
+      "deletionWork": 1
+    },
+    "projectState": "deleting",
+    "quota": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "version": {
+            "N": "75"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "count": {
+            "N": "32"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          }
+        }
+      ],
+      "sha256": "eba2698b49b7a44a1d33e9142c188dc102b32fca46f22613b062889c0f327d4c"
+    }
+  },
+  "meter": {
+    "parent": {
+      "sha256": "5672e5f765b66646d4812f50f2ade0c6abd06f2070cb6babb85ac65d261e2495",
+      "receiptSha256": "ef9200cbbd36beee38008896a6d0986fd675af052d243dfe9e62bafa5c06ac5a",
+      "counts": {
+        "api": 31,
+        "aws": 173,
+        "poll": 0,
+        "static": 9
+      },
+      "historicalFirstAttemptAt": 1792625396.3995085,
+      "historicalLastOutcomeAt": 1792626681.8631682,
+      "authorization": "accepted4803bd9: one replacement owner/project, new120min clock, counters retained",
+      "additionalProceduralUsd": 1,
+      "historicalUnusedBalanceClaimed": false
+    },
+    "newAttemptCount": 370,
+    "newOutcomeCount": 370,
+    "newCounts": {
+      "api": 99,
+      "aws": 254,
+      "static": 17,
+      "poll": 5
+    },
+    "cumulativeCounts": {
+      "api": 130,
+      "aws": 427,
+      "poll": 5,
+      "static": 26
+    },
+    "firstReplacementAttemptAt": 1792630264.3215842,
+    "firstReplacementAttemptUtc": "2026-10-22T00:51:04.321584+00:00",
+    "lastOutcomeAt": 1792631376.9869978,
+    "lastOutcomeUtc": "2026-10-22T01:09:36.986998+00:00",
+    "elapsedSeconds": 1112.665414,
+    "operationCounts": {
+      "CreateOAuth2Token": 2,
+      "GetCallerIdentity": 2,
+      "GET": 99,
+      "ListRolePolicies": 8,
+      "ListAttachedRolePolicies": 8,
+      "GetRolePolicy": 6,
+      "GetPolicy": 8,
+      "GetPolicyVersion": 8,
+      "GetRole": 8,
+      "GetAccountPlanState": 2,
+      "DescribeRule": 2,
+      "ListTargetsByRule": 2,
+      "GetItem": 5,
+      "Query": 107,
+      "GetQueueAttributes": 1,
+      "AdminCreateUser": 1,
+      "AdminSetUserPassword": 1,
+      "InitiateAuth": 4,
+      "RespondToAuthChallenge": 4,
+      "POST": 17,
+      "CognitoAuthPreflight": 6,
+      "OPTIONS": 36,
+      "PATCH": 3,
+      "HEAD": 10,
+      "FilterLogEvents": 16,
+      "DELETE": 1,
+      "AdminUserGlobalSignOut": 1,
+      "AdminDeleteUser": 1,
+      "AdminGetUser": 1
+    },
+    "statusCounts": {
+      "200": 313,
+      "401": 1,
+      "201": 7,
+      "400": 6,
+      "204": 27,
+      "null": 9,
+      "202": 6,
+      "404": 1
+    },
+    "unknownHttpStatuses": 9,
+    "uncertainWrites": 0,
+    "readOnlyTransportErrors": [
+      {
+        "attempt": {
+          "sequence": 200,
+          "at": 1792630363.1706808,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 62,
+            "aws": 233,
+            "poll": 0,
+            "static": 18
+          }
+        },
+        "outcome": {
+          "sequence": 203,
+          "at": 1792630363.181935,
+          "event": "outcome",
+          "attempt": 200,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 201,
+          "at": 1792630363.1738312,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 63,
+            "aws": 233,
+            "poll": 0,
+            "static": 18
+          }
+        },
+        "outcome": {
+          "sequence": 204,
+          "at": 1792630363.1829493,
+          "event": "outcome",
+          "attempt": 201,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 202,
+          "at": 1792630363.1749005,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 64,
+            "aws": 233,
+            "poll": 0,
+            "static": 18
+          }
+        },
+        "outcome": {
+          "sequence": 205,
+          "at": 1792630363.1837025,
+          "event": "outcome",
+          "attempt": 202,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 258,
+          "at": 1792630367.1985471,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 83,
+            "aws": 237,
+            "poll": 0,
+            "static": 22
+          }
+        },
+        "outcome": {
+          "sequence": 261,
+          "at": 1792630367.2078745,
+          "event": "outcome",
+          "attempt": 258,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 259,
+          "at": 1792630367.2025068,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 84,
+            "aws": 237,
+            "poll": 0,
+            "static": 22
+          }
+        },
+        "outcome": {
+          "sequence": 262,
+          "at": 1792630367.2086487,
+          "event": "outcome",
+          "attempt": 259,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 260,
+          "at": 1792630367.2047195,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 85,
+            "aws": 237,
+            "poll": 0,
+            "static": 22
+          }
+        },
+        "outcome": {
+          "sequence": 263,
+          "at": 1792630367.209484,
+          "event": "outcome",
+          "attempt": 260,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 344,
+          "at": 1792630387.0539308,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 108,
+            "aws": 251,
+            "poll": 1,
+            "static": 26
+          }
+        },
+        "outcome": {
+          "sequence": 347,
+          "at": 1792630387.0613081,
+          "event": "outcome",
+          "attempt": 344,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 345,
+          "at": 1792630387.0554562,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 109,
+            "aws": 251,
+            "poll": 1,
+            "static": 26
+          }
+        },
+        "outcome": {
+          "sequence": 348,
+          "at": 1792630387.0622537,
+          "event": "outcome",
+          "attempt": 345,
+          "status": null,
+          "transportError": true
+        }
+      },
+      {
+        "attempt": {
+          "sequence": 346,
+          "at": 1792630387.0563571,
+          "event": "attempt",
+          "category": "api",
+          "operation": "OPTIONS",
+          "write": false,
+          "poll": false,
+          "protocol": "HTTP/2.0",
+          "counts": {
+            "api": 110,
+            "aws": 251,
+            "poll": 1,
+            "static": 26
+          }
+        },
+        "outcome": {
+          "sequence": 349,
+          "at": 1792630387.0629966,
+          "event": "outcome",
+          "attempt": 346,
+          "status": null,
+          "transportError": true
+        }
+      }
+    ],
+    "meterStops": [],
+    "ledger": "workflow-assertions-hl-replacement-attempts.jsonl",
+    "ledgerSha256": "66050c4e8d224556dd65b5a96401039a2d4b8af1f79a59778b1ffbb5be97652f"
+  },
+  "results": {
+    "reviewedCasesPassed": ["H", "I", "J", "K", "L"],
+    "newAdmissions": 10,
+    "newTargetSends": 8,
+    "cumulativeCampaignAdmissions": 28,
+    "cumulativeAuditedTargetSends": 24,
+    "cumulativeDisposableIdentitiesProjects": 8,
+    "schema2Captures": 8,
+    "captureBytes": 15781,
+    "assertionResults": 40,
+    "passedAssertions": 38,
+    "expectedFailedAssertions": 2,
+    "targetModeCounts": {
+      "assertions-values": 7,
+      "assertions-not-found": 1
+    },
+    "targetRequestIdsUnique": true,
+    "allCurrentReplacementResourcesNormallyCleaned": true,
+    "monthlyAdmissionCount": 32,
+    "newOwnerDailyCount": 10,
+    "instructorDailyCharges": {
+      "2026-10-20": 2,
+      "2026-10-21": 2
+    },
+    "quotaVersionBeforeCleanup": 67,
+    "quotaVersionAfterCleanup": 75,
+    "reservedBytesBeforeCleanup": 15781,
+    "reservedBytesAfterCleanup": 0
+  },
+  "operatorInMemoryGuardObservations": {
+    "hostedExpectedDecimalTokensExactAcrossThreeBrowserContexts": true,
+    "literalResponseNumberTokensCheckedAsText": true,
+    "frozenSourceRevisionAndRulesPreservedOnRerun": true,
+    "sourceHStoredBytesUnchangedAfterRerun": true,
+    "allCaptureLengthsAndSha256MatchedImmutableManifests": true,
+    "terminalJobIdentityImmutablePublicationAndSettledUploadGuardPassed": true,
+    "basis": "Recorded campaign completion is reachable only after these checks; safe hashes/results are retained, full raw captures/configurations are not persisted"
+  },
+  "localVerification": {
+    "completeAuthorReopenEdit": {
+      "pinnedBrowserAuthorReopenAndEdit": true,
+      "localPatches": 3,
+      "exactDecimalTokens": true,
+      "liveAwsCalls": 0,
+      "targetSends": 0
+    },
+    "preLiveRegressionLimitation": "Did not assert zero read-only transport errors",
+    "oldContextCloseLocalReproduction": {
+      "pinnedBrowserAuthorReopenAndEdit": true,
+      "localPatches": 3,
+      "transportErrorOutcomes": 9,
+      "oldCloseReproduced": true,
+      "exactDecimalTokens": true,
+      "liveAwsCalls": 0,
+      "targetSends": 0
+    },
+    "correctedContextCloseLocalRegression": {
+      "pinnedBrowserAuthorReopenAndEdit": true,
+      "localPatches": 3,
+      "transportErrorOutcomes": 0,
+      "oldCloseReproduced": false,
+      "exactDecimalTokens": true,
+      "liveAwsCalls": 0,
+      "targetSends": 0
+    },
+    "correctedBrowserDriverUsedLive": false,
+    "pythonUnitCases": 20,
+    "replacementMeterRealLocalTransport": true,
+    "newClockAndExactInheritedLimits": true,
+    "repositoryVerifyCommand": "npm run verify",
+    "repositoryVerifyExitCode": 0,
+    "pythonFormattingAndCoreLint": true
+  },
+  "localCleanup": {
+    "coordinatorExited": true,
+    "meterExited": true,
+    "proxyAndRelayAbsent": true,
+    "temporaryCaRemoved": true
+  },
+  "holdsAndGaps": [
+    "Frozen audit after live processes stopped found nine charged read-only API OPTIONS transport errors; prior browser driver closed before background reads settled. Local reproduction supports this explanation but does not prove historical causation. No uncertain writes or target sends. Corrected driver passed locally only; review gap remains",
+    "No redeployment, stage writes, A-G replay, manual draining or extra target requests occurred",
+    "No further campaign submissions or reserve admissions remain",
+    "Historical missing readbacks, old error attribution limits and first-attempt AWS totals remain unproved",
+    "All actual billing totals remain unknown; additional $1 is procedural and no historical balance is claimed",
+    "Controlled fixtures/admin-created genuine SRP do not establish general signup/email or arbitrary external-target behavior",
+    "Broad fault injection, elapsed-retention/late-upload windows and PITR remain separate",
+    "Provider absence/global signout do not establish immediate offline access-JWT invalidation"
+  ]
+}

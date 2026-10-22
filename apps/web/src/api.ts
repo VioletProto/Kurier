@@ -1,3 +1,21 @@
+import { validStepAssertions, validAssertionEvaluation } from "./assertions";
+
+function checkedWorkflow<T extends { steps: WorkflowStep[] }>(value: T): T {
+  if (
+    !value ||
+    !Array.isArray(value.steps) ||
+    !value.steps.every(validStepAssertions)
+  ) {
+    throw Error("Workflow assertion configuration unavailable.");
+  }
+  return {
+    ...value,
+    steps: value.steps.map((step) => ({
+      ...step,
+      assertions: step.assertions ?? [],
+    })),
+  };
+}
 import { auth, SessionExpired } from "./auth";
 export interface SecretReference {
   secretId: string;
@@ -218,7 +236,7 @@ export class Api {
     cursor?: string,
     signal?: AbortSignal,
   ): Promise<{ items: Workflow[]; nextCursor: string | null }> {
-    return (
+    const page = (
       await (
         await this.request(
           `/api/v1/projects/${encodeURIComponent(project)}/workflows${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
@@ -229,6 +247,10 @@ export class Api {
         )
       ).json()
     ).data;
+    return {
+      ...page,
+      items: page.items.map((v: Workflow) => checkedWorkflow(v)),
+    };
   }
   async saveWorkflow(
     project: string,
@@ -236,6 +258,8 @@ export class Api {
     old?: Workflow,
     signal?: AbortSignal,
   ): Promise<Workflow> {
+    if (!definition.steps.every(validStepAssertions))
+      throw Error("Invalid bounded assertion configuration.");
     const response = await this.request(
       `/api/v1/projects/${encodeURIComponent(project)}/workflows${old ? `/${old.workflowId}` : ""}`,
       old ? "PATCH" : "POST",
@@ -246,7 +270,7 @@ export class Api {
     try {
       const data = (await response.json()).data;
       if (!data?.workflow?.workflowId) throw Error();
-      return data.workflow;
+      return checkedWorkflow<Workflow>(data.workflow);
     } catch {
       throw new UncertainWrite();
     }
@@ -269,7 +293,7 @@ export class Api {
     cursor?: string,
     signal?: AbortSignal,
   ): Promise<{ items: WorkflowRun[]; nextCursor: string | null }> {
-    return (
+    const page = (
       await (
         await this.request(
           `/api/v1/projects/${encodeURIComponent(project)}/workflow-runs${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
@@ -280,13 +304,17 @@ export class Api {
         )
       ).json()
     ).data;
+    return {
+      ...page,
+      items: page.items.map((v: WorkflowRun) => checkedWorkflow(v)),
+    };
   }
   async workflowRun(
     project: string,
     id: string,
     signal?: AbortSignal,
   ): Promise<WorkflowRun> {
-    return (
+    const run: WorkflowRun = (
       await (
         await this.request(
           `/api/v1/projects/${encodeURIComponent(project)}/workflow-runs/${id}`,
@@ -297,6 +325,7 @@ export class Api {
         )
       ).json()
     ).data.run;
+    return checkedWorkflow(run);
   }
   async submitWorkflow(
     project: string,
@@ -321,7 +350,7 @@ export class Api {
     try {
       const data = (await response.json()).data;
       if (!data?.run?.workflowRunId) throw Error();
-      return data.run;
+      return checkedWorkflow<WorkflowRun>(data.run);
     } catch {
       throw new UncertainWrite();
     }
@@ -557,7 +586,7 @@ export class Api {
     executionId: string,
     signal?: AbortSignal,
   ): Promise<Evidence> {
-    return (
+    const evidence: Evidence = (
       await (
         await this.request(
           this.executionPath(projectId, executionId) + "/evidence",
@@ -568,6 +597,16 @@ export class Api {
         )
       ).json()
     ).data.evidence;
+    if (
+      !evidence ||
+      (evidence.schemaVersion !== 1 && evidence.schemaVersion !== 2) ||
+      (evidence.schemaVersion === 1 && evidence.assertions !== undefined) ||
+      (evidence.schemaVersion === 2 &&
+        !validAssertionEvaluation(evidence.assertions!))
+    ) {
+      throw Error("Evidence version or assertion results unavailable.");
+    }
+    return evidence;
   }
   private async detailResponse(response: Response): Promise<ProjectDetail> {
     try {
@@ -900,6 +939,7 @@ export type EvidenceBody = {
   omissionReason: string | null;
 };
 export type Evidence = {
+  assertions?: AssertionEvaluation;
   schemaVersion: number;
   status: string;
   outcome: { code: string | null; certainty: string };
@@ -951,12 +991,32 @@ export type WorkflowBinding = {
     suffix?: string;
   };
 };
+export type Assertion =
+  | { assertionId: string; kind: "statusEquals"; expected: number }
+  | { assertionId: string; kind: "jsonExists"; path: string }
+  | {
+      assertionId: string;
+      kind: "jsonEquals";
+      path: string;
+      expected: string | boolean | null | { type: "number"; decimal: string };
+    };
+export type AssertionEvaluation = {
+  schemaVersion: 1;
+  state: "not_configured" | "evaluated";
+  results: {
+    assertionId: string;
+    kind: Assertion["kind"];
+    outcome: "passed" | "failed" | "not_evaluated";
+    reason: string;
+  }[];
+};
 export type WorkflowStep = {
   stepId: string;
   requestId: string;
   requestRevision: number;
   extract: WorkflowExtraction[];
   bindings: WorkflowBinding[];
+  assertions?: Assertion[];
 };
 export type WorkflowDefinition = { name: string; steps: WorkflowStep[] };
 export type Workflow = WorkflowDefinition & {

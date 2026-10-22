@@ -24,7 +24,8 @@
     "sst:install:db": "sst install --stage db-viability",
     "sst:remove:db": "sst remove --stage db-viability",
     "sst:state:list:db": "sst state list --stage db-viability",
-    "test": "npm run test --workspaces --if-present && npm run test:infra",
+    "test": "npm run test --workspaces --if-present && npm run test:infra && npm run test:workflow-poll && npm run test:assertions-tooling",
+    "test:workflow-poll": "node --test scripts/workflow-run-poll.test.mjs scripts/workflow-coordinator-transport.test.mjs scripts/workflow-assertions-collector.test.mjs scripts/workflow-assertions-hl.test.mjs",
     "verify": "npm run format:check && npm run lint && npm run test && npm run build && npm run verify:go",
     "verify:go": "set -e; for service in services/api services/worker services/local-agent services/mcp services/request-runtime infra/spikes/sst-viability/service infra/spikes/sst-db-viability/service; do (cd \"$service\" && go test ./... && go vet ./...); done",
     "test:ownership:integration": "cd services/api && go test -race -tags=integration -count=1 ./...",
@@ -37,7 +38,8 @@
     "sst:diff:api": "node scripts/sst-auth.mjs diff dev-api",
     "sst:deploy:api": "node scripts/sst-auth.mjs deploy dev-api",
     "dev:cloud": "node scripts/local-dev.mjs cloud-web",
-    "test:aws:integration": "node scripts/aws-integration.mjs"
+    "test:aws:integration": "node scripts/aws-integration.mjs",
+    "test:assertions-tooling": "node --test scripts/workflow-assertions-activation.test.mjs scripts/workflow-assertions-release.test.mjs && python3 -m unittest discover -s scripts/attempt-meter -p 'test_*.py'"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

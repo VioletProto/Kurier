@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/VioletProto/Kurier/services/api/execution"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"io"
 	"net/http"
 	"net/url"
@@ -66,7 +67,7 @@ func (a *Server) workflowEndpoint(w http.ResponseWriter, r *http.Request, u User
 		if e != nil {
 			return e
 		}
-		if execution.NonNullObject(raw) != nil {
+		if runner.ValidateWorkflowJSON(raw) != nil {
 			return apiError(400, "invalid_request", "Invalid workflow definition.")
 		}
 		rev := int64(0)

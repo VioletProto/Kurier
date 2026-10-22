@@ -1,0 +1,421 @@
+{
+  "inventory": {
+    "sourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+    "checkedAt": "2026-10-21T02:22:15.307Z",
+    "account": "747336059622",
+    "nonRoot": true,
+    "region": "us-east-2",
+    "bootstrap": {
+      "version": 5,
+      "parameterVersion": 1,
+      "valueSha256": "f390213368ff859bf1b886d97785aee459948f4b20e495b1dabc799f56a688ff",
+      "state": "sst-state-moshrdrrbeba",
+      "asset": "sst-asset-moshrdrrbeba"
+    },
+    "plan": {
+      "type": "FREE",
+      "status": "ACTIVE",
+      "expiration": "2026-12-29T21:05:52.776000+00:00"
+    },
+    "accountConcurrency": 10,
+    "unreserved": 10,
+    "stageSha256": "dca180063fb02b0c7bf7b1a5e582ae4b5b19109cadaae8eea61983412a09d10d",
+    "quotaSha256": "ffcd7f713a4ad5bc6af27b9c56c5fd1bb4bc544c3527d9e5d9c8d8fed7ff085b",
+    "projectAccounting": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "schedule": {
+      "enabled": true,
+      "expression": "rate(1 minute)"
+    },
+    "api": {
+      "gatewayCorsAbsent": true,
+      "rate": 10,
+      "burst": 20
+    },
+    "generation": "dev-api-initial-v1",
+    "stageVersion": "13",
+    "consumers": [
+      {
+        "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+        "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+        "environmentSha256": "ddcc5cac0a9d9ef94e6e9e5d5de75d1aa7696bd4f2d9e8808ec9124ed9e5c438",
+        "role": "kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+        "inlineIamSha256": "b7b5f4018fbda8238e139230f1a734fc212f09ab6623d6236bbc0d32e2c5e591",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 256,
+        "timeout": 15,
+        "reserved": false,
+        "provisioned": false
+      },
+      {
+        "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+        "codeSha256": "z2X4utxBRZYv7kzceatNTLHxgp0wL0HODzCDOuGaMm4=",
+        "environmentSha256": "4d4b1fb897d33ccafe45468cdc0da1fa55f745ca3e90a3b7f3b9145d43e8b517",
+        "role": "kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+        "inlineIamSha256": "e9035ff341283e94c01d601388fcb4834e6dd35c88cf2be5ad5dfffb7f1c7f02",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 256,
+        "timeout": 60,
+        "reserved": false,
+        "provisioned": false
+      },
+      {
+        "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+        "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+        "environmentSha256": "b4bce3ff109f801c16c36eb7daf71d8b4858973efdfc88e623275cabd4d1621f",
+        "role": "kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+        "inlineIamSha256": "0992d2303c82fa31de3fc68ac7e6f0cad3b279c3d65c071aba3bd66afb56329a",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 256,
+        "timeout": 90,
+        "reserved": false,
+        "provisioned": false
+      },
+      {
+        "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+        "codeSha256": "L7Oe8Hc2IRnA01IG6TXykfQIXIAXAy9cwkgApDoXCQA=",
+        "environmentSha256": "2f7d50469ec5c2a9e185d0bf009487f4ee5bfb754d9d51eae263cc30f14f77d8",
+        "role": "kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+        "inlineIamSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "attachedIamSha256": "377062a2b03d5ebd666b369fbd951b107407a16b1b3145e68e9efc8228e4fddc",
+        "trustSha256": "8c1dae4c3e51769423406a8b52c7a197a7d552c25994ca843548a9641740b3b9",
+        "memory": 128,
+        "timeout": 65,
+        "reserved": false,
+        "provisioned": false
+      }
+    ],
+    "worker": {
+      "batch": 1,
+      "max": 2,
+      "standardPollers": true
+    },
+    "cognito": {
+      "pool": "us-east-2_qTDZQT1FE",
+      "client": "5jg9sb38i6ae9c0adm5rtdfkno",
+      "essentials": true,
+      "defaultEmail": true,
+      "rotatingRefresh": true
+    },
+    "productDeploymentPerformed": false,
+    "previewCompleted": true,
+    "bootstrapUnchanged": true,
+    "consumersUnchanged": true,
+    "accountingUnchanged": true,
+    "toolingMetadata": {
+      "passphraseMetadataSha256": "aa7f675d05f6577fd7805fbe968039afdef9a402e3a6f35d58126c84682a2dd8",
+      "stateBucketMetadataSha256": "f9707d4863afbfab126428a25c52631987ec2c231bda7661d884718574a3f353",
+      "stateObjects": 88
+    },
+    "toolingMetadataUnchanged": true,
+    "deploymentPerformed": false,
+    "activationPerformed": false,
+    "targetRequestsPerformed": false
+  },
+  "preview": {
+    "resourceChanges": 11,
+    "resources": [
+      {
+        "name": "UsersProjectsApiCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "operation": "replace",
+        "changedProperties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "EmptyProjectCleanupCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "operation": "replace",
+        "changedProperties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "UsersProjectsApiFunction",
+        "type": "aws:lambda/function:Function",
+        "operation": "update",
+        "changedProperties": ["lastModified", "s3Key"]
+      },
+      {
+        "name": "EmptyProjectCleanupFunction",
+        "type": "aws:lambda/function:Function",
+        "operation": "update",
+        "changedProperties": ["lastModified", "s3Key"]
+      },
+      {
+        "name": "ExecutionControlledEndpointCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "operation": "replace",
+        "changedProperties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "ExecutionControlledEndpointFunction",
+        "type": "aws:lambda/function:Function",
+        "operation": "update",
+        "changedProperties": ["lastModified", "s3Key"]
+      },
+      {
+        "name": "CloudExecutionWorkerCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "operation": "replace",
+        "changedProperties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "CloudExecutionWorkerFunction",
+        "type": "aws:lambda/function:Function",
+        "operation": "update",
+        "changedProperties": ["lastModified", "s3Key"]
+      },
+      {
+        "name": "FrontendWebKvKeys.sst.aws.KvKeys",
+        "type": "pulumi-nodejs:dynamic:Resource",
+        "operation": "update",
+        "changedProperties": [
+          "entries[\"/assets/index-CD_8s4hz.js\"]",
+          "entries[\"/assets/index-TwEBpFzH.js\"]"
+        ]
+      },
+      {
+        "name": "FrontendWebAssetFiles.sst.aws.BucketFiles",
+        "type": "pulumi-nodejs:dynamic:Resource",
+        "operation": "update",
+        "changedProperties": [
+          "files[0].hash",
+          "files[0].key",
+          "files[0].source",
+          "files[1].source",
+          "files[2].source",
+          "files[3].hash",
+          "files[3].source",
+          "files[4].hash",
+          "files[4].source",
+          "files[5].source",
+          "files[6].key",
+          "files[6].source",
+          "files[7].hash",
+          "files[7].key",
+          "files[7].source",
+          "files[8].hash",
+          "files[8].key",
+          "files[8].source",
+          "files[9].key",
+          "files[9].source"
+        ]
+      },
+      {
+        "name": "FrontendWebInvalidation.sst.aws.DistributionInvalidation",
+        "type": "pulumi-nodejs:dynamic:Resource",
+        "operation": "update",
+        "changedProperties": ["version"]
+      }
+    ],
+    "iamChanges": [],
+    "infrastructureChanges": [],
+    "packages": [
+      {
+        "name": "UsersProjectsApi",
+        "bytes": 9251049,
+        "sha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
+        "oldKey": "assets/UsersProjectsApi-code-cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e.zip",
+        "newKey": "assets/UsersProjectsApi-code-f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32.zip"
+      },
+      {
+        "name": "EmptyProjectCleanup",
+        "bytes": 9251049,
+        "sha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
+        "oldKey": "assets/EmptyProjectCleanup-code-cf65f8badc4145962fee4cdc79ab4d4cb1f1829d302f41ce0f30833ae19a326e.zip",
+        "newKey": "assets/EmptyProjectCleanup-code-f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32.zip"
+      },
+      {
+        "name": "CloudExecutionWorker",
+        "bytes": 8687530,
+        "sha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
+        "oldKey": "assets/CloudExecutionWorker-code-2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900.zip",
+        "newKey": "assets/CloudExecutionWorker-code-15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379.zip"
+      },
+      {
+        "name": "ExecutionControlledEndpoint",
+        "bytes": 8687530,
+        "sha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
+        "oldKey": "assets/ExecutionControlledEndpoint-code-2fb39ef077362119c0d35206e935f291f4085c8017032f5cc24800a43a170900.zip",
+        "newKey": "assets/ExecutionControlledEndpoint-code-15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379.zip"
+      }
+    ]
+  },
+  "frontend": {
+    "schemaVersion": 1,
+    "publicConfig": {
+      "VITE_API_URL": "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+      "VITE_COGNITO_USER_POOL_ID": "us-east-2_qTDZQT1FE",
+      "VITE_COGNITO_CLIENT_ID": "5jg9sb38i6ae9c0adm5rtdfkno",
+      "VITE_KURIER_STAGE": "dev-api"
+    },
+    "files": [
+      {
+        "path": "404.html",
+        "bytes": 344,
+        "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "assets/index-CAjex_6u.css",
+        "bytes": 2955,
+        "sha256": "89dd6331058a55d3bb75930baa3d6554ceaf73abaaff99b5913f904b07661ec9",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "assets/index-CD_8s4hz.js",
+        "bytes": 408338,
+        "sha256": "726345aab32ea3f11a8a3075942223794cf33c1c8ad99095dd2fc652bfb97fee",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "index.html",
+        "bytes": 666,
+        "sha256": "919cfe5e83225f18b97601b72a1c94a107847f0f1c6541f2281a455c413a6cab",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "startup.js",
+        "bytes": 1030,
+        "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      }
+    ],
+    "releaseId": "bd511e3f9979d2ef7dd6b73d183dcf7620a423b62659ac89c64e4a1a08981cde"
+  },
+  "releaseSourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "applicationCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "assertionsImplementationCommit": "55cd061c0f6607037ebd61e200fe54ab296237c4",
+  "artifactDirectory": ".build/workflow-assertions-release/68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "packageBuilds": [
+    {
+      "name": "UsersProjectsApi",
+      "goVersion": "go1.27.1-X:nodwarf5",
+      "goos": "linux",
+      "goarch": "arm64",
+      "cgoEnabled": false,
+      "goarm64": "v8.0",
+      "ldflags": "-s -w",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+      "vcsModified": false,
+      "bootstrapBytes": 22741152,
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32"
+    },
+    {
+      "name": "EmptyProjectCleanup",
+      "goVersion": "go1.27.1-X:nodwarf5",
+      "goos": "linux",
+      "goarch": "arm64",
+      "cgoEnabled": false,
+      "goarm64": "v8.0",
+      "ldflags": "-s -w",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+      "vcsModified": false,
+      "bootstrapBytes": 22741152,
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32"
+    },
+    {
+      "name": "CloudExecutionWorker",
+      "goVersion": "go1.27.1-X:nodwarf5",
+      "goos": "linux",
+      "goarch": "arm64",
+      "cgoEnabled": false,
+      "goarm64": "v8.0",
+      "ldflags": "-s -w",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+      "vcsModified": false,
+      "bootstrapBytes": 21430432,
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379"
+    },
+    {
+      "name": "ExecutionControlledEndpoint",
+      "goVersion": "go1.27.1-X:nodwarf5",
+      "goos": "linux",
+      "goarch": "arm64",
+      "cgoEnabled": false,
+      "goarm64": "v8.0",
+      "ldflags": "-s -w",
+      "vcsRevision": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+      "vcsModified": false,
+      "bootstrapBytes": 21430432,
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379"
+    }
+  ],
+  "readerBaselineSha256": "710fc11abae5abecc696402b4ee9be19e5c436c32a516c2b4fa324bef89033a2",
+  "equivalentToAcceptedPreview": true,
+  "supersedesExecutionPreparation": "c9f55d4980e24c1ec8d57e96a722fd06f7f0271f",
+  "sourceTrees": {
+    "services": "6fe8d29a838d5c3ae8a14216a39f4f7d7592a05d",
+    "apps": "281696959fb1bd82a9ddc62f067556d4ee10f306",
+    "infra": "1657dec95552fc856308ef5537a710c857424f5a"
+  },
+  "buildInputs": {
+    "nodeVersion": "26.11.1",
+    "npmVersion": "12.2.1",
+    "packageLockSha256": "0002e759ded5ff43aca6c2c51a012378a19286d511675b934cc94b555a8d68dd",
+    "goModuleFiles": {
+      "services/api/go.mod": "9229281710970dd441b1ddb3f2eea55cca7418d7291a711704c8f21b62f99ea5",
+      "services/api/go.sum": "8fe6e43cfdba5f3571b617c4f6284f85aa3ac48bb0df2eafd64cfd31cebc453c",
+      "services/worker/go.mod": "e0dd87f90c64d41741de0d85687fa6fb167b0f6c1dd4ac2b2e1a32a58e2692c9",
+      "services/worker/go.sum": "ca5779b1a9bb177aa3fc215a0bb0b996b879fa8d21e4a5e08058df5d96356959",
+      "services/request-runtime/go.mod": "a1d1b1e1b5cad391f044362101c1bb20d42dd23905eeef67ecb309968de29675",
+      "services/request-runtime/go.sum": "58730b20987bf6b84b27522506a03686cce87600a04f742c66e64f1f71e36de3"
+    }
+  },
+  "controlledFixtures": {
+    "schemaVersion": 1,
+    "auditFields": [
+      "kurierWorkflowFixture",
+      "fixtureId",
+      "mode",
+      "authorized",
+      "requestId"
+    ],
+    "responses": [
+      {
+        "mode": "assertions-values",
+        "status": 200,
+        "literalUtf8": "{\"precise\":0.10000000000000001,\"short\":0.1,\"exponent\":1E-01,\"min\":1e-308,\"max\":9007199254740991,\"zero\":-0.0,\"exists\":null,\"flag\":true,\"text\":\"public\"}",
+        "bodyBytes": 150,
+        "bodySha256": "be88eeacbd302fd531b18b44713578f9d2b3420b628f3595c2201baa5df4ddc8",
+        "requiresFixtureUUID": true,
+        "reflectsCallerInput": false,
+        "auditAuthorizedAlwaysFalse": true
+      },
+      {
+        "mode": "assertions-not-found",
+        "status": 404,
+        "literalUtf8": "{\"unavailable\":true}",
+        "bodyBytes": 20,
+        "bodySha256": "1bbc5eb53033fa10f526c0245b6032760000674c4a28b7df6dd4c2989bb39c52",
+        "requiresFixtureUUID": true,
+        "reflectsCallerInput": false,
+        "auditAuthorizedAlwaysFalse": true
+      }
+    ]
+  },
+  "campaignLimits": {
+    "plannedAdmittedSteps": 24,
+    "reservedAdmittedSteps": 4,
+    "maximumAdmittedSteps": 28,
+    "maximumTwoStepSubmissions": 14,
+    "maximumTargetSends": 28,
+    "disposableIdentities": 2,
+    "disposableProjects": 2,
+    "incrementalAllowanceUsd": "1.00",
+    "maximumApiCalls": 500,
+    "maximumStatusPolls": 240,
+    "minimumPollIntervalSeconds": 2,
+    "maximumAwsReads": 1500,
+    "windowHours": 2,
+    "cleanupObservationMinutes": 20,
+    "directFixtureProbes": 0
+  }
+}

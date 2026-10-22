@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	wire "github.com/VioletProto/Kurier/services/request-runtime/mcpwire"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -65,7 +66,7 @@ func (d *mcpReadSet) guards(s *Service) ([]dt.TransactWriteItem, error) {
 		names := map[string]string{}
 		values := map[string]dt.AttributeValue{}
 		parts := []string{}
-		for i, k := range []string{"version", "kind", "revision", "state", "deletionEpoch", "disabled", "recoveryGeneration", "mcpReadOnlySchemaVersion", "savedRequestsSchemaVersion", "normalExpiresAt", "pinned", "evidenceAvailability", "tokenHash", "expiresAt"} {
+		for i, k := range []string{"version", "kind", "revision", "state", "deletionEpoch", "disabled", "recoveryGeneration", "mcpReadOnlySchemaVersion", "savedRequestsSchemaVersion", "workflowAssertionsSchemaVersion", "assertionSemanticsVersion", "normalExpiresAt", "pinned", "evidenceAvailability", "tokenHash", "expiresAt"} {
 			n := fmt.Sprintf("#f%d", i)
 			names[n] = k
 			if v, ok := m[k]; ok {
@@ -360,7 +361,7 @@ func (s *Service) mcpData(ctx context.Context, c row, tool string, in wire.Input
 			return nil, failure(503, "evidence_unavailable")
 		}
 		capture := stored.Data.Evidence
-		if capture.SchemaVersion != 1 || capture.ProjectID != in.ProjectID || capture.ExecutionID != in.ExecutionID {
+		if runner.ValidateEvidenceVersion(&capture) != nil || capture.ProjectID != in.ProjectID || capture.ExecutionID != in.ExecutionID {
 			return nil, failure(503, "evidence_unavailable")
 		}
 		v, e := s.Detail(ctx, c.OwnerID, in.ProjectID, in.ExecutionID)
@@ -373,15 +374,23 @@ func (s *Service) mcpData(ctx context.Context, c row, tool string, in wire.Input
 		delivery := &wire.Evidence{View: in.View, Retention: mcpRetention(v.Retention), OmittedFields: []string{}}
 		out.Evidence = delivery
 		if in.View == "complete" {
-			b, _ := json.Marshal(capture)
+			b, _ := json.Marshal(capture.LegacyProjection())
 			if len(b) > wire.CaptureLimit {
 				return nil, failure(413, "evidence_too_large")
 			}
 			delivery.Complete = true
-			delivery.Capture = &capture
+			legacy := capture.LegacyProjection()
+			delivery.Capture = &legacy
+			if capture.SchemaVersion == 2 {
+				delivery.OmissionReason = pointer("assertions_not_exposed")
+				delivery.OmittedFields = []string{"assertions"}
+			}
 		} else {
 			delivery.OmissionReason = pointer("mcp_summary_view")
 			delivery.OmittedFields = []string{"request.url", "request.headers", "request.body.text", "response.headers", "response.body.text"}
+			if capture.SchemaVersion == 2 {
+				delivery.OmittedFields = append(delivery.OmittedFields, "assertions")
+			}
 			delivery.Summary = &wire.CaptureSummary{ProjectID: capture.ProjectID, ExecutionID: capture.ExecutionID, Status: capture.Status, Outcome: capture.Outcome, SubmittedAt: capture.SubmittedAt, StartedAt: capture.StartedAt, CompletedAt: capture.CompletedAt, HTTPStatus: capture.Response.HTTPStatus, Timing: capture.Timing, RequestBody: wire.BodySummary{Kind: capture.Request.Body.Kind, OmissionReason: capture.Request.Body.OmissionReason}, ResponseBody: wire.BodySummary{Kind: capture.Response.Body.Kind, OmissionReason: capture.Response.Body.OmissionReason}, Redaction: capture.Redaction}
 		}
 		return out, nil

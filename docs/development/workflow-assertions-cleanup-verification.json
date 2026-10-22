@@ -1,0 +1,547 @@
+{
+  "kind": "kurier-focused-cleanup-verification-v1",
+  "startedAt": "2026-10-21T16:40:55.229Z",
+  "project": "2d9723c2-facf-40e1-8a2b-130853d3c0f8",
+  "readOnly": true,
+  "limits": {
+    "awsAttempts": 100,
+    "seconds": 600
+  },
+  "historicalPacketSha256": "f8b20b3c63a0dff4e772ce6bec200415639770f94cefaa1d63e451ba9de829df",
+  "historicalCollectorFailuresPreserved": true,
+  "historicalMissingReadbacksReconstructed": false,
+  "checks": {
+    "intendedNonRootIdentity": true,
+    "stageVersionCapabilitiesGenerationMatchRetained": true,
+    "controlTombstoneOnly": true,
+    "deletionOperationCompletedAndIdentityMatched": true,
+    "completeTombstoneShapeRecognized": true,
+    "protectedPartitionEmpty": true,
+    "noOutstandingUploadTickets": true,
+    "evidencePrefixEmpty": true,
+    "residualSweepRegistrationRetained": true,
+    "currentAccountingStableAcrossFreshReads": true,
+    "admissionUsageMatchesRetainedEvidence": true,
+    "currentStoragePinsAndInflightZero": true,
+    "versionAndStorageConsistentWithNormalTicketCleanup": true,
+    "ownerDailyUsageConsistent0": true,
+    "ownerDailyUsageConsistent1": true,
+    "ownerDailyUsageConsistent2": true,
+    "ownerDailyUsageConsistent3": true,
+    "stageUnchangedAcrossVerification": true
+  },
+  "observations": {
+    "stageBefore": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "8"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "15"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "workflowAssertionsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    },
+    "accountingBefore": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          },
+          "count": {
+            "N": "20"
+          },
+          "version": {
+            "N": "48"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "version": {
+            "N": "0"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          }
+        },
+        {
+          "count": {
+            "N": "14"
+          },
+          "version": {
+            "N": "6"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "U#b8b36faf-2c6c-4618-9351-9cacf513a4df"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "0"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "PK": {
+            "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "739508d26d9b62807892fac3d4a4254a66eb4ea563a2864fb69ca58f340c013a"
+    },
+    "control": [
+      {
+        "SK": {
+          "S": "META"
+        },
+        "version": {
+          "N": "59"
+        },
+        "kind": {
+          "S": "projectTombstone"
+        },
+        "state": {
+          "S": "deleted"
+        },
+        "deletionOperation": {
+          "M": {
+            "startedAt": {
+              "S": "2026-10-21T15:46:33.316349870Z"
+            },
+            "operationId": {
+              "S": "4527b106-f0f9-4cc8-8749-bb19fe34a934"
+            },
+            "completedAt": {
+              "S": "2026-10-21T16:04:56.266916214Z"
+            },
+            "state": {
+              "S": "completed"
+            },
+            "projectId": {
+              "S": "2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+            },
+            "retryAfterSeconds": {
+              "N": "0"
+            }
+          }
+        },
+        "ownerId": {
+          "S": "b8b36faf-2c6c-4618-9351-9cacf513a4df"
+        },
+        "PK": {
+          "S": "P#2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+        },
+        "schemaVersion": {
+          "N": "1"
+        },
+        "projectId": {
+          "S": "2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+        }
+      }
+    ],
+    "tombstone": {
+      "PK": {
+        "S": "P#2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "projectTombstone"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "projectId": {
+        "S": "2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+      },
+      "ownerId": {
+        "S": "b8b36faf-2c6c-4618-9351-9cacf513a4df"
+      },
+      "version": {
+        "N": "59"
+      },
+      "state": {
+        "S": "deleted"
+      },
+      "deletionEpoch": {
+        "N": "1"
+      },
+      "initiatingVersion": {
+        "N": "43"
+      },
+      "deletionOperation": {
+        "M": {
+          "startedAt": {
+            "S": "2026-10-21T15:46:33.316349870Z"
+          },
+          "operationId": {
+            "S": "4527b106-f0f9-4cc8-8749-bb19fe34a934"
+          },
+          "completedAt": {
+            "S": "2026-10-21T16:04:56.266916214Z"
+          },
+          "state": {
+            "S": "completed"
+          },
+          "projectId": {
+            "S": "2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+          },
+          "retryAfterSeconds": {
+            "N": "0"
+          }
+        }
+      }
+    },
+    "protectedRows": [],
+    "uploads": [],
+    "s3": {
+      "bucket": "executionevidence-71a0f7a",
+      "prefix": "dev-api/projects/2d9723c2-facf-40e1-8a2b-130853d3c0f8/",
+      "objects": 0,
+      "complete": true
+    },
+    "residualRegistration": {
+      "SK": {
+        "S": "RESIDUAL#2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+      },
+      "kind": {
+        "S": "executionResidual"
+      },
+      "PK": {
+        "S": "MAINTENANCE#dev-api"
+      },
+      "projectId": {
+        "S": "2d9723c2-facf-40e1-8a2b-130853d3c0f8"
+      }
+    },
+    "accountingAfter": {
+      "projection": [
+        "PK",
+        "SK",
+        "kind",
+        "schemaVersion",
+        "version",
+        "state",
+        "ownerId",
+        "projectId",
+        "count",
+        "month",
+        "day",
+        "pinnedCount",
+        "pinnedBytes",
+        "inflightCount",
+        "storageReservedBytes"
+      ],
+      "rows": [
+        {
+          "SK": {
+            "S": "QUOTA"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "pinnedCount": {
+            "N": "0"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "pinnedBytes": {
+            "N": "0"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "STAGE#dev-api"
+          },
+          "count": {
+            "N": "20"
+          },
+          "version": {
+            "N": "48"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "PK": {
+            "S": "U#12931237-a352-4734-99fa-41a2f4c89f26"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "version": {
+            "N": "0"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          }
+        },
+        {
+          "count": {
+            "N": "14"
+          },
+          "version": {
+            "N": "6"
+          },
+          "month": {
+            "S": "2026-10"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "schemaVersion": {
+            "N": "1"
+          },
+          "PK": {
+            "S": "U#b8b36faf-2c6c-4618-9351-9cacf513a4df"
+          }
+        },
+        {
+          "month": {
+            "S": "2026-10"
+          },
+          "version": {
+            "N": "0"
+          },
+          "SK": {
+            "S": "EXECUTION_DAY#2026-10-21"
+          },
+          "count": {
+            "N": "2"
+          },
+          "kind": {
+            "S": "executionQuota"
+          },
+          "PK": {
+            "S": "U#c31af90f-008f-4184-b7f1-5f6da328117a"
+          },
+          "schemaVersion": {
+            "N": "1"
+          }
+        }
+      ],
+      "sha256": "739508d26d9b62807892fac3d4a4254a66eb4ea563a2864fb69ca58f340c013a"
+    },
+    "accountingInterpretation": {
+      "retainedMonthlyCount": "20",
+      "retainedMonthlyVersion": "36",
+      "retainedReservedBytes": "16308",
+      "retainedPublishedCaptures": 12,
+      "retainedEvidenceBytes": "16308",
+      "currentMonthlyCount": "20",
+      "currentMonthlyVersion": "48",
+      "currentStorageReservedBytes": "0",
+      "expectedCleanupVersion": "48",
+      "historicalPreservationProved": false
+    },
+    "stageAfter": {
+      "protectedSecretsSchemaVersion": {
+        "N": "1"
+      },
+      "cloudExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "executionInputsSchemaVersion": {
+        "N": "1"
+      },
+      "mcpReadOnlySchemaVersion": {
+        "N": "1"
+      },
+      "savedRequestsSchemaVersion": {
+        "N": "8"
+      },
+      "schemaVersion": {
+        "N": "1"
+      },
+      "recoveryGeneration": {
+        "S": "dev-api-initial-v1"
+      },
+      "version": {
+        "N": "15"
+      },
+      "sequentialWorkflowsSchemaVersion": {
+        "N": "1"
+      },
+      "workflowAssertionsSchemaVersion": {
+        "N": "1"
+      },
+      "SK": {
+        "S": "META"
+      },
+      "kind": {
+        "S": "stage"
+      },
+      "evidencePinningSchemaVersion": {
+        "N": "1"
+      },
+      "localAgentExecutionsSchemaVersion": {
+        "N": "1"
+      },
+      "state": {
+        "S": "active"
+      },
+      "PK": {
+        "S": "STAGE#dev-api"
+      }
+    }
+  },
+  "gaps": [
+    "Missing historical final accounting readbacks remain unproved; current consistency cannot establish every historical intermediate state",
+    "Historical legacy-A503 cause and exact prior browser-blocked operation remain unestablished",
+    "Historical first-attempt AWS-read total and all actual billing totals remain unknown",
+    "H-L remain held; no new target execution or identity allowance is inferred"
+  ],
+  "identity": {
+    "account": "747336059622",
+    "arn": "arn:aws:iam::747336059622:user/davian-admin"
+  },
+  "currentCleanupVerified": true,
+  "currentConsistencyVerified": true,
+  "uploadInterpretation": "No upload tickets remain now; retained publication/settlement evidence and completed deletion are consistent with normal draining. Missing historical upload transitions are not reconstructed.",
+  "finishedAt": "2026-10-21T16:41:05.634Z",
+  "metering": {
+    "counts": {
+      "api": 0,
+      "aws": 20,
+      "poll": 0,
+      "static": 0
+    },
+    "readAttempts": 19,
+    "nativeCliAuthenticationRefreshAttempts": 1,
+    "firstAttemptAt": 1792600855.499617,
+    "lastOutcomeAt": 1792600865.5558224,
+    "elapsedSeconds": 10.056205,
+    "resourceWrites": 0,
+    "stageWrites": 0,
+    "apiCalls": 0,
+    "identityCreation": 0,
+    "targetRequests": 0,
+    "ledger": "workflow-assertions-cleanup-verification-attempts.jsonl",
+    "ledgerSha256": "c7984a58bb150835436fc141bc82ce47f8e60f249c0f3613ca56b2813baca098"
+  }
+}

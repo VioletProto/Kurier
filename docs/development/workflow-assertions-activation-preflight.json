@@ -1,0 +1,15 @@
+{
+  "mode": "inspect",
+  "markerSha256": "dca180063fb02b0c7bf7b1a5e582ae4b5b19109cadaae8eea61983412a09d10d",
+  "accountingSha256": "2cab5359d18f993115706399f98dbf712cb02c72f9e7d50f9f0314021b304f37",
+  "projects": 0,
+  "state": "active",
+  "version": "13",
+  "generation": "dev-api-initial-v1",
+  "readersReady": false,
+  "backendReadersReady": false,
+  "frontendReady": false,
+  "writes": 0,
+  "releaseSourceCommit": "68d9f218225c7092a1e4fca0b66a21421d862a22",
+  "releaseManifestSha256": "920667777eb69cabfb7800910451062a18e6ff06ce22ad4fb543f96c78321dd6"
+}

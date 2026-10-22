@@ -1,0 +1,68 @@
+{
+  "kind": "kurier-focused-local-tooling-verification-v1",
+  "awsValidation": false,
+  "browser": {
+    "passed": true,
+    "pinnedBrowserBundle": true,
+    "srpPasswordVerifier": true,
+    "rotatingRefresh": true,
+    "revocation": true,
+    "cognitoForwardedOptions": 4,
+    "cognitoPostAttempts": 4,
+    "meteredAwsAttempts": 8,
+    "apiAttempts": 8,
+    "resourceWriteHeld": true,
+    "safeHeldDiagnostics": true,
+    "rawCredentialsPersisted": false,
+    "realAwsCalls": 0,
+    "realIdentitiesCreated": 0,
+    "targetSends": 0
+  },
+  "transport": {
+    "passed": true,
+    "sdkRetryAndPaginationAttempts": 9,
+    "apiAttempts": 6,
+    "coordinator503Then200": true,
+    "redirectRejected": true,
+    "admissionsAndTargetSends": 0,
+    "directNetworkBypassBlocked": true,
+    "browserCovered": true,
+    "http2Covered": true,
+    "lostWriteAcknowledgmentNoReplay": true,
+    "awsCalls": 0,
+    "credentialsOrBodiesPersisted": false
+  },
+  "pythonUnitCases": 16,
+  "collectorNodeCases": 4,
+  "verificationTransport": {
+    "passed": true,
+    "actualCollectorAdapterAndIntegerTimeout": true,
+    "awsAttempts": 4,
+    "liveAwsCalls": 0,
+    "resourceWriteDeniedDespitePhaseFile": true
+  },
+  "negativePreflight": {
+    "passed": true,
+    "forwardedAttempts": 0
+  },
+  "cleanupTransport": {
+    "passed": true,
+    "parentLedgerUnchanged": true,
+    "scopedDeleteAllowedUnrelatedPostDenied": true,
+    "realAwsCalls": 0
+  },
+  "repositoryVerify": {
+    "command": "npm run verify",
+    "exitCode": 0
+  },
+  "pythonFormatLint": {
+    "formatCheck": true,
+    "lintSelect": "E4,E7,E9,F",
+    "passed": true
+  },
+  "limitations": [
+    "Local Cognito responses do not establish genuine provider behavior or cryptographically validate SRP password proof",
+    "Historical failures and missing readbacks are not reconstructed",
+    "H-L remain held"
+  ]
+}
