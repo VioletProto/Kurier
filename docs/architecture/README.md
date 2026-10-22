@@ -1,5 +1,18 @@
 # Accepted architecture
 
+## Accepted OpenAPI library selection only
+
+Davian accepted kin-openapi v0.152.0, santhosh-tekuri/jsonschema/v6 v6.0.3 and
+oasdiff/yaml3 v0.0.14 from revised research
+`a759851a252db854c7f74ad98ec8114ba2a7b668` on 2026-10-22, authorizing scoped
+acceptance recording and PR #14 merge after head/check verification.
+The [research and scoped acceptance](../spikes/openapi-library-selection.md)
+do **not** accept the proposed production import/validation contract or its
+remaining dialect/features, request-generation/DTOs, example/secret policy,
+translation, target coverage, sensitive-body suppression, evidence-schema or
+operational decisions. Those remain unaccepted; no production implementation,
+deployment or AWS changes are authorized by library selection or merge.
+
 ## Accepted workflow assertions continuation
 
 Current status: Davian accepted scoped assertions functionality and cleanup from

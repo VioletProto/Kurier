@@ -1,9 +1,28 @@
-# OpenAPI library selection — proposed for review
+# Accepted OpenAPI libraries — production contract still proposed
 
 Prepared and revised 2026-10-22 for [the library card](https://trello.com/c/y53kkj4i).
-This is a tested recommendation, not architecture acceptance or feature delivery.
+Library selection is accepted as recorded below; production contract acceptance
+and feature delivery remain separate.
 The implementation handoff is [OpenAPI import/validation](https://trello.com/c/zUsI4e6l);
 [MCP result exposure](https://trello.com/c/jQR3w1Zt) remains separate.
+
+## Scoped library acceptance
+
+On 2026-10-22 Davian accepted **kin-openapi v0.152.0**,
+**santhosh-tekuri/jsonschema/v6 v6.0.3** and **oasdiff/yaml3 v0.0.14**, supported
+by the revised research at `a759851a252db854c7f74ad98ec8114ba2a7b668`, and authorized
+recording this acceptance and merging PR #14 after head/check verification.
+This acceptance selects the three exact library pins only. It does **not** accept
+the proposed production import/validation contract, dialect/feature and
+serialization boundaries, candidate lifecycle/DTOs, example/secret-designation
+policy, translator semantics, cloud-only validation, sensitive-body suppression,
+evidence-schema/result/capability changes or operational decisions below.
+Those remain explicitly unaccepted and need separate review before implementation.
+No production implementation, deployment or AWS changes are authorized.
+
+This acceptance record changes the PR head. The new head must pass the relevant
+checks and fresh GitHub CI before merge; merge must use an expected-head guard.
+The PR and Trello closeout will record the exact merged review head and CI run.
 
 ## Scope correction and review status
 
@@ -20,7 +39,8 @@ selection constitutes acceptance of the full production import/validation contra
 Use **kin-openapi v0.152.0** for document loading, semantic validation and
 local reference resolution; **santhosh-tekuri/jsonschema/v6 v6.0.3** for response
 schema validation; and **oasdiff/yaml3 v0.0.14** for syntax-tree preflight.
-Translate only the explicit allowlisted 3.0 schema subset below to standard
+The remaining adapter/production recommendation is **proposed, not accepted**:
+translate only the explicit allowlisted 3.0 schema subset below to standard
 JSON Schema 2020-12, with bounded traversal and serialization. Compile at import,
 then use the frozen compiled semantics with raw `json.Number` values. Apply
 independent status/header checks. Do not forward arbitrary OAS Schema Objects
@@ -42,7 +62,9 @@ and [API Contracts](https://docs.google.com/document/d/1KSfRYOb2UxmrIl8VoFjc3YP3
 including later accepted continuations. They require bounded JSON/YAML imports,
 local references, ready-only publication, frozen operation associations and safe
 immutable validation evidence. Dialect/library and import DTO choices remain
-proposed. This packet refines those proposals without editing the live documents.
+proposed at source-reading time. The scoped library acceptance above supersedes
+only the library-selection status; this packet does not accept or rewrite the
+live production contract documents.
 
 Read [accepted architecture](../architecture/README.md), both accepted
 [ADRs](../decisions/), the W1 design/data model/review/synchronization records and
@@ -492,8 +514,8 @@ violations. Do not reencode existing evidence or change accepted schema-1/2 byte
   implement and verify them separately. No deployment, AWS work or production
   feature is authorized by this research revision.
 
-The library recommendation can be reviewed/accepted independently. The library
-spike's completion is not a checkmark for the combined library-plus-production-
+The three library pins are now accepted independently. The library
+spike's completion/acceptance is not a checkmark for the combined library-plus-production-
 contract acceptance items on the implementation or API-contract cards.
 
 ## Verification and review boundary
