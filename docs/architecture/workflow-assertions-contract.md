@@ -9,6 +9,15 @@ for separate review. Acceptance does not claim deployed assertion behavior.
 The original preparation/revision milestones below are historical; this
 acceptance supersedes their Proposed status and implementation hold.
 
+Current closeout: Davian accepted scoped assertions functionality and cleanup
+based on retained A–G and H–L evidence at `4ffdaaf4cfb569a349ebd16ca739d8deb15aa973`,
+including its explicit read-only OPTIONS stop-guard exception. The deployment
+holds above describe the original contract acceptance, not current status:
+the pinned release was subsequently deployed/activated under separate approval.
+See the [PR review and acceptance record](../development/workflow-assertions-pr-review.md).
+The [separate tooling follow-up](https://trello.com/c/F47iWJY8) remains open;
+its teardown correction is locally verified only. No new live work is authorized.
+
 Review baseline: freshly fetched `origin/main`
 `f4d1f3b84d3bbf04c451ba927ad9b4853468fed5`; initially clean working tree.
 Branch: `docs/workflow-assertions-contract`.

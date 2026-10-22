@@ -146,3 +146,19 @@ reopen; failures stay closed for inspection. It preserves infrastructure,
 frontend releases and existing PITR history. Never use this as schema activation
 or automatically retry an uncertain reset. See the
 [authorization, scope and reset result](../docs/development/development-data-reset.md).
+
+## Assertions closeout checks
+
+`npm run test:assertions-tooling` runs the pure activator/release guards and
+standard-library Python metering unit tests. It is part of `npm test`/`npm run verify`
+and CI. Release compatibility tests read accepted historical Git objects, so the
+web CI checkout includes full history. Retained release ZIPs are checked locally
+when available; CI explicitly skips their absent local archive check, never
+claims to rebuild the deployed release. Optional DynamoDB Local CAS tests require
+`KURIER_ACTIVATOR_DDB_ENDPOINT=http://127.0.0.1:8000`; the normal race integration
+suite also runs actual legacy maintenance settlement and stale-reader regressions.
+
+Functional validation and normal cleanup are accepted. Browser cancellation/stop
+enforcement remains a [separate tooling follow-up](https://trello.com/c/F47iWJY8).
+No historical campaign launcher or approval record grants new live authority.
+See [review findings](../docs/development/workflow-assertions-pr-review.md).
