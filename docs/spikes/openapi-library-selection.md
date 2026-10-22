@@ -1,9 +1,19 @@
 # OpenAPI library selection — proposed for review
 
-Prepared 2026-10-22 for [the library card](https://trello.com/c/y53kkj4i).
+Prepared and revised 2026-10-22 for [the library card](https://trello.com/c/y53kkj4i).
 This is a tested recommendation, not architecture acceptance or feature delivery.
 The implementation handoff is [OpenAPI import/validation](https://trello.com/c/zUsI4e6l);
 [MCP result exposure](https://trello.com/c/jQR3w1Zt) remains separate.
+
+## Scope correction and review status
+
+The current proposal's approved MVP requires generating requests from path, query
+and header parameters, optional JSON request bodies, and documented examples when
+available. The original static-endpoint experiment did not satisfy that complete
+requirement. Its restrictions remain below as research evidence, **not a reduction
+of the approved MVP**. The revised proposed boundary and additional compatibility
+probes cover those generation requirements. Neither this revision nor library
+selection constitutes acceptance of the full production import/validation contract.
 
 ## Recommendation
 
@@ -41,9 +51,11 @@ the relevant execution, protected-input, assertions and MCP boundaries. Preserve
 configuration, 2 MiB wire and decoded response, 64 KiB response headers, 4 MiB
 encoded evidence/API, transaction/chunk budgets, retention and cleanup fences.
 
-Trello target, architecture, contract-review, implementation and MCP handoffs and
-their returned checklists were read. The target had no checklist. Doing was empty;
-the configured WIP limit is three. Only the library spike was moved to Doing.
+The original spike read Trello target/dependency cards and checklists; Doing was
+empty under the configured limit of three. The target initially had no checklist;
+verified research criteria were later added and completed. This revision reread
+the current proposal/contracts and board; library research completion is separate
+from acceptance of the revised production contract.
 The implementation checklist item combining spike completion **and contract
 acceptance** must remain open until acceptance; no downstream feature is complete.
 
@@ -79,12 +91,14 @@ are compatible permissive choices; retain dependency notices in distributed
 artifacts and review the complete transitive inventory before production adoption.
 No claim of zero vulnerabilities or completed legal/security audit.
 
-## Exact first supported subset
+## Restricted prototype — research evidence, not the import MVP
 
-Propose deliberately small **OpenAPI 3.0.0–3.0.4**, single-document JSON or YAML.
-No Swagger 2, OpenAPI 3.1/3.2, external files, ZIP bundles or standalone JSON Schema
-imports. The executable prototype grammar in `selection_test.go` is a review aid;
-the following semantic restrictions also apply to a future implementation.
+The original `selection_test.go` preflight exercises a small OpenAPI
+3.0.0–3.0.4 grammar. Its table and rejections describe that experiment only.
+It remains useful for bounded parsing, schema translation and response-validation
+regressions. It is **not** the production allowlist and must not gate the complete
+MVP. The separate `request_generation_test.go` probes the added generation surface;
+neither test helper is a production importer.
 
 | Area        | Supported                                                                                                                                                                                                                                                                                                                                      |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -96,17 +110,11 @@ the following semantic restrictions also apply to a future implementation.
 | Schema      | Explicit single type object/array/string/integer/number/boolean; nullable boolean, object properties/required, array items, boolean additionalProperties; title/description annotations. Missing additionalProperties follows OAS default allowing extras. No coercion; integral JSON numeric values satisfy integer. Null only with nullable. |
 | Annotations | Listed descriptive fields accepted but stripped from retained validation bundles. No automatic request values, example/default injection, auth setup or target calls.                                                                                                                                                                          |
 
-Reject every other field, including allOf/anyOf/oneOf/not, discriminator, enum,
-numeric/string/array bounds, pattern/format, readOnly/writeOnly, schema-valued
-additionalProperties, boolean schemas, `$schema`/`$id`/`$defs`, security schemes,
-security requirements, callbacks, links, webhooks, externalDocs, tags, examples,
-defaults, extensions, parameters, requestBody and server variables. Reject the
-whole import rather than publishing a silently weakened contract. This narrower
-slice supports importing static endpoints and editing their saved requests using
-existing authoring; ordinary parameterized/auth-described APIs will be rejected.
-That compatibility cost is explicit and is a review decision, not an assertion
-that the libraries lack these capabilities. Expand only with additional fixtures
-and an accepted contract amendment.
+That original gate rejects all other fields, including parameters, requestBody,
+examples, security declarations and advanced schema keywords. Its static-only
+result was insufficient for MVP request generation; the revised proposal below
+supersedes those generation exclusions. The tests intentionally retain the old
+gate unchanged so its original research findings remain reproducible.
 
 Use an AST context allowlist: a property literally named `oneOf` remains a property,
 not a composition keyword. Inspect unused components too. YAML permits only
@@ -114,6 +122,130 @@ string-key mappings, ordinary JSON-compatible scalar tags and sequences; reject
 duplicates, anchors/aliases, merge keys, custom tags and multiple documents.
 JSON ingress must additionally use the existing strict JSON rules, not accept
 the YAML superset under a JSON content type.
+
+## Proposed MVP request-generation boundary
+
+Keep OpenAPI **3.0.0–3.0.4**, single strict JSON/YAML document, <=2 MiB and
+<=100 operations. Keep the response-schema type/required/nullable/items/boolean
+additionalProperties subset and existing execution bounds. Extend the proposed
+operation model to include the following generation features; this is a proposed
+bounded implementation of approved product requirements, not a new approval.
+
+| Feature                | Proposed supported behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paths and methods      | GET/POST/PUT/PATCH/DELETE; absolute path templates with named, nonnested `{parameter}` substitutions. Every template name has exactly one effective required path parameter; reject extra/unmatched/duplicate/ambiguous placeholders. Never leave braces in a saved executable URL.                                                                                                                                                                                                                                                                     |
+| Parameter declarations | Inline or same-document `components.parameters` refs at Path Item and Operation level. Inherit path-level parameters; operation-level `(in,name)` overrides without adding a duplicate. Reject duplicates within a level; compare header names case-insensitively, other names exactly. Preserve deterministic effective order (inherited positions replaced in place, new operation parameters appended).                                                                                                                                              |
+| Path parameters        | Nonnullable string/integer/number/boolean only, required:true, simple style, explode:false (including defaults). Substitute one percent-encoded scalar per placeholder; never treat example bytes as URI syntax. No sensitive path values.                                                                                                                                                                                                                                                                                                              |
+| Query parameters       | Nonnullable primitive or array of nonnullable primitives; form style, explode:true (including defaults). Scalar creates one ordered row; array creates repeated rows with the same name in source order. Keep query values separate from the URL until the existing execution encoder runs.                                                                                                                                                                                                                                                             |
+| Header parameters      | Nonnullable primitive only, simple style, explode:false (including defaults). Render a control-safe scalar; HTTP-token header name, no CR/LF or newline folding. Reject routing/framing headers controlled by the runtime, plus parameter declarations for reserved Accept/Content-Type/Authorization; body media and existing protected auth authoring govern those instead. Credential-like custom headers use existing protected authoring, never a public example value.                                                                            |
+| Request bodies         | Inline or local `components.requestBodies` ref; one application/json media entry with the same bounded typed schema subset. Preserve requestBody.required (default false). Optional body is absent unless a safe selected example or explicit owner input supplies it; required body without one needs input. No fabricated `{}` or defaults to conceal missing required fields.                                                                                                                                                                        |
+| Examples               | Parameter.example, Parameter.examples, media.example, media.examples and Schema.example, including inline Example Objects and local `components.examples` refs. Direct and named examples are mutually exclusive at one location; outer parameter/media examples take precedence over schema examples. Keep source presence separate from value, including explicit null in direct/schema examples. Named Example Objects with value:null are excluded pending an adapter decision; kin conflates nil with absence. See selection/security rules below. |
+| Local refs             | In addition to schemas/responses, allow same-document parameters/requestBodies/examples of the correct kind; preserve acyclic/depth/work budgets and prohibit ref siblings. No external URI/file refs or externalValue fetches.                                                                                                                                                                                                                                                                                                                         |
+
+Reject cookie parameters; object/nested-array parameter values; label, matrix,
+deepObject, spaceDelimited and pipeDelimited styles; explode:false query arrays;
+explode:true path/header parameters; parameter content; allowReserved:true;
+allowEmptyValue:true; nullable parameters; multipart, form, binary, text and other
+request-body media; encoding objects; server variables; external examples; and
+all unlisted features. Explicit default style/explode values equal omission.
+Request schemas still reject enum/composition/pattern/format/bounds/readOnly/
+writeOnly/default and standard-JSON-Schema-only keywords. Security scheme import,
+auth-flow generation, callbacks, links, webhooks and extensions remain unsupported
+with diagnostics, not silently ignored. Library support is broader than this
+proposed product boundary.
+
+Proposed generation bounds, applied together: <=32 effective parameters/operation,
+<=128 UTF-8 bytes/name, 1–16 elements/query-array example, <=2 KiB serialized
+scalar example, <=8 named examples/location, <=8 KiB complete example value and
+<=16 KiB aggregate retained examples/operation. Count every candidate, including
+unselected or unsafe examples, against source/traversal work limits before
+omitting it. The **entire** operation bundle including schemas, generation
+metadata and sanitized examples remains <=32 KiB; complete generated/frozen
+configuration and resolved request body each remain <=64 KiB, and existing
+header/query descriptor limits still apply. Overflow rejects with a fixed limit
+code; never truncate values, drop required fields or publish a weakened operation.
+These additional per-feature numbers are proposed, not existing accepted quotas.
+
+### Example choice, missing values and saved-request compatibility
+
+Retain safe bounded examples for owner selection, using opaque candidate IDs;
+never publish raw example names in diagnostics. A direct outer example is selected
+first; for named examples propose the lexically first authored key as deterministic
+initial selection, with explicit owner override before publication. Fall back to a
+schema-level example only when no outer example exists. Do not merge examples
+from unrelated named cases or synthesize values from descriptions/defaults.
+All retained values must match the declared schema; invalid examples reject with
+example_invalid instead of silently changing them. If a selected example is
+unsafe, omit it with a warning and require owner selection/input where needed;
+never silently choose a different target or example. Optional unprovided
+parameters stay disabled; explicit enablement of empty string differs from no
+example. Required query/header/path/body inputs without usable examples need
+owner completion. Supported array examples are typed arrays of logical primitive
+values; already serialized delimiter strings for numeric/array parameters are
+unsupported. String values are literal data, not templates or executable text.
+
+OAS 3.0 example precedence and mutually exclusive forms are defined in the
+[Example Object specification](https://spec.openapis.org/oas/v3.0.4.html#example-object).
+Library model construction and numeric example validation do not replace strict
+source parsing. Kin's generic Example values round numeric literals through
+float64. Preserve exact raw JSON lexemes (or validated YAML scalar lexemes) from
+the source AST, parse with strict JSON/UseNumber and the bounded decimal domain,
+then validate using the selected translated schema engine. YAML numeric examples
+must use the supported JSON decimal grammar; reject hex/octal, digit separators,
+NaN/infinity and other non-JSON scalar spellings without coercion. Never regenerate
+example JSON from kin's generic Example maps. The new precision regression
+preserves 0.10000000000000001 through fixture conversion and records kin's loss.
+
+Existing saved requests require concrete absolute public URLs and permit no
+unresolved path templates. Therefore propose owner-only **staged generation
+candidates** while the import is preparing, separate from executable saved
+requests. Each records safe parameter/body definitions, examples, chosen server
+and unresolved-input markers. Missing path values are never replaced with empty
+segments or fake executable placeholders. After owner completion/confirmation,
+materialize concrete requests through existing saved-request/secret validation,
+then publish the import ready with its final count/digest guards. No automatic
+execution; no generated request visibility before ready. Optional bodies without
+examples may remain absent and be authored later. A ready imported request can
+use existing local/cloud execution only as permitted by the separately reviewed
+validation-association policy; do not infer a new execution restriction from the
+library choice. Exact candidate preview/complete/cancel HTTP DTOs and lifecycle
+are still a production-contract decision, explicitly listed below.
+
+### Imported examples and the accepted secret boundary
+
+Treat the complete upload, every example (including unselected ones), parameter
+values and descriptions as untrusted input. Before any durable source/bundle,
+generated request, diagnostic, preview or MCP output, apply the existing
+[protected-input contract](../architecture/protected-request-secrets-contract.md):
+Authorization/cookies/credential headers and query names, recognized credential
+JSON fields, obvious credential text, user-designated paths/values and their
+reflections cannot become public examples. Designations must be supplied through
+a reviewed import input policy; no free-text credential values in diagnostics.
+
+Propose conservative omission for examples: discard the complete affected
+parameter/body example and issue example_omitted_sensitive, with no offending
+name/value/path/excerpt/hash. Safe unrelated examples may remain; unsafe selected
+required inputs become needs-input markers. A JSON body containing a secret
+field is withheld entirely at import, rather than storing its raw text or fake
+`[REDACTED]` as a value. Subsequent owner authoring can use the existing whole-body
+or per-pointer protected union with literal null placeholders and fresh bindings.
+Do not create a secretRef/binding from a sample, automatically encrypt/store an
+imported credential, reuse a same-name secret, or downgrade to plaintext when
+protection is unavailable. Sensitive path/server/structural values reject as
+source_unsafe. Public generated URLs contain only validated concrete nonsensitive
+path values; credential queries stay separate protected rows. Validate percent
+encoding and control characters before saving, not just before dispatch.
+
+Strip descriptions/unused annotations and omitted examples from retained source;
+persist only sanitized structural source/bundles after semantic and budget
+checks. Preserve every execution-relevant constraint; reject if sanitizing a
+structural field would change it. Apply existing public URL/SSRF rules to the
+selected server, without contacting it. Arbitrary undisclosed secrets cannot be
+detected reliably; require the existing public-data/explicit designation boundary.
+New tests probe credential-name/designated-value omission and fixed diagnostics
+using synthetic inputs; they do not implement a production sanitizer or encryption. Per-pointer designation
+matching, encoding/reflection variants, full URL/header validation and all durable
+secret-write paths remain future implementation tests.
 
 ## Prototype findings and preserved selection criteria
 
@@ -140,6 +272,13 @@ fixtures only. No target API is contacted, and no sensitive source is retained.
 - Shared production `StrictJSON` is reused read-only for body experiments:
   duplicate keys, invalid surrogate escapes, trailing JSON and over-limit bodies
   cannot pass. Standalone JSON Schema tests demonstrate the nullable dialect trap.
+- Additional JSON/YAML generation fixtures resolve inherited/local parameters,
+  operation overrides, local requestBody/example refs, serialization defaults,
+  named/schema examples and optional JSON bodies in both parser candidates.
+  Direct null-example presence is preserved from source even though the model
+  cannot distinguish nil from absence; the translated nullable schema accepts it.
+  Request-filter wire probes cover encoded path, scalar/repeated query, required
+  header and valid/invalid optional body; this is compatibility evidence only.
 - Native kin rounds a near-integer token; the selected engine rejects it exactly.
   Bounded translation preserves nullable, required, array and object semantics;
   integral exponent spelling passes. Unbounded numeric tokens are not evaluated.
@@ -147,7 +286,8 @@ fixtures only. No target API is contacted, and no sensitive source is retained.
 The prototype is intentionally **not** a finished importer or safe production
 adapter. Its YAML-to-JSON conversion is for synthetic fixtures, and its header
 experiment checks presence only. Complete typed grammar enforcement, UTF-8/JSON
-ingress, header schema/case-collision rules, operation-bundle serialization,
+ingress, header schema/case-collision rules, complete MVP-generation preflight,
+operation-bundle serialization,
 source sanitization, sensitive-response suppression, all diagnostic mappings and
 publication/cleanup are implementation requirements, not claimed finished here.
 No adversarial CPU/RSS benchmark, production Lambda measurement or runtime proof.
@@ -157,11 +297,14 @@ No adversarial CPU/RSS benchmark, production Lambda measurement or runtime proof
 After feature preflight, semantic validation and cycle/work checks, map one OAS
 `type` to a 2020-12 type array; add `null` exactly when nullable is true. Recursively
 map properties and items, copy required names and boolean additionalProperties,
-and drop title/description. Resolve only allowed local refs first. No other
+and drop title/description/example from validation schemas; retain only safe
+bounded generation examples separately. Resolve only allowed local refs first. No other
 keywords enter the compiler. Require explicit type at each schema and items for
 arrays; reject incompatible type-specific keywords rather than silently dropping
 them. Preserve absent additionalProperties as the standard allowing default.
 Compile with fixed Draft2020, in-memory registered resources and no URLLoader.
+Validate examples from exact source separately from the model's float64-based
+example checks; the production adapter must not rely on native example verdicts.
 The prototype bounds translated schema bytes to 32 KiB; production must fit the
 **entire operation bundle**, not just this schema, within that same accepted cap.
 Repeated ref traversal and translated allocation must remain bounded before
@@ -206,7 +349,10 @@ Failures found after admission produce failed plus fixed diagnostic codes.
 Bound diagnostics to 16 entries / 2 KiB serialized, with `diagnosticsTruncated`
 when more were found. Entries contain fixed code and optional bounded numeric
 line/column; never offending source, filenames, URLs, refs, property names or
-library error text. Codes include syntax_invalid, dialect_unsupported,
+library error text. Generation failures use the same fixed diagnostic envelope,
+including parameter_unsupported, example_invalid, example_limit and input_required;
+example_omitted_sensitive is a warning with no source locator. Codes also include
+syntax_invalid, dialect_unsupported,
 feature_unsupported, reference_unsupported, reference_invalid, reference_cycle,
 structure_limit, reference_limit, operation_limit, bundle_limit and source_unsafe.
 Owner editors can locate their own source using line/column; status/logs/MCP do
@@ -227,9 +373,10 @@ preserve validation semantics while stripping annotations. Reject secrets in
 structural values that cannot be removed without changing semantics. Apply
 existing credential/URL/designated-secret/reflection rules; these do not detect
 arbitrary undisclosed secrets. Do not persist raw source, raw hashes or parse
-errors. Generated requests use opaque internal operation IDs, empty values/body,
-validated public literal server URL/path and existing saved-request bounds. Do
-not follow specification URLs or synthesize credentials. Multiple eligible server
+errors. Generated requests use opaque internal operation IDs and the revised
+parameter/body/example generation contract above, with concrete validated public
+URLs and the existing saved-request bounds. Do not follow specification URLs or
+synthesize credentials. Multiple eligible server
 URLs require explicit selection; never silently choose a different target.
 
 Stage operations/requests under preparing in guarded bounded chunks, preserving
@@ -248,10 +395,12 @@ with the immutable context so later import/request edits cannot change an
 accepted run or a deliberate whole-run rerun. Project deletion still wins;
 missing legacy context is unavailable, never a passing empty result.
 
-Propose **cloud standalone and cloud workflow** validation first. Local agent
+**Unaccepted target proposal:** cloud standalone and cloud workflow validation first. Local agent
 results are already sanitized before upload; the server cannot reliably validate
-raw values from them. Local operation associations must be rejected until a
-separately accepted local protocol supplies trustworthy versioned results.
+raw values from them. Whether to reject local validation associations or allow imported local requests
+with explicit not-evaluated/unsupported validation remains undecided. A future
+local protocol would need trustworthy versioned results; library selection alone
+does not choose that policy.
 Do not revalidate stored evidence on owner GET or MCP reads.
 
 Validate bounded complete raw response in worker memory before sanitization and
@@ -274,11 +423,11 @@ Avoid match/type oracles on secrets: suppress body validation if its evaluation
 could depend on any recognized/designated/reflected sensitive field or value;
 report not_evaluated/sensitive_input without a body match bit. Do the equivalent
 for sensitive headers, including Authorization/cookies/credential headers. This
-conservative whole-body suppression needs implementation fixtures and explicit
-owner UI wording. It preserves the accepted no-secret-evidence boundary while
+conservative whole-body suppression is an **unaccepted policy proposal** requiring
+review, implementation fixtures and explicit owner UI wording. It preserves the accepted no-secret-evidence boundary while
 making reduced coverage visible.
 
-Propose the next immutable evidence schema (**3**, preserving all schema-2
+**Unaccepted versioning proposal:** next immutable evidence schema (**3**, preserving all schema-2
 fields) with required `contractValidation`:
 
 ```json
@@ -321,13 +470,42 @@ before rollout. MCP must explicitly omit contract results until its separate
 card accepts a tool/projection extension; no fourth-result inference from empty
 violations. Do not reencode existing evidence or change accepted schema-1/2 bytes.
 
+## Remaining acceptance decisions — not resolved by library selection
+
+- **Generation handoff:** accept the proposed scalar/query-array styles, example
+  precedence/selection and budgets; settle candidate preview/complete/cancel DTOs,
+  explicit server selection, missing-required-input lifecycle and secret
+  designation/omission UI. Staged candidate storage/cleanup needs schema review.
+- **Target coverage:** cloud-only validation is a proposal. Decide standalone and
+  workflow/local behavior explicitly; imported local requests and raw-response
+  validation availability are separate concerns. No new local restriction is
+  accepted by this packet.
+- **Sensitive-response policy:** decide whole-body suppression versus a safely
+  scoped alternative, allowed presence/type disclosure and not-evaluated wording.
+  Request-example omission does not settle response-validation suppression.
+- **Evidence compatibility:** evidence schema 3, result DTO/reason triples,
+  capability/translator versioning, coordinated readers/cleanup and activation
+  remain proposed. Preserve old immutable bytes and MCP's explicit omission;
+  separate MCP contract acceptance is still required.
+- **Runtime semantics and operations:** accept failure precedence, admission/freeze
+  budgets, async publication/error DTOs, cleanup and worker CPU/memory isolation;
+  implement and verify them separately. No deployment, AWS work or production
+  feature is authorized by this research revision.
+
+The library recommendation can be reviewed/accepted independently. The library
+spike's completion is not a checkmark for the combined library-plus-production-
+contract acceptance items on the implementation or API-contract cards.
+
 ## Verification and review boundary
 
 Local verification passed: root `npm run verify` (format, lint, web/infra/tooling
 tests, build and all Go test/vet checks), plus the isolated prototype's Go build,
 race tests and compiled test-binary build. The initial sandbox run failed on an
 existing release test's Git subprocess (`spawnSync git EPERM`); the unrestricted
-local rerun passed. No test failure was bypassed or production test changed.
+local rerun passed. No test failure was bypassed or production test changed. The revised generation
+fixtures also passed full root verification and isolated Go build/vet/race and
+test-binary compilation. Exact pushed review head and remote CI outcome are
+reported on PR #14 after push; a local pass is not a remote CI result.
 
 Run from the repository root:
 
@@ -343,6 +521,6 @@ The module is included in root Go formatting/verification and CI, including a
 test-binary build because it intentionally contains tests only. All evidence in
 this packet is local/synthetic. Import API/UI, persistence, actual sanitization,
 runtime error policy, partial publication, IAM, Cognito, email, AWS and deployment
-were not implemented or exercised. Review the subset's compatibility cost,
+were not implemented or exercised. Review the revised MVP generation boundary,
 conservative sensitive-body suppression, cloud-only first target and evidence-3
 proposal before starting the implementation card.

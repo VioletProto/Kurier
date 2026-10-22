@@ -36,7 +36,9 @@ func fixture(t *testing.T) []byte {
 
 // Inspect the syntax tree BEFORE reference resolution. In particular, a property
 // named "oneOf" is data, whereas a schema keyword oneOf changes semantics.
-// This deliberately tiny executable grammar covers only the proposed first slice.
+// This deliberately tiny grammar preserves the ORIGINAL RESTRICTED experiment.
+// It is research evidence, not the complete import MVP's feature allowlist.
+// request_generation_test.go separately probes the approved generation needs.
 var grammar = map[string]map[string]string{
 	"root":       {"openapi": "scalar", "info": "info", "servers": "servers", "paths": "paths", "components": "components"},
 	"info":       {"title": "scalar", "version": "scalar", "description": "scalar"},
