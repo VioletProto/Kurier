@@ -37,6 +37,7 @@ jobs:
           - services/local-agent
           - services/mcp
           - services/request-runtime
+          - spikes/openapi-library-selection
           - infra/spikes/sst-viability/service
           - infra/spikes/sst-db-viability/service
     defaults:
@@ -50,6 +51,8 @@ jobs:
           cache-dependency-path: ${{ matrix.service }}/go.mod
       - run: go test ./...
       - run: go vet ./...
+      - if: matrix.service == 'spikes/openapi-library-selection'
+        run: go test -c -o /tmp/kurier-openapi-selection.test
 
   ownership-integration:
     runs-on: ubuntu-latest
