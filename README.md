@@ -20,6 +20,8 @@ secret storage exists. See the [saved-request guide](docs/development/saved-requ
 - `docs` — architecture, decisions, spikes, and planning
 - `spikes/openapi-library-selection` — isolated Go parser/validator selection tests;
   see the [proposed recommendation and contract](docs/spikes/openapi-library-selection.md)
+- `spikes/environment-resolution` — isolated variable-resolution review experiments;
+  see the [proposed environments packet](docs/architecture/drafts/project-environments-review.md)
 - `scripts` — future repository-level development scripts
 
 ## Prerequisites

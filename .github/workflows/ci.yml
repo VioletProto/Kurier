@@ -38,6 +38,7 @@ jobs:
           - services/mcp
           - services/request-runtime
           - spikes/openapi-library-selection
+          - spikes/environment-resolution
           - infra/spikes/sst-viability/service
           - infra/spikes/sst-db-viability/service
     defaults:
@@ -53,6 +54,8 @@ jobs:
       - run: go vet ./...
       - if: matrix.service == 'spikes/openapi-library-selection'
         run: go test -c -o /tmp/kurier-openapi-selection.test
+      - if: matrix.service == 'spikes/environment-resolution'
+        run: go test -c -o /tmp/kurier-environment-resolution.test
 
   ownership-integration:
     runs-on: ubuntu-latest
