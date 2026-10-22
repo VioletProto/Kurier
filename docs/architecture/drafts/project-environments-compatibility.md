@@ -285,8 +285,9 @@ decimal characters; `{"value":"\"1\""}` rejects as string. Typed boolean accepts
 The seven existing tools and their wire schemas remain unchanged. Recognized,
 validated owner evidence3 projects using a dedicated version-1 evidence DTO,
 selecting exactly the legacy fields listed above and schemaVersion:1; never embed
-or spread the owner object. For capture view, the existing Evidence envelope uses `view:"capture"` and
-`capture` (the dedicated legacy DTO). It retains `complete:true`,
+or spread the owner object. For the complete view, the existing Evidence envelope uses `view:"complete"` and
+`capture` (the dedicated legacy DTO). The supported view values remain exactly
+`summary|complete`; `capture` is a field name, never a view value. It retains `complete:true`,
 `truncated:false`, with `omissionReason:"environment_context_not_exposed"` and
 `omittedFields:["templateSemanticsVersion","environmentContext"]`. If assertions
 are present, use reason `unsupported_context_not_exposed` and ordered fields

@@ -227,7 +227,49 @@ func TestCompatibilityMCPProjectionPreservesOwnerEvidence(t *testing.T) {
 	projected := owner.LegacyEvidence
 	projected.SchemaVersion = 1
 	reason := "unsupported_context_not_exposed"
-	envelope := wire.Evidence{View: "capture", Capture: &projected, Complete: true, Truncated: false, OmissionReason: &reason, OmittedFields: []string{"assertions", "templateSemanticsVersion", "environmentContext"}}
+	envelope := wire.Evidence{View: "complete", Capture: &projected, Complete: true, Truncated: false, OmissionReason: &reason, OmittedFields: []string{"assertions", "templateSemanticsVersion", "environmentContext"}}
+	// Exercise the current wire boundary, not just the Evidence struct: View is
+	// a string in the DTO, but Parse/Decode enforce summary|complete.
+	for _, tc := range []struct {
+		name   string
+		reason string
+		fields []string
+	}{
+		{"environment", "environment_context_not_exposed", []string{"templateSemanticsVersion", "environmentContext"}},
+		{"environment_and_assertions", reason, envelope.OmittedFields},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			candidate := envelope
+			candidate.OmissionReason = &tc.reason
+			candidate.OmittedFields = tc.fields
+			packet := wire.Envelope{Data: &wire.Data{SchemaVersion: 1, ServerTime: "2026-10-22T22:00:00Z", Evidence: &candidate}}
+			decoded, err := wire.Decode("get_execution_evidence", compact(packet))
+			if err != nil {
+				t.Fatalf("current wire contract rejected complete projection: %v", err)
+			}
+			if !reflect.DeepEqual(decoded.Data.Evidence, &candidate) {
+				t.Fatal("wire round-trip changed capture or explicit omission metadata")
+			}
+			candidate.View = "capture"
+			if _, err := wire.Decode("get_execution_evidence", compact(packet)); err == nil {
+				t.Fatal("current wire contract accepted capture as a view")
+			}
+			candidate.View = "complete"
+			candidate.Capture = nil
+			if _, err := wire.Decode("get_execution_evidence", compact(packet)); err == nil {
+				t.Fatal("complete view accepted without capture field")
+			}
+		})
+	}
+	for _, tc := range []struct {
+		view  string
+		valid bool
+	}{{"complete", true}, {"summary", true}, {"capture", false}} {
+		input := compact(map[string]string{"projectId": "11111111-1111-4111-8111-111111111111", "executionId": "22222222-2222-4222-8222-222222222222", "view": tc.view})
+		if _, err := wire.Parse("get_execution_evidence", input); (err == nil) != tc.valid {
+			t.Fatalf("current wire request view acceptance mismatch: %s", tc.view)
+		}
+	}
 	if !bytes.Equal(compact(*envelope.Capture), legacy) || !bytes.Equal(stored, before) {
 		t.Fatal("projection changed capture or stored evidence")
 	}
