@@ -449,7 +449,7 @@ conservative whole-body suppression is an **unaccepted policy proposal** requiri
 review, implementation fixtures and explicit owner UI wording. It preserves the accepted no-secret-evidence boundary while
 making reduced coverage visible.
 
-**Unaccepted versioning proposal:** next immutable evidence schema (**3**, preserving all schema-2
+**Unaccepted versioning proposal:** a future, **unallocated** immutable evidence schema (preserving all schema-2
 fields) with required `contractValidation`:
 
 ```json
@@ -505,7 +505,7 @@ violations. Do not reencode existing evidence or change accepted schema-1/2 byte
 - **Sensitive-response policy:** decide whole-body suppression versus a safely
   scoped alternative, allowed presence/type disclosure and not-evaluated wording.
   Request-example omission does not settle response-validation suppression.
-- **Evidence compatibility:** evidence schema 3, result DTO/reason triples,
+- **Evidence compatibility:** an unallocated future evidence schema, result DTO/reason triples,
   capability/translator versioning, coordinated readers/cleanup and activation
   remain proposed. Preserve old immutable bytes and MCP's explicit omission;
   separate MCP contract acceptance is still required.
@@ -544,5 +544,11 @@ test-binary build because it intentionally contains tests only. All evidence in
 this packet is local/synthetic. Import API/UI, persistence, actual sanitization,
 runtime error policy, partial publication, IAM, Cognito, email, AWS and deployment
 were not implemented or exercised. Review the revised MVP generation boundary,
-conservative sensitive-body suppression, cloud-only first target and evidence-3
+conservative sensitive-body suppression, cloud-only first target and future evidence-schema
 proposal before starting the implementation card.
+
+Environment compatibility coordination: the [environment amendment](../architecture/drafts/project-environments-compatibility.md)
+now proposes reserving evidence **3** exclusively for environment/template context.
+This supersedes this research packet's earlier numeric suggestion; OpenAPI has no
+allocated production evidence version. Neither version 4 nor any import/validation
+contract is accepted by the library selection.

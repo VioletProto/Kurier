@@ -374,18 +374,15 @@ is 400, stale selected environment revision is 409 with fixed conflict reason
 or resolved overflow retains existing source_unavailable/input_limit_exceeded
 and certainty rules. Successful assertions do not override failed resolution.
 
-Compatibility is **not** additive to current strict readers. Add environment and
-template semantics capabilities, advance saved-request/storage schemas and update
-API/worker/cleanup/browser/local agent and MCP readers together before a separately
-reviewed closed-stage activation. Preserve generation/accounting/Free plan/quotas.
-Validate exact deployed capability values later; no stage inventory or numeric
-activation target is invented here. Legacy missing marker stays literal; do not
-reinterpret immutable bytes, current protected slots or workflow extraction rules.
-Owner evidence needs a coordinated next schema to carry environment context;
-schema 1/2 must stay unchanged. OpenAPI's independently proposed evidence 3 is
-also unaccepted: reconcile the next number/fields jointly, not two incompatible
-schema-3 definitions. MCP must project only supported fields with explicit
-omissions or deny unknown schemas before disclosure. No new MCP environment tools.
+Compatibility is **not** additive to current strict readers. The
+[implementation-ready compatibility amendment](project-environments-compatibility.md)
+defines exact saved/frozen fields, owner evidence **3**, Work/Result **2**,
+capability negotiation, trusted reusable-secret scalar types/PATCH and explicit
+MCP projections. These allocations are proposed and unaccepted; schema 1/2 stay
+unchanged. OpenAPI's earlier proposed evidence 3 is superseded by an unallocated
+future-version placeholder, without accepting its production contract.
+All strict readers/cleanup and the complete proposed stage tuple require a
+separately reviewed closed-stage activation. No production changes in this packet.
 
 ## Focused local prototypes and remaining evidence
 
@@ -420,6 +417,11 @@ code. They demonstrate:
 - existing destination helpers continue to deny a private cloud target and
   permit an exact local-origin fixture; raw/rendered synthetic canaries are
   scrubbed by the shared sanitizer, with sensitivity retained;
+- the [compatibility amendment](project-environments-compatibility.md) and
+  [wire experiments](../../../spikes/environment-resolution/compatibility_test.go)
+  distinguish absent/null context, reject incompatible declarations before spy
+  side effects, exercise RFC 8785 identity changes and typed secret PATCH, and
+  use the existing MCP capture envelope without changing stored bytes;
 - frozen RawMessage buffers need independent copies; existing submit/workflow/
   plan readers reject new environment/marker fields, proving coordinated
   compatibility work is required.
