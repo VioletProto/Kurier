@@ -24,6 +24,7 @@ class Budget:
         seconds=7200,
         cleanup_parent=None,
         history=None,
+        continuation_parent=None,
     ):
         self.clock = clock
         self.elapsed_clock = time.monotonic if clock is time.time else clock
@@ -32,6 +33,14 @@ class Budget:
         self.limits = dict(api=api_limit, aws=aws_limit, poll=poll_limit, static=200)
         self.seconds = seconds
         self.counts = dict(api=0, aws=0, poll=0, static=0)
+        if cleanup_parent and continuation_parent:
+            raise MeterStop("conflicting-parent-scopes")
+        if continuation_parent:
+            self.counts = continuation_parent["counts"].copy()
+            elapsed = self.clock() - continuation_parent["firstAttemptAt"]
+            if elapsed < 0 or elapsed >= seconds:
+                raise MeterStop("continuation-parent-window-exhausted")
+            self.started = self.elapsed_clock() - elapsed
         self.cleanup_parent = cleanup_parent
         if cleanup_parent:
             self.counts = cleanup_parent["counts"].copy()
@@ -63,6 +72,11 @@ class Budget:
                     )
                 ),
                 cleanupParent=cleanup_parent,
+                **(
+                    {"continuationParent": continuation_parent}
+                    if continuation_parent
+                    else {}
+                ),
                 limits=self.limits.copy(),
                 seconds=self.seconds,
             )

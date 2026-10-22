@@ -33,3 +33,40 @@ export function checkAdmission(ledger, key, workflow, options = {}) {
     throw Error("H-L admission guard; no replay or reserve");
   return true;
 }
+
+export function refreshedBaseline(report) {
+  if (
+    report?.kind !== "kurier-existing-instructor-deletion-observation-v1" ||
+    report.verified !== true ||
+    report.stopped ||
+    !Object.values(report.checks ?? {}).length ||
+    !Object.values(report.checks).every((v) => v === true)
+  )
+    throw Error("Verified existing instructor cleanup required");
+  const quota = report.accountingAfter?.rows?.find(
+    (r) => r.PK.S === "STAGE#dev-api",
+  );
+  if (
+    quota?.count?.N !== "22" ||
+    quota.version?.N !== "54" ||
+    (quota.storageReservedBytes?.N ?? "0") !== "0" ||
+    quota.pinnedCount?.N !== "0" ||
+    quota.pinnedBytes?.N !== "0" ||
+    report.finalTombstone?.deletionOperation?.M?.operationId?.S !==
+      report.deletionOperationId ||
+    report.finalTombstone?.deletionOperation?.M?.state?.S !== "completed" ||
+    report.finalTombstone?.projectId?.S !== report.projectId
+  )
+    throw Error("Refreshed accounting/deletion identity invalid");
+  return {
+    stage: report.stage,
+    accounting: report.accountingAfter,
+    owners: [
+      ...new Set(
+        report.accountingAfter.rows
+          .filter((r) => r.PK.S.startsWith("U#"))
+          .map((r) => r.PK.S),
+      ),
+    ],
+  };
+}

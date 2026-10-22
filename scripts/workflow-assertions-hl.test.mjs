@@ -53,3 +53,43 @@ test("H-L-only sequential admissions preserve prior usage and exhaust zero reser
   );
   assert(!actions.some((x) => /deploy|activate|close|campaign-first/.test(x)));
 });
+
+test("refreshed baseline requires completed matched cleanup and deduplicates multi-day owner", async () => {
+  const { refreshedBaseline } =
+    await import("./lib/workflow-assertions-hl-policy.mjs");
+  const report = {
+    kind: "kurier-existing-instructor-deletion-observation-v1",
+    verified: true,
+    checks: { physical: true },
+    projectId: "local-project",
+    deletionOperationId: "local-operation",
+    stage: {},
+    finalTombstone: {
+      projectId: { S: "local-project" },
+      deletionOperation: {
+        M: { operationId: { S: "local-operation" }, state: { S: "completed" } },
+      },
+    },
+    accountingAfter: {
+      rows: [
+        {
+          PK: { S: "STAGE#dev-api" },
+          count: { N: "22" },
+          version: { N: "54" },
+          pinnedCount: { N: "0" },
+          pinnedBytes: { N: "0" },
+        },
+        { PK: { S: "U#owner" }, SK: { S: "day20" } },
+        { PK: { S: "U#owner" }, SK: { S: "day21" } },
+      ],
+    },
+  };
+  assert.deepEqual(refreshedBaseline(report).owners, ["U#owner"]);
+  for (const bad of [
+    { ...report, verified: false },
+    { ...report, stopped: true },
+    { ...report, checks: { physical: false } },
+    { ...report, deletionOperationId: "other" },
+  ])
+    assert.throws(() => refreshedBaseline(bad));
+});

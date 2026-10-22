@@ -25,7 +25,7 @@ import {
 } from "./lib/workflow-coordinator-transport.mjs";
 const dir = new URL("./workflow-assertions-hl/", import.meta.url);
 const receiptPath = new URL(
-  "../.build/workflow-assertions-hl/ledger.json",
+  "../.build/workflow-assertions-hl-resumed/ledger.json",
   import.meta.url,
 ).pathname;
 if (!process.env.KURIER_ATTEMPT_METER_ACTIVE)
@@ -128,17 +128,18 @@ async function token(i = 0) {
   u.expires = Number(a.tokens.accessToken.payload.exp) * 1000;
   return u.token;
 }
+const openingEvents = readFileSync(
+  process.env.KURIER_ATTEMPT_METER_DIRECTORY + "/attempts.jsonl",
+  "utf8",
+)
+  .trim()
+  .split("\n")
+  .map(JSON.parse);
 ledger.startedAt = new Date(
-  JSON.parse(
-    readFileSync(
-      process.env.KURIER_ATTEMPT_METER_DIRECTORY + "/attempts.jsonl",
-      "utf8",
-    )
-      .trim()
-      .split("\n")
-      .find((s) => JSON.parse(s).event === "attempt"),
-  ).at * 1000,
+  (openingEvents[0].continuationParent?.firstAttemptAt ??
+    openingEvents.find((e) => e.event === "attempt")?.at) * 1000,
 ).toISOString();
+ledger.continuationParent = openingEvents[0].continuationParent ?? null;
 const transport = createCoordinatorTransport({
   origin: o.apiUrl,
   ledger,
@@ -453,6 +454,19 @@ for await (const line of createInterface({ input: process.stdin })) {
   } catch (e) {
     privateState.stopped = true;
     ledger.stoppedAt = new Date().toISOString();
+    if (
+      /^(launch|navigate|sign-in|select-project|load-workflows|select-workflow|author-step-[12](-assertion-[1-8]-add)?|author-(kind|path|type|decimal)|reopen-decimals|save-workflow)$/.test(
+        privateState.browserProgress ?? "",
+      )
+    )
+      ledger.browserStopContext = {
+        stage: privateState.browserProgress,
+        errorClass: ["TimeoutError", "TypeError", "Error"].includes(
+          privateState.browserFailureClass,
+        )
+          ? privateState.browserFailureClass
+          : "unknown",
+      };
     ledger.stopReason = /^[A-Za-z0-9 /:.,_#?=+<>"@()-]{1,300}$/.test(e.message)
       ? e.message
       : "Sanitized execution failure; inspect recorded state";

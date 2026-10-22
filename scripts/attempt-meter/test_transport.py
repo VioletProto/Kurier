@@ -112,7 +112,7 @@ def unused_port():
         return s.getsockname()[1]
 
 
-def main(mode="normal", scenario=None):
+def main(mode="normal", scenario=None, proxy_script=None):
     origin = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Origin)
     threading.Thread(target=origin.serve_forever, daemon=True).start()
     processes = []
@@ -127,6 +127,11 @@ def main(mode="normal", scenario=None):
             KURIER_METER_CONTROL=str(d / "control.json"),
             KURIER_METER_LOCAL_ORIGIN=str(origin.server_port),
         )
+        if mode == "hl-resume":
+            env["KURIER_METER_HL_ONLY"] = "1"
+            env["KURIER_METER_HL_PARENT"] = str(
+                ROOT / "docs/development/workflow-assertions-hl-attempts.jsonl"
+            )
         if mode == "hl":
             env["KURIER_METER_HL_ONLY"] = "1"
         if mode == "verify":
@@ -193,7 +198,7 @@ def main(mode="normal", scenario=None):
                 "--set",
                 "http2=true",
                 "-s",
-                str(SCRIPTS / "proxy.py"),
+                str(proxy_script or SCRIPTS / "proxy.py"),
             ],
             env=env,
             stdout=subprocess.DEVNULL,

@@ -1,7 +1,8 @@
 import { chromium } from "@playwright/test";
 export async function run(c) {
   const { p, w, mode } = c.privateState.browserAction;
-  const { privateState: s, check, call, root, note, hash } = c;
+  const { privateState: s, check, root, note } = c;
+  s.browserProgress = "launch";
   const browser = await chromium.launch({
     headless: true,
     proxy: { server: "http://127.0.0.1:18080" },
@@ -11,34 +12,40 @@ export async function run(c) {
       "--disable-domain-reliability",
     ],
   });
+  let page;
   try {
     const context = await browser.newContext({
       ignoreHTTPSErrors: true,
       serviceWorkers: "block",
     });
-    const page = await context.newPage();
+    page = await context.newPage();
     page.setDefaultTimeout(20000);
     const bad = [];
     page.on("response", (r) => {
       if (r.url().includes("/api/v1/") && r.status() >= 400)
         bad.push(r.status());
     });
+    s.browserProgress = "navigate";
     await page.goto(c.o.hostedFrontendOrigin, {
       waitUntil: "domcontentloaded",
     });
+    s.browserProgress = "sign-in";
     await page.getByLabel("Email", { exact: true }).fill(s.users[0].name);
     await page
       .getByLabel("Password", { exact: true })
       .fill(s.users[0].password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    s.browserProgress = "select-project";
     await page.getByRole("button", { name: p.name, exact: true }).click();
     const section = page.getByRole("region", {
       name: "Workflows",
       exact: true,
     });
+    s.browserProgress = "load-workflows";
     await section
       .getByRole("button", { name: "Load workflows", exact: true })
       .click();
+    s.browserProgress = "select-workflow";
     await section
       .getByRole("button", {
         name: w.name + " (revision " + w.revision + ")",
@@ -63,6 +70,7 @@ export async function run(c) {
     ];
     if (mode === "author")
       for (let pos = 0; pos < 2; pos++) {
+        s.browserProgress = "author-step-" + (pos + 1);
         const step = section.getByRole("group", {
           name: "Step " + (pos + 1),
           exact: true,
@@ -72,6 +80,9 @@ export async function run(c) {
           exact: true,
         });
         for (let i = 0; i < 8; i++) {
+          s.browserProgress =
+            "author-step-" + (pos + 1) + "-assertion-" + (i + 1);
+          s.browserProgress += "-add";
           await editor
             .getByRole("button", { name: "Add assertion", exact: true })
             .click();
@@ -80,29 +91,25 @@ export async function run(c) {
             exact: true,
           });
           if (i < 6) {
-            await a
-              .getByLabel("Assertion kind", { exact: true })
-              .selectOption("jsonEquals");
+            s.browserProgress = "author-kind";
+            await a.getByLabel("Assertion kind").selectOption("jsonEquals");
+            s.browserProgress = "author-path";
             await a
               .getByLabel("Assertion JSON path", { exact: true })
               .fill(paths[i]);
-            await a
-              .getByLabel("Expected type", { exact: true })
-              .selectOption("number");
+            s.browserProgress = "author-type";
+            await a.getByLabel("Expected type").selectOption("number");
+            s.browserProgress = "author-decimal";
             await a
               .getByLabel("Expected decimal", { exact: true })
               .fill(i === 2 ? (pos === 0 ? "1e-1" : "1E-01") : tokens[i]);
           } else if (i === 6) {
-            await a
-              .getByLabel("Assertion kind", { exact: true })
-              .selectOption("jsonExists");
+            await a.getByLabel("Assertion kind").selectOption("jsonExists");
             await a
               .getByLabel("Assertion JSON path", { exact: true })
               .fill("$.exists");
           } else {
-            await a
-              .getByLabel("Assertion kind", { exact: true })
-              .selectOption("statusEquals");
+            await a.getByLabel("Assertion kind").selectOption("statusEquals");
             await a.getByLabel("Expected status", { exact: true }).fill("200");
           }
         }
@@ -115,15 +122,17 @@ export async function run(c) {
       "1E-01",
       ...tokens.slice(3),
     ];
+    s.browserProgress = "reopen-decimals";
     if (mode !== "author")
       check(
         JSON.stringify(
           await section
             .getByLabel("Expected decimal", { exact: true })
-            .allInputValues(),
+            .evaluateAll((inputs) => inputs.map((input) => input.value)),
         ) === JSON.stringify(expected),
         "Browser reopen decimal tokens changed",
       );
+    s.browserProgress = "save-workflow";
     const name =
       "Assertions H " +
       (mode === "author"
@@ -174,7 +183,12 @@ export async function run(c) {
       storageEmpty: true,
     });
     await context.close();
-  } catch {
+  } catch (error) {
+    s.browserFailureClass = ["TimeoutError", "TypeError", "Error"].includes(
+      error?.name,
+    )
+      ? error.name
+      : "unknown";
     throw Error("Hosted browser verification failed; no automatic replay");
   } finally {
     await browser.close();

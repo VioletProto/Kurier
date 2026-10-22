@@ -132,3 +132,40 @@ test("cleanup budget uses frozen parent clock and counters before its first exch
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test("explicit H-L continuation retains original clock/counters and cleanup reserve", () => {
+  const directory = mkdtempSync(tmpdir() + "/kurier-hl-budget-");
+  try {
+    const path = directory + "/attempts.jsonl";
+    const ledger = {
+      startedAt: new Date(100000).toISOString(),
+      apiCalls: 0,
+      polls: 0,
+    };
+    writeFileSync(
+      path,
+      JSON.stringify({
+        event: "meter-created",
+        continuationParent: {
+          firstAttemptAt: 100,
+          counts: { api: 0, aws: 54, poll: 0, static: 0 },
+        },
+      }) + "\n",
+    );
+    let now = 100000 + 99 * 60000;
+    const budget = coordinatorBudget({
+      ledger,
+      meterPath: path,
+      now: () => now,
+    });
+    budget();
+    assert.equal(ledger.meterCounts.aws, 54);
+    now = 100000 + 100 * 60000;
+    assert.throws(() => budget(), /reserve/);
+    budget({ cleanup: true });
+    now = 100000 + 120 * 60000;
+    assert.throws(() => budget({ cleanup: true }), /reserve/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});

@@ -201,7 +201,7 @@ export async function run(c) {
     for (let page = 0; page < 20; page++) {
       const r = aws(["logs", "filter-log-events", "--no-paginate"], {
         logGroupName: p.fixtureLogGroup,
-        startTime: Date.parse(l.startedAt),
+        startTime: Date.parse(l.runtimeStartedAt ?? l.startedAt),
         filterPattern: '"kurierWorkflowFixture"',
         limit: 1000,
         ...(nextToken ? { nextToken } : {}),

@@ -70,7 +70,12 @@ def events(directory):
 
 
 def serve(
-    directory, cleanup_parent=None, cleanup_scope=None, verify_only=False, hl_only=False
+    directory,
+    cleanup_parent=None,
+    cleanup_scope=None,
+    verify_only=False,
+    hl_only=False,
+    hl_parent=None,
 ):
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
     write_json(directory / "control.json", PHASES["inspect"])
@@ -105,6 +110,11 @@ def serve(
         env["KURIER_METER_VERIFY_ONLY"] = "1"
     if hl_only:
         env["KURIER_METER_HL_ONLY"] = "1"
+    if hl_parent:
+        from hl_resume import parent_proof as hl_parent_proof
+
+        hl_parent_proof(hl_parent)
+        env["KURIER_METER_HL_PARENT"] = str(hl_parent)
     if cleanup_parent:
         from cleanup import parent_proof, validate_scope
 
@@ -207,6 +217,7 @@ def main():
             "serve-cleanup",
             "serve-verify",
             "serve-hl",
+            "serve-hl-resume",
             "exec",
             "phase",
             "stats",
@@ -218,6 +229,10 @@ def main():
     directory = args.directory.resolve()
     if args.action == "serve":
         return serve(directory)
+    if args.action == "serve-hl-resume":
+        if len(args.command) != 1:
+            raise RuntimeError("Exact published H-L parent ledger required")
+        return serve(directory, hl_only=True, hl_parent=Path(args.command[0]).resolve())
     if args.action == "serve-hl":
         if args.command:
             raise RuntimeError("Fixed H-L continuation scope required")

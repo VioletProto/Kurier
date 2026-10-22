@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from budget import Budget, MeterStop
 from cleanup import parent_proof, cleanup_allowed, validate_scope
 from cognito import held_diagnostics
+from hl_resume import parent_proof as hl_parent_proof
 from mitmproxy import http
 
 
@@ -30,6 +31,9 @@ class AttemptMeter:
         self.budget = Budget(
             os.environ["KURIER_METER_LEDGER"],
             cleanup_parent=parent_proof(parent) if parent else None,
+            continuation_parent=hl_parent_proof(os.environ["KURIER_METER_HL_PARENT"])
+            if os.environ.get("KURIER_METER_HL_PARENT")
+            else None,
             **(
                 {
                     "aws_limit": 100,

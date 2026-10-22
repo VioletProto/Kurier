@@ -15,6 +15,8 @@ export async function run(c) {
     l.preflightVerified && !l.users.length && !l.projects.length,
     "Single disposable owner/project; no replay",
   );
+  l.runtimeStartedAt = new Date().toISOString();
+  save();
   const name = "kurier-assertions-hl-" + l.tag + "@example.invalid";
   const u = { name, created: false };
   l.users.push(u);

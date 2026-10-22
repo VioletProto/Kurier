@@ -68,6 +68,13 @@ additional disposable owner/project and the retained bounds. Its
 before resource creation: stage monthly count22/version52/reserved3302 differs
 from the retained count20/version48/reserved0. Attribution is unestablished;
 H–L remain unperformed, with known campaign totals18steps/16sends unchanged.
+The [instructor-cleanup continuation](../development/workflow-assertions-hl-continuation.md)
+observed the existing deletion and reconciled monthly22/version54/storage0,
+preserving both instructor dates. Full preflight passed, then browser authoring
+stopped before H admission. The additional disposable owner/project was normally
+cleaned; operator driver corrections passed local pinned-browser tests. H–L
+remains unperformed, known steps/sends remain18/16, and seven cumulative disposable
+identities/projects have been created and cleaned. The application pins are unchanged.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

@@ -1,3 +1,4 @@
+import { refreshedBaseline } from "../lib/workflow-assertions-hl-policy.mjs";
 import { snapshot, hash } from "../verify-read-only-mcp-deployment.mjs";
 import { checkPlatform } from "../lib/workflow-assertions-activation.mjs";
 import {
@@ -47,11 +48,36 @@ export async function run(c) {
     checkPlatform(platform, baseline, release),
     "Deployed pinned reader/IAM/platform drift",
   );
+  l.preflightPlatform = { at: new Date().toISOString(), platform };
+  save();
   const retained = JSON.parse(
     readFileSync(
       "docs/development/workflow-assertions-cleanup-verification.json",
     ),
   );
+  const cleanupBytes = readFileSync(
+    ".build/workflow-assertions-hl-resumed/instructor-cleanup.json",
+  );
+  const refreshed = refreshedBaseline(JSON.parse(cleanupBytes));
+  check(
+    hash(refreshed.stage) === hash(retained.observations.stageAfter),
+    "Refreshed stage must preserve retained stage",
+  );
+  check(
+    compareAccounting(refreshed.accounting, refreshed.accounting),
+    "Refreshed snapshot checksum required",
+  );
+  l.instructorCleanupReceiptSha256 = createHash("sha256")
+    .update(cleanupBytes)
+    .digest("hex");
+  l.instructorCleanup = {
+    projectId: JSON.parse(cleanupBytes).projectId,
+    chargedOctober20: 2,
+    chargedOctober21: 2,
+    monthlyStageUsage: 22,
+    reservedBytes: 0,
+  };
+  save();
   c.marker = () =>
     aws(["dynamodb", "get-item"], {
       TableName: o.controlTable,
@@ -67,9 +93,7 @@ export async function run(c) {
     const rows = [];
     for (const [pk, prefix] of [
       ["STAGE#dev-api", "QUOTA"],
-      ...retained.observations.accountingAfter.rows
-        .filter((r) => r.PK.S.startsWith("U#"))
-        .map((r) => [r.PK.S, "EXECUTION_DAY#"]),
+      ...refreshed.owners.map((pk) => [pk, "EXECUTION_DAY#"]),
       ["U#9c919ed7-f835-42ce-82ad-753fce1ed39e", "EXECUTION_DAY#"],
     ]) {
       const r = aws(
@@ -83,8 +107,8 @@ export async function run(c) {
   };
   const accounting = c.accounting();
   check(
-    compareAccounting(retained.observations.accountingAfter, accounting),
-    "Retained accounting drift before campaign",
+    compareAccounting(refreshed.accounting, accounting),
+    "Refreshed accounting drift before campaign",
   );
   const hosted = [];
   for (const f of release.frontend.files) {

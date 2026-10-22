@@ -22,6 +22,11 @@ and H–L remain held.
 The later authorized [H–L-only preflight](workflow-assertions-hl-rollout.md)
 stopped on changed stage accounting before creating resources or admitting work.
 It adds no campaign steps/sends; the changed global quota usage is unattributed.
+The subsequent [authorized continuation](workflow-assertions-hl-continuation.md)
+verified instructor deletion and reconciled the charged usage without resetting
+it. Full preflight passed, then hosted authoring stopped before H admission.
+The new fixture was normally cleaned; two driver defects were corrected and
+tested locally. H–L runtime evidence remains open and application pins unchanged.
 
 ## Implemented behavior
 

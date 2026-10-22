@@ -35,11 +35,14 @@ export function coordinatorBudget({ ledger, meterPath, now = Date.now }) {
       throw Error("Invalid or stopped transport meter");
     const attempts = events.filter((e) => e.event === "attempt");
     const counts = attempts.at(-1)?.counts ??
-      events[0].cleanupParent?.counts ?? { api: 0, aws: 0, poll: 0 };
+      events[0].cleanupParent?.counts ??
+      events[0].continuationParent?.counts ?? { api: 0, aws: 0, poll: 0 };
     if (events[0].cleanupParent && !cleanup)
       throw Error("Cleanup-only continuation");
     const start = Math.floor(
-      (events[0].cleanupParent?.firstAttemptAt ?? attempts[0]?.at) * 1000,
+      (events[0].cleanupParent?.firstAttemptAt ??
+        events[0].continuationParent?.firstAttemptAt ??
+        attempts[0]?.at) * 1000,
     );
     if (
       !Number.isFinite(start) ||
