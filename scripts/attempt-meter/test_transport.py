@@ -127,6 +127,15 @@ def main(mode="normal", scenario=None, proxy_script=None):
             KURIER_METER_CONTROL=str(d / "control.json"),
             KURIER_METER_LOCAL_ORIGIN=str(origin.server_port),
         )
+        if mode == "hl-replacement":
+            env["KURIER_METER_HL_ONLY"] = "1"
+            env["KURIER_METER_HL_REPLACEMENT_PARENT"] = str(
+                ROOT
+                / "docs/development/workflow-assertions-hl-continuation-attempts.jsonl"
+            )
+            env["KURIER_METER_HL_REPLACEMENT_RECEIPT"] = str(
+                ROOT / "docs/development/workflow-assertions-hl-continuation.json"
+            )
         if mode == "hl-resume":
             env["KURIER_METER_HL_ONLY"] = "1"
             env["KURIER_METER_HL_PARENT"] = str(

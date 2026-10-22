@@ -1,4 +1,4 @@
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 export async function run(c) {
   const { p, w, mode } = c.privateState.browserAction;
   const { privateState: s, check, root, note } = c;
@@ -21,6 +21,10 @@ export async function run(c) {
     page = await context.newPage();
     page.setDefaultTimeout(20000);
     const bad = [];
+    let failedApi = 0;
+    page.on("requestfailed", (r) => {
+      if (r.url().includes("/api/v1/")) failedApi++;
+    });
     page.on("response", (r) => {
       if (r.url().includes("/api/v1/") && r.status() >= 400)
         bad.push(r.status());
@@ -165,6 +169,12 @@ export async function run(c) {
       ) === JSON.stringify(expected),
       "Browser/API serialization lost decimals",
     );
+    s.browserProgress = "drain-browser-reads";
+    await expect(
+      section.getByRole("button", { name: "Save workflow", exact: true }),
+    ).toBeEnabled({ timeout: 20000 });
+    await page.waitForLoadState("networkidle", { timeout: 20000 });
+    check(failedApi === 0, "Hosted browser API transport failed");
     const storage = await page.evaluate(async () => ({
       local: localStorage.length,
       session: sessionStorage.length,
@@ -176,13 +186,21 @@ export async function run(c) {
       "Hosted browser persisted session material",
     );
     check(!bad.length, "Unexpected hosted API response");
+    s.browserProgress = "close-browser";
+    await context.close();
+    s.browserRequestFailures = failedApi;
+    check(
+      failedApi === 0,
+      "Hosted browser context closed pending API requests",
+    );
     note("hosted-decimal-roundtrip", {
       mode,
       revision: out.revision,
       decimalTokens: expected,
       storageEmpty: true,
+      apiTransportFailures: failedApi,
+      pendingReadsDrained: true,
     });
-    await context.close();
   } catch (error) {
     s.browserFailureClass = ["TimeoutError", "TypeError", "Error"].includes(
       error?.name,

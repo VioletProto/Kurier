@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from budget import Budget, MeterStop
 from cleanup import parent_proof, cleanup_allowed, validate_scope
 from cognito import held_diagnostics
+from hl_replacement import parent_proof as replacement_proof
 from hl_resume import parent_proof as hl_parent_proof
 from mitmproxy import http
 
@@ -16,6 +17,7 @@ from mitmproxy import http
 class AttemptMeter:
     def __init__(self):
         self.hl_only = os.environ.get("KURIER_METER_HL_ONLY") == "1"
+        self.hl_replacement = os.environ.get("KURIER_METER_HL_REPLACEMENT_PARENT")
         self.hl_creations = set()
         self.verify_only = os.environ.get("KURIER_METER_VERIFY_ONLY") == "1"
         parent = os.environ.get("KURIER_METER_CLEANUP_PARENT")
@@ -33,6 +35,11 @@ class AttemptMeter:
             cleanup_parent=parent_proof(parent) if parent else None,
             continuation_parent=hl_parent_proof(os.environ["KURIER_METER_HL_PARENT"])
             if os.environ.get("KURIER_METER_HL_PARENT")
+            else None,
+            replacement_parent=replacement_proof(
+                self.hl_replacement, os.environ["KURIER_METER_HL_REPLACEMENT_RECEIPT"]
+            )
+            if self.hl_replacement
             else None,
             **(
                 {
@@ -56,11 +63,13 @@ class AttemptMeter:
                 if self.verify_only
                 else {
                     "history": {
-                        "purpose": "H-L-only-continuation",
+                        "purpose": "H-L-only-replacement"
+                        if self.hl_replacement
+                        else "H-L-only-continuation",
                         "priorSteps": 18,
                         "priorSends": 16,
-                        "priorIdentitiesAndProjects": 6,
-                        "priorKnownApiCalls": 116,
+                        "priorIdentitiesAndProjects": 7 if self.hl_replacement else 6,
+                        "priorKnownApiCalls": 147 if self.hl_replacement else 116,
                         "priorKnownPolls": 11,
                         "priorKnownFinalAttemptAwsCharges": 917,
                         "priorKnownSecondAttemptAwsCharges": 574,

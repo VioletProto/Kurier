@@ -76,6 +76,7 @@ def serve(
     verify_only=False,
     hl_only=False,
     hl_parent=None,
+    hl_replacement=None,
 ):
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
     write_json(directory / "control.json", PHASES["inspect"])
@@ -115,6 +116,12 @@ def serve(
 
         hl_parent_proof(hl_parent)
         env["KURIER_METER_HL_PARENT"] = str(hl_parent)
+    if hl_replacement:
+        from hl_replacement import parent_proof as replacement_proof
+
+        replacement_proof(*hl_replacement)
+        env["KURIER_METER_HL_REPLACEMENT_PARENT"] = str(hl_replacement[0])
+        env["KURIER_METER_HL_REPLACEMENT_RECEIPT"] = str(hl_replacement[1])
     if cleanup_parent:
         from cleanup import parent_proof, validate_scope
 
@@ -218,6 +225,7 @@ def main():
             "serve-verify",
             "serve-hl",
             "serve-hl-resume",
+            "serve-hl-replacement",
             "exec",
             "phase",
             "stats",
@@ -229,6 +237,14 @@ def main():
     directory = args.directory.resolve()
     if args.action == "serve":
         return serve(directory)
+    if args.action == "serve-hl-replacement":
+        if len(args.command) != 2:
+            raise RuntimeError("Exact accepted parent ledger/cleanup receipt required")
+        return serve(
+            directory,
+            hl_only=True,
+            hl_replacement=tuple(Path(p).resolve() for p in args.command),
+        )
     if args.action == "serve-hl-resume":
         if len(args.command) != 1:
             raise RuntimeError("Exact published H-L parent ledger required")

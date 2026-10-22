@@ -25,6 +25,7 @@ class Budget:
         cleanup_parent=None,
         history=None,
         continuation_parent=None,
+        replacement_parent=None,
     ):
         self.clock = clock
         self.elapsed_clock = time.monotonic if clock is time.time else clock
@@ -33,8 +34,16 @@ class Budget:
         self.limits = dict(api=api_limit, aws=aws_limit, poll=poll_limit, static=200)
         self.seconds = seconds
         self.counts = dict(api=0, aws=0, poll=0, static=0)
-        if cleanup_parent and continuation_parent:
+        if (
+            sum(
+                bool(x)
+                for x in [cleanup_parent, continuation_parent, replacement_parent]
+            )
+            > 1
+        ):
             raise MeterStop("conflicting-parent-scopes")
+        if replacement_parent:
+            self.counts = replacement_parent["counts"].copy()
         if continuation_parent:
             self.counts = continuation_parent["counts"].copy()
             elapsed = self.clock() - continuation_parent["firstAttemptAt"]
@@ -75,6 +84,11 @@ class Budget:
                 **(
                     {"continuationParent": continuation_parent}
                     if continuation_parent
+                    else {}
+                ),
+                **(
+                    {"replacementParent": replacement_parent}
+                    if replacement_parent
                     else {}
                 ),
                 limits=self.limits.copy(),

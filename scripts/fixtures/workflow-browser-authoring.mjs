@@ -1,4 +1,9 @@
-import { run } from "../workflow-assertions-hl/browser.mjs";
+import { pathToFileURL } from "node:url";
+const { run } = await import(
+  process.argv[2]
+    ? pathToFileURL(process.argv[2]).href
+    : "../workflow-assertions-hl/browser.mjs"
+);
 const project = {
   projectId: "44444444-4444-4444-8444-444444444444",
   name: "Local authoring project",

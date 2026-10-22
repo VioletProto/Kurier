@@ -1,6 +1,8 @@
 """Pinned browser author/reopen/unrelated-edit transport against LOCAL API/provider fixtures."""
 
 import json
+import sys
+import time
 from urllib.parse import urlsplit
 import test_transport as harness
 import test_browser_auth as auth
@@ -43,6 +45,13 @@ patches = []
 
 
 class AuthorOrigin(auth.AuthOrigin):
+    def do_OPTIONS(self):
+        # Deterministic finite latency for the frontend's three post-save GET
+        # preflights. Closing a context early cancels these; no live faults.
+        if patches and self.path.startswith("/api/v1/projects/"):
+            time.sleep(0.2)
+        return super().do_OPTIONS()
+
     def reply(self, code, body, content_type="application/json"):
         raw = body if isinstance(body, bytes) else body.encode()
         self.send_response(code)
@@ -100,6 +109,17 @@ class AuthorOrigin(auth.AuthOrigin):
 
 
 def scenario(run, d, env):
+    if len(sys.argv) > 1 and sys.argv[1] == "old-close":
+        retained = (
+            harness.ROOT
+            / "docs/development/workflow-assertions-hl-context-close-driver.mjs.txt"
+        )
+        module = (
+            harness.ROOT
+            / ".build/workflow-assertions-hl-replacement/pre-close-browser.mjs"
+        )
+        module.parent.mkdir(parents=True, exist_ok=True)
+        module.write_bytes(retained.read_bytes())
     (d / "control.json").write_text(
         json.dumps(
             {
@@ -118,6 +138,16 @@ def scenario(run, d, env):
             [
                 "node",
                 str(harness.ROOT / "scripts/fixtures/workflow-browser-authoring.mjs"),
+                *(
+                    [
+                        str(
+                            harness.ROOT
+                            / ".build/workflow-assertions-hl-replacement/pre-close-browser.mjs"
+                        )
+                    ]
+                    if len(sys.argv) > 1 and sys.argv[1] == "old-close"
+                    else []
+                ),
             ]
         )
     except RuntimeError:
@@ -133,6 +163,19 @@ def scenario(run, d, env):
         raise
     rows = [json.loads(x) for x in (d / "ledger.jsonl").read_text().splitlines()]
     assert not any(r["event"] == "stop" for r in rows)
+    attempts = {r["sequence"]: r for r in rows if r["event"] == "attempt"}
+    errors = [r for r in rows if r["event"] == "outcome" and r.get("transportError")]
+    if len(sys.argv) > 1 and sys.argv[1] == "old-close":
+        assert errors and all(
+            attempts[r["attempt"]]["category"] == "api"
+            and attempts[r["attempt"]]["operation"] == "OPTIONS"
+            and not attempts[r["attempt"]]["write"]
+            for r in errors
+        )
+    else:
+        assert not errors, (
+            "Corrected driver must drain all read preflights before closing"
+        )
     assert len(patches) == 3
     assert (
         len(WORKFLOW["steps"][0]["assertions"]) == 8
@@ -163,6 +206,10 @@ def scenario(run, d, env):
             {
                 "pinnedBrowserAuthorReopenAndEdit": True,
                 "localPatches": 3,
+                "transportErrorOutcomes": len(errors),
+                "oldCloseReproduced": bool(
+                    len(sys.argv) > 1 and sys.argv[1] == "old-close"
+                ),
                 "exactDecimalTokens": True,
                 "liveAwsCalls": 0,
                 "targetSends": 0,

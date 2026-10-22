@@ -25,7 +25,7 @@ import {
 } from "./lib/workflow-coordinator-transport.mjs";
 const dir = new URL("./workflow-assertions-hl/", import.meta.url);
 const receiptPath = new URL(
-  "../.build/workflow-assertions-hl-resumed/ledger.json",
+  "../.build/workflow-assertions-hl-replacement/ledger.json",
   import.meta.url,
 ).pathname;
 if (!process.env.KURIER_ATTEMPT_METER_ACTIVE)
@@ -33,13 +33,13 @@ if (!process.env.KURIER_ATTEMPT_METER_ACTIVE)
 const ledger = {
   kind: "kurier-assertions-H-L-v1",
   authorization:
-    "H-L-only continuation from 2c9c24ba68e4876d4049618478c534ad528f2a6d",
+    "Explicit H-L replacement accepted4803bd9d1c108dd8655574af55aff8aa1fc0e74b; new120min clock,173AWS/31API/9static retained",
   tag: randomUUID(),
   users: [],
   projects: [],
   runs: [],
   events: [],
-  apiCalls: 0,
+  apiCalls: 31,
   polls: 0,
   awsReads: 0,
   admittedSteps: 18,
@@ -47,9 +47,9 @@ const ledger = {
   prior: {
     admittedSteps: 18,
     targetSends: 16,
-    identitiesCreatedAndCleaned: 6,
-    projectsCreatedAndCleaned: 6,
-    knownApiCalls: 116,
+    identitiesCreatedAndCleaned: 7,
+    projectsCreatedAndCleaned: 7,
+    knownApiCalls: 147,
     knownPolls: 11,
     knownSecondAttemptAwsCharges: 574,
     knownFinalAttemptAwsCharges: 917,
@@ -140,6 +140,13 @@ ledger.startedAt = new Date(
     openingEvents.find((e) => e.event === "attempt")?.at) * 1000,
 ).toISOString();
 ledger.continuationParent = openingEvents[0].continuationParent ?? null;
+ledger.replacementParent = openingEvents[0].replacementParent ?? null;
+check(
+  ledger.replacementParent?.counts.aws === 173 &&
+    ledger.replacementParent?.counts.api === 31 &&
+    ledger.replacementParent?.counts.static === 9,
+  "Explicit replacement parent required",
+);
 const transport = createCoordinatorTransport({
   origin: o.apiUrl,
   ledger,
@@ -455,7 +462,7 @@ for await (const line of createInterface({ input: process.stdin })) {
     privateState.stopped = true;
     ledger.stoppedAt = new Date().toISOString();
     if (
-      /^(launch|navigate|sign-in|select-project|load-workflows|select-workflow|author-step-[12](-assertion-[1-8]-add)?|author-(kind|path|type|decimal)|reopen-decimals|save-workflow)$/.test(
+      /^(launch|navigate|sign-in|select-project|load-workflows|select-workflow|author-step-[12](-assertion-[1-8]-add)?|author-(kind|path|type|decimal)|reopen-decimals|save-workflow|drain-browser-reads|close-browser)$/.test(
         privateState.browserProgress ?? "",
       )
     )

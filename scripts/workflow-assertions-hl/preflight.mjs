@@ -55,9 +55,16 @@ export async function run(c) {
       "docs/development/workflow-assertions-cleanup-verification.json",
     ),
   );
-  const cleanupBytes = readFileSync(
-    ".build/workflow-assertions-hl-resumed/instructor-cleanup.json",
+  const acceptedBytes = readFileSync(
+    "docs/development/workflow-assertions-hl-continuation.json",
   );
+  check(
+    createHash("sha256").update(acceptedBytes).digest("hex") ===
+      "ef9200cbbd36beee38008896a6d0986fd675af052d243dfe9e62bafa5c06ac5a",
+    "Accepted cleanup receipt changed",
+  );
+  const accepted = JSON.parse(acceptedBytes);
+  const cleanupBytes = Buffer.from(JSON.stringify(accepted.instructorCleanup));
   const refreshed = refreshedBaseline(JSON.parse(cleanupBytes));
   check(
     hash(refreshed.stage) === hash(retained.observations.stageAfter),
@@ -95,6 +102,7 @@ export async function run(c) {
       ["STAGE#dev-api", "QUOTA"],
       ...refreshed.owners.map((pk) => [pk, "EXECUTION_DAY#"]),
       ["U#9c919ed7-f835-42ce-82ad-753fce1ed39e", "EXECUTION_DAY#"],
+      ["U#1eab4ab5-4dbe-4eda-b7d0-b1d7db56ce63", "EXECUTION_DAY#"],
     ]) {
       const r = aws(
         ["dynamodb", "query", "--no-paginate"],

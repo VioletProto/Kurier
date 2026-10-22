@@ -36,7 +36,8 @@ export function coordinatorBudget({ ledger, meterPath, now = Date.now }) {
     const attempts = events.filter((e) => e.event === "attempt");
     const counts = attempts.at(-1)?.counts ??
       events[0].cleanupParent?.counts ??
-      events[0].continuationParent?.counts ?? { api: 0, aws: 0, poll: 0 };
+      events[0].continuationParent?.counts ??
+      events[0].replacementParent?.counts ?? { api: 0, aws: 0, poll: 0 };
     if (events[0].cleanupParent && !cleanup)
       throw Error("Cleanup-only continuation");
     const start = Math.floor(

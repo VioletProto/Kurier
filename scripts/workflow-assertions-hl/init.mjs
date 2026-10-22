@@ -61,7 +61,7 @@ export async function run(c) {
   note("single-disposable-owner-project-created", {
     owner: u.owner,
     projectId: l.projects[0].id,
-    cumulativeIdentities: 7,
-    cumulativeProjects: 7,
+    cumulativeIdentities: l.prior.identitiesCreatedAndCleaned + 1,
+    cumulativeProjects: l.prior.projectsCreatedAndCleaned + 1,
   });
 }

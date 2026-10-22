@@ -75,6 +75,7 @@ stopped before H admission. The additional disposable owner/project was normally
 cleaned; operator driver corrections passed local pinned-browser tests. H–L
 remains unperformed, known steps/sends remain18/16, and seven cumulative disposable
 identities/projects have been created and cleaned. The application pins are unchanged.
+The authorized replacement subsequently completed H–L and normal cleanup against the unchanged deployed release: [runtime and cleanup packet](../development/workflow-assertions-hl-replacement.md). Cumulative campaign admissions/sends are 28/24; instructor charges are preserved separately. The frozen audit retains nine read-only OPTIONS transport failures as an explicit review gap; the browser teardown correction passed locally only. No remaining reserve submissions or inferred authorization for further live work.
 The [implementation guide](../development/workflow-assertions.md) distinguishes
 local fixtures from actual deployment/runtime evidence.
 

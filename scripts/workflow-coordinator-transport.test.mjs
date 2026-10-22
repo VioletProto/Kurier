@@ -169,3 +169,52 @@ test("explicit H-L continuation retains original clock/counters and cleanup rese
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test("authorized replacement uses first NEW attempt clock while preserving total counters", () => {
+  const directory = mkdtempSync(tmpdir() + "/kurier-hl-replacement-");
+  try {
+    const path = directory + "/attempts.jsonl";
+    const start = 500000;
+    const ledger = {
+      startedAt: new Date(start).toISOString(),
+      apiCalls: 31,
+      polls: 0,
+    };
+    writeFileSync(
+      path,
+      [
+        {
+          event: "meter-created",
+          replacementParent: {
+            historicalFirstAttemptAt: 100,
+            counts: { api: 31, aws: 173, poll: 0, static: 9 },
+          },
+        },
+        {
+          event: "attempt",
+          at: start / 1000,
+          counts: { api: 31, aws: 174, poll: 0, static: 9 },
+        },
+      ]
+        .map(JSON.stringify)
+        .join("\n") + "\n",
+    );
+    let now = start + 99 * 60000;
+    const budget = coordinatorBudget({
+      ledger,
+      meterPath: path,
+      now: () => now,
+    });
+    budget();
+    assert.equal(ledger.meterCounts.aws, 174);
+    assert.equal(ledger.meterCounts.api, 31);
+    assert.equal(ledger.meterCounts.static, 9);
+    now = start + 100 * 60000;
+    assert.throws(() => budget(), /reserve/);
+    budget({ cleanup: true });
+    now = start + 120 * 60000;
+    assert.throws(() => budget({ cleanup: true }), /reserve/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});

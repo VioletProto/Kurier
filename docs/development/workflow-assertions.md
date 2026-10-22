@@ -173,3 +173,20 @@ confirmed the exact inserted content and native heading, including numeric
 round trips, result/compatibility DTOs and unchanged deployment holds. The
 proposal was read without edits. Full API Contracts v0.1 acceptance and unrelated
 environment/OpenAPI/MCP-result work remain separate.
+
+## H–L replacement runtime and cleanup
+
+The [authorized replacement packet](workflow-assertions-hl-replacement.md) records
+H–L against the unchanged deployed pinned application: ten new admissions/eight
+audited sends, cumulative 28/24, zero reserve submissions. Normal deletion and
+provider absence are verified; charged monthly usage32 includes four separate
+instructor charges, with reserved bytes/pins/inflight zero. Final read-only
+reader/IAM/platform/stage/generation checks match preflight.
+
+Nine charged read-only API OPTIONS transport errors were discovered in the
+frozen audit after live processes stopped. No mutation/submission/target outcome
+is uncertain. The old browser teardown can reproduce this locally; the corrected
+driver drains background reads and asserts zero transport failures, locally only.
+This remains a guard-review gap and does not prove exact historical causation.
+No redeployment, A–G replay or further live request follows from these results.
+Historical missing readbacks/billing, broad fault injection and PITR remain open.
