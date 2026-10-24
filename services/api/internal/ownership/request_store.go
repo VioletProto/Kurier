@@ -59,6 +59,9 @@ func (st *Store) CreateRequest(ctx context.Context, userID, projectID string, c 
 	if err != nil {
 		return SavedRequest{}, err
 	}
+	if c.TemplateSemanticsVersion == 1 && stage.ProjectEnvironmentsSchemaVersion != 1 {
+		return SavedRequest{}, unavailable()
+	}
 	raw, err := configurationJSON(c)
 	if err != nil {
 		return SavedRequest{}, err
@@ -68,6 +71,9 @@ func (st *Store) CreateRequest(ctx context.Context, userID, projectID string, c 
 	r := record{PK: p.PK, SK: "REQ#" + id, Kind: "request", SchemaVersion: 1, ProjectID: projectID, RequestID: id, State: "active", ConfigurationJSON: string(raw), CreatedAt: now, UpdatedAt: now, LPK: p.PK + "#REQUEST", LSK: now + "#" + id}
 	if len(slots(&c)) > 0 {
 		r.SchemaVersion = 2
+	}
+	if c.TemplateSemanticsVersion == 1 {
+		r.SchemaVersion = 3
 	}
 	action, err := st.put(r, "attribute_not_exists(PK)", nil)
 	if err != nil {
@@ -108,6 +114,12 @@ func (st *Store) PatchRequest(ctx context.Context, userID, projectID, requestID 
 	}
 	if len(slots(&c)) > 0 {
 		r.SchemaVersion = 2
+	}
+	if c.TemplateSemanticsVersion == 1 {
+		r.SchemaVersion = 3
+	}
+	if c.TemplateSemanticsVersion == 1 && stage.ProjectEnvironmentsSchemaVersion != 1 {
+		return SavedRequest{}, unavailable()
 	}
 	r.ConfigurationJSON = string(encoded)
 	r.Revision++
@@ -207,7 +219,7 @@ func (st *Store) drainRequests(ctx context.Context, p, stage, work record) (reco
 			}
 		}
 		var r record
-		if !recognized || attributevalue.UnmarshalMap(item, &r) != nil || (r.SchemaVersion != 1 && r.SchemaVersion != 2) || r.PK != p.PK || r.ProjectID != p.ProjectID || r.RequestID == "" || r.SK != "REQ#"+r.RequestID || r.Revision < 0 {
+		if !recognized || attributevalue.UnmarshalMap(item, &r) != nil || (r.SchemaVersion != 1 && r.SchemaVersion != 2 && r.SchemaVersion != 3) || r.PK != p.PK || r.ProjectID != p.ProjectID || r.RequestID == "" || r.SK != "REQ#"+r.RequestID || r.Revision < 0 {
 			continue
 		}
 		switch r.Kind {

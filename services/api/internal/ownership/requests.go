@@ -3,6 +3,7 @@ package ownership
 import (
 	"bytes"
 	"encoding/json"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"io"
 	"net/url"
 	"regexp"
@@ -49,13 +50,14 @@ type RequestBody struct {
 	SecretWrite  *SecretWrite     `json:"secretWrite,omitempty"`
 }
 type RequestConfiguration struct {
-	Name            string         `json:"name"`
-	Method          string         `json:"method"`
-	URL             string         `json:"url"`
-	QueryParameters []RequestField `json:"queryParameters"`
-	Headers         []RequestField `json:"headers"`
-	Body            *RequestBody   `json:"body"`
-	OperationRef    any            `json:"operationRef"`
+	TemplateSemanticsVersion int            `json:"templateSemanticsVersion,omitempty"`
+	Name                     string         `json:"name"`
+	Method                   string         `json:"method"`
+	URL                      string         `json:"url"`
+	QueryParameters          []RequestField `json:"queryParameters"`
+	Headers                  []RequestField `json:"headers"`
+	Body                     *RequestBody   `json:"body"`
+	OperationRef             any            `json:"operationRef"`
 }
 type SavedRequest struct {
 	RequestID string `json:"requestId"`
@@ -189,6 +191,19 @@ func obviousCredential(value string) bool {
 	return strings.Contains(lower, "bearer ") || strings.Contains(lower, "-----begin") || strings.HasPrefix(lower, "basic ")
 }
 func validateConfiguration(c *RequestConfiguration) error {
+	templated := c.TemplateSemanticsVersion == 1
+	if c.TemplateSemanticsVersion != 0 && !templated {
+		return invalidConfiguration()
+	}
+	if templated {
+		runtime := runtimeTemplateConfiguration(*c)
+		if _, e := runner.TemplateLocations(runtime); e != nil {
+			return environmentError(e)
+		}
+		if e := runner.ValidateTemplateURL(c.URL); e != nil {
+			return environmentError(e)
+		}
+	}
 	if control(c.Name, false) {
 		return invalidConfiguration()
 	}
@@ -201,8 +216,12 @@ func validateConfiguration(c *RequestConfiguration) error {
 	default:
 		return invalidConfiguration()
 	}
-	u, err := url.Parse(c.URL)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" || u.User != nil || u.Fragment != "" || strings.Contains(c.URL, "#") || control(c.URL, false) || strings.ContainsAny(c.URL, " {}") {
+	validationURL := c.URL
+	if templated && runner.HasTemplate(validationURL) {
+		validationURL = "https://template.invalid/"
+	}
+	u, err := url.Parse(validationURL)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" || u.User != nil || u.Fragment != "" || strings.Contains(validationURL, "#") || control(validationURL, false) || strings.ContainsAny(validationURL, " {}") {
 		return invalidConfiguration()
 	}
 	query, err := url.ParseQuery(u.RawQuery)
@@ -233,7 +252,7 @@ func validateConfiguration(c *RequestConfiguration) error {
 			if !f.Sensitive && (f.BindingID != "" || f.SecretWrite != nil || f.SecretRef != nil || f.Masked) {
 				return invalidConfiguration()
 			}
-			if f.Name == "" || control(f.Name, false) || control(f.Value, entry.header) || (!f.Sensitive && (credentialName(f.Name) && !(entry.header && f.Value == "") || obviousCredential(f.Value))) || (entry.header && !headerToken.MatchString(f.Name)) {
+			if f.Name == "" || control(f.Name, false) || control(f.Value, entry.header) || (!f.Sensitive && !(templated && runner.HasTemplate(f.Value)) && (credentialName(f.Name) && !(entry.header && f.Value == "") || obviousCredential(f.Value))) || (entry.header && !headerToken.MatchString(f.Name)) {
 				return invalidConfiguration()
 			}
 		}
@@ -254,7 +273,7 @@ func validateConfiguration(c *RequestConfiguration) error {
 			var v any
 			d := json.NewDecoder(strings.NewReader(c.Body.Text))
 			d.UseNumber()
-			if d.Decode(&v) != nil || (!c.Body.Sensitive && !publicBodyJSON(v, c.Body.SecretFields)) {
+			if d.Decode(&v) != nil || (!c.Body.Sensitive && !publicTemplateBodyJSON(v, c.Body.SecretFields, templated)) {
 				return invalidConfiguration()
 			}
 		default:
@@ -375,6 +394,11 @@ func mergeConfigurationMode(raw []byte, previous *RequestConfiguration, stored b
 				return c, invalidConfiguration()
 			}
 			c.Body = &parsed
+		case "templateSemanticsVersion":
+			if string(v) != "1" {
+				return c, invalidConfiguration()
+			}
+			c.TemplateSemanticsVersion = 1
 		case "operationRef":
 			if !bytes.Equal(v, []byte("null")) {
 				return c, invalidConfiguration()
@@ -396,4 +420,23 @@ func (r record) savedRequest() (SavedRequest, error) {
 		return SavedRequest{}, unavailable()
 	}
 	return SavedRequest{r.RequestID, r.ProjectID, r.Revision, c, r.CreatedAt, r.UpdatedAt}, nil
+}
+
+func runtimeTemplateConfiguration(c RequestConfiguration) runner.Configuration {
+	runtime := runner.Configuration{Name: c.Name, Method: c.Method, URL: c.URL, TemplateSemanticsVersion: c.TemplateSemanticsVersion, OperationRef: c.OperationRef}
+	runtime.Headers = []runner.Field{}
+	runtime.QueryParameters = []runner.Field{}
+	for _, f := range c.Headers {
+		runtime.Headers = append(runtime.Headers, runner.Field{Name: f.Name, Value: f.Value, Enabled: f.Enabled, Sensitive: f.Sensitive})
+	}
+	for _, f := range c.QueryParameters {
+		runtime.QueryParameters = append(runtime.QueryParameters, runner.Field{Name: f.Name, Value: f.Value, Enabled: f.Enabled, Sensitive: f.Sensitive})
+	}
+	if c.Body != nil {
+		runtime.Body = &runner.RequestBody{Type: c.Body.Type, Text: c.Body.Text, Sensitive: c.Body.Sensitive}
+		for _, f := range c.Body.SecretFields {
+			runtime.Body.SecretFields = append(runtime.Body.SecretFields, runner.SecretField{Pointer: f.Pointer})
+		}
+	}
+	return runtime
 }

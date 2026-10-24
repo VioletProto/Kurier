@@ -1,3 +1,4 @@
+import { EnvironmentSelector } from "./Environments";
 import { AssertionEditor, AssertionResults } from "./Assertions";
 import { validStepAssertions } from "./assertions";
 import { useEffect, useRef, useState } from "react";
@@ -5,6 +6,7 @@ import {
   api,
   ApiError,
   UncertainWrite,
+  type EnvironmentSelection,
   type Workflow,
   type WorkflowDefinition,
   type WorkflowStep,
@@ -28,6 +30,9 @@ export function Workflows({
   onGateChanged: () => void;
   disabled: boolean;
 }) {
+  const [environment, setEnvironment] = useState<EnvironmentSelection | null>(
+    null,
+  );
   const [opened, setOpened] = useState(false),
     [items, setItems] = useState<Workflow[]>([]),
     [requests, setRequests] = useState<SavedRequest[]>([]),
@@ -51,6 +56,7 @@ export function Workflows({
       workflow?: Workflow;
       allow: boolean;
       created: number;
+      environment: EnvironmentSelection | null;
     } | null>(null);
   useEffect(() => {
     runRef.current = run;
@@ -162,6 +168,7 @@ export function Workflows({
       workflow,
       key: crypto.randomUUID(),
       allow,
+      environment,
       created: Date.now(),
     };
     uncertain.current = admission;
@@ -173,6 +180,7 @@ export function Workflows({
         allow,
         workflow,
         lifetime.current.signal,
+        workflow ? admission.environment : undefined,
       );
       if (lifetime.current.signal.aborted) return;
       uncertain.current = null;
@@ -316,6 +324,45 @@ export function Workflows({
                   </select>
                 </label>
                 <p>Frozen source revision: {step.requestRevision}</p>
+                <label>
+                  Step environment mode {pos + 1}
+                  <select
+                    value={step.environment?.mode ?? "inherit"}
+                    onChange={(e) =>
+                      change(pos, (s) => ({
+                        ...s,
+                        environment:
+                          e.target.value === "select"
+                            ? { mode: "select", environmentId: "", revision: 0 }
+                            : { mode: e.target.value as "inherit" | "none" },
+                      }))
+                    }
+                  >
+                    <option value="inherit">Inherit run environment</option>
+                    <option value="none">No environment</option>
+                    <option value="select">Select environment</option>
+                  </select>
+                </label>
+                {step.environment?.mode === "select" && (
+                  <EnvironmentSelector
+                    projectId={projectId}
+                    label={`Step environment ${pos + 1}`}
+                    value={
+                      step.environment.environmentId ? step.environment : null
+                    }
+                    change={(v) =>
+                      change(pos, (s) => ({
+                        ...s,
+                        environment: v
+                          ? { mode: "select", ...v }
+                          : { mode: "none" },
+                      }))
+                    }
+                    disabled={busy || disabled}
+                    onExpired={onExpired}
+                  />
+                )}
+
                 <button
                   disabled={pos === 0}
                   onClick={() =>
@@ -727,6 +774,14 @@ export function Workflows({
             />
             Allow sensitive values over public HTTP for this submission or rerun
           </label>
+          <EnvironmentSelector
+            projectId={projectId}
+            label="Workflow run environment"
+            value={environment}
+            change={setEnvironment}
+            disabled={busy || disabled || !!uncertain.current}
+            onExpired={onExpired}
+          />
           {uncertain.current && (
             <button
               disabled={busy}
@@ -742,6 +797,7 @@ export function Workflows({
                     a.allow,
                     a.workflow,
                     lifetime.current.signal,
+                    a.workflow ? a.environment : undefined,
                   );
                   if (lifetime.current.signal.aborted) return;
                   uncertain.current = null;

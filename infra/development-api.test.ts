@@ -115,7 +115,20 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(45);
+    expect(resources.filter((r) => r.route)).toHaveLength(53);
+    const declaredRoutes = resources.filter((r) => r.route).map((r) => r.route);
+    expect(declaredRoutes).toEqual(
+      expect.arrayContaining([
+        "POST /api/v1/projects/{projectId}/environments",
+        "GET /api/v1/projects/{projectId}/environments",
+        "GET /api/v1/projects/{projectId}/environments/{environmentId}",
+        "PATCH /api/v1/projects/{projectId}/environments/{environmentId}",
+        "DELETE /api/v1/projects/{projectId}/environments/{environmentId}",
+        "OPTIONS /api/v1/projects/{projectId}/environments",
+        "OPTIONS /api/v1/projects/{projectId}/environments/{environmentId}",
+        "POST /api/v1/local-agent/capabilities",
+      ]),
+    );
     expect(
       resources.filter((r) => r.route?.includes("/mcp/")).map((r) => r.route),
     ).toEqual([

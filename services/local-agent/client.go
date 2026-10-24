@@ -26,12 +26,13 @@ type protocolError struct {
 func (e *protocolError) Error() string { return "hosted agent operation unavailable" }
 
 type client struct {
-	origin, token string
-	http          *http.Client
-	agent         runner.Agent
-	seen          map[string]bool
-	now           func() time.Time
-	pause         func(context.Context, time.Duration) error
+	origin, token      string
+	http               *http.Client
+	templateNegotiated bool
+	agent              runner.Agent
+	seen               map[string]bool
+	now                func() time.Time
+	pause              func(context.Context, time.Duration) error
 }
 
 func newClient(origin, token string) (*client, error) {
@@ -120,6 +121,21 @@ func (c *client) session(ctx context.Context) error {
 		}
 	}
 	c.agent = a
+	c.templateNegotiated = false
+	var declared struct {
+		Data runner.AgentCapabilities `json:"data"`
+	}
+	if err := c.call(ctx, "POST", "/api/v1/local-agent/capabilities", runner.EnvironmentAgentCapabilities(), &declared, 2048); err != nil {
+		var protocol *protocolError
+		if !errors.As(err, &protocol) || protocol.Status != 404 {
+			return err
+		}
+	} else {
+		if !declared.Data.Valid() {
+			return errors.New("invalid agent capabilities")
+		}
+		c.templateNegotiated = true
+	}
 	return nil
 }
 func (c *client) workAllowed(w runner.Work) bool {
@@ -139,10 +155,14 @@ func (c *client) workAllowed(w runner.Work) bool {
 	if e != nil || deadline.Sub(intent) != 120*time.Second {
 		return false
 	}
-	if w.SchemaVersion != 1 || w.LocalAgentID != c.agent.LocalAgentID || w.RecoveryGeneration != c.agent.RecoveryGeneration || w.Plan.Target != "local" || w.Plan.LocalAgentID != w.LocalAgentID || w.Plan.Destination == nil || *w.Plan.Destination != w.Destination || w.Plan.Options.Local == nil || !w.Plan.Options.Local.AllowPrivateNetwork || w.Plan.Options.Local.LocalAgentID != w.LocalAgentID || w.JobID == "" || w.ExecutionID == "" || w.LeaseID == "" || w.Fence < 1 || w.ProtectedInputs.Values == nil {
+	if runner.ValidateWorkContext(w) != nil || w.SchemaVersion == 2 && !c.templateNegotiated || w.LocalAgentID != c.agent.LocalAgentID || w.RecoveryGeneration != c.agent.RecoveryGeneration || w.Plan.Target != "local" || w.Plan.LocalAgentID != w.LocalAgentID || w.Plan.Destination == nil || *w.Plan.Destination != w.Destination || w.Plan.Options.Local == nil || !w.Plan.Options.Local.AllowPrivateNetwork || w.Plan.Options.Local.LocalAgentID != w.LocalAgentID || w.JobID == "" || w.ExecutionID == "" || w.LeaseID == "" || w.Fence < 1 || w.ProtectedInputs.Values == nil {
 		return false
 	}
-	if _, e := runner.ValidateLocalURL(w.Plan.Configuration.URL, w.Destination); e != nil {
+	resolvedURL, err := runner.ResolvedTemplateURL(w.Plan)
+	if err != nil {
+		return false
+	}
+	if _, e := runner.ValidateLocalURL(resolvedURL, w.Destination); e != nil {
 		return false
 	}
 	if w.Plan.Options.TimeoutSeconds < 1 || w.Plan.Options.TimeoutSeconds > 60 {

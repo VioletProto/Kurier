@@ -135,13 +135,13 @@ func TestDefensiveLocalSanitizationNoNetwork(t *testing.T) {
 }
 
 func TestResultWorstEscapingFitsLambdaIngress(t *testing.T) {
-	w := Work{LeaseID: NewID(), Fence: 1, Nonce: base64.RawURLEncoding.EncodeToString(bytes.Repeat([]byte{1}, 32))}
+	w := Work{SchemaVersion: 1, LeaseID: NewID(), Fence: 1, Nonce: base64.RawURLEncoding.EncodeToString(bytes.Repeat([]byte{1}, 32))}
 	e := NewEvidence("p", "e", "now", fixturePlan())
 	text := strings.Repeat("\"", BodyLimit-2048)
 	e.Response.Body = Body{Kind: "text", Text: &text}
 	e.Status = "completed"
 	e.Outcome = Outcome{Certainty: "known"}
-	candidate, _ := json.Marshal(Result{1, w.LeaseID, 1, w.Nonce, CaptureEvidence(e)})
+	candidate, _ := json.Marshal(Result{SchemaVersion: 1, LeaseID: w.LeaseID, Fence: 1, Nonce: w.Nonce, Capture: CaptureEvidence(e)})
 	if len(candidate) > EvidenceLimit || resultTransportFits(candidate) {
 		t.Fatal("escaping fixture does not hit ingress boundary")
 	}

@@ -21,8 +21,9 @@ import (
 func TestIntegrationBrowserProjects(t *testing.T) {
 	i, pinProject, pinExecution, _ := pinLocal(t)
 	var pinTime atomic.Int64
-	pinTime.Store(time.Now().UnixNano())
-	i.store.executions.Now = func() time.Time { return time.Unix(0, pinTime.Load()).UTC() }
+	testStarted := time.Now()
+	pinTime.Store(testStarted.UnixNano())
+	i.store.executions.Now = func() time.Time { return time.Unix(0, pinTime.Load()).UTC().Add(time.Since(testStarted)) }
 	for n := 0; n < 27; n++ {
 		if _, err := i.store.CreateProject(context.Background(), i.alice.UserID, "Seed "+twoDigits(n)); err != nil {
 			t.Fatal(err)
@@ -38,6 +39,7 @@ func TestIntegrationBrowserProjects(t *testing.T) {
 	configureBrowserWorkflows(t, i)
 	configureBrowserMCP(t, i)
 	configureBrowserAssertions(t, i)
+	configureBrowserEnvironments(t, i)
 	mux.HandleFunc("POST /test-only/pin-expire", func(w http.ResponseWriter, r *http.Request) {
 		pinTime.Store(time.Now().Add(31 * 24 * time.Hour).UnixNano())
 		w.WriteHeader(204)

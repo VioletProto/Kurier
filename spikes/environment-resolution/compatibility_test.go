@@ -59,7 +59,7 @@ func TestCompatibilityIdentityAndLegacyReaders(t *testing.T) {
 			t.Fatalf("accepted invalid fixture %s", raw)
 		}
 	}
-	for _, legacy := range []any{&execution.Result{}, &execution.Work{}, &execution.Evidence{}} {
+	for _, legacy := range []any{&legacyResultV1{}, &legacyWorkV1{}, &execution.LegacyEvidence{}} {
 		if execution.StrictJSON(valid, legacy) == nil {
 			t.Fatal("legacy reader accepted context")
 		}

@@ -1,5 +1,16 @@
 # Accepted architecture
 
+## Accepted project environments continuation
+
+Davian accepted the [environment packet](drafts/project-environments-review.md)
+and [compatibility amendment](drafts/project-environments-compatibility.md) at
+`d8be596a2306f2e888ef34e81dfa836bc4b84447` on 2026-10-24.
+Evidence 3, Work/Result 2, typed-secret rules and the corrected MCP complete-view
+projection are accepted for scoped implementation and local/CI validation.
+AWS inventory/preview, deployment, migration and activation remain held for
+separate review. OpenAPI production import/validation remains unaccepted.
+[Implementation and local verification](../development/project-environments.md).
+
 ## Accepted OpenAPI library selection only
 
 Davian accepted kin-openapi v0.152.0, santhosh-tekuri/jsonschema/v6 v6.0.3 and

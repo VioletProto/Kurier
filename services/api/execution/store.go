@@ -60,28 +60,33 @@ type SecretSource struct {
 	Revision int64  `dynamodbav:"revision"`
 }
 type row struct {
-	WorkflowAssertionsSchemaVersion  int      `dynamodbav:"workflowAssertionsSchemaVersion,omitempty"`
-	AssertionSemanticsVersion        int      `dynamodbav:"assertionSemanticsVersion,omitempty"`
-	MCPTokenID                       string   `dynamodbav:"mcpTokenId,omitempty"`
-	MCPProjectIDs                    []string `dynamodbav:"mcpProjectIds,omitempty"`
-	MCPTool                          string   `dynamodbav:"mcpTool,omitempty"`
-	MCPCode                          string   `dynamodbav:"mcpCode,omitempty"`
-	MCPRequestID                     string   `dynamodbav:"mcpRequestId,omitempty"`
-	MCPReadOnlySchemaVersion         int      `dynamodbav:"mcpReadOnlySchemaVersion,omitempty"`
-	SequentialWorkflowsSchemaVersion int      `dynamodbav:"sequentialWorkflowsSchemaVersion,omitempty"`
-	WorkflowID                       string   `dynamodbav:"workflowId,omitempty"`
-	WorkflowSubmission               string   `dynamodbav:"workflowSubmission,omitempty"`
-	RerunSourceRunID                 string   `dynamodbav:"rerunSourceRunId,omitempty"`
-	WorkflowRevision                 int64    `dynamodbav:"workflowRevision,omitempty"`
-	RunID                            string   `dynamodbav:"runId,omitempty"`
-	Position                         int      `dynamodbav:"position,omitempty"`
-	CurrentPosition                  int      `dynamodbav:"currentPosition,omitempty"`
-	FailedPosition                   *int     `dynamodbav:"failedPosition,omitempty"`
-	StepCount                        int      `dynamodbav:"stepCount,omitempty"`
-	AvailableCount                   int64    `dynamodbav:"availableCount,omitempty"`
-	RunPinnedCount                   int64    `dynamodbav:"runPinnedCount,omitempty"`
-	EvidenceExpired                  bool     `dynamodbav:"evidenceExpired,omitempty"`
-	UpdatedAt                        string   `dynamodbav:"updatedAt,omitempty"`
+	Capabilities                     *runner.AgentCapabilities  `dynamodbav:"capabilities,omitempty"`
+	TemplateSemanticsVersion         int                        `dynamodbav:"templateSemanticsVersion,omitempty"`
+	EnvironmentContext               *runner.EnvironmentContext `dynamodbav:"environmentContext,omitempty"`
+	ProjectEnvironmentsSchemaVersion int                        `dynamodbav:"projectEnvironmentsSchemaVersion,omitempty"`
+	EnvironmentID                    string                     `dynamodbav:"environmentId,omitempty"`
+	WorkflowAssertionsSchemaVersion  int                        `dynamodbav:"workflowAssertionsSchemaVersion,omitempty"`
+	AssertionSemanticsVersion        int                        `dynamodbav:"assertionSemanticsVersion,omitempty"`
+	MCPTokenID                       string                     `dynamodbav:"mcpTokenId,omitempty"`
+	MCPProjectIDs                    []string                   `dynamodbav:"mcpProjectIds,omitempty"`
+	MCPTool                          string                     `dynamodbav:"mcpTool,omitempty"`
+	MCPCode                          string                     `dynamodbav:"mcpCode,omitempty"`
+	MCPRequestID                     string                     `dynamodbav:"mcpRequestId,omitempty"`
+	MCPReadOnlySchemaVersion         int                        `dynamodbav:"mcpReadOnlySchemaVersion,omitempty"`
+	SequentialWorkflowsSchemaVersion int                        `dynamodbav:"sequentialWorkflowsSchemaVersion,omitempty"`
+	WorkflowID                       string                     `dynamodbav:"workflowId,omitempty"`
+	WorkflowSubmission               string                     `dynamodbav:"workflowSubmission,omitempty"`
+	RerunSourceRunID                 string                     `dynamodbav:"rerunSourceRunId,omitempty"`
+	WorkflowRevision                 int64                      `dynamodbav:"workflowRevision,omitempty"`
+	RunID                            string                     `dynamodbav:"runId,omitempty"`
+	Position                         int                        `dynamodbav:"position,omitempty"`
+	CurrentPosition                  int                        `dynamodbav:"currentPosition,omitempty"`
+	FailedPosition                   *int                       `dynamodbav:"failedPosition,omitempty"`
+	StepCount                        int                        `dynamodbav:"stepCount,omitempty"`
+	AvailableCount                   int64                      `dynamodbav:"availableCount,omitempty"`
+	RunPinnedCount                   int64                      `dynamodbav:"runPinnedCount,omitempty"`
+	EvidenceExpired                  bool                       `dynamodbav:"evidenceExpired,omitempty"`
+	UpdatedAt                        string                     `dynamodbav:"updatedAt,omitempty"`
 
 	CandidateCompletedAt string `dynamodbav:"candidateCompletedAt,omitempty"`
 
@@ -116,6 +121,7 @@ type row struct {
 	Revision                      int64          `dynamodbav:"revision,omitempty"`
 	RequestID                     string         `dynamodbav:"requestId,omitempty"`
 	SecretID                      string         `dynamodbav:"secretId,omitempty"`
+	ScalarType                    string         `dynamodbav:"scalarType,omitempty"`
 	ValueKind                     string         `dynamodbav:"valueKind,omitempty"`
 	ConfigurationJSON             string         `dynamodbav:"configurationJSON,omitempty"`
 	RecoveryGeneration            string         `dynamodbav:"recoveryGeneration,omitempty"`
@@ -184,6 +190,20 @@ func (s *Service) get(ctx context.Context, table, pk, sk string) (row, error) {
 	if attributevalue.UnmarshalMap(out.Item, &r) != nil || r.PK != pk || r.SK != sk {
 		return row{}, safeError()
 	}
+	if r.Kind == "environment" || r.Kind == "environmentTombstone" {
+		allowed := map[string]bool{}
+		for _, k := range []string{"PK", "SK", "kind", "schemaVersion", "projectId", "environmentId", "revision", "state", "configurationJSON", "createdAt", "updatedAt"} {
+			allowed[k] = true
+		}
+		for k := range out.Item {
+			if !allowed[k] {
+				return row{}, safeError()
+			}
+		}
+		if r.SchemaVersion != 1 {
+			return row{}, safeError()
+		}
+	}
 	if strings.HasPrefix(r.Kind, "execution") && strings.HasPrefix(r.PK, "P#") && !knownExecution(out.Item, r) {
 		return row{}, safeError()
 	}
@@ -199,6 +219,9 @@ func (s *Service) put(table string, r row, fresh bool) (dt.TransactWriteItem, er
 	item, e := attributevalue.MarshalMap(r)
 	if e != nil {
 		return dt.TransactWriteItem{}, safeError()
+	}
+	if r.TemplateSemanticsVersion == 1 && r.EnvironmentContext == nil {
+		item["environmentContext"] = &dt.AttributeValueMemberNULL{Value: true}
 	}
 	raw, _ := json.Marshal(item)
 	if len(raw) > 128*1024 {
@@ -294,6 +317,16 @@ func transactionConflict(err error) bool {
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
+	if r.SavedRequestsSchemaVersion == 9 {
+		if e != nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != 1 || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
+			return row{}, safeError()
+		}
+		return r, nil
+	}
+	if r.ProjectEnvironmentsSchemaVersion != 0 {
+		return row{}, safeError()
+	}
+
 	// Version 8 preserves the version-7 baseline and adds assertions exactly once.
 	schema := r.SavedRequestsSchemaVersion
 	if schema == 8 {
@@ -308,6 +341,9 @@ func (s *Service) stage(ctx context.Context) (row, error) {
 	return r, nil
 }
 func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
+	if stage.SavedRequestsSchemaVersion == 9 {
+		return s.environmentStageGuard(stage)
+	}
 	guard := dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &s.Table, Key: keys(stage.PK, "META"), ConditionExpression: aws.String("#s = :active AND recoveryGeneration = :g AND savedRequestsSchemaVersion = :r AND cloudExecutionsSchemaVersion = :c AND executionInputsSchemaVersion = :c AND protectedSecretsSchemaVersion = :c"), ExpressionAttributeNames: map[string]string{"#s": "state"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":active": str("active"), ":g": str(stage.RecoveryGeneration), ":r": num(int64(stage.SavedRequestsSchemaVersion)), ":c": num(1)}}}
 	if stage.EvidencePinningSchemaVersion == 1 {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND evidencePinningSchemaVersion = :c")
@@ -398,6 +434,10 @@ func (s *Service) view(ctx context.Context, r row) (View, error) {
 	}
 	v.Source = Source{RequestID: r.Plan.RequestID, Revision: r.Plan.Revision}
 	v.Configuration = &r.Plan.Configuration
+	if r.Plan.TemplateSnapshot != nil {
+		v.TemplateSemanticsVersion = 1
+		v.EnvironmentContext = r.Plan.TemplateSnapshot.EnvironmentContext
+	}
 	if source, e := s.get(ctx, s.Table, r.PK, "REQ#"+r.Plan.RequestID); e == nil && source.State == "active" && source.Kind == "request" {
 		v.LiveRequestID = &r.Plan.RequestID
 	}
@@ -457,7 +497,20 @@ func (s *Service) fastNotify(ctx context.Context, project, job string) {
 	_, _ = s.Queue.SendMessage(send, &sqs.SendMessageInput{QueueUrl: &s.QueueURL, MessageBody: aws.String(string(raw))})
 }
 func (s *Service) sourceGuard(r row, table string) dt.TransactWriteItem {
-	return dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &table, Key: keys(r.PK, r.SK), ConditionExpression: aws.String("revision = :r AND #s = :active AND #k = :kind"), ExpressionAttributeNames: map[string]string{"#s": "state", "#k": "kind"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":r": num(r.Revision), ":active": str("active"), ":kind": str(r.Kind)}}}
+	guard := dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &table, Key: keys(r.PK, r.SK), ConditionExpression: aws.String("revision = :r AND #s = :active AND #k = :kind"), ExpressionAttributeNames: map[string]string{"#s": "state", "#k": "kind"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":r": num(r.Revision), ":active": str("active"), ":kind": str(r.Kind)}}}
+	if r.Kind == "savedSecret" {
+		g := guard.ConditionCheck
+		*g.ConditionExpression += " AND schemaVersion = :schema AND valueKind = :valueKind"
+		g.ExpressionAttributeValues[":schema"] = num(int64(r.SchemaVersion))
+		g.ExpressionAttributeValues[":valueKind"] = str(r.ValueKind)
+		if r.SchemaVersion == 2 {
+			*g.ConditionExpression += " AND scalarType = :scalarType"
+			g.ExpressionAttributeValues[":scalarType"] = str(r.ScalarType)
+		} else {
+			*g.ConditionExpression += " AND attribute_not_exists(scalarType)"
+		}
+	}
+	return guard
 }
 func requiredRefs(c Configuration) []string {
 	seen := map[string]bool{}
@@ -494,6 +547,10 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	if e != nil {
 		return View{}, e
 	}
+
+	if rerun && options.Environment != nil {
+		return View{}, failure(400, "invalid_request")
+	}
 	if len(s.SigningKey) < 32 || !uuidPattern.MatchString(key) || !uuidPattern.MatchString(source) {
 		return View{}, failure(400, "invalid_request")
 	}
@@ -517,6 +574,9 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	}
 	receipt, e := s.get(ctx, s.Table, p.PK, receiptSK)
 	if e == nil {
+		if receipt.TemplateSemanticsVersion == 1 {
+			inputDigest = s.digest("execution-environment-admission-input-v1", []any{inputDigest, 1})
+		}
 		if receipt.Kind != "executionReceipt" || receipt.InputDigest != inputDigest || receipt.ExpiresAt <= stamp(s.now()) {
 			return View{}, failure(409, "conflict")
 		}
@@ -548,7 +608,7 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		source = plan.RequestID
 	}
 	request, e := s.get(ctx, s.Table, p.PK, "REQ#"+source)
-	if e != nil || request.Kind != "request" || request.State != "active" || (request.SchemaVersion != 1 && request.SchemaVersion != 2) {
+	if e != nil || request.Kind != "request" || request.State != "active" || (request.SchemaVersion != 1 && request.SchemaVersion != 2 && request.SchemaVersion != 3) {
 		return View{}, failure(400, "source_unavailable")
 	}
 	if !rerun {
@@ -562,6 +622,20 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		plan.Revision = revision
 		plan.Options = options
 	}
+	envGuards, e := s.freezeEnvironment(ctx, project, &plan, options.Environment, rerun)
+	if e != nil {
+		return View{}, e
+	}
+	if plan.Configuration.TemplateSemanticsVersion == 1 && stage.ProjectEnvironmentsSchemaVersion != 1 {
+		return View{}, safeError()
+	}
+	if plan.TemplateSnapshot != nil {
+		inputDigest = s.digest("execution-environment-admission-input-v1", []any{inputDigest, 1})
+	}
+	resolvedURL, e := runner.ResolvedTemplateURL(plan)
+	if e != nil {
+		return View{}, e
+	}
 	var agent row
 	if options.Target == "local" {
 		if options.Local == nil || !options.Local.AllowPrivateNetwork {
@@ -571,9 +645,12 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		if e != nil {
 			return View{}, e
 		}
-		d, e := agentDestination(agent, project, plan.Configuration.URL)
+		d, e := agentDestination(agent, project, resolvedURL)
 		if e != nil {
 			return View{}, e
+		}
+		if plan.Configuration.TemplateSemanticsVersion == 1 && !agent.Capabilities.Valid() {
+			return View{}, failure(409, "agent_incompatible")
 		}
 		plan.Target = "local"
 		plan.LocalAgentID = agent.LocalAgentID
@@ -586,14 +663,14 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	if len(frozen) > ConfigLimit {
 		return View{}, failure(413, "payload_too_large")
 	}
-	destination, e := ValidateDestination(plan.Configuration.URL)
+	destination, e := ValidateDestination(resolvedURL)
 	if plan.Target == "local" {
-		destination, e = runner.ValidateLocalURL(plan.Configuration.URL, *plan.Destination)
+		destination, e = runner.ValidateLocalURL(resolvedURL, *plan.Destination)
 	}
 	if e != nil {
 		return View{}, e
 	}
-	refs := requiredRefs(plan.Configuration)
+	refs := requiredPlanRefs(plan)
 	if len(refs) > 16 {
 		return View{}, failure(413, "payload_too_large")
 	}
@@ -607,12 +684,13 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		return View{}, e
 	}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), user, s.projectUpdate(p, 0, 1), s.sourceGuard(request, s.Table)}
+	actions = append(actions, envGuards...)
 	values := map[string]string{}
 	defer clear(values)
 	sources := []SecretSource{}
 	for _, ref := range refs {
 		r, e := s.get(ctx, s.Protected, p.PK, "SECRET#"+ref)
-		if e != nil || r.Kind != "savedSecret" || r.SchemaVersion != 1 || r.SecretID != ref || r.ProjectID != project || r.State != "active" {
+		if e != nil || !validateEnvironmentSecret(plan, r) || r.SecretID != ref || r.ProjectID != project {
 			return View{}, failure(400, "source_unavailable")
 		}
 		raw, e := s.decrypt(ctx, project, ref, "saved-secret", r.Revision, r.Envelope)
@@ -623,6 +701,9 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		clear(raw)
 		sources = append(sources, SecretSource{ref, r.Revision})
 		actions = append(actions, s.sourceGuard(r, s.Protected))
+	}
+	if e = s.preflightEnvironment(ctx, plan, values); e != nil {
+		return View{}, e
 	}
 	if plan.Target == "local" {
 		if _, e := runner.LocalRequestCapture(ctx, plan, values, *plan.Destination); e != nil {
@@ -641,6 +722,10 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	r := row{PK: p.PK, SK: "EXEC#" + execution, Kind: "execution", SchemaVersion: 1, ProjectID: project, OwnerID: owner, State: "queued", ExecutionID: execution, JobID: job, Plan: &plan, SubmittedAt: stamp(now), RecoveryGeneration: stage.RecoveryGeneration, LPK: p.PK + "#EXEC", LSK: stamp(now) + "#" + execution, HPK: p.PK + "#REQ#" + source, HSK: stamp(now) + "#" + execution}
 	j := row{PK: p.PK, SK: "JOB#" + job, Kind: "executionJob", SchemaVersion: 1, ProjectID: project, OwnerID: owner, State: "queued", ExecutionID: execution, JobID: job, Sources: sources, SubmittedAt: r.SubmittedAt, RecoveryGeneration: stage.RecoveryGeneration, DPK: dueShard(project), DSK: stamp(now.Add(10*time.Minute)) + "#" + job}
 	receipt = row{PK: p.PK, SK: receiptSK, Kind: "executionReceipt", SchemaVersion: 1, ProjectID: project, OwnerID: owner, InputDigest: inputDigest, ExecutionID: execution, ExpiresAt: stamp(now.Add(7 * 24 * time.Hour))}
+	if plan.TemplateSnapshot != nil {
+		receipt.TemplateSemanticsVersion = 1
+		receipt.EnvironmentContext = plan.TemplateSnapshot.EnvironmentContext
+	}
 	out := row{PK: p.PK, SK: "OUT#" + job, Kind: "executionOutbox", SchemaVersion: 1, ProjectID: project, OwnerID: owner, ExecutionID: execution, JobID: job, RecoveryGeneration: stage.RecoveryGeneration, State: "pending", DPK: dueShard(project), DSK: stamp(now) + "#" + job}
 	if plan.Target == "local" {
 		r.SchemaVersion = 2

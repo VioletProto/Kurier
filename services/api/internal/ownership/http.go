@@ -32,7 +32,7 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 	a.mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, 200, map[string]string{"service": "api", "status": "ok"})
 	})
-	for _, route := range []string{"DELETE /api/v1/local-agent/session", "GET /api/v1/local-agent/session", "POST /api/v1/projects/{projectId}/local-agent/poll", "POST /api/v1/projects/{projectId}/local-agent/jobs/{jobId}/result"} {
+	for _, route := range []string{"POST /api/v1/local-agent/capabilities", "DELETE /api/v1/local-agent/session", "GET /api/v1/local-agent/session", "POST /api/v1/projects/{projectId}/local-agent/poll", "POST /api/v1/projects/{projectId}/local-agent/jobs/{jobId}/result"} {
 		a.mux.HandleFunc(route, a.agentProtocol)
 	}
 	for _, route := range []string{"POST /api/v1/local-agents", "GET /api/v1/local-agents/current", "DELETE /api/v1/local-agents/{localAgentId}"} {
@@ -53,6 +53,11 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 		pattern string
 		handler endpoint
 	}{
+		{"POST /api/v1/projects/{projectId}/environments", a.environmentEndpoint},
+		{"GET /api/v1/projects/{projectId}/environments", a.environmentEndpoint},
+		{"GET /api/v1/projects/{projectId}/environments/{environmentId}", a.environmentEndpoint},
+		{"PATCH /api/v1/projects/{projectId}/environments/{environmentId}", a.environmentEndpoint},
+		{"DELETE /api/v1/projects/{projectId}/environments/{environmentId}", a.environmentEndpoint},
 		{"POST /api/v1/projects/{projectId}/workflows", a.workflowEndpoint},
 		{"GET /api/v1/projects/{projectId}/workflows", a.workflowEndpoint},
 		{"GET /api/v1/projects/{projectId}/workflows/{workflowId}", a.workflowEndpoint},

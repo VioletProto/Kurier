@@ -66,7 +66,7 @@ func (d *mcpReadSet) guards(s *Service) ([]dt.TransactWriteItem, error) {
 		names := map[string]string{}
 		values := map[string]dt.AttributeValue{}
 		parts := []string{}
-		for i, k := range []string{"version", "kind", "revision", "state", "deletionEpoch", "disabled", "recoveryGeneration", "mcpReadOnlySchemaVersion", "savedRequestsSchemaVersion", "workflowAssertionsSchemaVersion", "assertionSemanticsVersion", "normalExpiresAt", "pinned", "evidenceAvailability", "tokenHash", "expiresAt"} {
+		for i, k := range []string{"version", "kind", "revision", "state", "deletionEpoch", "disabled", "recoveryGeneration", "mcpReadOnlySchemaVersion", "savedRequestsSchemaVersion", "projectEnvironmentsSchemaVersion", "protectedSecretsSchemaVersion", "localAgentExecutionsSchemaVersion", "workflowAssertionsSchemaVersion", "assertionSemanticsVersion", "normalExpiresAt", "pinned", "evidenceAvailability", "tokenHash", "expiresAt"} {
 			n := fmt.Sprintf("#f%d", i)
 			names[n] = k
 			if v, ok := m[k]; ok {
@@ -381,15 +381,25 @@ func (s *Service) mcpData(ctx context.Context, c row, tool string, in wire.Input
 			delivery.Complete = true
 			legacy := capture.LegacyProjection()
 			delivery.Capture = &legacy
-			if capture.SchemaVersion == 2 {
+			if capture.Assertions != nil {
 				delivery.OmissionReason = pointer("assertions_not_exposed")
 				delivery.OmittedFields = []string{"assertions"}
+			}
+			if capture.SchemaVersion == 3 {
+				delivery.OmissionReason = pointer("environment_context_not_exposed")
+				if capture.Assertions != nil {
+					delivery.OmissionReason = pointer("unsupported_context_not_exposed")
+				}
+				delivery.OmittedFields = append(delivery.OmittedFields, "templateSemanticsVersion", "environmentContext")
 			}
 		} else {
 			delivery.OmissionReason = pointer("mcp_summary_view")
 			delivery.OmittedFields = []string{"request.url", "request.headers", "request.body.text", "response.headers", "response.body.text"}
-			if capture.SchemaVersion == 2 {
+			if capture.Assertions != nil {
 				delivery.OmittedFields = append(delivery.OmittedFields, "assertions")
+			}
+			if capture.SchemaVersion == 3 {
+				delivery.OmittedFields = append(delivery.OmittedFields, "templateSemanticsVersion", "environmentContext")
 			}
 			delivery.Summary = &wire.CaptureSummary{ProjectID: capture.ProjectID, ExecutionID: capture.ExecutionID, Status: capture.Status, Outcome: capture.Outcome, SubmittedAt: capture.SubmittedAt, StartedAt: capture.StartedAt, CompletedAt: capture.CompletedAt, HTTPStatus: capture.Response.HTTPStatus, Timing: capture.Timing, RequestBody: wire.BodySummary{Kind: capture.Request.Body.Kind, OmissionReason: capture.Request.Body.OmissionReason}, ResponseBody: wire.BodySummary{Kind: capture.Response.Body.Kind, OmissionReason: capture.Response.Body.OmissionReason}, Redaction: capture.Redaction}
 		}

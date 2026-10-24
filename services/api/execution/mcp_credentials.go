@@ -91,7 +91,7 @@ func knownMCP(item map[string]dt.AttributeValue, r row) bool {
 }
 func (s *Service) mcpStage(ctx context.Context) (row, error) {
 	r, e := s.stage(ctx)
-	if e != nil || r.MCPReadOnlySchemaVersion != 1 || (r.SavedRequestsSchemaVersion != 7 && r.SavedRequestsSchemaVersion != 8) {
+	if e != nil || r.MCPReadOnlySchemaVersion != 1 || (r.SavedRequestsSchemaVersion != 7 && r.SavedRequestsSchemaVersion != 8 && r.SavedRequestsSchemaVersion != 9) {
 		return row{}, safeError()
 	}
 	return r, nil

@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"strings"
 	"unicode/utf8"
 
@@ -80,6 +81,7 @@ func (c *EnvelopeCipher) encrypt(ctx context.Context, project, id string, revisi
 }
 
 type SecretMetadata struct {
+	ScalarType string `json:"scalarType,omitempty"`
 	SecretID   string `json:"secretId"`
 	ProjectID  string `json:"projectId"`
 	Revision   int64  `json:"revision"`
@@ -93,6 +95,7 @@ type SecretMetadata struct {
 	UpdatedAt  string `json:"updatedAt"`
 }
 type protectedRecord struct {
+	ScalarType    string    `dynamodbav:"scalarType,omitempty"`
 	PK            string    `dynamodbav:"PK"`
 	SK            string    `dynamodbav:"SK"`
 	Kind          string    `dynamodbav:"kind"`
@@ -110,12 +113,19 @@ type protectedRecord struct {
 }
 
 func (r protectedRecord) metadata() SecretMetadata {
-	return SecretMetadata{r.SecretID, r.ProjectID, r.Revision, r.State, r.ValueKind, r.HeaderSafe, r.QuerySafe, true, "••••••••", r.CreatedAt, r.UpdatedAt}
+	scalarType := r.ScalarType
+	if scalarType == "" {
+		scalarType = "untyped"
+		if r.ValueKind == "string" {
+			scalarType = "string"
+		}
+	}
+	return SecretMetadata{scalarType, r.SecretID, r.ProjectID, r.Revision, r.State, r.ValueKind, r.HeaderSafe, r.QuerySafe, true, "••••••••", r.CreatedAt, r.UpdatedAt}
 }
 func knownProtected(item map[string]types.AttributeValue, project string) (protectedRecord, bool) {
 	var r protectedRecord
 	allowed := map[string]bool{}
-	for _, k := range []string{"PK", "SK", "kind", "schemaVersion", "secretId", "projectId", "revision", "state", "valueKind", "headerSafe", "querySafe", "createdAt", "updatedAt", "envelope"} {
+	for _, k := range []string{"PK", "SK", "kind", "schemaVersion", "secretId", "projectId", "revision", "state", "valueKind", "scalarType", "headerSafe", "querySafe", "createdAt", "updatedAt", "envelope"} {
 		allowed[k] = true
 	}
 	for k := range item {
@@ -123,7 +133,10 @@ func knownProtected(item map[string]types.AttributeValue, project string) (prote
 			return r, false
 		}
 	}
-	if attributevalue.UnmarshalMap(item, &r) != nil || r.SchemaVersion != 1 || r.Kind != "savedSecret" || r.ProjectID != project || r.PK != "P#"+project || !bindingUUID.MatchString(r.SecretID) || r.SK != "SECRET#"+r.SecretID || r.Revision < 0 || r.CreatedAt == "" || r.UpdatedAt == "" || (r.ValueKind != "string" && r.ValueKind != "jsonBody" && r.ValueKind != "jsonScalar") {
+	if attributevalue.UnmarshalMap(item, &r) != nil || (r.SchemaVersion != 1 && r.SchemaVersion != 2) || r.Kind != "savedSecret" || r.ProjectID != project || r.PK != "P#"+project || !bindingUUID.MatchString(r.SecretID) || r.SK != "SECRET#"+r.SecretID || r.Revision < 0 || r.CreatedAt == "" || r.UpdatedAt == "" || (r.ValueKind != "string" && r.ValueKind != "jsonBody" && r.ValueKind != "jsonScalar") {
+		return r, false
+	}
+	if r.SchemaVersion == 1 && r.ScalarType != "" || r.SchemaVersion == 2 && !validScalarMetadata(r.ValueKind, r.ScalarType) {
 		return r, false
 	}
 	if r.State == "revoked" {
@@ -155,7 +168,7 @@ func (st *Store) secretContext(ctx context.Context, user, project string) (recor
 	if err != nil {
 		return stage, u, p, err
 	}
-	if (stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || stage.ProtectedSecretsSchemaVersion != 1 || st.protectedTable == "" {
+	if (stage.SavedRequestsSchemaVersion != 9 && stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || (stage.ProtectedSecretsSchemaVersion != 1 && stage.ProtectedSecretsSchemaVersion != 2) || st.protectedTable == "" {
 		return stage, u, p, unavailable()
 	}
 	return stage, u, p, nil
@@ -203,8 +216,13 @@ func (st *Store) secretPut(r protectedRecord, initial bool) (types.TransactWrite
 	var names map[string]string
 	if !initial {
 		condition = "#r = :r AND #s = :active AND schemaVersion = :schema AND #k = :kind"
-		values = map[string]types.AttributeValue{":r": n(r.Revision - 1), ":active": s("active"), ":schema": n(1), ":kind": s("savedSecret")}
+		values = map[string]types.AttributeValue{":r": n(r.Revision - 1), ":active": s("active"), ":schema": n(int64(r.SchemaVersion)), ":kind": s("savedSecret")}
 		names = map[string]string{"#r": "revision", "#s": "state", "#k": "kind"}
+		if r.SchemaVersion == 2 {
+			condition += " AND valueKind = :valueKind AND scalarType = :scalarType"
+			values[":valueKind"] = s(r.ValueKind)
+			values[":scalarType"] = s(r.ScalarType)
+		}
 	}
 	return types.TransactWriteItem{Put: &types.Put{TableName: aws.String(st.protectedTable), Item: item, ConditionExpression: aws.String(condition), ExpressionAttributeValues: values, ExpressionAttributeNames: names}}, err
 }
@@ -258,7 +276,7 @@ func (st *Store) protectConfiguration(ctx context.Context, project string, c *Re
 				return nil, err
 			}
 			now := timestamp(st.now())
-			r := protectedRecord{"P#" + project, "SECRET#" + id, "savedSecret", 1, id, project, 0, "active", f.kind, headerSafe, !control(*w.Value, false), now, now, env}
+			r := protectedRecord{"", "P#" + project, "SECRET#" + id, "savedSecret", 1, id, project, 0, "active", f.kind, headerSafe, !control(*w.Value, false), now, now, env}
 			action, err := st.secretPut(r, true)
 			if err != nil {
 				return nil, unavailable()
@@ -283,7 +301,7 @@ func (st *Store) protectConfiguration(ctx context.Context, project string, c *Re
 				}
 				if !checked[id] {
 					checked[id] = true
-					actions = append(actions, types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.protectedTable), Key: key(r.PK, r.SK), ConditionExpression: aws.String("revision = :r AND #s = :active AND schemaVersion = :schema AND #k = :kind"), ExpressionAttributeNames: map[string]string{"#s": "state", "#k": "kind"}, ExpressionAttributeValues: map[string]types.AttributeValue{":r": n(r.Revision), ":active": s("active"), ":schema": n(1), ":kind": s("savedSecret")}}})
+					actions = append(actions, st.secretSourceGuard(r))
 				}
 			} else if w.Action != "preserve" {
 				return nil, apiError(400, "invalid_secret_reference", "Secret reference is not eligible.")
@@ -332,7 +350,7 @@ func (st *Store) protectIfEnabled(ctx context.Context, stage record, project str
 	if len(slots(c)) == 0 {
 		return nil, nil
 	}
-	if (stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || stage.ProtectedSecretsSchemaVersion != 1 {
+	if (stage.SavedRequestsSchemaVersion != 9 && stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || (stage.ProtectedSecretsSchemaVersion != 1 && stage.ProtectedSecretsSchemaVersion != 2) {
 		return nil, unavailable()
 	}
 	return st.protectConfiguration(ctx, project, c, previous)
@@ -351,6 +369,11 @@ func (st *Store) ReplaceSecret(ctx context.Context, user, project, id, value str
 	}
 	if r.Revision != expected {
 		return SecretMetadata{}, requestStale()
+	}
+	if r.SchemaVersion == 2 && r.ScalarType != "untyped" {
+		if runner.ValidateTypedSecret(r.ValueKind, r.ScalarType, value) != nil {
+			return SecretMetadata{}, invalidConfiguration()
+		}
 	}
 	safe, err := validateSecretValue(r.ValueKind, value)
 	if err != nil {
@@ -436,7 +459,7 @@ func (st *Store) drainProtected(ctx context.Context, p, stage, work record) (rec
 		if !ok {
 			continue
 		}
-		actions = append(actions, types.TransactWriteItem{Delete: &types.Delete{TableName: aws.String(st.protectedTable), Key: key(r.PK, r.SK), ConditionExpression: aws.String("revision = :r AND #s = :s AND schemaVersion = :schema AND #k = :kind"), ExpressionAttributeNames: map[string]string{"#s": "state", "#k": "kind"}, ExpressionAttributeValues: map[string]types.AttributeValue{":r": n(r.Revision), ":s": s(r.State), ":schema": n(1), ":kind": s("savedSecret")}}})
+		actions = append(actions, types.TransactWriteItem{Delete: &types.Delete{TableName: aws.String(st.protectedTable), Key: key(r.PK, r.SK), ConditionExpression: aws.String("revision = :r AND #s = :s AND schemaVersion = :schema AND #k = :kind"), ExpressionAttributeNames: map[string]string{"#s": "state", "#k": "kind"}, ExpressionAttributeValues: map[string]types.AttributeValue{":r": n(r.Revision), ":s": s(r.State), ":schema": n(int64(r.SchemaVersion)), ":kind": s("savedSecret")}}})
 	}
 	work.ProtectedCursor = ""
 	if v, ok := page.LastEvaluatedKey["SK"].(*types.AttributeValueMemberS); ok {
@@ -457,4 +480,20 @@ func (st *Store) drainProtected(ctx context.Context, p, stage, work record) (rec
 	}
 	p.Version++
 	return p, len(page.LastEvaluatedKey) > 0, nil
+}
+
+func validScalarMetadata(kind, typ string) bool {
+	return kind == "string" && typ == "string" || kind == "jsonBody" && typ == "untyped" || kind == "jsonScalar" && (typ == "number" || typ == "boolean" || typ == "null")
+}
+
+func (st *Store) secretSourceGuard(r protectedRecord) types.TransactWriteItem {
+	expr := "revision = :r AND #s = :active AND #k = :kind AND schemaVersion = :schema AND valueKind = :valueKind"
+	values := map[string]types.AttributeValue{":r": n(r.Revision), ":active": s("active"), ":kind": s("savedSecret"), ":schema": n(int64(r.SchemaVersion)), ":valueKind": s(r.ValueKind)}
+	if r.SchemaVersion == 2 {
+		expr += " AND scalarType = :scalarType"
+		values[":scalarType"] = s(r.ScalarType)
+	} else {
+		expr += " AND attribute_not_exists(scalarType)"
+	}
+	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: &st.protectedTable, Key: key(r.PK, r.SK), ConditionExpression: &expr, ExpressionAttributeNames: map[string]string{"#s": "state", "#k": "kind"}, ExpressionAttributeValues: values}}
 }
