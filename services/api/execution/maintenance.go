@@ -320,6 +320,26 @@ func (s *Service) expire(ctx context.Context, ret row) error {
 	return s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), remove})
 }
 func knownExecution(item map[string]dt.AttributeValue, r row) bool {
+	if r.Capabilities != nil || r.ProjectEnvironmentsSchemaVersion != 0 || r.EnvironmentID != "" || r.ScalarType != "" {
+		return false
+	}
+	if r.TemplateSemanticsVersion != 0 && r.Kind != "executionReceipt" && r.Kind != "executionJob" && r.Kind != "executionLocalReceipt" {
+		return false
+	}
+
+	if r.TemplateSemanticsVersion < 0 || r.TemplateSemanticsVersion > 1 || r.TemplateSemanticsVersion == 0 && r.EnvironmentContext != nil {
+		return false
+	}
+	if r.Plan != nil {
+		if r.Plan.Configuration.TemplateSemanticsVersion == 1 {
+			if r.Plan.TemplateSnapshot.Validate() != nil {
+				return false
+			}
+		} else if r.Plan.Configuration.TemplateSemanticsVersion != 0 || r.Plan.TemplateSnapshot != nil {
+			return false
+		}
+	}
+
 	if r.WorkflowAssertionsSchemaVersion != 0 || r.AssertionSemanticsVersion < 0 || r.AssertionSemanticsVersion > 1 || r.AssertionSemanticsVersion != 0 && r.Kind != "executionWorkflowRun" {
 		return false
 	}
@@ -339,6 +359,9 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 	encoded, err := attributevalue.MarshalMap(r)
 	if err != nil {
 		return false
+	}
+	if r.TemplateSemanticsVersion == 1 && r.EnvironmentContext == nil {
+		encoded["environmentContext"] = &dt.AttributeValueMemberNULL{Value: true}
 	}
 	for k, v := range item {
 		if !reflect.DeepEqual(v, encoded[k]) {
@@ -409,7 +432,7 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 	case "executionLocalWait":
 		return r.SK == "LOCALWAIT#"+r.JobID && r.LocalAgentID != ""
 	case "executionLocalReceipt":
-		return r.SK == "JOB#"+r.JobID+"#RECEIPT" && r.InputDigest != "" && r.CanonicalizationVersion == 1 && r.LocalAgentID != ""
+		return r.SK == "JOB#"+r.JobID+"#RECEIPT" && r.InputDigest != "" && (r.CanonicalizationVersion == 1 || r.CanonicalizationVersion == 2 && r.TemplateSemanticsVersion == 1) && r.LocalAgentID != ""
 	case "executionReceipt":
 		return strings.HasPrefix(r.SK, "IDEM#execution-admission#")
 	}

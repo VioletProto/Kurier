@@ -36,6 +36,12 @@ func prepare(ctx context.Context, plan Plan, values map[string]string, resolver 
 }
 func preparePolicy(ctx context.Context, plan Plan, values map[string]string, resolver Resolver, local *Destination, resolveDNS bool) (*Prepared, error) {
 	preparedAt := time.Now()
+	resolved, corpus, resolveErr := ResolveTemplatePlan(plan, values)
+	if resolveErr != nil {
+		return nil, resolveErr
+	}
+	plan = resolved
+	values = corpus
 	c := plan.Configuration
 	var u *url.URL
 	var e error
@@ -225,6 +231,17 @@ func sanitizeHeaders(h http.Header, san *sanitizer, additional []string) []Heade
 }
 func NewEvidence(project, execution, submitted string, plan Plan) *Evidence {
 	e := &Evidence{SchemaVersion: 1, ProjectID: project, ExecutionID: execution, Source: Source{plan.RequestID, plan.Revision}, Target: "cloud", SubmittedAt: submitted, Status: "failed", Outcome: Outcome{Certainty: "not_dispatched"}, Request: RequestCapture{Method: plan.Configuration.Method, URL: plan.Configuration.URL, Headers: []Header{}, Body: emptyBody()}, Response: ResponseCapture{Headers: []Header{}, Body: emptyBody()}}
+	if plan.Configuration.TemplateSemanticsVersion == 1 && plan.TemplateSnapshot != nil {
+		e.SchemaVersion = 3
+		e.TemplateSemanticsVersion = 1
+		e.EnvironmentContext = plan.TemplateSnapshot.EnvironmentContext
+		u, err := ResolvedTemplateURL(plan)
+		if err == nil {
+			e.Request.URL = u
+		} else {
+			e.Request.URL = ""
+		}
+	}
 	e.Redaction.PolicyVersion = 1
 	e.Redaction.Applied = true
 	if plan.Target == "local" {
@@ -239,7 +256,9 @@ func (e *Evidence) Fail(code, certainty string) {
 }
 func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 	if p.workflow != nil && p.workflow.AssertionSemanticsVersion == 1 {
-		e.SchemaVersion = 2
+		if e.SchemaVersion != 3 {
+			e.SchemaVersion = 2
+		}
 		e.Assertions = NewAssertionEvaluation(p.workflow.Step, "not_dispatched")
 		defer CompleteAssertionAttempt(e, p.workflow.Step)
 	}
@@ -422,4 +441,25 @@ func (r *countReader) Read(p []byte) (int, error) {
 	n, e := r.reader.Read(p)
 	r.count += int64(n)
 	return n, e
+}
+
+// PreflightTemplatePlan checks final policy, serialization and header/body bounds
+// without DNS, opening a socket, or admitting an HTTP attempt.
+func PreflightTemplatePlan(ctx context.Context, plan Plan, values map[string]string) error {
+	var destination *Destination
+	if plan.Target == "local" {
+		destination = plan.Destination
+		if destination == nil {
+			return failure(400, "source_unavailable")
+		}
+	}
+	prepared, e := preparePolicy(ctx, plan, values, nil, destination, false)
+	if e != nil {
+		return e
+	}
+	prepared.transport.CloseIdleConnections()
+	if prepared.request.Body != nil {
+		_ = prepared.request.Body.Close()
+	}
+	return nil
 }

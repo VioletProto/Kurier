@@ -1,5 +1,18 @@
 # Project environments and variable resolution — proposed review packet
 
+## Accepted continuation — 2026-10-24
+
+Davian accepted this packet and its compatibility amendment at
+`d8be596a2306f2e888ef34e81dfa836bc4b84447`, including evidence 3,
+Work/Result 2, typed-secret rules and the corrected MCP complete-view projection.
+This acceptance supersedes the historical Proposed/unaccepted wording below
+within the environment scope. Scoped implementation and local/CI validation are
+authorized on `feat/project-environments`; publication is for implementation review.
+AWS inventory/preview, deployment, migration and activation remain held for
+separate review. OpenAPI's production import/validation contract remains unaccepted
+and has no allocated production evidence version. Acceptance is not deployment
+or genuine runtime evidence.
+
 Status: **Proposed, unaccepted.** Prepared 2026-10-22 on
 `docs/project-environments-review` from merged main `b24fb17680bcd5802950394bd2811a597d693014`.
 This task delivers a contract proposal and isolated local experiments only.

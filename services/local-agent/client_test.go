@@ -150,3 +150,54 @@ func TestAgentFixedDiagnosticsDoNotExposeHostedResponse(t *testing.T) {
 		t.Fatal("raw diagnostics exposed")
 	}
 }
+
+func TestEnvironmentGrantRequiresNegotiationAndPreservesResultIdentity(t *testing.T) {
+	var sends atomic.Int32
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sends.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer target.Close()
+	work, agent := testWork(t, target.URL)
+	work.SchemaVersion = 2
+	work.TemplateSemanticsVersion = 1
+	work.EnvironmentContext = &runner.EnvironmentContext{EnvironmentID: runner.NewID(), Revision: 7}
+	work.Plan.Configuration.TemplateSemanticsVersion = 1
+	work.Plan.TemplateSnapshot = &runner.TemplateSnapshot{SchemaVersion: 1, EnvironmentContext: work.EnvironmentContext, Variables: []runner.FrozenVariable{}}
+	var result runner.Result
+	hosted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if json.NewDecoder(r.Body).Decode(&result) != nil || runner.ValidateResultContext(result, work.Plan) != nil {
+			t.Error("agent lost environment identity")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": runner.Receipt{ExecutionID: work.ExecutionID, AcceptedAt: time.Now().Format(time.RFC3339Nano)}})
+	}))
+	defer hosted.Close()
+	client, e := newClient(hosted.URL, "test-only-agent-token")
+	if e != nil {
+		t.Fatal(e)
+	}
+	client.http = hosted.Client()
+	client.agent = agent
+	if client.workAllowed(work) || sends.Load() != 0 {
+		t.Fatal("unnegotiated client admitted Work2")
+	}
+	client.templateNegotiated = true
+	if !client.workAllowed(work) {
+		t.Fatal("negotiated Work2 rejected")
+	}
+	if e = client.execute(context.Background(), work, time.Now().Format(time.RFC3339Nano), time.Now()); e != nil {
+		t.Fatal(e)
+	}
+	if result.SchemaVersion != 2 || result.EnvironmentContext == nil || result.EnvironmentContext.Revision != 7 || sends.Load() != 1 {
+		t.Fatal("result version or send count incorrect")
+	}
+	tampered := work
+	other := *work.EnvironmentContext
+	other.Revision++
+	tampered.EnvironmentContext = &other
+	if client.workAllowed(tampered) {
+		t.Fatal("grant accepted mismatched frozen environment identity")
+	}
+}

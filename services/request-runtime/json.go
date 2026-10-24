@@ -188,7 +188,7 @@ func NonNullObject(raw []byte) error {
 }
 func ParseOptions(raw []byte) (Options, error) {
 	o := Options{TimeoutSeconds: 30, ResponseRedaction: RedactionPolicy{Headers: []string{}, JSONPointers: []string{}}}
-	if e := NonNullObject(raw); e != nil {
+	if e := NonNullEnvironmentPolicy(raw); e != nil {
 		return o, e
 	}
 	if e := StrictJSON(raw, &o); e != nil {

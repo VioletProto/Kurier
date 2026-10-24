@@ -38,20 +38,22 @@ type Agent struct {
 	RecoveryGeneration string  `json:"recoveryGeneration"`
 }
 type Work struct {
-	SchemaVersion      int    `json:"schemaVersion"`
-	ProjectID          string `json:"projectId"`
-	JobID              string `json:"jobId"`
-	ExecutionID        string `json:"executionId"`
-	LocalAgentID       string `json:"localAgentId"`
-	RecoveryGeneration string `json:"recoveryGeneration"`
-	LeaseID            string `json:"leaseId"`
-	Fence              int64  `json:"fence"`
-	Nonce              string `json:"nonce"`
-	DispatchIntentAt   string `json:"dispatchIntentAt"`
-	ExecuteNotAfter    string `json:"executeNotAfter"`
-	Deadline           string `json:"deadline"`
-	Plan               Plan   `json:"plan"`
-	ProtectedInputs    struct {
+	TemplateSemanticsVersion int                 `json:"templateSemanticsVersion,omitempty"`
+	EnvironmentContext       *EnvironmentContext `json:"environmentContext,omitempty"`
+	SchemaVersion            int                 `json:"schemaVersion"`
+	ProjectID                string              `json:"projectId"`
+	JobID                    string              `json:"jobId"`
+	ExecutionID              string              `json:"executionId"`
+	LocalAgentID             string              `json:"localAgentId"`
+	RecoveryGeneration       string              `json:"recoveryGeneration"`
+	LeaseID                  string              `json:"leaseId"`
+	Fence                    int64               `json:"fence"`
+	Nonce                    string              `json:"nonce"`
+	DispatchIntentAt         string              `json:"dispatchIntentAt"`
+	ExecuteNotAfter          string              `json:"executeNotAfter"`
+	Deadline                 string              `json:"deadline"`
+	Plan                     Plan                `json:"plan"`
+	ProtectedInputs          struct {
 		Values map[string]string `json:"values"`
 	} `json:"protectedInputs"`
 	Destination Destination `json:"destination"`
@@ -70,11 +72,13 @@ type Capture struct {
 	Redaction Redaction       `json:"redaction"`
 }
 type Result struct {
-	SchemaVersion int     `json:"schemaVersion"`
-	LeaseID       string  `json:"leaseId"`
-	Fence         int64   `json:"fence"`
-	Nonce         string  `json:"nonce"`
-	Capture       Capture `json:"capture"`
+	TemplateSemanticsVersion int                 `json:"templateSemanticsVersion,omitempty"`
+	EnvironmentContext       *EnvironmentContext `json:"environmentContext,omitempty"`
+	SchemaVersion            int                 `json:"schemaVersion"`
+	LeaseID                  string              `json:"leaseId"`
+	Fence                    int64               `json:"fence"`
+	Nonce                    string              `json:"nonce"`
+	Capture                  Capture             `json:"capture"`
 }
 type Receipt struct {
 	ExecutionID string `json:"executionId"`

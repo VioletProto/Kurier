@@ -41,7 +41,7 @@ func s(v string) types.AttributeValue { return &types.AttributeValueMemberS{Valu
 func n(v int64) types.AttributeValue  { return &types.AttributeValueMemberN{Value: fmt.Sprint(v)} }
 func encode(r record) (map[string]types.AttributeValue, error) {
 	item, err := attributevalue.MarshalMap(r)
-	if err == nil && (r.Kind == "request" || r.Kind == "requestTombstone") {
+	if err == nil && (r.Kind == "request" || r.Kind == "requestTombstone" || r.Kind == "environment" || r.Kind == "environmentTombstone") {
 		item["revision"] = n(r.Revision)
 		delete(item, "version")
 	}
@@ -59,13 +59,34 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 		return record{}, missing()
 	}
 	var r record
-	if attributevalue.UnmarshalMap(result.Item, &r) != nil || (r.SchemaVersion != 1 && !(r.Kind == "request" && r.SchemaVersion == 2)) {
+	if attributevalue.UnmarshalMap(result.Item, &r) != nil || (r.SchemaVersion != 1 && !(r.Kind == "request" && (r.SchemaVersion == 2 || r.SchemaVersion == 3))) {
 		return record{}, unavailable()
+	}
+	if r.Kind == "environment" || r.Kind == "environmentTombstone" {
+		allowed := map[string]bool{}
+		for _, k := range []string{"PK", "SK", "kind", "schemaVersion", "projectId", "environmentId", "revision", "state", "configurationJSON", "createdAt", "updatedAt"} {
+			allowed[k] = true
+		}
+		for k := range result.Item {
+			if !allowed[k] {
+				return record{}, unavailable()
+			}
+		}
 	}
 	return r, nil
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
+	if r.SavedRequestsSchemaVersion == 9 {
+		if err != nil || st.executions == nil || st.protectedTable == "" || st.cipher == nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != 1 || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
+			return record{}, unavailable()
+		}
+		return r, nil
+	}
+	if r.ProjectEnvironmentsSchemaVersion != 0 {
+		return record{}, unavailable()
+	}
+
 	// Version 8 preserves the version-7 baseline and adds assertions exactly once.
 	schema := r.SavedRequestsSchemaVersion
 	if schema == 8 {
@@ -163,6 +184,9 @@ func pause(ctx context.Context, attempt int) error {
 	}
 }
 func (st *Store) stageGuard(stage record) types.TransactWriteItem {
+	if stage.SavedRequestsSchemaVersion == 9 {
+		return st.environmentStageGuard(stage)
+	}
 	mode := "localEmptyProjectsOnly = :yes"
 	values := map[string]types.AttributeValue{":active": s("active"), ":gen": s(stage.RecoveryGeneration), ":yes": &types.AttributeValueMemberBOOL{Value: true}}
 	if stage.SavedRequestsSchemaVersion >= 1 {
@@ -477,6 +501,19 @@ func (st *Store) CleanupProject(ctx context.Context, projectID string) (Deletion
 	}
 	if more {
 		return *r.Operation, conflict()
+	}
+	if stage.ProjectEnvironmentsSchemaVersion == 1 {
+		work, err = st.get(ctx, r.PK, workKey)
+		if err != nil {
+			return DeletionOperation{}, err
+		}
+		r, more, err = st.drainEnvironments(ctx, r, stage, work)
+		if err != nil {
+			return DeletionOperation{}, err
+		}
+		if more {
+			return *r.Operation, conflict()
+		}
 	}
 	if stage.SavedRequestsSchemaVersion >= 3 {
 		if st.executions == nil {

@@ -14,6 +14,11 @@ import (
 func agentQueue(a, p string) string { return "AGENT#" + a + "#PROJECT#" + p }
 func newWork(j row, p Plan, values map[string]string, nonce string) *runner.Work {
 	w := &runner.Work{SchemaVersion: 1, ProjectID: j.ProjectID, JobID: j.JobID, ExecutionID: j.ExecutionID, LocalAgentID: j.LocalAgentID, RecoveryGeneration: j.RecoveryGeneration, LeaseID: j.LeaseID, Fence: j.Fence, Nonce: nonce, DispatchIntentAt: j.DispatchIntentAt, ExecuteNotAfter: j.ExecuteNotAfter, Deadline: j.Deadline, Plan: p, Destination: *p.Destination}
+	if p.TemplateSnapshot != nil {
+		w.SchemaVersion = 2
+		w.TemplateSemanticsVersion = 1
+		w.EnvironmentContext = p.TemplateSnapshot.EnvironmentContext
+	}
 	w.ProtectedInputs.Values = values
 	return w
 }
@@ -110,7 +115,14 @@ func (s *Service) PollAgent(ctx context.Context, token, project string) (runner.
 			if e != nil || anchor.Plan == nil || anchor.Plan.Destination == nil {
 				return response, safeError()
 			}
-			d, e := agentDestination(a, project, anchor.Plan.Configuration.URL)
+			resolvedURL, e := runner.ResolvedTemplateURL(*anchor.Plan)
+			if e != nil {
+				return response, e
+			}
+			if anchor.Plan.TemplateSnapshot != nil && !a.Capabilities.Valid() {
+				return response, failure(409, "agent_incompatible")
+			}
+			d, e := agentDestination(a, project, resolvedURL)
 			if e != nil || d != *anchor.Plan.Destination {
 				return response, failure(409, "local_permission_required")
 			}
@@ -124,10 +136,16 @@ func (s *Service) PollAgent(ctx context.Context, token, project string) (runner.
 				return response, e
 			}
 			guards := []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), user, s.sourceGuard(source, s.Table)}
+			envGuards, envErr := s.environmentGuards(ctx, project, *anchor.Plan)
+			if envErr != nil {
+				_ = s.reconcileLocal(ctx, project, j.JobID)
+				continue
+			}
+			guards = append(guards, envGuards...)
 			eligible := true
 			for _, ref := range j.Sources {
 				r, e := s.get(ctx, s.Protected, j.PK, "SECRET#"+ref.SecretID)
-				if e != nil || r.Kind != "savedSecret" || r.State != "active" || r.SecretID != ref.SecretID || r.ProjectID != project {
+				if e != nil || !validateEnvironmentSecret(*anchor.Plan, r) || r.SecretID != ref.SecretID || r.ProjectID != project {
 					eligible = false
 					break
 				}
@@ -298,6 +316,12 @@ func (s *Service) reconcileLocal(ctx context.Context, project, jobID string) err
 		certainty = "unknown"
 	}
 	if reason == "" && j.State == "queued" {
+		if _, err := s.environmentGuards(ctx, project, *anchor.Plan); err != nil {
+			reason = "source_unavailable"
+		}
+		if anchor.Plan.TemplateSnapshot != nil && !a.Capabilities.Valid() {
+			reason = "source_unavailable"
+		}
 		if a.State != "active" || a.ExpiresAt <= stamp(s.now()) || a.RecoveryGeneration != stage.RecoveryGeneration {
 			reason = "source_unavailable"
 		}

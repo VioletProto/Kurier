@@ -35,7 +35,22 @@ func (a *Server) agentManagement(w http.ResponseWriter, r *http.Request, u User)
 		if e != nil {
 			return localAgentError(e)
 		}
-		success(w, 200, map[string]any{"agent": v, "serverTime": s.ServerTime()})
+		expected := []string{}
+		if v != nil {
+			expected = append(expected, v.LocalAgentID)
+		}
+		caps, enabled, e := s.OwnerAgentCapabilities(r.Context(), u.UserID, expected...)
+		if e != nil {
+			return localAgentError(e)
+		}
+		var ownerView any = v
+		if enabled && v != nil {
+			ownerView = struct {
+				runner.Agent
+				Capabilities *runner.AgentCapabilities `json:"capabilities"`
+			}{*v, caps}
+		}
+		success(w, 200, map[string]any{"agent": ownerView, "serverTime": s.ServerTime()})
 		return nil
 	case "DELETE":
 		if e := emptyAgentBody(r); e != nil {
@@ -74,7 +89,21 @@ func (a *Server) agentManagement(w http.ResponseWriter, r *http.Request, u User)
 		if created {
 			status = 201
 		}
-		success(w, status, response)
+		var result any = response
+		capabilities, enabled, e := s.OwnerAgentCapabilities(r.Context(), u.UserID, response.Agent.LocalAgentID)
+		if e != nil {
+			return localAgentError(e)
+		}
+		if enabled {
+			result = struct {
+				Agent any     `json:"agent"`
+				Token *string `json:"token"`
+			}{struct {
+				runner.Agent
+				Capabilities *runner.AgentCapabilities `json:"capabilities"`
+			}{response.Agent, capabilities}, response.Token}
+		}
+		success(w, status, result)
 		return nil
 	}
 	return missing()
@@ -93,6 +122,37 @@ func (a *Server) agentProtocol(w http.ResponseWriter, r *http.Request) {
 	}
 	token := strings.TrimPrefix(h[0], "Bearer ")
 	switch r.Pattern {
+	case "POST /api/v1/local-agent/capabilities":
+		if e := s.CheckAgentCredential(r.Context(), token); e != nil {
+			fail(e)
+			return
+		}
+		if r.Header.Get("Content-Encoding") != "" {
+			fail(invalidConfiguration())
+			return
+		}
+		media, _, e := mime.ParseMediaType(r.Header.Get("Content-Type"))
+		if e != nil || media != "application/json" {
+			fail(invalidConfiguration())
+			return
+		}
+		raw, e := io.ReadAll(http.MaxBytesReader(w, r.Body, 1024))
+		if e != nil {
+			fail(apiError(413, "payload_too_large", "Capability declaration exceeds its limit."))
+			return
+		}
+		var c runner.AgentCapabilities
+		if e = runner.StrictJSON(raw, &c); e != nil {
+			fail(e)
+			return
+		}
+		result, e := s.DeclareAgentCapabilities(r.Context(), token, c)
+		if e != nil {
+			fail(e)
+			return
+		}
+		success(w, 200, result)
+
 	case "DELETE /api/v1/local-agent/session":
 		if e := emptyAgentBody(r); e != nil {
 			fail(e)

@@ -35,13 +35,16 @@ func (a *Server) workflowEndpoint(w http.ResponseWriter, r *http.Request, u User
 			return e
 		}
 		var options execution.RunOptions
-		if execution.NonNullObject(raw) != nil || execution.StrictJSON(raw, &options) != nil {
+		if runner.NonNullEnvironmentPolicy(raw) != nil || execution.StrictJSON(raw, &options) != nil {
 			return apiError(400, "invalid_request", "Invalid workflow options.")
 		}
 		rev := int64(0)
 		rerun := run != ""
 		source := wf
 		if rerun {
+			if options.Environment != nil {
+				return apiError(400, "invalid_request", "Reruns preserve their frozen environment selections.")
+			}
 			source = run
 		} else {
 			rev, e = precondition(r)

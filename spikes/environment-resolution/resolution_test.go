@@ -426,14 +426,15 @@ func TestSharedRedactionPrimitivesAndLegacyReaders(t *testing.T) {
 	}
 	// Existing strict wire readers deny new fields; rollout cannot assume this
 	// is an additive reader-compatible change or turn markers on automatically.
-	if _, err := execution.ParseOptions([]byte(`{"environment":{"environmentId":"e","revision":0}}`)); err == nil {
+	var options legacyOptionsV1
+	if err := execution.StrictJSON([]byte(`{"environment":{"environmentId":"11111111-1111-4111-8111-111111111111","revision":0}}`), &options); err == nil {
 		t.Fatal("legacy submit silently accepts environment")
 	}
-	var step execution.WorkflowStep
+	var step legacyWorkflowStepV1
 	if execution.StrictJSON([]byte(`{"stepId":"s","requestId":"r","requestRevision":0,"environment":{"mode":"inherit"}}`), &step) == nil {
 		t.Fatal("legacy step silently accepts environment")
 	}
-	var config execution.Configuration
+	var config legacyConfigurationV1
 	if execution.StrictJSON([]byte(`{"templateSemanticsVersion":1}`), &config) == nil {
 		t.Fatal("legacy plan silently accepts marker")
 	}

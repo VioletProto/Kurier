@@ -3,6 +3,7 @@ package ownership
 import (
 	"bytes"
 	"encoding/json"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"regexp"
 	"strconv"
 	"strings"
@@ -261,6 +262,9 @@ func pointerValue(v any, p string) (any, bool) {
 	return v, true
 }
 func publicBodyJSON(v any, fields []SecretField) bool {
+	return publicTemplateBodyJSON(v, fields, false)
+}
+func publicTemplateBodyJSON(v any, fields []SecretField, templated bool) bool {
 	paths := map[string]bool{}
 	for _, f := range fields {
 		paths[f.Pointer] = true
@@ -274,7 +278,7 @@ func publicBodyJSON(v any, fields []SecretField) bool {
 		case map[string]any:
 			for k, v := range a {
 				q := p + "/" + strings.ReplaceAll(strings.ReplaceAll(k, "~", "~0"), "/", "~1")
-				if credentialName(k) && !paths[q] {
+				if credentialName(k) && !paths[q] && !(templated && templateScalarString(v)) {
 					return false
 				}
 				if !walk(v, q) {
@@ -318,3 +322,5 @@ func configurationSize(c RequestConfiguration) (int, error) {
 	raw, err := configurationJSON(c)
 	return len(raw), err
 }
+
+func templateScalarString(v any) bool { s, ok := v.(string); return ok && runner.HasTemplate(s) }

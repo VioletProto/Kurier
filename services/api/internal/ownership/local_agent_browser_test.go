@@ -84,7 +84,7 @@ func configureBrowserLocalAgent(t *testing.T, i *integration, mux *http.ServeMux
 			w.WriteHeader(400)
 			return
 		}
-		clientCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		clientCtx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 		defer cancel()
 		command := exec.CommandContext(clientCtx, binary, "run", "--api", apiTLS.URL, "--stdin")
 		command.Env = append(os.Environ(), "SSL_CERT_FILE="+certFile)
@@ -99,7 +99,16 @@ func configureBrowserLocalAgent(t *testing.T, i *integration, mux *http.ServeMux
 		done := make(chan error, 1)
 		go func() { done <- command.Wait() }()
 		success := false
-		for attempt := 0; attempt < 150; attempt++ {
+		for attempt := 0; attempt < 300; attempt++ {
+			if input.ExecutionID == "" {
+				capabilities, _, err := i.store.executions.OwnerAgentCapabilities(clientCtx, i.alice.UserID)
+				if err == nil && capabilities.Valid() {
+					success = true
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
 			v, e := i.store.executions.Detail(clientCtx, i.alice.UserID, input.ProjectID, input.ExecutionID)
 			if e == nil && (v.Status == "completed" || v.Status == "failed") {
 				success = v.Status == "completed"

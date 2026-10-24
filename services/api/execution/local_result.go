@@ -103,7 +103,14 @@ func (s *Service) UploadAgentResult(ctx context.Context, token, project, jobID s
 	if e != nil || anchor.Plan == nil || anchor.Plan.Destination == nil {
 		return runner.Receipt{}, safeError()
 	}
-	if _, e = agentDestination(a, project, anchor.Plan.Configuration.URL); e != nil {
+	if e = runner.ValidateResultContext(result, *anchor.Plan); e != nil {
+		return runner.Receipt{}, e
+	}
+	resolvedURL, e := runner.ResolvedTemplateURL(*anchor.Plan)
+	if e != nil {
+		return runner.Receipt{}, e
+	}
+	if _, e = agentDestination(a, project, resolvedURL); e != nil {
 		return runner.Receipt{}, e
 	}
 	values, e := s.bindings(ctx, j)
@@ -124,6 +131,9 @@ func (s *Service) UploadAgentResult(ctx context.Context, token, project, jobID s
 	evidence.Response = capture.Response
 	evidence.Timing = capture.Timing
 	evidence.Redaction = capture.Redaction
+	j.CanonicalizationVersion = result.SchemaVersion
+	j.TemplateSemanticsVersion = result.TemplateSemanticsVersion
+	j.EnvironmentContext = result.EnvironmentContext
 	j.CandidateDigest = digest
 	j.HMACKeyID = keyID
 	if e = s.publishLocal(ctx, j, evidence); e != nil {
@@ -187,7 +197,9 @@ func (s *Service) publishLocal(ctx context.Context, expected row, evidence *Evid
 		j.CandidateCompletedAt = evidence.CompletedAt
 		j.CandidateDigest = expected.CandidateDigest
 		j.HMACKeyID = expected.HMACKeyID
-		j.CanonicalizationVersion = 1
+		j.CanonicalizationVersion = expected.CanonicalizationVersion
+		j.TemplateSemanticsVersion = expected.TemplateSemanticsVersion
+		j.EnvironmentContext = expected.EnvironmentContext
 		j.CandidateTicket = ticket.SK
 		j.Version++
 		actions, e := s.localWriterActions(ctx, stage, p, j)

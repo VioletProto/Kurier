@@ -9,8 +9,11 @@ import (
 // CanonicalResult is version 1: explicit null scalars, ordered arrays and body
 // text retained. Typed integer fields reject unsafe/decimal/nonfinite numbers.
 func CanonicalResult(r Result) ([]byte, error) {
+	if r.SchemaVersion == 1 && (r.TemplateSemanticsVersion != 0 || r.EnvironmentContext != nil) || r.SchemaVersion == 2 && r.TemplateSemanticsVersion != 1 {
+		return nil, failure(400, "invalid_request")
+	}
 	nonce, e := base64.RawURLEncoding.DecodeString(r.Nonce)
-	if e != nil || len(nonce) != 32 || base64.RawURLEncoding.EncodeToString(nonce) != r.Nonce || r.SchemaVersion != 1 || r.Fence < 1 || r.Fence > 9007199254740991 || r.LeaseID == "" {
+	if e != nil || len(nonce) != 32 || base64.RawURLEncoding.EncodeToString(nonce) != r.Nonce || (r.SchemaVersion != 1 && r.SchemaVersion != 2) || r.Fence < 1 || r.Fence > 9007199254740991 || r.LeaseID == "" {
 		return nil, failure(400, "invalid_request")
 	}
 	if r.Capture.Request.Headers == nil {
@@ -30,7 +33,7 @@ func CanonicalResult(r Result) ([]byte, error) {
 	return canonical, nil
 }
 func ResultFromEvidence(w Work, e *Evidence) (Result, error) {
-	r := Result{1, w.LeaseID, w.Fence, w.Nonce, CaptureEvidence(e)}
+	r := Result{SchemaVersion: w.SchemaVersion, LeaseID: w.LeaseID, Fence: w.Fence, Nonce: w.Nonce, Capture: CaptureEvidence(e), TemplateSemanticsVersion: w.TemplateSemanticsVersion, EnvironmentContext: w.EnvironmentContext}
 	raw, _ := json.Marshal(r)
 	if !resultTransportFits(raw) {
 		r.Capture.Request.Body = omitted("encoded_evidence_limit")

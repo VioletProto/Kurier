@@ -1,3 +1,4 @@
+import { Environments } from "./Environments";
 import { MCPCredentials } from "./MCPCredentials";
 import { flushSync } from "react-dom";
 import { Workflows } from "./Workflows";
@@ -537,6 +538,13 @@ function Projects({ onExpired }: { onExpired: () => void }) {
                 projectName={detail.project.name}
                 disabled={busy}
                 onSessionExpired={onExpired}
+              />
+              <Environments
+                key={"environments-" + detail.project.projectId}
+                projectId={detail.project.projectId}
+                disabled={busy}
+                onExpired={onExpired}
+                onGateChanged={() => setStale(true)}
               />
               <Workflows
                 key={"workflows-" + detail.project.projectId}
