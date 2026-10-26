@@ -80,6 +80,18 @@ introduced. Reviewing deployment and an actual closed-stage transition is separa
 
 ## Verification and practical limits
 
+The decoded-JSON correction (2026-10-26) removes a raw-byte delimiter shortcut:
+JSON string values are inspected after escape decoding. Bodies with no
+replacements retain their exact original bytes; replaced bodies retain untouched
+numeric tokens and insert variable values once. Regressions cover Unicode and
+mixed delimiters, root/array values, inert inserted markers, protected-value
+redaction, malformed input and traversal/reference/output bounds. A controlled
+HTTP execution checks the actual outgoing bytes; API freeze/rerun fixtures also
+use an escaped template. Review of discovery, authoring validation, workflow
+overlap checks and cloud/local execution found those paths already use decoded
+string values through the shared resolver; no protocol allocation changes are
+needed.
+
 The verification campaign covers:
 
 - full repository formatting, lint, unit/tooling/infra tests, web build and Go

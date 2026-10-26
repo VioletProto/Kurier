@@ -60,7 +60,7 @@ func fixtureEnvironment(t *testing.T, f *protocolFixture, url string) (runner.En
 	c.Method = "POST"
 	c.URL = url
 	c.Headers = []Field{{Name: "Authorization", Value: "Bearer {{token}}", Enabled: true}}
-	c.Body = &RequestBody{Type: "json", Text: `{"n":"{{n}}"}`}
+	c.Body = &RequestBody{Type: "json", Text: `{"n":"\u007b\u007bn\u007d\u007d"}`}
 	raw, _ = json.Marshal(c)
 	request.ConfigurationJSON = string(raw)
 	request.SchemaVersion = 3

@@ -131,10 +131,8 @@ func renderTemplateJSON(raw []byte, vars map[string]templateScalar) ([]byte, boo
 	if StrictJSON(raw, &root) != nil {
 		return nil, false, failure(400, "template_invalid")
 	}
-	if !strings.Contains(string(raw), "{{") && !strings.Contains(string(raw), "}}") {
-		return append([]byte(nil), raw...), false, nil
-	}
 	protected := false
+	replaced := false
 	nodes := 0
 	var visit func(any) (any, error)
 	visit = func(v any) (any, error) {
@@ -144,7 +142,13 @@ func renderTemplateJSON(raw []byte, vars map[string]templateScalar) ([]byte, boo
 		}
 		switch x := v.(type) {
 		case string:
+			// Delimiters belong to the decoded value, including Unicode escapes.
+			// Visit only source values: inserted strings remain inert.
+			if !HasTemplate(x) {
+				return x, nil
+			}
 			r, s, err := renderTemplate(x, "json", vars)
+			replaced = true
 			protected = protected || s
 			return r, err
 		case map[string]any:
@@ -172,6 +176,11 @@ func renderTemplateJSON(raw []byte, vars map[string]templateScalar) ([]byte, boo
 	root, err := visit(root)
 	if err != nil {
 		return nil, false, err
+	}
+	if !replaced {
+		// Validation still visits the tree, but a literal body keeps all source
+		// whitespace, escapes, property order and numeric token spellings.
+		return append([]byte(nil), raw...), false, nil
 	}
 	out := templateCompact(root)
 	if len(out) > 65536 {
