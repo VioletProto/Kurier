@@ -33,6 +33,9 @@ func validWorkflowSubmission(run row) bool {
 // worker buffer yields unavailable checks with the original dispatch certainty.
 func (s *Service) workflowEvidence(ctx context.Context, job row, evidence *Evidence, initialize bool) error {
 	if job.RunID == "" {
+		if evidence.Assertions != nil {
+			return safeError()
+		}
 		return runner.ValidateEvidenceVersion(evidence)
 	}
 	run, err := s.get(ctx, s.Table, job.PK, "RUN#"+job.RunID)
@@ -44,12 +47,14 @@ func (s *Service) workflowEvidence(ctx context.Context, job row, evidence *Evide
 		return safeError()
 	}
 	step := def.Steps[job.Position]
-	if initialize && run.AssertionSemanticsVersion == 1 && evidence.SchemaVersion == 1 {
+	if initialize && run.AssertionSemanticsVersion == 1 && evidence.Assertions == nil {
 		reason := "not_dispatched"
 		if evidence.Outcome.Certainty != "not_dispatched" {
 			reason = "evaluation_unavailable"
 		}
-		evidence.SchemaVersion = 2
+		if evidence.SchemaVersion != 3 {
+			evidence.SchemaVersion = 2
+		}
 		evidence.Assertions = runner.NewAssertionEvaluation(step, reason)
 	}
 	if runner.ValidateFrozenAssertions(evidence, step, run.AssertionSemanticsVersion) != nil {
@@ -143,7 +148,16 @@ func (s *Service) workflowRuntime(ctx context.Context, job row, plan Plan) (Plan
 			}
 		}
 	}
-	resolved, e := runner.ApplyWorkflowBindings(plan, definition.Steps[job.Position], outputs, values)
+	templatePlan, templateValues, templateErr := runner.ResolveTemplatePlan(plan, values)
+	if templateErr != nil {
+		clear(values)
+		return plan, nil, nil, templateErr
+	}
+	if plan.TemplateSnapshot != nil {
+		clear(values)
+		values = templateValues
+	}
+	resolved, e := runner.ApplyWorkflowBindings(templatePlan, definition.Steps[job.Position], outputs, values)
 	if e != nil {
 		clear(values)
 		return plan, nil, nil, e
@@ -218,10 +232,33 @@ func (s *Service) workflowSourceGuards(ctx context.Context, run row) ([]dt.Trans
 	if e != nil {
 		return nil, e
 	}
+	steps, err := s.runSteps(ctx, run)
+	if err != nil {
+		return nil, err
+	}
+	seenEnvironments := map[string]bool{}
+	for _, step := range steps {
+		guards, err := s.environmentGuards(ctx, run.ProjectID, *step.Plan)
+		if err != nil {
+			return nil, err
+		}
+		for _, guard := range guards {
+			sk := guard.ConditionCheck.Key["SK"].(*dt.AttributeValueMemberS).Value
+			if !seenEnvironments[sk] {
+				actions = append(actions, guard)
+				seenEnvironments[sk] = true
+			}
+		}
+	}
 	for _, source := range run.Sources {
 		r, e := s.get(ctx, s.Protected, run.PK, "SECRET#"+source.SecretID)
 		if e != nil || r.Kind != "savedSecret" || r.State != "active" {
 			return nil, failure(400, "source_unavailable")
+		}
+		for _, step := range steps {
+			if !validateEnvironmentSecret(*step.Plan, r) {
+				return nil, failure(400, "source_unavailable")
+			}
 		}
 		actions = append(actions, s.sourceGuard(r, s.Protected))
 	}

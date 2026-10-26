@@ -34,7 +34,7 @@ func tokenHash(v string) string { h := sha256.Sum256([]byte(v)); return hex.Enco
 
 // Future/unknown credential fields cannot be silently discarded by a CAS write.
 func knownAgent(item map[string]dt.AttributeValue, r row) bool {
-	if r.SchemaVersion != 1 {
+	if r.SchemaVersion != 1 || r.Capabilities != nil && !r.Capabilities.Valid() {
 		return false
 	}
 	encoded, e := attributevalue.MarshalMap(r)
@@ -89,7 +89,7 @@ func agentView(r row) Agent {
 }
 func (s *Service) localStage(ctx context.Context) (row, error) {
 	stage, e := s.stage(ctx)
-	if e != nil || stage.LocalAgentExecutionsSchemaVersion != 1 {
+	if e != nil || (stage.LocalAgentExecutionsSchemaVersion != 1 && stage.LocalAgentExecutionsSchemaVersion != 2) {
 		return row{}, safeError()
 	}
 	return stage, nil
@@ -394,4 +394,65 @@ func (s *Service) ServerTime() string { return stamp(s.now()) }
 func (s *Service) CheckAgentCredential(ctx context.Context, token string) error {
 	_, _, e := s.authenticateAgent(ctx, token)
 	return e
+}
+
+// DeclareAgentCapabilities binds this exact declaration to the authenticated
+// credential and generation. It never creates a job or extends target scope.
+func (s *Service) DeclareAgentCapabilities(ctx context.Context, token string, c runner.AgentCapabilities) (*runner.AgentCapabilities, error) {
+	stage, a, e := s.authenticateAgent(ctx, token)
+	if e != nil {
+		return nil, e
+	}
+	if stage.ProjectEnvironmentsSchemaVersion != 1 {
+		return nil, failure(404, "not_found")
+	}
+	if !c.Valid() {
+		return nil, failure(409, "agent_incompatible")
+	}
+	if a.Capabilities != nil {
+		if !reflect.DeepEqual(a.Capabilities, &c) {
+			return nil, failure(409, "agent_incompatible")
+		}
+		return a.Capabilities, nil
+	}
+	if a.ActiveJob != "" {
+		return nil, failure(409, "agent_incompatible")
+	}
+	a.Capabilities = &c
+	a.Version++
+	put, e := s.put(s.Table, a, false)
+	if e != nil {
+		return nil, e
+	}
+	if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), put}); e != nil {
+		return nil, safeError()
+	}
+	return &c, nil
+}
+func (s *Service) OwnerAgentCapabilities(ctx context.Context, owner string, expectedID ...string) (*runner.AgentCapabilities, bool, error) {
+	stage, e := s.stage(ctx)
+	if e != nil {
+		return nil, false, e
+	}
+	if stage.ProjectEnvironmentsSchemaVersion != 1 {
+		return nil, false, nil
+	}
+	agent, e := s.CurrentAgent(ctx, owner)
+	if e != nil {
+		return nil, true, e
+	}
+	if agent == nil {
+		if len(expectedID) > 0 {
+			return nil, true, failure(409, "conflict")
+		}
+		return nil, true, nil
+	}
+	if len(expectedID) > 0 && agent.LocalAgentID != expectedID[0] {
+		return nil, true, failure(409, "conflict")
+	}
+	record, e := s.get(ctx, s.Table, "U#"+owner, "CRED#"+agent.LocalAgentID)
+	if e != nil {
+		return nil, true, e
+	}
+	return record.Capabilities, true, nil
 }

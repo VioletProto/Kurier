@@ -360,7 +360,7 @@ func TestIntegrationLocalReceiptSecretContainmentAndPinLifetime(t *testing.T) {
 	raw, _ := json.Marshal(config)
 	req.ConfigurationJSON = string(raw)
 	f.write(t, f.s.Table, req)
-	f.write(t, f.s.Protected, row{PK: req.PK, SK: "SECRET#" + secret, Kind: "savedSecret", SchemaVersion: 1, ProjectID: f.project, SecretID: secret, Revision: 1, State: "active", Envelope: fixtureSecretEnvelope(t, f.s, f.project, secret, value, 1)})
+	f.write(t, f.s.Protected, row{PK: req.PK, SK: "SECRET#" + secret, Kind: "savedSecret", SchemaVersion: 1, ProjectID: f.project, SecretID: secret, Revision: 1, State: "active", ValueKind: "string", Envelope: fixtureSecretEnvelope(t, f.s, f.project, secret, value, 1)})
 	v, job := f.submit(t)
 	w := f.grant(t)
 	if w.ProtectedInputs.Values[secret] != value {

@@ -66,13 +66,14 @@ type RequestBody struct {
 	SecretFields []SecretField `json:"secretFields,omitempty"`
 }
 type Configuration struct {
-	Name            string       `json:"name"`
-	Method          string       `json:"method"`
-	URL             string       `json:"url"`
-	QueryParameters []Field      `json:"queryParameters"`
-	Headers         []Field      `json:"headers"`
-	Body            *RequestBody `json:"body"`
-	OperationRef    any          `json:"operationRef"`
+	TemplateSemanticsVersion int          `json:"templateSemanticsVersion,omitempty"`
+	Name                     string       `json:"name"`
+	Method                   string       `json:"method"`
+	URL                      string       `json:"url"`
+	QueryParameters          []Field      `json:"queryParameters"`
+	Headers                  []Field      `json:"headers"`
+	Body                     *RequestBody `json:"body"`
+	OperationRef             any          `json:"operationRef"`
 }
 type RedactionPolicy struct {
 	Headers      []string `json:"headers"`
@@ -80,18 +81,20 @@ type RedactionPolicy struct {
 	OmitBody     bool     `json:"omitBody"`
 }
 type Options struct {
-	Target string        `json:"target,omitempty" dynamodbav:"target,omitempty"`
-	Local  *LocalOptions `json:"local,omitempty" dynamodbav:"local,omitempty"`
+	Environment *EnvironmentContext `json:"environment,omitempty"`
+	Target      string              `json:"target,omitempty" dynamodbav:"target,omitempty"`
+	Local       *LocalOptions       `json:"local,omitempty" dynamodbav:"local,omitempty"`
 
 	TimeoutSeconds       int             `json:"timeoutSeconds"`
 	AllowInsecureSecrets bool            `json:"allowInsecureSecrets"`
 	ResponseRedaction    RedactionPolicy `json:"responseRedaction"`
 }
 type Plan struct {
-	Target            string       `json:"target,omitempty" dynamodbav:"target,omitempty"`
-	LocalAgentID      string       `json:"localAgentId,omitempty" dynamodbav:"localAgentId,omitempty"`
-	Destination       *Destination `json:"destination,omitempty" dynamodbav:"destination,omitempty"`
-	CredentialVersion int64        `json:"credentialVersion,omitempty" dynamodbav:"credentialVersion,omitempty"`
+	TemplateSnapshot  *TemplateSnapshot `json:"templateSnapshot,omitempty"`
+	Target            string            `json:"target,omitempty" dynamodbav:"target,omitempty"`
+	LocalAgentID      string            `json:"localAgentId,omitempty" dynamodbav:"localAgentId,omitempty"`
+	Destination       *Destination      `json:"destination,omitempty" dynamodbav:"destination,omitempty"`
+	CredentialVersion int64             `json:"credentialVersion,omitempty" dynamodbav:"credentialVersion,omitempty"`
 
 	Configuration Configuration `json:"configuration"`
 	Options       Options       `json:"options"`
@@ -133,21 +136,23 @@ type Outcome struct {
 	Certainty string  `json:"certainty"`
 }
 type Evidence struct {
-	SchemaVersion int                  `json:"schemaVersion"`
-	ProjectID     string               `json:"projectId"`
-	ExecutionID   string               `json:"executionId"`
-	Source        Source               `json:"source"`
-	Target        string               `json:"target"`
-	SubmittedAt   string               `json:"submittedAt"`
-	StartedAt     *string              `json:"startedAt"`
-	CompletedAt   string               `json:"completedAt"`
-	Status        string               `json:"status"`
-	Outcome       Outcome              `json:"outcome"`
-	Request       RequestCapture       `json:"request"`
-	Response      ResponseCapture      `json:"response"`
-	Timing        Timing               `json:"timing"`
-	Redaction     Redaction            `json:"redaction"`
-	Assertions    *AssertionEvaluation `json:"assertions,omitempty"`
+	TemplateSemanticsVersion int                  `json:"templateSemanticsVersion,omitempty"`
+	EnvironmentContext       *EnvironmentContext  `json:"environmentContext,omitempty"`
+	SchemaVersion            int                  `json:"schemaVersion"`
+	ProjectID                string               `json:"projectId"`
+	ExecutionID              string               `json:"executionId"`
+	Source                   Source               `json:"source"`
+	Target                   string               `json:"target"`
+	SubmittedAt              string               `json:"submittedAt"`
+	StartedAt                *string              `json:"startedAt"`
+	CompletedAt              string               `json:"completedAt"`
+	Status                   string               `json:"status"`
+	Outcome                  Outcome              `json:"outcome"`
+	Request                  RequestCapture       `json:"request"`
+	Response                 ResponseCapture      `json:"response"`
+	Timing                   Timing               `json:"timing"`
+	Redaction                Redaction            `json:"redaction"`
+	Assertions               *AssertionEvaluation `json:"assertions,omitempty"`
 }
 
 func omitted(reason string) Body { return Body{Kind: "omitted", OmissionReason: &reason} }
@@ -170,10 +175,12 @@ type Retention struct {
 	EvidenceAvailability string  `json:"evidenceAvailability"`
 }
 type View struct {
-	RunID        *string `json:"runId,omitempty"`
-	Position     *int    `json:"position,omitempty"`
-	Target       string  `json:"target"`
-	LocalAgentID *string `json:"localAgentId"`
+	TemplateSemanticsVersion int                 `json:"templateSemanticsVersion,omitempty"`
+	EnvironmentContext       *EnvironmentContext `json:"environmentContext,omitempty"`
+	RunID                    *string             `json:"runId,omitempty"`
+	Position                 *int                `json:"position,omitempty"`
+	Target                   string              `json:"target"`
+	LocalAgentID             *string             `json:"localAgentId"`
 
 	ExecutionID   string         `json:"executionId"`
 	ProjectID     string         `json:"projectId"`

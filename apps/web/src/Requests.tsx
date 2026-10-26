@@ -24,6 +24,9 @@ const empty = (): RequestConfiguration => ({
 });
 function configuration(r: RequestConfiguration): RequestConfiguration {
   return {
+    ...(r.templateSemanticsVersion === 1
+      ? { templateSemanticsVersion: 1 as const }
+      : {}),
     name: r.name,
     method: r.method,
     url: r.url,
@@ -125,13 +128,22 @@ function validate(c: RequestConfiguration) {
   )
     return "Provide a request name of 1–100 characters without controls.";
   try {
-    const u = new URL(c.url);
+    const validationURL =
+      c.templateSemanticsVersion === 1
+        ? c.url
+            .replace(
+              /^\{\{[A-Za-z_][A-Za-z0-9_]{0,63}\}\}/,
+              "https://template.invalid",
+            )
+            .replace(/\{\{[A-Za-z_][A-Za-z0-9_]{0,63}\}\}/g, "segment")
+        : c.url;
+    const u = new URL(validationURL);
     if (
       !["http:", "https:"].includes(u.protocol) ||
       u.username ||
       u.password ||
       u.hash ||
-      /[ {}\p{Cc}]/u.test(c.url)
+      /[ {}\p{Cc}]/u.test(validationURL)
     )
       return "Use an absolute HTTP(S) URL without credentials, templates or fragments.";
     for (const [key] of u.searchParams)
@@ -148,6 +160,10 @@ function validate(c: RequestConfiguration) {
       !f.name ||
       (!f.sensitive &&
         credentialName(f.name) &&
+        !(
+          c.templateSemanticsVersion === 1 &&
+          /^(Bearer )?\{\{[A-Za-z_][A-Za-z0-9_]{0,63}\}\}$/.test(f.value ?? "")
+        ) &&
         !(c.headers.includes(f) && (f.value ?? "") === "")) ||
       /[\r\n]/.test(f.name + (f.value ?? ""))
     )
@@ -783,6 +799,25 @@ export function Requests({
                   <option key={m}>{m}</option>
                 ))}
               </select>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={draft.templateSemanticsVersion === 1}
+                  disabled={detail?.request.templateSemanticsVersion === 1}
+                  onChange={(e) => {
+                    const next = { ...draft };
+                    if (e.target.checked) next.templateSemanticsVersion = 1;
+                    else delete next.templateSemanticsVersion;
+                    setDraft(next);
+                  }}
+                />
+                Enable environment templates
+              </label>
+              <p>
+                Use {"{{variableName}}"} in supported URL components,
+                header/query values or body values. Public URLs require public
+                string variables. Protected values are never previewed.
+              </p>
               <label htmlFor="request-url">Public request URL</label>
               <input
                 id="request-url"

@@ -1,12 +1,26 @@
 package execution
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 func (e *Evidence) UnmarshalJSON(raw []byte) error {
 	type plain Evidence
 	var v plain
 	var fields map[string]json.RawMessage
 	if StrictJSON(raw, &fields) != nil || StrictJSON(raw, &v) != nil {
+		return workflowInvalid()
+	}
+	for k := range fields {
+		if (strings.EqualFold(k, "templateSemanticsVersion") || strings.EqualFold(k, "environmentContext")) && k != "templateSemanticsVersion" && k != "environmentContext" {
+			return workflowInvalid()
+		}
+	}
+	if v.SchemaVersion == 3 && fields["templateSemanticsVersion"] == nil {
+		return workflowInvalid()
+	}
+	if v.SchemaVersion < 3 && (fields["templateSemanticsVersion"] != nil || fields["environmentContext"] != nil) || v.SchemaVersion == 3 && (v.TemplateSemanticsVersion != 1 || fields["environmentContext"] == nil) {
 		return workflowInvalid()
 	}
 	if v.SchemaVersion == 1 && fields["assertions"] != nil {
@@ -40,6 +54,22 @@ func (e Evidence) LegacyProjection() LegacyEvidence {
 }
 
 func ValidateEvidenceVersion(e *Evidence) error {
+	if e.SchemaVersion == 3 {
+		if e.TemplateSemanticsVersion != 1 || e.EnvironmentContext != nil && (!workflowUUID.MatchString(e.EnvironmentContext.EnvironmentID) || e.EnvironmentContext.Revision < 0 || e.EnvironmentContext.Revision > 9007199254740991) {
+			return workflowInvalid()
+		}
+		if e.Assertions == nil {
+			return nil
+		}
+		copy := *e
+		copy.SchemaVersion = 2
+		copy.TemplateSemanticsVersion = 0
+		copy.EnvironmentContext = nil
+		return ValidateEvidenceVersion(&copy)
+	}
+	if e.TemplateSemanticsVersion != 0 || e.EnvironmentContext != nil {
+		return workflowInvalid()
+	}
 	if e.SchemaVersion == 1 && e.Assertions == nil {
 		return nil
 	}
@@ -96,12 +126,12 @@ func ValidateFrozenAssertions(e *Evidence, step WorkflowStep, semantics int) err
 		return workflowInvalid()
 	}
 	if semantics == 0 {
-		if e.SchemaVersion != 1 || len(step.Assertions) != 0 {
+		if (e.SchemaVersion != 1 && e.SchemaVersion != 3) || e.Assertions != nil || len(step.Assertions) != 0 {
 			return workflowInvalid()
 		}
 		return nil
 	}
-	if semantics != 1 || e.SchemaVersion != 2 || len(e.Assertions.Results) != len(step.Assertions) {
+	if semantics != 1 || (e.SchemaVersion != 2 && e.SchemaVersion != 3) || e.Assertions == nil || len(e.Assertions.Results) != len(step.Assertions) {
 		return workflowInvalid()
 	}
 	for i, a := range step.Assertions {

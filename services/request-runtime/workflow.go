@@ -34,12 +34,13 @@ type Binding struct {
 	To   BindingTarget `json:"to"`
 }
 type WorkflowStep struct {
-	StepID          string       `json:"stepId"`
-	RequestID       string       `json:"requestId"`
-	RequestRevision int64        `json:"requestRevision"`
-	Extract         []Extraction `json:"extract"`
-	Bindings        []Binding    `json:"bindings"`
-	Assertions      []Assertion  `json:"assertions,omitempty"`
+	Environment     *StepEnvironment `json:"environment,omitempty"`
+	StepID          string           `json:"stepId"`
+	RequestID       string           `json:"requestId"`
+	RequestRevision int64            `json:"requestRevision"`
+	Extract         []Extraction     `json:"extract"`
+	Bindings        []Binding        `json:"bindings"`
+	Assertions      []Assertion      `json:"assertions,omitempty"`
 }
 
 func (s WorkflowStep) MarshalJSON() ([]byte, error) {
@@ -62,7 +63,7 @@ func (s *WorkflowStep) UnmarshalJSON(raw []byte) error {
 	}
 	for k, v := range fields {
 		switch k {
-		case "stepId", "requestId", "requestRevision", "extract", "bindings", "assertions":
+		case "stepId", "requestId", "requestRevision", "extract", "bindings", "assertions", "environment":
 		default:
 			return workflowInvalid()
 		}
@@ -241,6 +242,11 @@ func ValidateWorkflow(steps []WorkflowStep, plans []Plan) error {
 	producers := map[string]map[string]string{}
 	revisions := map[string]int64{}
 	for pos, step := range steps {
+		if step.Environment != nil {
+			if e := step.Environment.Validate(); e != nil {
+				return e
+			}
+		}
 		if e := ValidateAssertions(step, plans[pos].Options.ResponseRedaction); e != nil {
 			return e
 		}
@@ -274,6 +280,20 @@ func ValidateWorkflow(steps []WorkflowStep, plans []Plan) error {
 				return workflowInvalid()
 			}
 			t := b.To
+			if plans[pos].Configuration.TemplateSemanticsVersion == 1 {
+				locations, e := TemplateLocations(plans[pos].Configuration)
+				if e != nil {
+					return e
+				}
+				for _, loc := range locations {
+					if !HasTemplate(loc.Text) {
+						continue
+					}
+					if (t.Kind == loc.Kind && t.Index != nil && *t.Index == loc.Index) || t.Kind == "textBody" && loc.Kind == "text" || t.Kind == "jsonBody" && loc.Kind == "json" && t.Pointer != nil && overlaps(*t.Pointer, loc.Pointer) {
+						return failure(400, "template_target_overlap")
+					}
+				}
+			}
 			key := t.Kind
 			config := plans[pos].Configuration
 			if t.Kind != "header" && (t.Prefix != nil || t.Suffix != nil) || t.Kind == "header" && typ != "string" && (t.Prefix != nil || t.Suffix != nil) {

@@ -100,7 +100,7 @@ func (s *RunStep) UnmarshalJSON(raw []byte) error {
 		return safeError()
 	}
 	step := map[string]json.RawMessage{}
-	for _, key := range []string{"stepId", "requestId", "requestRevision", "extract", "bindings", "assertions"} {
+	for _, key := range []string{"stepId", "requestId", "requestRevision", "extract", "bindings", "assertions", "environment"} {
 		if v, ok := fields[key]; ok {
 			step[key] = v
 			delete(fields, key)
@@ -144,8 +144,9 @@ type WorkflowRun struct {
 	Steps            []RunStep `json:"steps"`
 }
 type RunOptions struct {
-	Target               string `json:"target"`
-	AllowInsecureSecrets bool   `json:"allowInsecureSecrets"`
+	Environment          *runner.EnvironmentContext `json:"environment,omitempty"`
+	Target               string                     `json:"target"`
+	AllowInsecureSecrets bool                       `json:"allowInsecureSecrets"`
 }
 
 func (s *Service) workflowContext(ctx context.Context, owner, project string) (row, row, dt.TransactWriteItem, error) {
@@ -226,6 +227,34 @@ func (s *Service) SaveWorkflow(ctx context.Context, owner, project, workflow str
 	_, requests, e := s.workflowPlans(ctx, p, &d, true)
 	if e != nil {
 		return Workflow{}, e
+	}
+	for _, step := range d.Steps {
+		if step.Environment != nil {
+			if stage.ProjectEnvironmentsSchemaVersion != 1 {
+				return Workflow{}, safeError()
+			}
+			if step.Environment.Mode == "select" {
+				env, e := s.get(ctx, s.Table, p.PK, "ENV#"+step.Environment.EnvironmentID)
+				if e != nil || env.Kind != "environment" || env.State != "active" {
+					return Workflow{}, failure(400, "source_unavailable")
+				}
+				if env.Revision != step.Environment.Revision {
+					return Workflow{}, failure(409, "environment_revision_conflict")
+				}
+				exists := false
+				for _, r := range requests {
+					if r.SK == env.SK {
+						if r.Revision != env.Revision {
+							return Workflow{}, failure(409, "environment_revision_conflict")
+						}
+						exists = true
+					}
+				}
+				if !exists {
+					requests = append(requests, env)
+				}
+			}
+		}
 	}
 	raw := workflowDefinitionJSON(d, stage.WorkflowAssertionsSchemaVersion == 1)
 	if len(raw) > ConfigLimit {
@@ -308,6 +337,10 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	if e != nil {
 		return WorkflowRun{}, e
 	}
+
+	if rerun && options.Environment != nil {
+		return WorkflowRun{}, failure(400, "invalid_request")
+	}
 	if !uuidPattern.MatchString(key) || !uuidPattern.MatchString(source) || len(s.SigningKey) < 32 || options.Target != "cloud" {
 		return WorkflowRun{}, failure(400, "invalid_request")
 	}
@@ -320,6 +353,9 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	input := s.digest("workflow-admission-input-v1", []any{purpose, source, revision, options})
 	receipt, e := s.get(ctx, s.Table, p.PK, receiptSK)
 	if e == nil {
+		if receipt.TemplateSemanticsVersion == 1 {
+			input = s.digest("workflow-environment-admission-input-v1", []any{input, 1})
+		}
 		if receipt.InputDigest != input || receipt.RunID == "" || receipt.ExpiresAt <= stamp(s.now()) {
 			return WorkflowRun{}, failure(409, "conflict")
 		}
@@ -391,6 +427,71 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	if e = runner.ValidateWorkflow(definition.Steps, plans); e != nil {
 		return WorkflowRun{}, e
 	}
+	environmentActions := []dt.TransactWriteItem{}
+	environmentSeen := map[string]int64{}
+	appendEnvironment := func(guards []dt.TransactWriteItem) error {
+		for _, g := range guards {
+			if g.ConditionCheck == nil {
+				continue
+			}
+			sk := g.ConditionCheck.Key["SK"].(*dt.AttributeValueMemberS).Value
+			r := g.ConditionCheck.ExpressionAttributeValues[":r"].(*dt.AttributeValueMemberN).Value
+			var revision int64
+			fmt.Sscan(r, &revision)
+			if old, ok := environmentSeen[sk]; ok {
+				if old != revision {
+					return failure(409, "environment_revision_conflict")
+				}
+				continue
+			}
+			environmentSeen[sk] = revision
+			environmentActions = append(environmentActions, g)
+		}
+		if len(environmentSeen) > 4 {
+			return failure(413, "variable_limit")
+		}
+		return nil
+	}
+	if options.Environment != nil && !rerun {
+		dummy := Plan{Configuration: Configuration{TemplateSemanticsVersion: 1, URL: "https://example.test/", QueryParameters: []Field{}, Headers: []Field{}}}
+		guards, e := s.freezeEnvironment(ctx, project, &dummy, options.Environment, false)
+		if e != nil {
+			return WorkflowRun{}, e
+		}
+		if e = appendEnvironment(guards); e != nil {
+			return WorkflowRun{}, e
+		}
+	}
+	for i := range plans {
+		selection := options.Environment
+		if step := definition.Steps[i].Environment; step != nil {
+			switch step.Mode {
+			case "none":
+				selection = nil
+			case "select":
+				selection = &runner.EnvironmentContext{EnvironmentID: step.EnvironmentID, Revision: step.Revision}
+			}
+		}
+		if plans[i].Configuration.TemplateSemanticsVersion == 1 && stage.ProjectEnvironmentsSchemaVersion != 1 {
+			return WorkflowRun{}, safeError()
+		}
+		guards, e := s.freezeEnvironment(ctx, project, &plans[i], selection, rerun)
+		if e != nil {
+			return WorkflowRun{}, e
+		}
+		if e = appendEnvironment(guards); e != nil {
+			return WorkflowRun{}, e
+		}
+	}
+	environmentSemantics := 0
+	for _, plan := range plans {
+		if plan.TemplateSnapshot != nil {
+			environmentSemantics = 1
+		}
+	}
+	if environmentSemantics == 1 {
+		input = s.digest("workflow-environment-admission-input-v1", []any{input, 1})
+	}
 	runID := id()
 	values := map[string]string{}
 	defer clear(values)
@@ -411,11 +512,15 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 			return WorkflowRun{}, failure(413, "payload_too_large")
 		}
 		total += len(raw)
-		refs := requiredRefs(plans[i].Configuration)
+		refs := requiredPlanRefs(plans[i])
 		if len(refs) > 8 {
 			return WorkflowRun{}, failure(413, "payload_too_large")
 		}
-		destination, e := ValidateDestination(plans[i].Configuration.URL)
+		resolvedURL, e := runner.ResolvedTemplateURL(plans[i])
+		if e != nil {
+			return WorkflowRun{}, e
+		}
+		destination, e := ValidateDestination(resolvedURL)
 		if e != nil {
 			return WorkflowRun{}, e
 		}
@@ -427,7 +532,7 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 				continue
 			}
 			r, e := s.get(ctx, s.Protected, p.PK, "SECRET#"+ref)
-			if e != nil || r.Kind != "savedSecret" || r.State != "active" || r.ProjectID != project {
+			if e != nil || !validateEnvironmentSecret(plans[i], r) || r.ProjectID != project {
 				return WorkflowRun{}, failure(400, "source_unavailable")
 			}
 			raw, e := s.decrypt(ctx, project, ref, "saved-secret", r.Revision, r.Envelope)
@@ -441,7 +546,12 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 			seen[ref] = true
 		}
 	}
-	if len(sources) > 16 || len(requests)+len(secretRows)+1 > 18 {
+	for _, plan := range plans {
+		if e = s.preflightEnvironment(ctx, plan, values); e != nil {
+			return WorkflowRun{}, e
+		}
+	}
+	if len(sources) > 16 || len(requests)+len(secretRows)+len(environmentActions)+1 > 18 {
 		return WorkflowRun{}, failure(413, "payload_too_large")
 	}
 	envelope, e := s.encryptPurpose(ctx, project, runID, "workflow-inputs", values)
@@ -475,6 +585,7 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 		return WorkflowRun{}, err
 	}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), user, s.projectUpdate(p, 0, 1)}
+	actions = append(actions, environmentActions...)
 	// Fence the definition or retained source run against concurrent deletion.
 	actions = append(actions, s.rowGuard(wf))
 	for _, r := range requests {
@@ -501,6 +612,7 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	}
 	initial := row{PK: p.PK, SK: "RUN#" + runID + "#INPUTS", Kind: "executionWorkflowInputs", SchemaVersion: 1, ProjectID: project, RunID: runID, Envelope: envelope}
 	receipt = row{PK: p.PK, SK: receiptSK, Kind: "executionReceipt", SchemaVersion: 1, ProjectID: project, OwnerID: owner, InputDigest: input, RunID: runID, ExpiresAt: stamp(s.now().Add(7 * 24 * time.Hour))}
+	receipt.TemplateSemanticsVersion = environmentSemantics
 	for _, spec := range []struct {
 		table string
 		r     row

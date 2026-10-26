@@ -33,6 +33,7 @@ export interface SecretField {
   secretWrite?: SecretWrite;
 }
 export interface SecretMetadata {
+  scalarType?: "string" | "number" | "boolean" | "null" | "untyped";
   secretId: string;
   projectId: string;
   revision: number;
@@ -66,6 +67,7 @@ export interface RequestBody {
   sensitive: boolean;
 }
 export interface RequestConfiguration {
+  templateSemanticsVersion?: 1;
   name: string;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   url: string;
@@ -175,6 +177,38 @@ const base = validateApiUrl(
   import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8080",
 );
 
+export type EnvironmentSelection = { environmentId: string; revision: number };
+export type PrimitiveValue =
+  | { type: "string"; value: string }
+  | { type: "number"; decimal: string }
+  | { type: "boolean"; value: boolean }
+  | { type: "null" };
+export type EnvironmentVariable = {
+  variableId?: string;
+  name: string;
+  enabled: boolean;
+  sensitive: boolean;
+  value?: PrimitiveValue;
+  valueType?: PrimitiveValue["type"];
+  masked?: true;
+  secretRef?: SecretReference;
+  secretWrite?:
+    | { action: "set"; value: PrimitiveValue }
+    | { action: "preserve" | "secretRef"; secretRef: SecretReference };
+};
+export type EnvironmentWrite = {
+  name: string;
+  variables: EnvironmentVariable[];
+};
+export type EnvironmentSummary = EnvironmentSelection & {
+  projectId: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type ProjectEnvironment = EnvironmentSummary & {
+  variables: EnvironmentVariable[];
+};
 export class Api {
   constructor(
     private token = auth.token,
@@ -327,6 +361,74 @@ export class Api {
     ).data.run;
     return checkedWorkflow(run);
   }
+  async listEnvironments(
+    project: string,
+    cursor?: string | null,
+    signal?: AbortSignal,
+  ): Promise<{ items: EnvironmentSummary[]; nextCursor: string | null }> {
+    return (
+      await (
+        await this.request(
+          `/api/v1/projects/${encodeURIComponent(project)}/environments${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data;
+  }
+  async getEnvironment(
+    project: string,
+    id: string,
+    signal?: AbortSignal,
+  ): Promise<ProjectEnvironment> {
+    return (
+      await (
+        await this.request(
+          `/api/v1/projects/${encodeURIComponent(project)}/environments/${encodeURIComponent(id)}`,
+          "GET",
+          undefined,
+          undefined,
+          signal,
+        )
+      ).json()
+    ).data.environment;
+  }
+  async saveEnvironment(
+    project: string,
+    value: EnvironmentWrite,
+    old?: ProjectEnvironment,
+    signal?: AbortSignal,
+  ): Promise<ProjectEnvironment> {
+    const response = await this.request(
+      `/api/v1/projects/${encodeURIComponent(project)}/environments${old ? `/${encodeURIComponent(old.environmentId)}` : ""}`,
+      old ? "PATCH" : "POST",
+      JSON.stringify(value),
+      old ? `"${old.revision}"` : undefined,
+      signal,
+    );
+    try {
+      const env = (await response.json()).data.environment;
+      if (!env?.environmentId || !Array.isArray(env.variables)) throw Error();
+      return env;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async deleteEnvironment(
+    project: string,
+    env: ProjectEnvironment,
+    signal?: AbortSignal,
+  ) {
+    await this.request(
+      `/api/v1/projects/${encodeURIComponent(project)}/environments/${encodeURIComponent(env.environmentId)}`,
+      "DELETE",
+      undefined,
+      `"${env.revision}"`,
+      signal,
+    );
+  }
   async submitWorkflow(
     project: string,
     source: string,
@@ -334,6 +436,7 @@ export class Api {
     allow: boolean,
     workflow?: Workflow,
     signal?: AbortSignal,
+    environment?: EnvironmentSelection | null,
   ): Promise<WorkflowRun> {
     const path = workflow
       ? `/workflows/${source}/runs`
@@ -341,7 +444,11 @@ export class Api {
     const response = await this.request(
       `/api/v1/projects/${encodeURIComponent(project)}${path}`,
       "POST",
-      JSON.stringify({ target: "cloud", allowInsecureSecrets: allow }),
+      JSON.stringify({
+        target: "cloud",
+        allowInsecureSecrets: allow,
+        ...(workflow && environment ? { environment } : {}),
+      }),
       workflow ? `"${workflow.revision}"` : undefined,
       signal,
       false,
@@ -599,10 +706,22 @@ export class Api {
     ).data.evidence;
     if (
       !evidence ||
-      (evidence.schemaVersion !== 1 && evidence.schemaVersion !== 2) ||
+      (evidence.schemaVersion !== 1 &&
+        evidence.schemaVersion !== 2 &&
+        evidence.schemaVersion !== 3) ||
       (evidence.schemaVersion === 1 && evidence.assertions !== undefined) ||
       (evidence.schemaVersion === 2 &&
-        !validAssertionEvaluation(evidence.assertions!))
+        !validAssertionEvaluation(evidence.assertions!)) ||
+      (evidence.schemaVersion === 3 &&
+        (evidence.templateSemanticsVersion !== 1 ||
+          !("environmentContext" in evidence) ||
+          (evidence.environmentContext !== null &&
+            (!evidence.environmentContext ||
+              typeof evidence.environmentContext.environmentId !== "string" ||
+              !Number.isSafeInteger(evidence.environmentContext.revision) ||
+              evidence.environmentContext.revision < 0)) ||
+          (evidence.assertions !== undefined &&
+            !validAssertionEvaluation(evidence.assertions))))
     ) {
       throw Error("Evidence version or assertion results unavailable.");
     }
@@ -887,6 +1006,7 @@ export class Api {
 export const api = new Api();
 
 export type ExecutionOptions = {
+  environment?: EnvironmentSelection | null;
   target?: "local";
   local?: { localAgentId: string; allowPrivateNetwork: true };
   timeoutSeconds: number;
@@ -908,6 +1028,8 @@ export type ExecutionRetention = {
   pinEligible: boolean;
 };
 export type Execution = {
+  templateSemanticsVersion?: 1;
+  environmentContext?: EnvironmentSelection | null;
   runId?: string;
   position?: number;
   target?: "cloud" | "local";
@@ -939,6 +1061,8 @@ export type EvidenceBody = {
   omissionReason: string | null;
 };
 export type Evidence = {
+  templateSemanticsVersion?: 1;
+  environmentContext?: EnvironmentSelection | null;
   assertions?: AssertionEvaluation;
   schemaVersion: number;
   status: string;
@@ -1011,6 +1135,8 @@ export type AssertionEvaluation = {
   }[];
 };
 export type WorkflowStep = {
+  environment?:
+    { mode: "inherit" | "none" } | ({ mode: "select" } & EnvironmentSelection);
   stepId: string;
   requestId: string;
   requestRevision: number;

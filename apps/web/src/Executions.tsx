@@ -1,3 +1,4 @@
+import { EnvironmentSelector } from "./Environments";
 import { AssertionResults } from "./Assertions";
 import { LocalAgents } from "./LocalAgents";
 import { useEffect, useRef, useState } from "react";
@@ -5,6 +6,7 @@ import {
   api,
   ApiError,
   UncertainWrite,
+  type EnvironmentSelection,
   type Execution,
   type ExecutionOptions,
   type Evidence,
@@ -48,6 +50,9 @@ export function Executions({
   onSessionExpired: () => void;
   onGateChanged?: () => void;
 }) {
+  const [environment, setEnvironment] = useState<EnvironmentSelection | null>(
+    null,
+  );
   const [agent, setAgent] = useState<LocalAgent | null>(null);
   const [target, setTarget] = useState<"cloud" | "local">("cloud");
   const [localConsent, setLocalConsent] = useState(false);
@@ -422,6 +427,9 @@ export function Executions({
     );
   };
   const options = (): ExecutionOptions => ({
+    ...(request?.request.templateSemanticsVersion === 1 && environment
+      ? { environment }
+      : {}),
     ...(target === "local" && agent
       ? {
           target: "local" as const,
@@ -585,6 +593,25 @@ export function Executions({
           Execute saved revision {request?.request.revision}
         </button>
       </fieldset>
+      {request?.request.templateSemanticsVersion === 1 && (
+        <EnvironmentSelector
+          projectId={projectId}
+          label="Execution environment"
+          value={environment}
+          change={setEnvironment}
+          disabled={disabled || busy || !!pending}
+          onExpired={onSessionExpired}
+        />
+      )}
+      {evidence?.schemaVersion === 3 && (
+        <p>
+          Frozen environment:{" "}
+          {evidence.environmentContext
+            ? `${evidence.environmentContext.environmentId} · revision ${evidence.environmentContext.revision}`
+            : "none"}{" "}
+          · template semantics 1
+        </p>
+      )}
       {pending && (
         <p role="status">
           An admission is unresolved. Its identity and options are held only in

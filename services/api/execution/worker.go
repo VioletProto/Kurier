@@ -133,12 +133,18 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 	guards := []dt.TransactWriteItem{user, s.sourceGuard(source, s.Table)}
 	for _, ref := range job.Sources {
 		r, e := s.get(ctx, s.Protected, job.PK, "SECRET#"+ref.SecretID)
-		if e != nil || r.Kind != "savedSecret" || r.SchemaVersion != 1 || r.State != "active" || r.ProjectID != job.ProjectID || r.SecretID != ref.SecretID {
+		if e != nil || !validateEnvironmentSecret(*anchor.Plan, r) || r.ProjectID != job.ProjectID || r.SecretID != ref.SecretID {
 			evidence.Fail("source_unavailable", "not_dispatched")
 			return s.publish(ctx, job, evidence)
 		}
 		guards = append(guards, s.sourceGuard(r, s.Protected))
 	}
+	envGuards, envErr := s.environmentGuards(ctx, job.ProjectID, *anchor.Plan)
+	if envErr != nil {
+		evidence.Fail("source_unavailable", "not_dispatched")
+		return s.publish(ctx, job, evidence)
+	}
+	guards = append(guards, envGuards...)
 	values := map[string]string{}
 	var capture *runner.ExtractionCapture
 	var output *Envelope
@@ -408,7 +414,7 @@ func (s *Service) finalize(ctx context.Context, expected, ticket row, evidence *
 			if a.State != "active" || a.ExpiresAt <= stamp(s.now().Add(5*time.Second)) || a.RecoveryGeneration != stage.RecoveryGeneration || a.ActiveJob != job.JobID || a.ActiveProject != job.ProjectID || job.CandidateDigest == "" {
 				return failure(401, "unauthenticated")
 			}
-			receipt := row{PK: job.PK, SK: job.SK + "#RECEIPT", Kind: "executionLocalReceipt", SchemaVersion: 1, ProjectID: job.ProjectID, OwnerID: job.OwnerID, ExecutionID: job.ExecutionID, JobID: job.JobID, LocalAgentID: job.LocalAgentID, LeaseID: job.LeaseID, Fence: job.Fence, NonceHash: job.NonceHash, InputDigest: job.CandidateDigest, CanonicalizationVersion: 1, HMACKeyID: job.HMACKeyID, AcceptedAt: stamp(s.now()), RecoveryGeneration: stage.RecoveryGeneration}
+			receipt := row{PK: job.PK, SK: job.SK + "#RECEIPT", Kind: "executionLocalReceipt", SchemaVersion: 1, ProjectID: job.ProjectID, OwnerID: job.OwnerID, ExecutionID: job.ExecutionID, JobID: job.JobID, LocalAgentID: job.LocalAgentID, LeaseID: job.LeaseID, Fence: job.Fence, NonceHash: job.NonceHash, InputDigest: job.CandidateDigest, CanonicalizationVersion: job.CanonicalizationVersion, TemplateSemanticsVersion: job.TemplateSemanticsVersion, EnvironmentContext: job.EnvironmentContext, HMACKeyID: job.HMACKeyID, AcceptedAt: stamp(s.now()), RecoveryGeneration: stage.RecoveryGeneration}
 			put, e := s.put(s.Table, receipt, true)
 			if e != nil {
 				return e
@@ -552,7 +558,7 @@ func (s *Service) recoverPrepared(ctx context.Context, job row) (bool, error) {
 				return false, safeError()
 			}
 			var evidence Evidence
-			if StrictJSON(raw, &evidence) != nil || evidence.SchemaVersion != 1 || evidence.ExecutionID != job.ExecutionID || evidence.ProjectID != job.ProjectID || !terminal(evidence.Status) {
+			if StrictJSON(raw, &evidence) != nil || runner.ValidateEvidenceVersion(&evidence) != nil || evidence.ExecutionID != job.ExecutionID || evidence.ProjectID != job.ProjectID || !terminal(evidence.Status) {
 				return false, safeError()
 			}
 			final, _, e := EncodeEvidence(&evidence)

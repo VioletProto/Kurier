@@ -203,6 +203,10 @@ func newProtocolFixture(t *testing.T) *protocolFixture {
 func (f *protocolFixture) write(t *testing.T, table string, r row) {
 	t.Helper()
 	item, e := attributevalue.MarshalMap(r)
+	if r.Kind == "environment" || r.Kind == "environmentTombstone" {
+		delete(item, "version")
+		item["revision"] = num(r.Revision)
+	}
 	if e != nil {
 		t.Fatal(e)
 	}
