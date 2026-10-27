@@ -1,5 +1,20 @@
 # Project environments deployment review
 
+## Authorized inventory continuation — 2026-10-27
+
+The [inventory and artifact packet](project-environments-inventory.md) records
+the separately authorized read-only preparation: 135/500 metered attempts,
+current stage/IAM/resource/accounting readbacks, prepared release hashes and
+verified retrieved rollback bytes. Release source is unchanged. The campaign
+stopped **before SST preview** because complete provider-process metering is not
+established. Only the separately authorized existing-session authentication
+refresh was an AWS write. Deployment, closure, migration, activation,
+identity/project creation and live targets remain held. The original preparation
+and its then-current holds below are historical; the continuation does not
+authorize a preview or further live work.
+
+## Original preparation
+
 Prepared 2026-10-27. **Proposed for review; no live work authorized or performed.**
 AWS inventory/preview, deployment, migration, capability activation, identity
 creation and live target requests remain held. OpenAPI production

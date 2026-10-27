@@ -2,6 +2,15 @@
 
 ## Release preparation — 2026-10-27
 
+Subsequent [authorized inventory and artifact preparation](project-environments-inventory.md)
+completed with 135/500 physical attempts, preserved source pins, current
+capability/accounting/IAM/resource readbacks and verified rollback retrieval.
+Prepared release ZIPs/static manifest are retained locally. Stopped before SST
+preview because provider-process metering is not established. Only Davian's
+separately authorized existing-session refresh wrote authentication state;
+no application/infrastructure changes or live target requests occurred.
+All deployment/closure/migration/activation/identity/project/runtime holds remain.
+
 PRs #15 and #16 are merged. The proposed
 [deployment review packet](project-environments-deployment-review.md) pins release
 source `44f1fb79d943501c95e06fcc1a6114111a7c1ea4` (PR #16 merge, including
