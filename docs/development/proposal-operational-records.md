@@ -21,8 +21,12 @@ The original 11-row/four-column table, ten phases, 20 hours per week and 200-hou
 total are preserved. A separate paragraph identifies the earlier W2/W9
 architecture revisions and Davian's new W4-to-W9 Friday finish target. There is
 no institutional submission deadline. The [remaining-work plan](../planning/remaining-work.md)
-records the December 4 target, six weekly slots, 120-hour capacity and the
-112–140-hour estimate risk; the accelerated allocation is 112–120 hours.
+now records an inferred, unconfirmed December 4 finish, six weekly slots and
+116 hours of remaining capacity: 16 hours from Tuesday, October 27 plus five
+20-hour weeks. The 112–140-hour estimate retains a 24-hour upper-case capacity
+risk; the accelerated allocation is 112–116 hours. This corrects the original
+October 26 assumption of 120 hours. PRs #15 and #16 are merged; environment
+deployment/activation and runtime validation remain held for separate review.
 
 Native revision-guarded edits and readback verified the relocated content,
 unchanged table cell text, image and faculty fields, preserved narrative/MVP
