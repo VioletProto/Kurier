@@ -39,8 +39,9 @@ inferred, not confirmed.
 Native revision-guarded edits and readback verified the relocated content,
 unchanged table cell text, image and faculty fields, preserved narrative/MVP
 text outside the two obsolete contract references, and bold technology labels
-with ordinary body text. The proposal links to this record and the work plan on
-the documentation branch. Native structure/readback was checked; rendered PDF
+with ordinary body text. During merge closeout, the proposal links to this record and the work plan are
+synchronized to `main` so deleting the documentation branch preserves navigation.
+Native structure/readback was checked; rendered PDF
 page layout was not assessed.
 
 `npm run verify` passed formatting/gofmt, lint, web/infra/tooling/Python tests,
