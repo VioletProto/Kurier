@@ -1,10 +1,27 @@
 # Project environments implementation and local verification
 
+## Release preparation — 2026-10-27
+
+PRs #15 and #16 are merged. The proposed
+[deployment review packet](project-environments-deployment-review.md) pins release
+source `44f1fb79d943501c95e06fcc1a6114111a7c1ea4` (PR #16 merge, including
+implementation head `82fa7d760a485934bde3259f7652ab1c434ea85f`). It records
+source-derived deployment/IAM expectations, compatibility, closed-stage activation,
+no required backfill, post-data rollback limits and a bounded runtime/cleanup plan.
+Fresh repository verification, uncached runtime/agent race tests and clean ARM64
+builds passed locally. This preparation did not repeat browser/database integration
+or establish live AWS state. AWS inventory/preview, deployment, migration,
+activation, identity creation and live target requests remain held. The packet is
+for review; the environment tracking card remains open. OpenAPI production scope
+remains separate.
+
+## Implementation record
+
 Davian accepted the [review packet](../architecture/drafts/project-environments-review.md)
 and [compatibility amendment](../architecture/drafts/project-environments-compatibility.md)
-at `d8be596a2306f2e888ef34e81dfa836bc4b84447` on 2026-10-24. This feature branch
-implements that scope for review. Acceptance recording does not merge PR #15,
-activate a stage or establish deployed runtime evidence.
+at `d8be596a2306f2e888ef34e81dfa836bc4b84447` on 2026-10-24. The implementation
+below was verified on the feature branch and subsequently merged in PR #16.
+Merge does not activate a stage or establish deployed runtime evidence.
 
 AWS inventory/preview, deployment, migration and activation remain held for
 separate review. No AWS calls, accounts, identities or resources were used for
