@@ -23,10 +23,16 @@ architecture revisions and Davian's new W4-to-W9 Friday finish target. There is
 no institutional submission deadline. The [remaining-work plan](../planning/remaining-work.md)
 now records an inferred, unconfirmed December 4 finish, six weekly slots and
 116 hours of remaining capacity: 16 hours from Tuesday, October 27 plus five
-20-hour weeks. The 112–140-hour estimate retains a 24-hour upper-case capacity
-risk; the accelerated allocation is 112–116 hours. This corrects the original
-October 26 assumption of 120 hours. PRs #15 and #16 are merged; environment
-deployment/activation and runtime validation remain held for separate review.
+20-hour weeks. Davian's subsequent history-based revision replaces the earlier
+112–140-hour estimate and 112–116-hour allocation with **31–60 hours of
+provisional active effort**, including a 5–10-hour troubleshooting reserve.
+This leaves 56–85 hours unallocated and withdraws the unsupported implication
+that work needs to accelerate to fit capacity. The ranges project Davian's
+observations of past implementations and their durations onto remaining work;
+they are subject to revision, not promises. PRs #15 and #16 are merged;
+environment deployment/activation and runtime validation remain held for
+separate review. The original October 26 assumption of 120 hours was corrected
+to 116 hours on October 27; the December 4 date remains inferred, not confirmed.
 
 Native revision-guarded edits and readback verified the relocated content,
 unchanged table cell text, image and faculty fields, preserved narrative/MVP

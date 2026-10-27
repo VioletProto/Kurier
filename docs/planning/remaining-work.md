@@ -2,8 +2,10 @@
 
 Planning snapshot updated: **2026-10-27**. Davian owns all work. This is a delivery
 forecast, separate from the proposal's preserved ten-week, 200-hour planned
-timeline. Estimates include implementation, documentation, review and relevant
-local verification; they are remaining effort, not recorded hours worked.
+timeline. Estimates below are provisional active effort projected by Davian from his
+past implementations and observations of how long that work took. They include
+implementation, documentation, review and relevant verification, and remain
+subject to revision. They are estimates, not promises of task duration.
 
 ## Calendar and capacity
 
@@ -19,15 +21,39 @@ end date or submission deadline.
   work: **16 hours this week** (4 hours today plus 3 other days at 4 hours each)
   plus **100 hours over the following 5 weeks** (20 hours/week). Monday is not
   counted as available working time.
-- Capacity allocation below: **112–116 hours**, including **8 hours contingency**;
-  **104–108 hours** for planned work. No actual time ledger or unused past-week
-  capacity is inferred.
-- The initial task estimate was **112–140 hours**. The accelerated target budgets
-  the lower part of that range; the upper case exceeds capacity by **24 hours**.
-  This is a schedule risk, not an estimate eliminated by changing the date.
-- Review remaining estimates and actual available hours each Friday. If the
-  upper case becomes likely, surface the effort/target tradeoff immediately;
-  no scope reduction or deadline extension is assumed or authorized.
+- Provisional remaining active effort: **31–60 hours**, including a **5–10-hour
+  troubleshooting reserve**. Capacity is available time, not a work estimate or
+  a requirement to use every available hour.
+- Against 116 available hours, that forecast leaves **56–85 hours unallocated**.
+  There appears to be substantial room to slow the pace, allow review and
+  integration time, and revise the forecast without assuming acceleration.
+- This replaces the earlier 112–140-hour estimate and 112–116-hour allocation.
+  Those figures lacked support from Davian's observed implementation pace;
+  their implied capacity shortfall and need to accelerate are withdrawn.
+- Revisit actual active effort, unfinished outcomes and available time each
+  Friday. Approval waits, elapsed-time tests and other external dependencies
+  can affect calendar duration even when active effort remains modest.
+
+## Provisional effort forecast and basis
+
+Davian supplied this forecast on 2026-10-27 after reviewing historical
+implementations/work and the time those tasks took, then projecting that pace
+onto the remaining scope. This plan adopts those observations as its basis; it
+does not invent individual task timings or claim an independently audited time
+ledger. Completed work remains evidence of pace, not a guarantee that a new
+feature will take the same time. Update these ranges as work supplies new data.
+
+| Remaining work                                            | Provisional active effort |
+| --------------------------------------------------------- | ------------------------- |
+| Environment rollout preparation and validation            | **4–8 hours**             |
+| OpenAPI contract, implementation and validation           | **10–20 hours**           |
+| MCP contract-result extension                             | **2–5 hours**             |
+| Product refinement, documentation and final demonstration | **10–17 hours**           |
+| Troubleshooting reserve                                   | **5–10 hours**            |
+| **Total**                                                 | **31–60 hours**           |
+
+The four work areas total **26–50 hours**, plus the reserve once. The reserve is
+for troubleshooting as needed, not a scheduled requirement to spend time.
 
 ## Current state and dependencies
 
@@ -51,25 +77,29 @@ not move cards, approve contracts, merge PRs or start product work.
 
 ## Weekly outcomes and effort
 
-The allocation changes implementation order from the proposal: workflows,
-local-agent, MCP foundations and hosting were delivered before OpenAPI. The
-original W5 OpenAPI milestone remains planned history; this forecast schedules
-OpenAPI import/validation in W5–W6, the dependent MCP extension in W7, feature
-freeze/regression in W8 and presentation-ready completion by **W9 Friday**.
-Moving the proposal's W10 finish activities into W9 is a substantive accelerated
-forecast revision inferred from the request on 2026-10-26; the exact finish date
-was not confirmed. MVP scope is unchanged. All rows remain
-**planned**, not completed; this is not faculty approval.
+The forecast keeps the proposal's original ten-week/200-hour planned timeline
+intact. Actual delivery order differs: workflows, local-agent, MCP foundations
+and hosting preceded OpenAPI. The weekly sequence below spreads the remaining
+work over W4–W9 with room for a slower pace; it does not require filling each
+week's capacity or accelerating to finish. The W9 Friday date remains inferred
+and unconfirmed, not a deadline or evidence of schedule pressure. MVP scope is
+unchanged. Every future outcome remains **planned**, not completed.
 
-| Week / dates                                        | Allocated effort                                                                        | Weekly outcome and completion evidence                                                                                                                                                                                                                                                                                                                                                                 |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **W4 — current**, Oct 26–Nov 1                      | **16 h**: environments rollout preparation 6; OpenAPI contract review 8; coordination 2 | Environment PRs #15/#16 are merged; remaining work prepares a reviewable rollout packet with deployment and runtime-validation holds explicit. OpenAPI decisions form a reviewable contract covering proposal requirements and compatibility. Unaccepted choices stay open; no implementation inferred from library selection.                                                                         |
-| **W5**, Nov 2–8                                     | **20 h**: import/generation 16; tests/docs/review 4                                     | After contract acceptance, bounded JSON/YAML import/status and supported-operation request generation work locally. Demonstrate path/query/header parameters, optional JSON bodies and safe examples; invalid/unsupported/ref/oversize/partial-publication cases fail explicitly. Preserve ownership, source sanitation and deletion.                                                                  |
-| **W6**, Nov 9–15                                    | **20 h**: validation/evidence/UI 16; tests/docs/review 4                                | Response validation persists immutable sanitized results for undocumented status, missing required properties, primitive type mismatch and required headers. Browser shows results; frozen operation/schema identity, failure semantics, retention/pins and deletion pass local tests for accepted targets. Start the final schema/contract reconciliation alongside this work.                        |
-| **W7**, Nov 16–22                                   | **20 h**: MCP results 12; integration/rollout preparation and tooling 8                 | Accepted MCP extension reads stored pass/fail/not-run/unsupported/unavailable states without fetching schemas or executing validation. Scope/revocation/audit/size/redaction tests pass. Environment/OpenAPI release and compatibility packets identify live gates. Guard tooling has deterministic stop/cancellation/in-flight/cleanup evidence before reuse.                                         |
-| **W8**, Nov 23–29                                   | **20 h**: reviewed rollout/genuine validation 12; regression/usability 8                | If separately authorized, environment/OpenAPI/MCP development rollout and bounded genuine browser/agent checks produce evidence and cleanup records. Otherwise record held gates and the MVP gap. Freeze after feature-completion evidence; browser-to-backend and ownership/redaction/history/workflow/agent/MCP regressions pass. Exercise critical loading/error/conflict and keyboard/focus paths. |
-| **W9 — inferred finish Friday Dec 4**, Nov 30–Dec 4 | **16–20 h**: final contracts/docs 4–6; demonstration/materials 4–6; contingency 8       | Resolve blocking defects within reserve, finalize contracts/executable schemas and setup/security/recovery docs, prepare sanitized demo data, rehearse, record a backup demonstration and finish presentation/submission materials by Friday. Record actual deployment checks and remaining limitations. No institutional submission deadline is claimed.                                              |
-| **Total**                                           | **112–116 h**                                                                           | **104–108 h planned work plus 8 h contingency**; W4 is limited to 16 h, later weeks to 20 h. Upper-case effort risk remains 140 h.                                                                                                                                                                                                                                                                     |
+| Week / dates                                        | Provisional active effort           | Weekly outcome and completion evidence                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **W4 — current**, Oct 26–Nov 1                      | **4–8 h**: environments             | PRs #15/#16 are merged. Prepare the environment rollout/compatibility packet; deployment, activation and runtime validation remain held for separate review. Complete and record validation only if separately authorized; otherwise carry that outcome forward explicitly.                                                                                                                        |
+| **W5**, Nov 2–8                                     | **10–20 h**: OpenAPI                | Review and accept the production contract before implementation. Deliver bounded JSON/YAML import, supported-operation request generation, four response violation classes and immutable sanitized results/UI for accepted targets. Verify invalid/unsupported/ref/oversize/partial-publication cases, ownership, redaction, retention/pins and cleanup. Record any separately held runtime gates. |
+| **W6**, Nov 9–15                                    | **2–5 h**: MCP extension            | After stored OpenAPI results and tool/DTO compatibility acceptance, expose stored pass/fail/not-run/unsupported/unavailable states. Verify scope, revocation, fail-closed audit, size limits and secret containment without schema fetching or validation on reads. Carry incomplete dependencies forward rather than claim completion.                                                            |
+| **W7**, Nov 16–22                                   | **4–7 h**: refinement/docs          | Run the primary browser-to-backend and ownership/redaction/history/workflow/agent/MCP regressions. Refine loading/error/conflict and keyboard/focus paths; reconcile accepted contracts and executable schemas. Record genuine-runtime gaps separately.                                                                                                                                            |
+| **W8**, Nov 23–29                                   | **4–6 h**: refinement/docs          | Resolve presentation-critical findings, review completion against the MVP, finish setup/security/recovery guidance and prepare sanitized demonstration data. Any authorized rollout/validation carried forward consumes its original work-area estimate, not a duplicate allocation.                                                                                                               |
+| **W9 — inferred finish Friday Dec 4**, Nov 30–Dec 4 | **2–4 h**: final demonstration      | Rehearse the demonstration, record a backup and finish presentation/submission materials. Document actual checks and remaining limitations. The inferred date is not an institutional submission deadline.                                                                                                                                                                                         |
+| **Across W4–W9, as needed**                         | **5–10 h**: troubleshooting reserve | Apply only when problems arise; record actual use once and revise affected work estimates when evidence warrants it.                                                                                                                                                                                                                                                                               |
+| **Total**                                           | **31–60 h**                         | **26–50 h work plus 5–10 h reserve**, within 116 h available capacity; **56–85 h unallocated**. Refinement/docs/demonstration rows together total 10–17 h.                                                                                                                                                                                                                                         |
+
+The weekly effort ranges distribute the work-area forecast; they are not extra
+hours on top of it. Dates and sequencing can move as dependencies resolve.
+Unused capacity can remain unused; it does not authorize stretch features or
+additional operational campaigns.
 
 ## Completion checks and risks
 
@@ -80,8 +110,8 @@ was not confirmed. MVP scope is unchanged. All rows remain
 - [x] Environment contract PR #15 and implementation PR #16 merged.
 - [ ] Environment deployment/activation and genuine runtime validation; held
       for separate review.
-- [ ] Track effort against the 116-hour capacity and revisit the 140-hour
-      upper-case risk each Friday.
+- [ ] Track actual active effort against the provisional 31–60-hour forecast
+      and 116-hour capacity; revise ranges and weekly outcomes each Friday.
 - [ ] OpenAPI contract accepted; import, generated requests, four validation
       classes, immutable safe results and accepted target coverage delivered.
 - [ ] MCP retrieves stored contract results with explicit unavailable/not-run
@@ -93,8 +123,9 @@ was not confirmed. MVP scope is unchanged. All rows remain
 The principal schedule risks are unaccepted OpenAPI semantics, review turnaround,
 compatibility of immutable evidence/readers and genuine runtime authorization.
 Reassess weekly using accepted scope, open findings, actual effort and remaining
-capacity. If a dependency slips, revise this forecast explicitly and raise a
-scope/deadline decision; keep affected checklist items open. The proposal's MVP
+capacity. If a dependency slips, update its weekly outcome and revise the forecast
+using the remaining headroom; keep affected checklist items open. Raise a
+scope/date tradeoff only if new evidence actually requires one. The proposal's MVP
 does not become smaller because a restricted prototype works.
 
 General-public signup/SES, custom-domain readiness, comprehensive cross-engine
