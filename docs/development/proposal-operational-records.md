@@ -22,17 +22,19 @@ total are preserved. A separate paragraph identifies the earlier W2/W9
 architecture revisions and Davian's new W4-to-W9 Friday finish target. There is
 no institutional submission deadline. The [remaining-work plan](../planning/remaining-work.md)
 now records an inferred, unconfirmed December 4 finish, six weekly slots and
-116 hours of remaining capacity: 16 hours from Tuesday, October 27 plus five
-20-hour weeks. Davian's subsequent history-based revision replaces the earlier
-112–140-hour estimate and 112–116-hour allocation with **31–60 hours of
-provisional active effort**, including a 5–10-hour troubleshooting reserve.
-This leaves 56–85 hours unallocated and withdraws the unsupported implication
-that work needs to accelerate to fit capacity. The ranges project Davian's
-observations of past implementations and their durations onto remaining work;
-they are subject to revision, not promises. PRs #15 and #16 are merged;
-environment deployment/activation and runtime validation remain held for
-separate review. The original October 26 assumption of 120 hours was corrected
-to 116 hours on October 27; the December 4 date remains inferred, not confirmed.
+**116 hours of remaining required effort under current assumptions**: 16 hours
+from Tuesday, October 27 plus five 20-hour weeks. The weekly workload prioritizes
+required MVP work, then useful refinement, then optional scope if the earlier
+priorities finish early. Davian's history-based duration estimates remain
+provisional: 26–50 hours for the four named work areas. Keep the 5–10-hour
+troubleshooting reserve separate; it contributes worked time only when actually
+used and logged once, displacing lower-priority work within the 116 hours.
+The prior 31–60-hour combined work-plus-reserve estimate is not the required
+workload or a record of hours worked. No acceleration requirement is inferred.
+PRs #15 and #16 are merged; environment deployment/activation and runtime
+validation remain held for separate review. The original October 26 assumption
+of 120 hours was corrected to 116 hours on October 27; December 4 remains
+inferred, not confirmed.
 
 Native revision-guarded edits and readback verified the relocated content,
 unchanged table cell text, image and faculty fields, preserved narrative/MVP
