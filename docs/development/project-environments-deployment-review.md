@@ -1,5 +1,15 @@
 # Project environments deployment review
 
+## Local provider-metering continuation — 2026-10-27
+
+The [preview meter implementation and fixture evidence](project-environments-preview-meter.md)
+now address the provider-process metering preparation gap locally. No AWS calls
+or live preview ran. The proposed separate60-minute/365-call preview window
+retains135 prior calls, the cumulative500 ceiling and the same $1 allowance.
+Review/authorization remains required before preview, with no automatic
+deployment, closure, activation or runtime continuation. Release source and all
+prepared/rollback hashes remain unchanged.
+
 ## Authorized inventory continuation — 2026-10-27
 
 The [inventory and artifact packet](project-environments-inventory.md) records

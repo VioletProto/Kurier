@@ -1,5 +1,17 @@
 # Project environments implementation and local verification
 
+## Provider-process meter preparation — 2026-10-27
+
+The [preview meter packet](project-environments-preview-meter.md) implements and
+locally verifies shared counting/time limits across isolated SST/Pulumi/Go/Node
+processes. Four unit tests and ten transport scenarios cover retries/pages,
+HTTP/2, concurrent limits, bypass denial, unexpected writes, redirects, failed
+transports, persistence failure and descendant shutdown. The proposed new window
+uses only the remaining365 calls, retaining135 prior calls and the cumulative
+$1 allowance. No AWS calls or live preview ran. Release source, package/static
+hashes and rollback bytes are unchanged. Preview and all deployment/runtime
+holds remain; this is tooling preparation for review.
+
 ## Release preparation — 2026-10-27
 
 Subsequent [authorized inventory and artifact preparation](project-environments-inventory.md)
