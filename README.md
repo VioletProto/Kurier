@@ -117,6 +117,13 @@ for local development only. Never store real credentials in the repository.
 
 ## Architecture
 
+The [capstone proposal](https://docs.google.com/document/d/1tatrrhqytTxAZxlrOnbSQRymmqjL2MmGq7Tdj0-1T60/edit)
+retains the project goals, research, MVP and original planned milestone schedule.
+See the [remaining-work plan](docs/planning/remaining-work.md) for the current
+week, remaining effort and weekly outcomes, and the
+[internal operational records](docs/development/proposal-operational-records.md)
+for relocated budgets, usage, deployment history and verification details.
+
 See [the architecture overview](docs/architecture/README.md) and
 [the SST viability spike](docs/spikes/sst-viability.md).
 [ADR 0002](docs/decisions/0002-serverless-persistence-topology.md) records the
