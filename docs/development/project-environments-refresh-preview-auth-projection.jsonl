@@ -1,0 +1,5 @@
+{"at":1793217214.2053576,"monotonic":51673.030787515,"event":"created","prior":165,"maximum":500,"seconds":3600,"parentSha256":"1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171"}
+{"at":1793217214.2157166,"monotonic":51673.04114136,"event":"shared-window","sourceWindowSha256":"19c362f32d5ce9e0ea4c8ad67c9f76e8ee03130f58c3e257aadbcdf1aa4c8f39"}
+{"at":1793217214.262621,"monotonic":51673.088053627,"event":"attempt","count":166,"service":"signin","operation":"CreateOAuth2Token","protocol":"HTTP/1.1"}
+{"at":1793217224.2950108,"monotonic":51683.120438414,"event":"outcome","attempt":166,"status":null,"transportError":true}
+{"at":1793217224.3041935,"monotonic":51683.129624179,"event":"stop","reason":"transport-failure","count":166}

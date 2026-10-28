@@ -1,0 +1,120 @@
+{
+  "toolingCommit": "9cf8d741214a2eb41e398634b0194162b87668a7",
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "command": [
+    "python3",
+    "-B",
+    "scripts/preview-meter/run.py",
+    "refresh-preview",
+    "--review-commit",
+    "9cf8d741214a2eb41e398634b0194162b87668a7",
+    "--source",
+    "/tmp/kurier-environments-release-source",
+    "--output",
+    "/home/king/Neumont/Kurier/.build/project-environments-preview/review-3"
+  ],
+  "invocations": 1,
+  "exitCode": 1,
+  "fixtureOnly": false,
+  "window": {
+    "startUtc": "2026-10-28T19:53:34.056108+00:00",
+    "nominalDeadlineUtc": "2026-10-28T20:53:34.056108+00:00",
+    "stopUtc": "2026-10-28T19:53:44.304193+00:00",
+    "elapsedToStopSeconds": 10.248245720998966,
+    "secondsAllowed": 3600,
+    "restartAllowed": false
+  },
+  "accounting": {
+    "priorCalls": 165,
+    "authenticationCalls": 1,
+    "refreshCalls": 1,
+    "identityVerificationCalls": 0,
+    "providerCalls": 0,
+    "newCalls": 1,
+    "additionalCeiling": 335,
+    "cumulativeCalls": 166,
+    "cumulativeCeiling": 500,
+    "unusedArithmeticHeadroom": 334,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "diagnosis": {
+    "phase": "authentication",
+    "reason": "transport-failure",
+    "attempt": 166,
+    "service": "signin",
+    "operation": "CreateOAuth2Token",
+    "httpStatus": null,
+    "transportError": true,
+    "remoteOutcome": "uncertain",
+    "transportSubtype": "not-retained",
+    "cause": "unestablished",
+    "identityVerified": false,
+    "refreshConfirmed": false,
+    "endpointPolicyDenial": false,
+    "providerStarted": false,
+    "authHandoffCreated": false,
+    "retryOrRepairPerformed": false
+  },
+  "evidence": {
+    "privateOriginals": {
+      ".build/project-environments-preview/review-3/authentication.jsonl": {
+        "sha256": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+        "bytes": 1224
+      },
+      ".build/project-environments-preview/review-3/window.json": {
+        "sha256": "19c362f32d5ce9e0ea4c8ad67c9f76e8ee03130f58c3e257aadbcdf1aa4c8f39",
+        "bytes": 580
+      },
+      ".build/project-environments-preview/review-3/cumulative-usage.json": {
+        "sha256": "346fa66374bac7ac87fd48ef250e4eb438d8d3ad725ca23876f9a7cacf684671",
+        "bytes": 244
+      },
+      ".build/project-environments-preview/window-from-165.json": {
+        "sha256": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+        "bytes": 309
+      }
+    },
+    "publicAuthenticationProjection": {
+      "path": "docs/development/project-environments-refresh-preview-auth-projection.jsonl",
+      "sha256": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+      "originalReplaced": false
+    }
+  },
+  "resourceDiff": {
+    "completed": false,
+    "partialAvailable": false,
+    "reason": "SST/Pulumi and provider never started"
+  },
+  "artifacts": {
+    "newPackagingGenerated": false,
+    "newPackagingReceiptGenerated": false,
+    "hashDifferences": [],
+    "releaseAndRollbackIntegrityVerifiedBeforeAndAfter": true,
+    "releaseManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "endpointPolicySha256": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "originalInventoryLedgerSha256": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+    "originalStoppedPreviewLedgerSha256": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb"
+  },
+  "holds": [
+    "deployment",
+    "stage closure",
+    "migration",
+    "activation",
+    "identity/project creation",
+    "live target requests",
+    "repairs",
+    "policy widening",
+    "repeated refresh",
+    "automatic restart"
+  ],
+  "publicationVerification": {
+    "repositoryVerifyPassed": true,
+    "sanitizedProjectionValidated": true,
+    "privateReceiptHashesRecheckedUnchanged": true,
+    "reviewedToolingUnchanged": true,
+    "releaseSourceClean": true,
+    "originalHistoricalChecksumsPassed": true,
+    "additionalAwsCallsDuringPublication": 0
+  }
+}

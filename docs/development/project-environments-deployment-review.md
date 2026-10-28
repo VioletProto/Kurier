@@ -1,5 +1,16 @@
 # Project environments deployment review
 
+## Authorized refresh-preview stopped — 2026-10-28 MDT
+
+The [live refresh-preview result](project-environments-refresh-preview-result.md)
+records the one authorized9cf8d74 invocation. One refresh attempt ended in
+transport-failure with no HTTP status; remote outcome and cause are uncertain.
+No identity verification or provider startup followed. New authentication1,
+provider0; cumulative166/500. No diff or regenerated packaging. Original ledgers,
+new private receipts, reviewed policy/tooling, release and rollback bytes remain
+intact. No repeated refresh, repair, widening or restart. The same cumulative $1
+allowance and all live-work holds remain;334 calls are arithmetic headroom only.
+
 ## Shared-budget handoff implemented — local review only
 
 The [amended tooling packet](project-environments-shared-budget.md) implements
