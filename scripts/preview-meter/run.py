@@ -21,6 +21,7 @@ ROOT = HERE.parents[1]
 PYTHON = ROOT / ".build/attempt-meter-venv/bin/python"
 MITM = ROOT / ".build/attempt-meter-venv/bin/mitmdump"
 sys.path.insert(0, str(HERE))
+from accounting import MAXIMUM, PRIOR, baseline
 from policy import PARENT_SHA, SOURCE
 
 SST = ROOT / "node_modules/sst-linux-x64/bin/sst"
@@ -46,6 +47,7 @@ def write(path, value):
 
 
 def valid_parent():
+    baseline(ROOT)
     p = ROOT / "docs/development/project-environments-inventory-attempts.jsonl"
     if sha(p) != PARENT_SHA:
         raise ValueError("parent-ledger-hash")
@@ -266,9 +268,14 @@ def launch(
     config = {
         "mode": "fixture" if fixture_origin else "preview",
         "ledger": str(directory / "attempts.jsonl"),
+        "budget": {"prior": PRIOR, "maximum": MAXIMUM, "seconds": 3600},
     }
+    if not fixture_origin:
+        config["budget"] = {"prior": PRIOR, "maximum": MAXIMUM, "seconds": 3600}
+        config["accounting"] = baseline(ROOT)
     if fixture_origin:
-        config.update(fixtureOrigin=fixture_origin, budget=budget or {})
+        config.update(fixtureOrigin=fixture_origin)
+        config["budget"].update(budget or {})
     if fixture_failure:
         config["fixtureFailure"] = True
     write(directory / "config.json", config)
@@ -480,8 +487,8 @@ def main():
             json.dumps(
                 {
                     "localChecksPassed": True,
-                    "priorCalls": 135,
-                    "remainingCalls": 365,
+                    "priorCalls": PRIOR,
+                    "remainingCalls": MAXIMUM - PRIOR,
                     "source": SOURCE,
                     "awsCalls": 0,
                 }
@@ -532,7 +539,7 @@ def main():
             {
                 "exitCode": r["exitCode"],
                 "newCalls": sum(x["event"] == "attempt" for x in r["rows"]),
-                "priorCalls": 135,
+                "priorCalls": PRIOR,
                 "stopped": any(x["event"] == "stop" for x in r["rows"]),
                 "previewOnly": True,
             }

@@ -1,5 +1,15 @@
 # Project environments deployment review
 
+## Local attribution/diagnostics follow-up
+
+The [endpoint investigation](project-environments-endpoint-investigation.md)
+reports the limits of the retained private evidence and locally tested bounded
+denial metadata. Historical hostname attribution is still unestablished; no
+endpoint-policy change is proposed or applied. Both original ledgers are frozen,
+and tooling carries cumulative165 forward without a new window. Release/rollback
+bytes remain unchanged; no AWS calls or preview rerun occurred. All live holds
+remain in effect.
+
 ## Actual authorized preview — stopped
 
 The [preview result and classified partial diff](project-environments-preview-result.md)

@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from run import ROOT, SST, launch, valid_parent
+from run import PRIOR, ROOT, SST, launch, valid_parent
 
 FAKE = {
     "AWS_ACCESS_KEY_ID": "localfixture",
@@ -252,7 +252,7 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
             assert any(x["protocol"] == "HTTP/2.0" for x in attempts)
             assert not any(x["event"] == "stop" for x in r["rows"])
             assert [x["count"] for x in attempts] == list(
-                range(136, 136 + len(attempts))
+                range(PRIOR + 1, PRIOR + 1 + len(attempts))
             )
             assert any("pulumi" in a[2].lower() for a in AUDIT), AUDIT
             assert any(x["operation"] == "GetParameter" for x in attempts)
@@ -303,7 +303,7 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                 ),
                 (
                     "limit",
-                    "for(let i=0;i<366;i++)await fetch('" + S3 + "/read');",
+                    "for(let i=0;i<336;i++)await fetch('" + S3 + "/read');",
                     500,
                     3600,
                     False,
@@ -320,7 +320,7 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                     "const{spawn}=await import('node:child_process');const code=\"for(let i=0;i<6;i++)try{await fetch('"
                     + S3
                     + "/read')}catch{}\";await Promise.all([0,1].map(()=>new Promise(r=>spawn('node',['--input-type=module','-e',code]).on('exit',r))));",
-                    139,
+                    169,
                     3600,
                     False,
                 ),
@@ -357,9 +357,9 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                     assert not aa and len(AUDIT) == old_audit and stops
                 elif name == "limit":
                     assert (
-                        len(aa) == 365
+                        len(aa) == 335
                         and aa[-1]["count"] == 500
-                        and COUNTS["get"] - old_get == 365
+                        and COUNTS["get"] - old_get == 335
                         and stops
                     )
                 elif name == "deadline":
@@ -385,6 +385,95 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                         "descendantShutdownVerified": name == "deadline",
                     }
                 )
+        # Each new endpoint scenario uses the production sandbox, but all
+        # supervisor/proxy/origin networking remains in the outer offline namespace.
+        for name, url, expected_host, expected_port, expected_phase in [
+            (
+                "denied-host",
+                "https://sts.us-east-1.amazonaws.com/private-local-private-canary?token=local-private-canary",
+                "sts.us-east-1.amazonaws.com",
+                443,
+                "connect",
+            ),
+            (
+                "secret-host-label",
+                "https://local-private-canary.example.invalid/private?token=local-private-canary",
+                "<redacted-host>",
+                443,
+                "connect",
+            ),
+            (
+                "denied-port",
+                "https://sts.us-east-2.amazonaws.com:8443/private?token=local-private-canary",
+                "sts.us-east-2.amazonaws.com",
+                8443,
+                "connect",
+            ),
+            (
+                "denied-http",
+                "http://sts.us-east-2.amazonaws.com/private?token=local-private-canary",
+                "sts.us-east-2.amazonaws.com",
+                80,
+                "request",
+            ),
+        ]:
+            code = """const{spawn}=await import('node:child_process');const fs=await import('node:fs');
+const grand=\"const fs=require('node:fs');setInterval(()=>fs.appendFileSync('/work/grand-pulse','x'),40)\";
+const child=\"const{spawn}=require('node:child_process');const fs=require('node:fs');spawn('node',['-e',\"+JSON.stringify(grand)+\"],{stdio:'ignore'});setInterval(()=>fs.appendFileSync('/work/child-pulse','x'),40)\";
+spawn('node',['-e',child],{stdio:'ignore'});setInterval(()=>fs.appendFileSync('/work/root-pulse','x'),40);
+for(let i=0;i<100&&!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse'));i++)await new Promise(r=>setTimeout(r,20));
+if(!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse')))throw Error('fixture descendants did not start');
+try{await fetch(TARGET,{method:'POST',headers:{Authorization:'Bearer local-private-canary',Cookie:'session=local-private-canary','X-Private':'local-private-canary'},body:'local-private-canary'})}catch{}
+await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
+            old_audit = len(AUDIT)
+            rr = launch(
+                source,
+                d / name,
+                ["node", "--input-type=module", "-e", code],
+                FAKE,
+                fixture_origin=origin.server_port,
+            )
+            assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
+            assert not any(x["event"] == "attempt" for x in rr["rows"])
+            denied = [x for x in rr["rows"] if x["event"] == "denied-endpoint"]
+            assert len(denied) == 1
+            record = denied[0]
+            assert (
+                record["hostname"] == expected_host
+                and record["port"] == expected_port
+                and record["phase"] == expected_phase
+            )
+            assert record["count"] == 165
+            assert any(x["event"] == "stop" and x["count"] == 165 for x in rr["rows"])
+            raw = (d / name / "attempts.jsonl").read_text()
+            assert all(
+                value not in raw
+                for value in [
+                    "local-private-canary",
+                    "Authorization",
+                    "Cookie",
+                    "token=",
+                    "/private",
+                    "https://",
+                    "http://",
+                ]
+            )
+            pulses = [
+                d / name / "work" / (x + "-pulse") for x in ["root", "child", "grand"]
+            ]
+            sizes = [p.stat().st_size for p in pulses]
+            assert all(sizes)
+            time.sleep(0.2)
+            assert sizes == [p.stat().st_size for p in pulses]
+            results.append(
+                {
+                    "case": name,
+                    "attempts": 0,
+                    "stopped": True,
+                    "allDescendantsStopped": True,
+                    "sanitizedDiagnostic": record,
+                }
+            )
         assert COUNTS["mutation"] == 0
         assert before_hashes == {
             p["name"]: p["zipSha256"] for p in valid_parent()["packages"]
@@ -412,6 +501,7 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                 for p in Path(__file__).parent.glob("*.py")
             },
             "fixtureOnly": True,
+            "realCumulativeUsagePreserved": 165,
             "awsCalls": 0,
             "releaseAndRollbackVerifiedUnchanged": True,
             "results": results,

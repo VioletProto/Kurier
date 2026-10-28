@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from diagnostics import endpoint_metadata
 from mitmproxy import http
 from policy import Budget, Stop, classify, service
 
@@ -19,7 +20,9 @@ class Gate:
         self.fixture_failure = config.get("fixtureFailure", False)
         if self.test and not isinstance(self.origin, int):
             raise ValueError("fixture-origin-required")
-        self.budget = Budget(config["ledger"], **config.get("budget", {}))
+        self.budget = Budget(config["ledger"], **config["budget"])
+        if "accounting" in config:
+            self.budget.record(event="accounting-baseline", **config["accounting"])
 
     async def running(self):
         async def watch():
@@ -34,8 +37,18 @@ class Gate:
 
         self.watch = asyncio.create_task(watch())
 
-    def held(self, flow, reason):
+    def held(self, flow, reason, phase):
         try:
+            if not self.budget.stopped:
+                q = flow.request
+                self.budget.record(
+                    event="denied-endpoint",
+                    count=self.budget.count,
+                    reason=reason,
+                    **endpoint_metadata(
+                        q.host, q.port, q.scheme, q.http_version, q.method, phase
+                    ),
+                )
             self.budget.stop(reason)
         except Stop:
             pass
@@ -53,7 +66,7 @@ class Gate:
                 raise Stop("port-held")
             service(flow.request.host)
         except Stop as e:
-            self.held(flow, str(e))
+            self.held(flow, str(e), "connect")
         except OSError:
             flow.kill()
             os._exit(74)
@@ -74,7 +87,7 @@ class Gate:
             if self.test:
                 q.scheme, q.host, q.port = "http", "127.0.0.1", self.origin
         except Stop as e:
-            self.held(flow, str(e))
+            self.held(flow, str(e), "request")
         except Exception:  # noqa: BLE001 - hook failures must terminate rather than forward
             flow.kill()
             os._exit(74)

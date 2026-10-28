@@ -1,5 +1,16 @@
 # Project environments implementation and local verification
 
+## Local endpoint diagnostics follow-up — 2026-10-27 MDT
+
+The [local investigation and diagnostic packet](project-environments-endpoint-investigation.md)
+keeps historical stop attribution unestablished, distinguishes source deductions
+from evidence, and adds bounded private hostname/protocol/port receipts. Eight
+unit tests and14 offline transport scenarios verify denial, redaction and
+parent/child/grandchild termination. The endpoint policy bytes are unchanged;
+no policy amendment is proposed. Launcher accounting now verifies both frozen
+ledgers and carries165/500 usage forward. Original ledgers, release and rollback
+bytes are preserved. No AWS calls, preview rerun or live work; all holds remain.
+
 ## Authorized preview stopped — 2026-10-27 MDT
 
 The [actual preview result](project-environments-preview-result.md) records the
