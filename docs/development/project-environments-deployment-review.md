@@ -1,5 +1,14 @@
 # Project environments deployment review
 
+## Latest authorized invocation — local credential refusal
+
+The [review-2 result](project-environments-preview-credential-stop.md) records
+the one authorized attempt with tooling0d1defa: expired cached credentials
+stopped it before proxy/SST startup, with zero new AWS calls and165 cumulative.
+No resource diff or new artifacts; original ledgers, policy, prepared release
+and rollback bytes preserved. No refresh, repair or restart. All live-work
+holds remain, and no continuation follows from the unused335-call headroom.
+
 ## Local attribution/diagnostics follow-up
 
 The [endpoint investigation](project-environments-endpoint-investigation.md)

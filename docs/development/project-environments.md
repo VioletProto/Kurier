@@ -1,5 +1,16 @@
 # Project environments implementation and local verification
 
+## Authorized preview invocation refused — 2026-10-27 MDT
+
+The [credential-stop result](project-environments-preview-credential-stop.md)
+records one invocation of reviewed tooling0d1defa with a fresh review-2 output
+path. Expired cached credentials caused the reviewed local guard to refuse
+before proxy/SST startup. Zero new AWS attempts; cumulative165/500, original
+ledgers and artifact/rollback bytes unchanged. No diff or new packaging exists.
+No refresh, repair, policy change or restart. The same cumulative $1 allowance
+and all deployment/closure/migration/activation/identity/project/runtime holds
+remain; unused335 calls do not authorize another invocation.
+
 ## Local endpoint diagnostics follow-up — 2026-10-27 MDT
 
 The [local investigation and diagnostic packet](project-environments-endpoint-investigation.md)
