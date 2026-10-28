@@ -1,5 +1,19 @@
 # Project environments deployment review
 
+## Authorized review-5 stopped — authentication succeeded, cumulative 200
+
+The [review-5 result](project-environments-refresh-preview-review-5.md) records
+one execution of clean `4a0faaf` against unchanged release source. Existing-session
+refresh and same-identity STS verification returned HTTP 200; 30 read-only provider
+attempts followed. The meter then held an unattributed CONNECT endpoint on port
+443; hostname is redacted by the reviewed sanitizer. **200/500 cumulative**:
+168 prior + 2 authentication/verification + 30 provider attempts. No restart,
+repair or widening followed. Partial component evidence has no final summary;
+frontend bytes match, no new ZIP completed, release/rollback bytes and all prior
+proofs remain unchanged. New campaign/provider claims and original ledgers are
+preserved. All deployment/runtime holds remain; future work needs reviewed
+200-based accounting and explicit authorization.
+
 ## Authentication endpoint alignment — offline verified, live work held
 
 The [amendment](project-environments-auth-endpoint-alignment.md) lets the pinned
