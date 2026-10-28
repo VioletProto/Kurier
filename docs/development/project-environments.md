@@ -1,5 +1,18 @@
 # Project environments implementation and local verification
 
+## Authorized preview stopped — 2026-10-27 MDT
+
+The [actual preview result](project-environments-preview-result.md) records the
+single invocation authorized at tooling `843428a3875e6d5ac3544420c392731d6a3991ee`:
+the unchanged meter stopped on `endpoint-held` after30 new AWS reads, retaining
+135 prior attempts for165 cumulative. The rejected hostname/operation was not
+retained, so attribution is unestablished. The partial event log has eight new
+route-component registrations but no completed AWS diff/summary. Frontend hashes
+match; no new Lambda ZIPs were produced; prepared and rollback bytes remain
+intact. No policy widening, refresh, repair or restart. The window is stopped;
+335 unused calls are arithmetic, not authority to continue. Deployment, closure,
+migration, activation, identity/project creation and runtime holds remain.
+
 ## Provider-process meter preparation — 2026-10-27
 
 The [preview meter packet](project-environments-preview-meter.md) implements and

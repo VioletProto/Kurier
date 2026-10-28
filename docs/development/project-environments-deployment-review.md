@@ -1,5 +1,16 @@
 # Project environments deployment review
 
+## Actual authorized preview — stopped
+
+The [preview result and classified partial diff](project-environments-preview-result.md)
+record the one authorized invocation of reviewed tooling843428a: stopped on an
+unrecognized endpoint at30 additional/165 cumulative physical AWS attempts.
+The endpoint attribution and complete resource plan remain unavailable. The
+frontend matches prepared bytes; no Lambda ZIPs completed. All original release
+and rollback hashes are preserved. No policy change, refresh, repair, restart,
+deployment, closure, activation or runtime work. The earlier proposed preview
+window below is historical; unused335 calls do not authorize continuation.
+
 ## Local provider-metering continuation — 2026-10-27
 
 The [preview meter implementation and fixture evidence](project-environments-preview-meter.md)
