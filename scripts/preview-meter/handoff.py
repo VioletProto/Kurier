@@ -92,7 +92,7 @@ def window_at(directory, root, *, clock=time.monotonic):
             type(w.get(k)) in (float, int) and math.isfinite(w[k])
             for k in ("started", "deadline")
         )
-        or w["deadline"] - w["started"] != SECONDS
+        or w["deadline"] != w["started"] + SECONDS
         or not w["started"] <= clock() < w["deadline"]
     ):
         raise ValueError("handoff-window-invalid-or-expired")

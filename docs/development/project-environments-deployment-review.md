@@ -1,5 +1,17 @@
 # Project environments deployment review
 
+## Local CONNECT investigation — private capture proposed, cumulative 200
+
+The [review-5 investigation](project-environments-denied-connect-review-5.md)
+cannot attribute the exact denied destination from retained private logs,
+generated configuration or installed source. No hostname is guessed or allowed.
+A default-off private host-only receipt is implemented for review: 253-character
+host/512-byte file cap, exclusive 0600 file in the ignored private ledger
+directory, no paths/queries/headers/bodies, unchanged public redaction and
+stop-before-forward. Any captured hostname requires private review before
+publication. Accounting verifies the preserved terminal campaign at **200/500**;
+no new claim/window or live call occurred. All deployment/runtime holds remain.
+
 ## Authorized review-5 stopped — authentication succeeded, cumulative 200
 
 The [review-5 result](project-environments-refresh-preview-review-5.md) records

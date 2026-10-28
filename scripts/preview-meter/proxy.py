@@ -1,4 +1,4 @@
-"""Host-side gate; no request/response material is persisted."""
+"""Host-side gate; optional private host-only receipt, no request bodies/headers."""
 
 import asyncio
 import json
@@ -11,6 +11,7 @@ from diagnostics import endpoint_metadata
 from handoff import SharedBudget, consume
 from mitmproxy import http
 from policy import Budget, Stop, classify, service
+from private_diagnostics import capture
 
 
 class Gate:
@@ -19,6 +20,10 @@ class Gate:
         self.test = config["mode"] == "fixture"
         self.origin = config.get("fixtureOrigin")
         self.fixture_failure = config.get("fixtureFailure", False)
+        self.private_connect = config.get("privateDeniedConnectCapture", False)
+        if type(self.private_connect) is not bool:
+            raise ValueError("private-capture-option-held")
+        self.private_directory = Path(config["ledger"]).parent
         if self.test and not isinstance(self.origin, int):
             raise ValueError("fixture-origin-required")
         if self.test:
@@ -60,10 +65,16 @@ class Gate:
                         q.host, q.port, q.scheme, q.http_version, q.method, phase
                     ),
                 )
+                if (
+                    self.private_connect
+                    and phase == "connect"
+                    and reason == "endpoint-held"
+                ):
+                    capture(self.private_directory, q.host, q.port, self.budget.count)
             self.budget.stop(reason)
         except Stop:
             pass
-        except OSError:
+        except Exception:  # noqa: BLE001 - diagnostics must never permit forwarding
             flow.kill()
             os._exit(74)
         flow.response = http.Response.make(

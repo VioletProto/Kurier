@@ -10,9 +10,12 @@ import tempfile
 import threading
 import time
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import parse_qs
 
+import run as runner
 from handoff import SharedBudget, begin, seal
+from private_diagnostics import FILENAME
 from run import PRIOR, ROOT, SST, launch, valid_parent
 
 FAKE = {
@@ -404,6 +407,13 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                 "connect",
             ),
             (
+                "private-capture-exists",
+                "https://local-private-canary.example.invalid/private?token=local-private-canary",
+                "<redacted-host>",
+                443,
+                "connect",
+            ),
+            (
                 "denied-port",
                 "https://sts.us-east-2.amazonaws.com:8443/private?token=local-private-canary",
                 "sts.us-east-2.amazonaws.com",
@@ -427,13 +437,23 @@ if(!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse')))throw 
 try{await fetch(TARGET,{method:'POST',headers:{Authorization:'Bearer local-private-canary',Cookie:'session=local-private-canary','X-Private':'local-private-canary'},body:'local-private-canary'})}catch{}
 await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
             old_audit = len(AUDIT)
-            rr = launch(
-                source,
-                d / name,
-                ["node", "--input-type=module", "-e", code],
-                FAKE,
-                fixture_origin=origin.server_port,
-            )
+            real_write = runner.write
+
+            def configure(path, value, real_write=real_write, name=name):
+                real_write(path, value)
+                if name == "private-capture-exists" and path.name == "config.json":
+                    real_write(path.parent / FILENAME, {"fixtureOriginal": True})
+
+            with patch.object(runner, "write", configure):
+                rr = launch(
+                    source,
+                    d / name,
+                    ["node", "--input-type=module", "-e", code],
+                    FAKE,
+                    fixture_origin=origin.server_port,
+                    private_denied_connect=name
+                    in {"secret-host-label", "private-capture-exists"},
+                )
             assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
             assert not any(x["event"] == "attempt" for x in rr["rows"])
             denied = [x for x in rr["rows"] if x["event"] == "denied-endpoint"]
@@ -445,7 +465,33 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                 and record["phase"] == expected_phase
             )
             assert record["count"] == PRIOR
-            assert any(x["event"] == "stop" and x["count"] == PRIOR for x in rr["rows"])
+            if name == "private-capture-exists":
+                assert rr["exitCode"] == 77
+                assert json.loads((d / name / FILENAME).read_text()) == {
+                    "fixtureOriginal": True
+                }
+            else:
+                assert any(
+                    x["event"] == "stop" and x["count"] == PRIOR for x in rr["rows"]
+                )
+            receipt = d / name / FILENAME
+            if name == "secret-host-label":
+                captured = json.loads(receipt.read_text())
+                assert captured["hostname"] == "local-private-canary.example.invalid"
+                assert captured["count"] == PRIOR and captured["port"] == 443
+                assert receipt.stat().st_mode & 0o777 == 0o600
+                assert receipt.stat().st_size <= 512
+                assert set(captured) == {
+                    "version",
+                    "phase",
+                    "count",
+                    "port",
+                    "hostnameStatus",
+                    "hostname",
+                }
+                assert not (d / name / "work" / FILENAME).exists()
+            elif name != "private-capture-exists":
+                assert not receipt.exists()
             raw = (d / name / "attempts.jsonl").read_text()
             assert all(
                 value not in raw
@@ -473,6 +519,10 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                     "stopped": True,
                     "allDescendantsStopped": True,
                     "sanitizedDiagnostic": record,
+                    "privateCaptureOptIn": name
+                    in {"secret-host-label", "private-capture-exists"},
+                    "privateCaptureFailureHeld": name == "private-capture-exists",
+                    "privateHostnameOmittedFromPublicReceipt": True,
                 }
             )
         # The real production proxy branch consumes a synthetic authentication

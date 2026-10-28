@@ -117,6 +117,18 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(Stop, "time-limit"):
             b.admit("s3", "GET", "HTTP/1.1")
 
+    def test_float_boundary_preserves_exact_created_deadline_without_tolerance(self):
+        clock = lambda: 64000.00000000001
+        d = self.directory.parent / "float-boundary"
+        w = h.begin(d, ROOT, clock=clock)
+        self.assertNotEqual(w["deadline"] - w["started"], h.SECONDS)
+        self.assertEqual(h.window_at(d, ROOT, clock=clock)["deadline"], w["deadline"])
+        data = json.loads((d / "window.json").read_text())
+        data["deadline"] += 0.000001
+        (d / "window.json").write_text(json.dumps(data))
+        with self.assertRaises(ValueError):
+            h.window_at(d, ROOT, clock=clock)
+
     def test_reused_handoff_claim_and_window_cannot_restart(self):
         receipt = self.complete()
         h.consume(receipt, ROOT, clock=self.clock)

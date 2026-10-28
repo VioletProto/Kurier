@@ -250,6 +250,7 @@ def launch(
     extra_ro=(),
     fixture_failure=False,
     handoff=None,
+    private_denied_connect=False,
 ):
     window = None
     if not fixture_origin:
@@ -279,6 +280,10 @@ def launch(
         "ledger": str(directory / "attempts.jsonl"),
         "budget": {"prior": PRIOR, "maximum": MAXIMUM, "seconds": 3600},
     }
+    if type(private_denied_connect) is not bool:
+        raise ValueError("private-capture-option-held")
+    if private_denied_connect:
+        config["privateDeniedConnectCapture"] = True
     if not fixture_origin:
         del config["budget"]
         config["handoff"] = str(Path(handoff).resolve())
@@ -482,6 +487,11 @@ def main():
     )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--review-commit")
+    parser.add_argument(
+        "--private-denied-connect",
+        action="store_true",
+        help="Opt in to a private bounded denied-host receipt; never publish before review",
+    )
     a = parser.parse_args()
     m = valid_parent()
     if sha(SST) != SST_SHA:
@@ -532,7 +542,14 @@ def main():
     output = a.output.resolve() / "provider"
     try:
         creds, handoff = authenticate(a.output.resolve(), ROOT, window)
-        r = launch(a.source.resolve(), output, command, creds, handoff=handoff)
+        r = launch(
+            a.source.resolve(),
+            output,
+            command,
+            creds,
+            handoff=handoff,
+            private_denied_connect=a.private_denied_connect,
+        )
     finally:
         # Even a failed or interrupted auth/launch retains conservative accounting.
         accounting = usage(a.output)
