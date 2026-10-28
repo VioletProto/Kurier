@@ -22,6 +22,7 @@ PYTHON = ROOT / ".build/attempt-meter-venv/bin/python"
 MITM = ROOT / ".build/attempt-meter-venv/bin/mitmdump"
 sys.path.insert(0, str(HERE))
 from accounting import MAXIMUM, PRIOR, baseline
+from handoff import begin, claim_campaign, usage, validate
 from policy import PARENT_SHA, SOURCE
 
 SST = ROOT / "node_modules/sst-linux-x64/bin/sst"
@@ -246,7 +247,13 @@ def launch(
     budget=None,
     extra_ro=(),
     fixture_failure=False,
+    handoff=None,
 ):
+    window = None
+    if not fixture_origin:
+        if handoff is None or budget is not None:
+            raise ValueError("validated-authentication-handoff-required")
+        window, _ = validate(handoff, ROOT)
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
     work = directory / "work"
     work.mkdir()
@@ -271,7 +278,8 @@ def launch(
         "budget": {"prior": PRIOR, "maximum": MAXIMUM, "seconds": 3600},
     }
     if not fixture_origin:
-        config["budget"] = {"prior": PRIOR, "maximum": MAXIMUM, "seconds": 3600}
+        del config["budget"]
+        config["handoff"] = str(Path(handoff).resolve())
         config["accounting"] = baseline(ROOT)
     if fixture_origin:
         config.update(fixtureOrigin=fixture_origin)
@@ -402,8 +410,11 @@ def launch(
             close_fds=True,
         )
         os.close(fd)
-        started = time.monotonic()
-        seconds = (budget or {}).get("seconds", 3600)
+        deadline = (
+            window["deadline"]
+            if window
+            else time.monotonic() + (budget or {}).get("seconds", 3600)
+        )
         while child.poll() is None:
             rows = [
                 json.loads(x)
@@ -413,7 +424,7 @@ def launch(
                 proxy.poll() is not None
                 or relay.poll() is not None
                 or any(x["event"] == "stop" for x in rows)
-                or time.monotonic() - started >= seconds
+                or time.monotonic() >= deadline
             ):
                 break
             time.sleep(0.05)
@@ -463,7 +474,7 @@ def launch(
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["check", "preview"])
+    parser.add_argument("action", choices=["check", "refresh-preview"])
     parser.add_argument(
         "--source", type=Path, default=Path("/tmp/kurier-environments-release-source")
     )
@@ -483,6 +494,9 @@ def main():
     ):
         raise ValueError("clean-pinned-source-required")
     if a.action == "check":
+        from authentication import sdk_pins
+
+        sdk_pins()
         print(
             json.dumps(
                 {
@@ -504,13 +518,30 @@ def main():
     base = (ROOT / ".build/project-environments-preview").resolve()
     if a.output.resolve().parent != base or a.source.resolve().is_relative_to(base):
         raise ValueError("private-output-outside-child-mounts-required")
-    creds = cached_credentials()
+    from authentication import authenticate, sdk_pins
+
+    sdk_pins()
+    # One fresh, non-resumable window, before the first possible AWS call.
+    if a.output.exists():
+        raise ValueError("fresh-output-required")
+    claim_campaign(ROOT, a.output)
+    window = begin(a.output.resolve(), ROOT)
     command = [str(SST), "diff", "--stage", "dev-api", "--json"]
-    r = launch(a.source.resolve(), a.output.resolve(), command, creds)
+    output = a.output.resolve() / "provider"
+    try:
+        creds, handoff = authenticate(a.output.resolve(), ROOT, window)
+        r = launch(a.source.resolve(), output, command, creds, handoff=handoff)
+    finally:
+        # Even a failed or interrupted auth/launch retains conservative accounting.
+        accounting = usage(a.output)
+        write(
+            a.output / "cumulative-usage.json",
+            {**accounting, "deadline": window["deadline"]},
+        )
     valid_parent()
     packaging = []
     for p in m["packages"]:
-        z = a.output.resolve() / "work/sst/artifacts" / p["name"] / "code.zip"
+        z = output / "work/sst/artifacts" / p["name"] / "code.zip"
         if z.exists():
             packaging.append(
                 {
@@ -520,7 +551,7 @@ def main():
                     "matchesPreparedZip": sha(z) == p["zipSha256"],
                 }
             )
-    frontend_path = a.output.resolve() / "work/sst/frontend-hosting-artifact.json"
+    frontend_path = output / "work/sst/frontend-hosting-artifact.json"
     frontend = json.loads(frontend_path.read_text()) if frontend_path.exists() else None
     write(
         a.output.resolve() / "packaging-review.json",
@@ -538,7 +569,7 @@ def main():
         json.dumps(
             {
                 "exitCode": r["exitCode"],
-                "newCalls": sum(x["event"] == "attempt" for x in r["rows"]),
+                "newCalls": accounting["newCalls"],
                 "priorCalls": PRIOR,
                 "stopped": any(x["event"] == "stop" for x in r["rows"]),
                 "previewOnly": True,

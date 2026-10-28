@@ -8,6 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from diagnostics import endpoint_metadata
+from handoff import SharedBudget, consume
 from mitmproxy import http
 from policy import Budget, Stop, classify, service
 
@@ -20,7 +21,17 @@ class Gate:
         self.fixture_failure = config.get("fixtureFailure", False)
         if self.test and not isinstance(self.origin, int):
             raise ValueError("fixture-origin-required")
-        self.budget = Budget(config["ledger"], **config["budget"])
+        if self.test:
+            if "handoff" in config:
+                raise ValueError("fixture-handoff-held")
+            self.budget = Budget(config["ledger"], **config["budget"])
+        else:
+            if config["mode"] != "preview" or "budget" in config or self.origin:
+                raise ValueError("preview-budget-reset-held")
+            window, count = consume(
+                config["handoff"], Path(__file__).resolve().parents[2]
+            )
+            self.budget = SharedBudget(config["ledger"], window, prior=count)
         if "accounting" in config:
             self.budget.record(event="accounting-baseline", **config["accounting"])
 

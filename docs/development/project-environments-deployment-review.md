@@ -1,5 +1,16 @@
 # Project environments deployment review
 
+## Shared-budget handoff implemented — local review only
+
+The [amended tooling packet](project-environments-shared-budget.md) implements
+a single-use authentication ledger and original-deadline handoff to the provider
+meter. The read-only policy is byte-identical. Offline ledger, exhaustion,
+deadline, failed-authentication and reuse/reset tests passed; no AWS calls,
+refresh or live preview occurred. Prior165/ceiling500 and the cumulative $1
+allowance remain. Source, original ledgers, release and rollback bytes are
+preserved. Execution awaits review of the amended commit and exact PR #18
+command; all live-work holds remain.
+
 ## Refresh authorization preflight — shared-budget gap
 
 The [local handoff preflight](project-environments-refresh-handoff-preflight.md)

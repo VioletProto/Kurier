@@ -1,0 +1,17 @@
+{
+  "version": "1.43.108",
+  "files": {
+    "__init__.py": "e5b7d7e1bb9b1ec5bb76d706ecdcb5217304c64357fda356970599034c5151d7",
+    "credentials.py": "38f95561c553c7e76d9da6d23d30a779dcfb0403a254cb98562e92e12cc0b0e8",
+    "httpsession.py": "14b2961314c711499da785ec30f00d9b04ead55a4403b2aba5c5e822ffd93b7b",
+    "endpoint.py": "0ce924a118e3ad98a2c71293541508efc1b3e0f84fb1b80272394829ba656262",
+    "session.py": "1da939f2ac5ee705775c5e5601177d97174f5ce0755ed695015118cb64c61d6c",
+    "utils.py": "e9d9182eacf6881499284a357fa1759796d7f57bc32930b691a92ad9915f2530",
+    "config.py": "3ff88b9f5af4b19a41792e5696918135e0bfc64011dcb4843fb515922239014f",
+    "client.py": "0e7b790ccb6aa2ca34803c6878aaead7db9108eee4e3fba0aa66008b647967f9",
+    "auth.py": "0713947738babdc828d1162bbe09c14df135b26108e0242fbddc2d2c52e891b6",
+    "awsrequest.py": "85d0ae028b154a991db1078c70987440c290c55b9c34f66e8ae4053de5d22c2f",
+    "data/signin/2023-01-01/service-2.json": "06c2ba0d3c74b024aba1ffecdff7bb81cf8a31d7841ae1af1574f726ccc839f6",
+    "data/sts/2011-06-15/service-2.json": "d97a08aa49223dee070009624c1d70f5b6af6ccc43220cc30ff566d5f02f3c0b"
+  }
+}

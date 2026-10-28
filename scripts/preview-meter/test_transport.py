@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 from urllib.parse import parse_qs
 
+from handoff import SharedBudget, begin, seal
 from run import PRIOR, ROOT, SST, launch, valid_parent
 
 FAKE = {
@@ -474,6 +475,52 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                     "sanitizedDiagnostic": record,
                 }
             )
+        # The real production proxy branch consumes a synthetic authentication
+        # handoff. Outer --unshare-net and a denied request prohibit AWS traffic.
+        shared = d / "shared-auth-window"
+        window = begin(shared, ROOT)
+        b = SharedBudget(shared / "authentication.jsonl", window, prior=165)
+        for service, operation in [
+            ("signin", "CreateOAuth2Token"),
+            ("sts", "GetCallerIdentity"),
+        ]:
+            n = b.admit(service, operation, "HTTP/1.1")
+            b.outcome(n, 200)
+        b.record(event="authenticated", count=b.count, identityVerified=True)
+        b.close()
+        receipt = seal(shared, ROOT)
+        old_audit = len(AUDIT)
+        rr = launch(
+            source,
+            shared / "provider",
+            ["node", "--input-type=module", "-e", code],
+            FAKE,
+            handoff=receipt,
+        )
+        assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
+        assert (shared / "provider-claim.json").is_file()
+        assert rr["rows"][0]["prior"] == 167
+        assert rr["rows"][1]["window"]["deadline"] == window["deadline"]
+        assert not any(x["event"] == "attempt" for x in rr["rows"])
+        assert any(x["event"] == "stop" and x["count"] == 167 for x in rr["rows"])
+        pulses = [
+            shared / "provider/work" / (x + "-pulse")
+            for x in ["root", "child", "grand"]
+        ]
+        sizes = [p.stat().st_size for p in pulses]
+        time.sleep(0.2)
+        assert all(sizes) and sizes == [p.stat().st_size for p in pulses]
+        results.append(
+            {
+                "case": "production-branch-shared-handoff-denial",
+                "attempts": 0,
+                "syntheticAuthenticationAttempts": 2,
+                "providerPrior": 167,
+                "originalDeadlinePreserved": True,
+                "singleUseClaim": True,
+                "allDescendantsStopped": True,
+            }
+        )
         assert COUNTS["mutation"] == 0
         assert before_hashes == {
             p["name"]: p["zipSha256"] for p in valid_parent()["packages"]

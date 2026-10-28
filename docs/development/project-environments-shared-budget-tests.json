@@ -1,0 +1,230 @@
+{
+  "fixtureOnly": true,
+  "awsCalls": 0,
+  "cumulativeUsage": 165,
+  "maximum": 500,
+  "remainingArithmeticHeadroom": 335,
+  "newUnitTests": [
+    "test_cross_phase_exhaustion_and_first_provider_ordinal",
+    "test_deadline_is_original_not_new_provider_window",
+    "test_reused_handoff_claim_and_window_cannot_restart",
+    "test_new_output_cannot_reset_same_campaign_baseline",
+    "test_copied_handoff_cannot_move_or_reset_window",
+    "test_window_field_resets_rejected",
+    "test_handoff_count_or_hash_reset_rejected",
+    "test_ledger_missing_duplicate_sequence_failure_and_unknown_rows",
+    "test_pending_authentication_never_seals",
+    "test_durable_write_failure_prevents_authentication_forwarding",
+    "test_terminal_usage_preserves_failed_attempt_and_flags_truncation",
+    "test_deadline_alarm_interrupts_synchronous_authentication",
+    "test_authentication_expired_window_forwards_nothing",
+    "test_provider_claim_race_has_only_one_winner",
+    "test_transport_records_before_forward_and_failure_latches",
+    "test_auth_redirect_error_and_retry_do_not_forward_again",
+    "test_auth_unexpected_endpoint_grant_and_pagination_are_not_forwarded",
+    "test_auth_second_refresh_or_extra_identity_read_blocked",
+    "test_launcher_rejects_unvalidated_or_reset_budget_before_startup",
+    "test_existing_cache_is_only_mutable_file_and_rejects_changed_identity",
+    "test_actual_sdk_refresh_and_identity_with_fake_physical_transport",
+    "test_sdk_failure_or_uncertainty_never_produces_handoff"
+  ],
+  "newUnitTestCount": 22,
+  "unitTestTotal": 30,
+  "unitTestsPassed": true,
+  "transportSuitePassed": true,
+  "repositoryVerifyPassed": true,
+  "pythonLintAndFormatPassed": true,
+  "localPinAndArtifactChecksPassed": true,
+  "liveWindowCreated": false,
+  "liveRefreshOrPreviewExecuted": false,
+  "deploymentPackagingChanged": false,
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "transport": {
+    "tooling": {
+      "sstSha256": "539659fa60f00e8b9610b7dfd967928d382b4800ca25452d9697e31a4eb521fd",
+      "pulumiAwsProviderSha256": "741bfe58a4f6100dfa839beb98d53e0f27c9b63998d53a293cbbfb7a6b23a797",
+      "node": "v26.12.1",
+      "go": "go version go1.27.3-X:nodwarf5 linux/amd64",
+      "bwrap": "bubblewrap 0.13.1"
+    },
+    "codeSha256": {
+      "test_diagnostics.py": "0607a15f5c5abe4feb05edd7bc3e55f02d70dd62c6693fac3918b200910acfdf",
+      "policy.py": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+      "handoff.py": "2790fa61f22c98f8ef998dedd41092b345780920f8277d1c16250f1d6ba21506",
+      "test_transport.py": "92039175f1876c8841c03b425072805fdf998e59c3bbad281910b3c2b04b6d4b",
+      "test_unit.py": "6f77bfc13af9a0bac06af081637b4efcc7e6e98d53934e4f4d488b72f610fc28",
+      "proxy.py": "efb37c1800295e1b8151ac2dd810ed85e08f28c81a3a37c3547bb23cca5f73d0",
+      "authentication.py": "eafb8bc95cae39bb01cf9de049483b8b6181b8d8744d245acb4ad03120533803",
+      "diagnostics.py": "e145bed68d269065352ce428c28dbfbc4cfa80edf3f7de77d6ffe72e0fad0006",
+      "test_handoff.py": "365871fe2854dbcea3fb921fd7541ca6b487368eb2aad89d454082ef7a6e93f6",
+      "accounting.py": "1a84c03c77a6b59f5a7af241ffb72b2d54e96cbacf2bbc53b070a170cba10435",
+      "run.py": "6f8f9af56a2c1bb5100ed16cdf8ae86899df71c948b0ebced6f74a0ad3cf5a06"
+    },
+    "fixtureOnly": true,
+    "realCumulativeUsagePreserved": 165,
+    "awsCalls": 0,
+    "releaseAndRollbackVerifiedUnchanged": true,
+    "results": [
+      {
+        "case": "shared-real-SST-Pulumi-Go-Node",
+        "attempts": 14,
+        "goRetryPages": 3,
+        "nodeRetryPages": 3,
+        "exitCode": 0,
+        "namespaceBypassHeld": true,
+        "httpVersions": ["HTTP/1.1", "HTTP/2.0"],
+        "realSST": true,
+        "realPulumiAWSProvider": true,
+        "attemptCounts": {
+          "dynamodb:ListTables": 3,
+          "s3:GET": 6,
+          "ssm:GetParameter": 2,
+          "sts:GetCallerIdentity": 3
+        }
+      },
+      {
+        "case": "write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "state-write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "transaction-write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "limit",
+        "attempts": 335,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "deadline",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": true
+      },
+      {
+        "case": "concurrent",
+        "attempts": 4,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "redirect",
+        "attempts": 1,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "disconnect",
+        "attempts": 1,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "persistence",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "denied-host",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793216940.1221333,
+          "event": "denied-endpoint",
+          "count": 165,
+          "reason": "endpoint-held",
+          "hostname": "sts.us-east-1.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "secret-host-label",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793216941.7033463,
+          "event": "denied-endpoint",
+          "count": 165,
+          "reason": "endpoint-held",
+          "hostname": "<redacted-host>",
+          "hostnameStatus": "redacted",
+          "trailingDot": false,
+          "port": 443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "denied-port",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793216943.2827144,
+          "event": "denied-endpoint",
+          "count": 165,
+          "reason": "port-held",
+          "hostname": "sts.us-east-2.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 8443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "denied-http",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793216944.8028634,
+          "event": "denied-endpoint",
+          "count": 165,
+          "reason": "tls-required",
+          "hostname": "sts.us-east-2.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 80,
+          "scheme": "http",
+          "httpVersion": "HTTP/1.1",
+          "method": "POST",
+          "phase": "request"
+        }
+      },
+      {
+        "case": "production-branch-shared-handoff-denial",
+        "attempts": 0,
+        "syntheticAuthenticationAttempts": 2,
+        "providerPrior": 167,
+        "originalDeadlinePreserved": true,
+        "singleUseClaim": true,
+        "allDescendantsStopped": true
+      }
+    ]
+  }
+}
