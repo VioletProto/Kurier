@@ -1,5 +1,19 @@
 # Project environments deployment review
 
+## Authentication endpoint alignment — offline verified, live work held
+
+The [amendment](project-environments-auth-endpoint-alignment.md) lets the pinned
+SDK resolve CreateOAuth2Token and accepts only the prepared token URL at
+https://us-east-2.signin.aws.amazon.com/v1/token before admission/forwarding.
+Offline tests confirm DPoP URI alignment and rejection of the old/wrong hosts.
+The current authentication/preview baseline verifies **168/500**; historical
+ledgers/claims, release/rollback bytes and the byte-identical preview policy
+remain preserved. **63 unit tests and 15 process/transport scenarios**, local
+preflight and repository verification passed without external networking.
+Implementation `4a0faafc673e97d9faae3f26906a327a8bd06e71` and an exact proposed
+execution command are published for review. No refresh, probe or preview ran;
+recovery and historical causation remain unverified. All live-work holds remain.
+
 ## Offline operation-endpoint comparison — no live work
 
 The [comparison](project-environments-auth-path-comparison.md) confirms that
