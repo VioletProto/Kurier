@@ -1,5 +1,17 @@
 # Project environments implementation and local verification
 
+## Authorized review-4 stopped — typed connect-timeout
+
+The [review-4 result](project-environments-refresh-preview-review-4.md) records
+one execution of7e6e504 with a fresh166-based window. One refresh attempt at167
+recorded connect-timeout/connect, no numeric code or HTTP status. No identity
+verification or provider work followed; no diff or new packaging. Cumulative
+167/500, authentication1/provider0. Underlying cause and remote refresh outcome
+remain unverified; prior uncertainty is preserved. Both failed runs/claims, all
+ledgers, tooling/policy, release and rollback bytes remain intact. No repeat,
+repair, widening or restart. Same cumulative $1 allowance,333 arithmetic calls
+remaining; all live-work holds remain.
+
 ## Local authentication diagnostics and166 accounting — review only
 
 The [local investigation](project-environments-auth-transport-investigation.md)
