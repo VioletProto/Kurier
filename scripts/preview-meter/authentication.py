@@ -19,6 +19,8 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
+from accounting import PRIOR
+from auth_diagnostics import DeadlineExpired, transport_diagnostic
 from handoff import SharedBudget, seal
 from policy import Stop
 
@@ -29,6 +31,7 @@ STS = "https://sts.us-east-2.amazonaws.com"
 
 def sdk_pins():
     import botocore
+    import urllib3
 
     base = Path(botocore.__file__).parent
     pins = json.loads(Path(__file__).with_name("authentication-sdk.json").read_text())
@@ -37,6 +40,12 @@ def sdk_pins():
         for name, sha in pins["files"].items()
     ):
         raise ValueError("authentication-sdk-pin")
+    base = Path(urllib3.__file__).parent
+    if urllib3.__version__ != pins["urllib3"]["version"] or any(
+        hashlib.sha256((base / name).read_bytes()).hexdigest() != sha
+        for name, sha in pins["urllib3"]["files"].items()
+    ):
+        raise ValueError("authentication-pool-pin")
 
 
 class ExistingCache:
@@ -139,7 +148,12 @@ class Transport:
             self.operations = candidate
             try:
                 response = self.send(session, request)
-            except BaseException:
+            except BaseException as error:
+                self.budget.record(
+                    event="authentication-transport-error",
+                    attempt=n,
+                    **transport_diagnostic(error),
+                )
                 self.budget.outcome(n, error=True)
                 raise
             self.budget.outcome(n, response.status_code)
@@ -153,10 +167,6 @@ class Transport:
             raise
         except Exception:  # noqa: BLE001 - never expose a raw transport/policy error
             self.budget.stop("authentication-transport-or-policy-failure")
-
-
-class DeadlineExpired(BaseException):
-    pass
 
 
 @contextlib.contextmanager
@@ -193,7 +203,7 @@ def authenticate(directory, root, window):
     old_logging = logging.root.manager.disable
     logging.disable(logging.CRITICAL)
     try:
-        budget = SharedBudget(directory / "authentication.jsonl", window, prior=165)
+        budget = SharedBudget(directory / "authentication.jsonl", window, prior=PRIOR)
         transport = Transport(budget, cache.original, URLLib3Session.send)
         # Explicit endpoint + unsigned/static credentials avoids every default
         # provider (IMDS, process, SSO, environment or automatic SDK refresh).

@@ -47,10 +47,10 @@ def boot_id():
 
 
 def claim_campaign(root, directory):
-    # A different output path must not replay the same cumulative165 baseline.
+    # A different output path must not replay the same cumulative baseline.
     # A later authorized run needs reviewed accounting for any calls spent here.
     persist(
-        root / ".build/project-environments-preview/window-from-165.json",
+        root / f".build/project-environments-preview/window-from-{PRIOR}.json",
         {"directory": str(Path(directory).resolve()), **baseline(root)},
     )
 

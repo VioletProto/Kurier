@@ -321,7 +321,7 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                     "const{spawn}=await import('node:child_process');const code=\"for(let i=0;i<6;i++)try{await fetch('"
                     + S3
                     + "/read')}catch{}\";await Promise.all([0,1].map(()=>new Promise(r=>spawn('node',['--input-type=module','-e',code]).on('exit',r))));",
-                    169,
+                    PRIOR + 4,
                     3600,
                     False,
                 ),
@@ -358,9 +358,9 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                     assert not aa and len(AUDIT) == old_audit and stops
                 elif name == "limit":
                     assert (
-                        len(aa) == 335
+                        len(aa) == 334
                         and aa[-1]["count"] == 500
-                        and COUNTS["get"] - old_get == 335
+                        and COUNTS["get"] - old_get == 334
                         and stops
                     )
                 elif name == "deadline":
@@ -444,8 +444,8 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                 and record["port"] == expected_port
                 and record["phase"] == expected_phase
             )
-            assert record["count"] == 165
-            assert any(x["event"] == "stop" and x["count"] == 165 for x in rr["rows"])
+            assert record["count"] == 166
+            assert any(x["event"] == "stop" and x["count"] == 166 for x in rr["rows"])
             raw = (d / name / "attempts.jsonl").read_text()
             assert all(
                 value not in raw
@@ -479,7 +479,7 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
         # handoff. Outer --unshare-net and a denied request prohibit AWS traffic.
         shared = d / "shared-auth-window"
         window = begin(shared, ROOT)
-        b = SharedBudget(shared / "authentication.jsonl", window, prior=165)
+        b = SharedBudget(shared / "authentication.jsonl", window, prior=166)
         for service, operation in [
             ("signin", "CreateOAuth2Token"),
             ("sts", "GetCallerIdentity"),
@@ -499,10 +499,10 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
         )
         assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
         assert (shared / "provider-claim.json").is_file()
-        assert rr["rows"][0]["prior"] == 167
+        assert rr["rows"][0]["prior"] == 168
         assert rr["rows"][1]["window"]["deadline"] == window["deadline"]
         assert not any(x["event"] == "attempt" for x in rr["rows"])
-        assert any(x["event"] == "stop" and x["count"] == 167 for x in rr["rows"])
+        assert any(x["event"] == "stop" and x["count"] == 168 for x in rr["rows"])
         pulses = [
             shared / "provider/work" / (x + "-pulse")
             for x in ["root", "child", "grand"]
@@ -515,7 +515,7 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                 "case": "production-branch-shared-handoff-denial",
                 "attempts": 0,
                 "syntheticAuthenticationAttempts": 2,
-                "providerPrior": 167,
+                "providerPrior": 168,
                 "originalDeadlinePreserved": True,
                 "singleUseClaim": True,
                 "allDescendantsStopped": True,
@@ -548,7 +548,7 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                 for p in Path(__file__).parent.glob("*.py")
             },
             "fixtureOnly": True,
-            "realCumulativeUsagePreserved": 165,
+            "realCumulativeUsagePreserved": 166,
             "awsCalls": 0,
             "releaseAndRollbackVerifiedUnchanged": True,
             "results": results,

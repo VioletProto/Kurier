@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from accounting import PRIOR, baseline
+from accounting import FROZEN_FILES, PRIOR, baseline
 from diagnostics import endpoint_metadata
 from policy import Stop, service
 from run import ROOT
@@ -106,18 +106,17 @@ class DiagnosticTests(unittest.TestCase):
             )
 
     def test_accounting_preserves_both_original_ledgers(self):
-        self.assertEqual(PRIOR, 165)
+        self.assertEqual(PRIOR, 166)
         b = baseline(ROOT)
-        self.assertEqual((b["prior"], b["maximum"]), (165, 500))
+        self.assertEqual((b["prior"], b["maximum"]), (166, 500))
         with tempfile.TemporaryDirectory() as t:
             root = Path(t)
             dest = root / "docs/development"
             dest.mkdir(parents=True)
-            for name in [
-                "project-environments-inventory-attempts.jsonl",
-                "project-environments-preview-attempts.jsonl",
-            ]:
-                shutil.copyfile(ROOT / "docs/development" / name, dest / name)
+            for name in FROZEN_FILES:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / name, target)
             self.assertEqual(baseline(root), b)
             with (dest / "project-environments-preview-attempts.jsonl").open("a") as f:
                 f.write("\n")

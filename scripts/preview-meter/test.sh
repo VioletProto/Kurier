@@ -4,6 +4,7 @@ cd "$(dirname "$0")/../.."
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_unit.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_diagnostics.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_handoff.py
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_auth_transport_diagnostics.py
 # The entire fixture supervisor/proxy/origin has no external network route.
 # The production child sandbox is nested inside it and more restrictive.
 bwrap --unshare-net --ro-bind / / --bind "$PWD" "$PWD" --bind /tmp /tmp --proc /proc --dev /dev \

@@ -1,5 +1,16 @@
 # Project environments implementation and local verification
 
+## Local authentication diagnostics and166 accounting — review only
+
+The [local investigation](project-environments-auth-transport-investigation.md)
+finds no retained subtype establishing the historical transport cause; remote
+refresh outcome remains uncertain. Typed, bounded category/phase/numeric-code
+diagnostics and offline regressions are added without messages or request data.
+Accounting now verifies166/500 against all frozen proofs, preserving the failed
+165 campaign claim. No network probe, AWS request, live refresh/preview or repair
+ran. Source, policy and release/rollback bytes remain unchanged. Proposed recovery
+requires separate review and authorization; all live-work holds remain.
+
 ## Authorized refresh-preview stopped — 2026-10-28 MDT
 
 The [live refresh-preview result](project-environments-refresh-preview-result.md)

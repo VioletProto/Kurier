@@ -12,6 +12,17 @@
     "auth.py": "0713947738babdc828d1162bbe09c14df135b26108e0242fbddc2d2c52e891b6",
     "awsrequest.py": "85d0ae028b154a991db1078c70987440c290c55b9c34f66e8ae4053de5d22c2f",
     "data/signin/2023-01-01/service-2.json": "06c2ba0d3c74b024aba1ffecdff7bb81cf8a31d7841ae1af1574f726ccc839f6",
-    "data/sts/2011-06-15/service-2.json": "d97a08aa49223dee070009624c1d70f5b6af6ccc43220cc30ff566d5f02f3c0b"
+    "data/sts/2011-06-15/service-2.json": "d97a08aa49223dee070009624c1d70f5b6af6ccc43220cc30ff566d5f02f3c0b",
+    "exceptions.py": "4324b05eac48020ded5b77d949d57b1e1de6dd47f57fe2757882804691088bcc"
+  },
+  "urllib3": {
+    "version": "2.8.0",
+    "files": {
+      "exceptions.py": "8503c7a2aa38cb0e3a7ac3525647225505d5520031580825b21e8c6f242d6be4",
+      "connection.py": "8a59dab3d7b6a0e1b38a5fd6e565ef6a49381bb995729d015e4f6440ab8523e0",
+      "connectionpool.py": "6a147869216b94449a053e869d4311cba23294551c83ee20fe5d2f1eaff50a3e",
+      "util/connection.py": "2633bbdb69731e5ccb5cf4e4afd65605d86c7979cc5633126f50c92d5ad74a74",
+      "util/retry.py": "0fdc26b67d1ecc42b0cab3972f20bb07284d783f4dc318394fe8b99098c42925"
+    }
   }
 }

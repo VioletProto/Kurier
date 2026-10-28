@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 import authentication as auth
 import handoff as h
+from accounting import FROZEN_FILES
 from policy import Stop
 from run import ROOT, launch
 
@@ -51,7 +52,7 @@ class Tests(unittest.TestCase):
         self.clock = lambda: self.now[0]
         self.window = h.begin(self.directory, ROOT, clock=self.clock)
 
-    def budget(self, name="authentication.jsonl", prior=165):
+    def budget(self, name="authentication.jsonl", prior=166):
         b = h.SharedBudget(
             self.directory / name, self.window, prior=prior, clock=self.clock
         )
@@ -79,14 +80,14 @@ class Tests(unittest.TestCase):
         receipt = self.complete()
         self.now[0] += 10
         w, prior = h.consume(receipt, ROOT, clock=self.clock)
-        self.assertEqual(prior, 167)
+        self.assertEqual(prior, 168)
         b = h.SharedBudget(
             self.directory / "provider.jsonl", w, prior=prior, clock=self.clock
         )
         self.addCleanup(b.close)
-        self.assertEqual(b.admit("sts", "GetCallerIdentity", "HTTP/2"), 168)
-        b.outcome(168, 200)
-        for _ in range(332):
+        self.assertEqual(b.admit("sts", "GetCallerIdentity", "HTTP/2"), 169)
+        b.outcome(169, 200)
+        for _ in range(331):
             n = b.admit("s3", "GET", "HTTP/2")
             if n == 500:
                 with self.assertRaisesRegex(Stop, "call-limit"):
@@ -100,7 +101,7 @@ class Tests(unittest.TestCase):
             json.loads(x)
             for x in (self.directory / "provider.jsonl").read_text().splitlines()
         ]
-        self.assertEqual(sum(r["event"] == "attempt" for r in rows), 333)
+        self.assertEqual(sum(r["event"] == "attempt" for r in rows), 332)
 
     def test_deadline_is_original_not_new_provider_window(self):
         receipt = self.complete()
@@ -130,11 +131,10 @@ class Tests(unittest.TestCase):
         docs = root / "docs/development"
         docs.mkdir(parents=True)
         (root / ".build/project-environments-preview").mkdir(parents=True)
-        for name in [
-            "project-environments-inventory-attempts.jsonl",
-            "project-environments-preview-attempts.jsonl",
-        ]:
-            shutil.copyfile(ROOT / "docs/development" / name, docs / name)
+        for name in FROZEN_FILES:
+            dest = root / name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / name, dest)
         h.claim_campaign(root, root / "output-1")
         with self.assertRaises(FileExistsError):
             h.claim_campaign(root, root / "output-2")
@@ -174,7 +174,7 @@ class Tests(unittest.TestCase):
         receipt = self.complete()
         original = receipt.read_text()
         for key, value in [
-            ("prior", 165),
+            ("prior", 166),
             ("authenticationSha256", "0" * 64),
             ("windowSha256", "0" * 64),
         ]:
@@ -193,13 +193,13 @@ class Tests(unittest.TestCase):
         changes = [
             lambda r: r.pop(3),
             lambda r: r.insert(4, r[3]),
-            lambda r: r[2].update(count=168),
+            lambda r: r[2].update(count=169),
             lambda r: r[3].update(status=403),
             lambda r: r[3].update(transportError=True),
             lambda r: r[2].update(operation="CreateUser"),
             lambda r: r.insert(-1, {"event": "stop", "monotonic": 100}),
             lambda r: r[-1].update(identityVerified=False),
-            lambda r: r[-1].update(count=165),
+            lambda r: r[-1].update(count=166),
             lambda r: r[2].update(monotonic=99),
             lambda r: r.pop(),
         ]
@@ -230,7 +230,7 @@ class Tests(unittest.TestCase):
     def test_terminal_usage_preserves_failed_attempt_and_flags_truncation(self):
         b = self.budget()
         b.admit("signin", "CreateOAuth2Token", "HTTP/1.1")
-        self.assertEqual(h.usage(self.directory)["cumulativeCalls"], 166)
+        self.assertEqual(h.usage(self.directory)["cumulativeCalls"], 167)
         with open(self.directory / "authentication.jsonl", "a") as f:
             f.write('{"event":')
         self.assertFalse(h.usage(self.directory)["ledgerIntegrity"])
@@ -275,7 +275,7 @@ class Tests(unittest.TestCase):
                 .splitlines()
             ]
             self.assertEqual(rows[-1]["event"], "attempt")
-            self.assertEqual(rows[-1]["count"], 166)
+            self.assertEqual(rows[-1]["count"], 167)
             raise OSError("local-private-canary")
 
         t = auth.Transport(b, TOKEN, failed)
@@ -283,7 +283,7 @@ class Tests(unittest.TestCase):
             t.forward(None, request())
         with self.assertRaises(Stop):
             t.forward(None, request("sts"))
-        self.assertEqual(b.count, 166)
+        self.assertEqual(b.count, 167)
         self.assertNotIn(
             "local-private-canary",
             (self.directory / "authentication.jsonl").read_text(),
@@ -307,7 +307,7 @@ class Tests(unittest.TestCase):
                 with self.assertRaises(Stop):
                     t.forward(None, request())
                 self.assertEqual(len(calls), 1)
-                self.assertEqual(b.count, 166)
+                self.assertEqual(b.count, 167)
 
     def test_auth_unexpected_endpoint_grant_and_pagination_are_not_forwarded(self):
         for change in [
@@ -329,7 +329,7 @@ class Tests(unittest.TestCase):
                 with self.assertRaises(Stop):
                     t.forward(None, r)
                 unused.assert_not_called()
-            self.assertEqual(b.count, 165)
+            self.assertEqual(b.count, 166)
 
     def test_auth_second_refresh_or_extra_identity_read_blocked(self):
         for service in ["signin", "sts"]:
@@ -357,7 +357,7 @@ class Tests(unittest.TestCase):
                     [],
                     {},
                     handoff=self.directory / "handoff.json",
-                    budget={"prior": 165},
+                    budget={"prior": 166},
                 )
             child.assert_not_called()
 
@@ -493,7 +493,7 @@ class SDKTests(unittest.TestCase):
                 if mode == "success":
                     creds, receipt = auth.authenticate(d, ROOT, w)
                     self.assertEqual(creds["AWS_ACCESS_KEY_ID"], "local-access")
-                    self.assertEqual(h.validate(receipt, ROOT)[1], 167)
+                    self.assertEqual(h.validate(receipt, ROOT)[1], 168)
                 else:
                     with self.assertRaisesRegex(
                         RuntimeError, "failed-or-uncertain-no-restart"
