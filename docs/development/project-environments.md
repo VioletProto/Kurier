@@ -1,5 +1,16 @@
 # Project environments implementation and local verification
 
+## Authorized DNS/TCP diagnostic stopped — cumulative168
+
+The [once-only diagnostic result](project-environments-network-probe-result.md)
+records two configured-resolver queries, one returned public IPv4 address, no
+AAAA address, and one IPv4 TCP connect timeout. TLS0, HTTP/API/authentication0;
+no refresh or preview. Actual context was measured; underlying cause and both
+prior remote refresh outcomes remain uncertain. One charged connection brings
+cumulative usage to168/500. New/old claims and every ledger remain preserved.
+Offline59 unit/15 transport checks passed before execution. No repair, settings
+change, retry or continuation; release/rollback bytes and all holds remain.
+
 ## Local network-context comparison and167 accounting — review only
 
 The [context comparison and probe proposal](project-environments-network-context.md)
