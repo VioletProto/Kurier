@@ -126,7 +126,7 @@ def custom_client(Session, Config, unsigned):
     # Extract the real helper's nested client factory without invoking authenticate
     # or ExistingCache. The extracted function has no credential-loader access.
     path = ROOT / "scripts/preview-meter/authentication.py"
-    if sha(path) != "c9565d8902a8720d5ac0cdb0818f76ef2f66429f1e772ccf8a9cd7cc64c71286":
+    if sha(path) != "5abf92df10c60209bd764bb76f8d149f2d6b4cc7918aa62640504503201043a9":
         raise OfflineViolation()
     tree = ast.parse(path.read_text())
     auth = next(

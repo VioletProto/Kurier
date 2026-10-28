@@ -8,7 +8,9 @@ import time
 import uuid
 from pathlib import Path
 
-from accounting import MAXIMUM, PRIOR, baseline
+from accounting import CURRENT_PRIOR as PRIOR
+from accounting import MAXIMUM
+from accounting import current_baseline as baseline
 from policy import SOURCE, Budget, Stop
 
 SECONDS = 3600

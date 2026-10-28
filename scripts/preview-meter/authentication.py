@@ -19,13 +19,13 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
-from accounting import PRIOR
+from accounting import CURRENT_PRIOR as PRIOR
 from auth_diagnostics import DeadlineExpired, transport_diagnostic
 from handoff import SharedBudget, seal
 from policy import Stop
 
 ACCOUNT = "747336059622"
-SIGNIN = "https://signin.us-east-2.amazonaws.com"
+SIGNIN = "https://us-east-2.signin.aws.amazon.com"
 STS = "https://sts.us-east-2.amazonaws.com"
 
 
@@ -205,8 +205,9 @@ def authenticate(directory, root, window):
     try:
         budget = SharedBudget(directory / "authentication.jsonl", window, prior=PRIOR)
         transport = Transport(budget, cache.original, URLLib3Session.send)
-        # Explicit endpoint + unsigned/static credentials avoids every default
-        # provider (IMDS, process, SSO, environment or automatic SDK refresh).
+        # Unsigned/static credentials avoid every default credential provider.
+        # Resolve Sign-In via the pinned operation rules, then enforce the actual
+        # prepared URL in Transport before admitting or forwarding an attempt.
         session = Session(
             session_vars={
                 "config_file": (None, None, "/dev/null", None),
@@ -223,7 +224,7 @@ def authenticate(directory, root, window):
             return session.create_client(
                 service,
                 region_name="us-east-2",
-                endpoint_url=SIGNIN if service == "signin" else STS,
+                endpoint_url=None if service == "signin" else STS,
                 verify=True,
                 aws_access_key_id=credentials.get("access_key", "unused"),
                 aws_secret_access_key=credentials.get("secret_key", "unused"),

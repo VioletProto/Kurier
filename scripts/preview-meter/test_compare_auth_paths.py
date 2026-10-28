@@ -13,7 +13,7 @@ import compare_auth_paths as comparison
 
 
 class Tests(unittest.TestCase):
-    def test_operation_endpoint_difference_is_captured_before_any_send(self):
+    def test_aligned_operation_endpoint_is_captured_before_any_send(self):
         result = subprocess.run(
             [sys.executable, "-B", comparison.__file__],
             capture_output=True,
@@ -35,7 +35,7 @@ class Tests(unittest.TestCase):
             modes["cli-default"]["operationHostname"], "us-east-2.signin.aws.amazon.com"
         )
         self.assertEqual(
-            modes["custom"]["operationHostname"], "signin.us-east-2.amazonaws.com"
+            modes["custom"]["operationHostname"], "us-east-2.signin.aws.amazon.com"
         )
         self.assertEqual(
             modes["sdk-default"]["clientBaseHostname"],

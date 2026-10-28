@@ -15,7 +15,8 @@ from unittest.mock import patch
 
 import authentication as auth
 import handoff as h
-from accounting import FROZEN_FILES
+from accounting import CURRENT_FROZEN_FILES as FROZEN_FILES
+from accounting import CURRENT_PRIOR as PRIOR
 from policy import Stop
 from run import ROOT, launch
 
@@ -52,7 +53,7 @@ class Tests(unittest.TestCase):
         self.clock = lambda: self.now[0]
         self.window = h.begin(self.directory, ROOT, clock=self.clock)
 
-    def budget(self, name="authentication.jsonl", prior=167):
+    def budget(self, name="authentication.jsonl", prior=PRIOR):
         b = h.SharedBudget(
             self.directory / name, self.window, prior=prior, clock=self.clock
         )
@@ -80,14 +81,14 @@ class Tests(unittest.TestCase):
         receipt = self.complete()
         self.now[0] += 10
         w, prior = h.consume(receipt, ROOT, clock=self.clock)
-        self.assertEqual(prior, 169)
+        self.assertEqual(prior, PRIOR + 2)
         b = h.SharedBudget(
             self.directory / "provider.jsonl", w, prior=prior, clock=self.clock
         )
         self.addCleanup(b.close)
-        self.assertEqual(b.admit("sts", "GetCallerIdentity", "HTTP/2"), 170)
-        b.outcome(170, 200)
-        for _ in range(330):
+        self.assertEqual(b.admit("sts", "GetCallerIdentity", "HTTP/2"), PRIOR + 3)
+        b.outcome(PRIOR + 3, 200)
+        for _ in range(500 - (PRIOR + 3)):
             n = b.admit("s3", "GET", "HTTP/2")
             if n == 500:
                 with self.assertRaisesRegex(Stop, "call-limit"):
@@ -101,7 +102,7 @@ class Tests(unittest.TestCase):
             json.loads(x)
             for x in (self.directory / "provider.jsonl").read_text().splitlines()
         ]
-        self.assertEqual(sum(r["event"] == "attempt" for r in rows), 331)
+        self.assertEqual(sum(r["event"] == "attempt" for r in rows), 500 - (PRIOR + 2))
 
     def test_deadline_is_original_not_new_provider_window(self):
         receipt = self.complete()
@@ -230,7 +231,7 @@ class Tests(unittest.TestCase):
     def test_terminal_usage_preserves_failed_attempt_and_flags_truncation(self):
         b = self.budget()
         b.admit("signin", "CreateOAuth2Token", "HTTP/1.1")
-        self.assertEqual(h.usage(self.directory)["cumulativeCalls"], 168)
+        self.assertEqual(h.usage(self.directory)["cumulativeCalls"], PRIOR + 1)
         with open(self.directory / "authentication.jsonl", "a") as f:
             f.write('{"event":')
         self.assertFalse(h.usage(self.directory)["ledgerIntegrity"])
@@ -275,7 +276,7 @@ class Tests(unittest.TestCase):
                 .splitlines()
             ]
             self.assertEqual(rows[-1]["event"], "attempt")
-            self.assertEqual(rows[-1]["count"], 168)
+            self.assertEqual(rows[-1]["count"], PRIOR + 1)
             raise OSError("local-private-canary")
 
         t = auth.Transport(b, TOKEN, failed)
@@ -283,7 +284,7 @@ class Tests(unittest.TestCase):
             t.forward(None, request())
         with self.assertRaises(Stop):
             t.forward(None, request("sts"))
-        self.assertEqual(b.count, 168)
+        self.assertEqual(b.count, PRIOR + 1)
         self.assertNotIn(
             "local-private-canary",
             (self.directory / "authentication.jsonl").read_text(),
@@ -307,11 +308,21 @@ class Tests(unittest.TestCase):
                 with self.assertRaises(Stop):
                     t.forward(None, request())
                 self.assertEqual(len(calls), 1)
-                self.assertEqual(b.count, 168)
+                self.assertEqual(b.count, PRIOR + 1)
 
     def test_auth_unexpected_endpoint_grant_and_pagination_are_not_forwarded(self):
         for change in [
             lambda r: setattr(r, "url", "https://iam.amazonaws.com/"),
+            lambda r: setattr(
+                r, "url", "https://signin.us-east-2.amazonaws.com/v1/token"
+            ),
+            lambda r: setattr(
+                r, "url", "https://us-east-1.signin.aws.amazon.com/v1/token"
+            ),
+            lambda r: setattr(
+                r, "url", "https://us-east-2.signin.aws.amazon.com:443/v1/token"
+            ),
+            lambda r: setattr(r, "url", auth.SIGNIN + "/v1/other"),
             lambda r: setattr(r, "url", auth.SIGNIN + "/v1/token?secret=canary"),
             lambda r: setattr(
                 r, "url", "http://signin.us-east-2.amazonaws.com/v1/token"
@@ -329,7 +340,7 @@ class Tests(unittest.TestCase):
                 with self.assertRaises(Stop):
                     t.forward(None, r)
                 unused.assert_not_called()
-            self.assertEqual(b.count, 167)
+            self.assertEqual(b.count, PRIOR)
 
     def test_auth_second_refresh_or_extra_identity_read_blocked(self):
         for service in ["signin", "sts"]:
@@ -396,6 +407,9 @@ class SDKTests(unittest.TestCase):
     def test_actual_sdk_refresh_and_identity_with_fake_physical_transport(self):
         self.sdk_scenario("success")
 
+    def test_prepared_operation_host_override_stops_before_charge_or_handoff(self):
+        self.sdk_scenario("wrong-host")
+
     def test_sdk_failure_or_uncertainty_never_produces_handoff(self):
         for mode in [
             "transport",
@@ -442,7 +456,32 @@ class SDKTests(unittest.TestCase):
             def close(self):
                 pass
 
+        calls = []
+
         def send(_, r):
+            calls.append(r.url)
+            # This is the fake physical boundary, reached only after admission.
+            rows = [
+                json.loads(x)
+                for x in (d / "authentication.jsonl").read_text().splitlines()
+            ]
+            self.assertEqual(rows[-1]["event"], "attempt")
+            self.assertEqual(rows[-1]["count"], PRIOR + len(calls))
+            if "signin" in r.url:
+                self.assertEqual(
+                    r.url, "https://us-east-2.signin.aws.amazon.com/v1/token"
+                )
+                proof = r.headers["DPoP"]
+                if isinstance(proof, bytes):
+                    proof = proof.decode()
+                payload = proof.split(".")[1]
+                claims = json.loads(
+                    base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))
+                )
+                self.assertEqual(claims["htu"], r.url)
+                self.assertEqual(claims["htm"], "POST")
+            else:
+                self.assertEqual(r.url, auth.STS + "/")
             if mode == "transport":
                 raise OSError("local-private-canary")
             status = 200
@@ -479,11 +518,43 @@ class SDKTests(unittest.TestCase):
 
             return AWSResponse(r.url, status, headers, Raw(data))
 
+        from botocore.session import Session
+
+        original_client = Session.create_client
+
+        def create_client(session, service, **kwargs):
+            self.assertEqual(kwargs["region_name"], "us-east-2")
+            self.assertIs(kwargs["verify"], True)
+            self.assertEqual(kwargs["config"].proxies, {})
+            self.assertEqual(kwargs["config"].retries, {"total_max_attempts": 1})
+            result = original_client(session, service, **kwargs)
+            if service == "signin":
+                self.assertIsNone(kwargs["endpoint_url"])
+                self.assertEqual(
+                    result.meta.endpoint_url, "https://signin.us-east-2.amazonaws.com"
+                )
+                if mode == "wrong-host":
+                    # Mutate the prepared operation after DPoP, leaving the client
+                    # base untouched. The transport must reject, not trust base.
+                    def change(request, **_):
+                        request.url = "https://signin.us-east-2.amazonaws.com/v1/token"
+
+                    result.meta.events.register(
+                        "before-send.signin.CreateOAuth2Token", change
+                    )
+            return result
+
         with tempfile.TemporaryDirectory() as tmp:
             d = Path(tmp) / "window"
             w = h.begin(d, ROOT)
             with (
                 patch.object(auth, "ExistingCache", Cache),
+                patch.object(Session, "create_client", create_client),
+                patch.object(
+                    Session,
+                    "get_credentials",
+                    side_effect=AssertionError("no-default-provider"),
+                ),
                 patch.object(URLLib3Session, "send", send),
                 patch(
                     "socket.socket",
@@ -493,7 +564,7 @@ class SDKTests(unittest.TestCase):
                 if mode == "success":
                     creds, receipt = auth.authenticate(d, ROOT, w)
                     self.assertEqual(creds["AWS_ACCESS_KEY_ID"], "local-access")
-                    self.assertEqual(h.validate(receipt, ROOT)[1], 169)
+                    self.assertEqual(h.validate(receipt, ROOT)[1], PRIOR + 2)
                 else:
                     with self.assertRaisesRegex(
                         RuntimeError, "failed-or-uncertain-no-restart"
@@ -503,7 +574,19 @@ class SDKTests(unittest.TestCase):
             ledger = (d / "authentication.jsonl").read_text()
             self.assertEqual(
                 h.usage(d)["newCalls"],
-                2 if mode in {"success", "identity-mismatch"} else 1,
+                0
+                if mode == "wrong-host"
+                else 2
+                if mode in {"success", "identity-mismatch"}
+                else 1,
+            )
+            self.assertEqual(
+                len(calls),
+                0
+                if mode == "wrong-host"
+                else 2
+                if mode in {"success", "identity-mismatch"}
+                else 1,
             )
             for secret in [
                 "local-secret",

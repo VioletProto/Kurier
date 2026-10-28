@@ -116,3 +116,58 @@ def baseline(root):
         "secondFailedCampaignClaimSha256": CLAIM4_SHA,
         "secondFailedAuthenticationProjectionSha256": PROJECTION4_SHA,
     }
+
+
+# Preserve the historical 167-based diagnostic executor and baseline above.
+# Authentication/preview alone now consume the terminal diagnostic's charge.
+CURRENT_PRIOR = 168
+CURRENT_FROZEN_FILES = {
+    **FROZEN_FILES,
+    ".build/project-environments-network-diagnostics/review-1/attempts.jsonl": "ad009e85a025ebbbd6b8b9398b56e4ea799d3d705e3b85d393ba0f55db9da9e9",
+    ".build/project-environments-network-diagnostics/review-1/result.json": "d0bd6f4c37cb92dbe18b33a995e4975688a24a04505b2d34881ac42cc3699432",
+    ".build/project-environments-network-diagnostics/review-1/context.json": "5b442af2a0ea0a552e93b476c6a22e6234ba2cce8e1ce5b032e13fe55d50f4fe",
+    ".build/project-environments-network-diagnostics/review-1/addresses.json": "b45ee55d1ba9a6781ff8a557dfb541fb388c7a3165bad4745f58c89cb6ed5874",
+    ".build/project-environments-network-diagnostics/review-1/route-4.json": "f7b7e49d6681f43ef44abebc61aa8930d7e112d95d4d2a0b04eaf9397f91e9a0",
+    ".build/project-environments-preview/window-from-167.json": "9e27595362462d7c24741b98dcc2274c152af3cbec2093b5c1b9d822e276181b",
+    ".build/project-environments-network-probe-offline/gate.json": "47eb5efd7a343640c49f69865487e7becc961b64195929719b92a637bfadf922",
+    "docs/development/project-environments-network-probe-ledger.jsonl": "2e3beb072185a8636635181f10a6efcb0733961369df0b23205fe1e9a5a470aa",
+    "docs/development/project-environments-network-probe-result.json": "80294d852d9c4d02dde6edf23854e14cdda4c2bcc6534bbbd325ddf1f580c262",
+}
+
+
+def current_baseline(root):
+    previous = baseline(root)
+    for name, expected in CURRENT_FROZEN_FILES.items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("current-accounting-proof-hash")
+    rows = [
+        json.loads(line)
+        for line in (
+            root / "docs/development/project-environments-network-probe-ledger.jsonl"
+        )
+        .read_text()
+        .splitlines()
+    ]
+    attempts = [r for r in rows if r["event"] == "attempt"]
+    if (
+        previous["prior"] != 167
+        or rows[0]["prior"] != 167
+        or [(r["kind"], r["ordinal"]) for r in attempts]
+        != [("dns", 1), ("dns", 2), ("tcp", 1)]
+        or attempts[-1]["cumulative"] != CURRENT_PRIOR
+        or rows[-1]["event"] != "stop"
+        or rows[-1]["reason"] != "tcp-failed"
+        or rows[-1]["counters"] != {"dns": 2, "tcp": 1, "tls": 0}
+        or rows[-1]["cumulative"] != CURRENT_PRIOR
+    ):
+        raise ValueError("terminal-diagnostic-accounting")
+    return {
+        **previous,
+        "prior": CURRENT_PRIOR,
+        "diagnosticLedgerSha256": CURRENT_FROZEN_FILES[
+            ".build/project-environments-network-diagnostics/review-1/attempts.jsonl"
+        ],
+        "diagnosticCampaignClaimSha256": CURRENT_FROZEN_FILES[
+            ".build/project-environments-preview/window-from-167.json"
+        ],
+    }

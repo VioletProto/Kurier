@@ -13,7 +13,11 @@
     "awsrequest.py": "85d0ae028b154a991db1078c70987440c290c55b9c34f66e8ae4053de5d22c2f",
     "data/signin/2023-01-01/service-2.json": "06c2ba0d3c74b024aba1ffecdff7bb81cf8a31d7841ae1af1574f726ccc839f6",
     "data/sts/2011-06-15/service-2.json": "d97a08aa49223dee070009624c1d70f5b6af6ccc43220cc30ff566d5f02f3c0b",
-    "exceptions.py": "4324b05eac48020ded5b77d949d57b1e1de6dd47f57fe2757882804691088bcc"
+    "exceptions.py": "4324b05eac48020ded5b77d949d57b1e1de6dd47f57fe2757882804691088bcc",
+    "data/signin/2023-01-01/endpoint-rule-set-1.json": "854b1b7cb1694ead3648d61813902ae6b58b09486edd0e61cafbbccffee9d118",
+    "data/endpoints.json": "a15ccb0bc9080690af472bb0a2a4a1910c941f41fc0e58a179c737b2fae5967b",
+    "regions.py": "6267ff1084be09980a04b9a2ad93a278583b49d982bebac9c4eb456b8bfe8183",
+    "endpoint_provider.py": "12dfc1223579e185c199a0d125f543942a301f2745e7ec96961e3cf2c9575d1c"
   },
   "urllib3": {
     "version": "2.8.0",

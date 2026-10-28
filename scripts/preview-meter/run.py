@@ -21,7 +21,9 @@ ROOT = HERE.parents[1]
 PYTHON = ROOT / ".build/attempt-meter-venv/bin/python"
 MITM = ROOT / ".build/attempt-meter-venv/bin/mitmdump"
 sys.path.insert(0, str(HERE))
-from accounting import MAXIMUM, PRIOR, baseline
+from accounting import CURRENT_PRIOR as PRIOR
+from accounting import MAXIMUM
+from accounting import current_baseline as baseline
 from handoff import begin, claim_campaign, usage, validate
 from policy import PARENT_SHA, SOURCE
 

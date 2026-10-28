@@ -17,9 +17,15 @@ from accounting import (
     AUTH_SHA,
     CLAIM4_SHA,
     CLAIM_SHA,
-    FROZEN_FILES,
-    PRIOR,
-    baseline,
+)
+from accounting import (
+    CURRENT_FROZEN_FILES as FROZEN_FILES,
+)
+from accounting import (
+    CURRENT_PRIOR as PRIOR,
+)
+from accounting import (
+    current_baseline as baseline,
 )
 from auth_diagnostics import DeadlineExpired, transport_diagnostic
 from botocore import exceptions as sdk
@@ -269,13 +275,13 @@ class Tests(unittest.TestCase):
 
     def test_frozen_failed_attempt_and_claim_are_required_and_unchanged(self):
         current = baseline(ROOT)
-        self.assertEqual(current["prior"], 167)
+        self.assertEqual(current["prior"], 168)
         self.assertEqual(current["maximum"], 500)
         self.assertEqual(current["failedAuthenticationLedgerSha256"], AUTH_SHA)
         self.assertEqual(current["failedCampaignClaimSha256"], CLAIM_SHA)
         self.assertEqual(current["secondFailedAuthenticationLedgerSha256"], AUTH4_SHA)
         self.assertEqual(current["secondFailedCampaignClaimSha256"], CLAIM4_SHA)
-        self.assertEqual(PRIOR, 167)
+        self.assertEqual(PRIOR, 168)
         import shutil
 
         with tempfile.TemporaryDirectory() as tmp:
