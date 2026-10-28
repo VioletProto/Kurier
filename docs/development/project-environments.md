@@ -1,5 +1,17 @@
 # Project environments implementation and local verification
 
+## Refresh authorization preflight — shared-budget gap
+
+The [local handoff preflight](project-environments-refresh-handoff-preflight.md)
+confirmed unchanged reviewed0d1defa tooling cannot carry refresh calls and the
+original deadline into the provider meter. Its non-fixture launcher hardcodes165
+prior calls and a new3,600-second clock. The offline probe made zero AWS calls;
+no refresh or preview started. Cumulative165/500, original ledgers, policy,
+release and rollback bytes remain unchanged. A concrete handoff amendment is
+proposed for review, not implemented; executing it requires resolving the
+identical-tooling/no-repairs constraint. The cumulative $1 allowance and all
+live-work holds remain.
+
 ## Authorized preview invocation refused — 2026-10-27 MDT
 
 The [credential-stop result](project-environments-preview-credential-stop.md)

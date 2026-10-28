@@ -1,0 +1,28 @@
+"""Offline proof only: prevent subprocess/network startup; do not refresh or preview."""
+from pathlib import Path
+import importlib.util,json,tempfile,hashlib,unittest.mock as mock
+ROOT=Path('/home/king/Neumont/Kurier')
+spec=importlib.util.spec_from_file_location('reviewed',ROOT/'scripts/preview-meter/run.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+from policy import Budget
+
+class OfflineStop(Exception):pass
+
+def platform_copy(source,dest,**kwargs):Path(dest).mkdir(parents=True)
+
+with tempfile.TemporaryDirectory(prefix='kurier-refresh-handoff-proof-') as tmp:
+ d=Path(tmp)/'preview'
+ with mock.patch.object(m.shutil,'copytree',side_effect=platform_copy),mock.patch.object(m.subprocess,'Popen',side_effect=OfflineStop('network/subprocess startup deliberately blocked')) as popen:
+  try:m.launch(Path(tmp)/'source',d,['unused-offline-command'],{},budget={'prior':166,'maximum':500,'seconds':3590})
+  except OfflineStop:pass
+  else:raise AssertionError('Probe must stop before any subprocess')
+  assert popen.call_count==1
+ config=json.loads((d/'config.json').read_text())
+ assert config['mode']=='preview'
+ assert config['budget']=={'prior':165,'maximum':500,'seconds':3600}
+ # At original-window expiry, the fresh provider clock would still allow calls.
+ now=[10.0];ledger=Path(tmp)/'simulated-provider-ledger.jsonl'
+ b=Budget(ledger,clock=lambda:now[0],**config['budget'])
+ first=b.admit('sts','GetCallerIdentity','local-fixture');assert first==166
+ now[0]=3600.0;b.check();b.close()
+ result={'fixtureOnly':True,'awsCalls':0,'subprocessesStarted':0,'realCumulativeUsage':165,'reviewedToolingCommit':'0d1defa8460d0e12c592be7b6d79ce1d7ab4758e','sourceCommit':'44f1fb79d943501c95e06fcc1a6114111a7c1ea4','simulatedRefreshCalls':1,'simulatedRefreshElapsedSeconds':10,'requestedProviderBudget':{'prior':166,'maximum':500,'seconds':3590},'actualReviewedLauncherConfig':config['budget'],'providedBudgetIgnoredInNonFixtureMode':True,'simulatedFirstProviderCount':first,'correctFirstProviderCountAfterRefresh':167,'providerClockStillOpenAtOriginalDeadline':True,'conclusion':'Cannot satisfy combined refresh/preview call and time bounds through unchanged reviewed launcher','reviewedSourceSha256':{str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [ROOT/'scripts/preview-meter/run.py',ROOT/'scripts/preview-meter/proxy.py',ROOT/'scripts/preview-meter/policy.py',ROOT/'scripts/environment-inventory-meter.py']}}
+ out=ROOT/'.build/project-environments-refresh-preflight/proof.json';out.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))
