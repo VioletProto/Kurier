@@ -1,0 +1,235 @@
+{
+  "gate": {
+    "offlinePassed": true,
+    "acceptedScope": "cb4bfc922c149e5c8a814e583851f89d95608908",
+    "sourceSha256": {
+      "accounting.py": "c16296ed98737f23995d13dd1f0ee2635bd9fa995e433b72c0643689983df856",
+      "auth_diagnostics.py": "e29e30c1e7d73ac6f352b147fc2840f28dc1be2b2fed16a1b9f7c8d2757b95fd",
+      "network_probe.py": "2cdbed9b06fe7676722eaaddab104c7509ddcddbda9b0960718f5b1a98c3c446",
+      "policy.py": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+      "test_network_probe.py": "89a49592b32c19d0311023fc5ff65aa5b76beeec0f8ca21db3c710b69e1e186b"
+    },
+    "unitTests": 59,
+    "newExecutorTests": 22,
+    "transportScenarios": 15,
+    "repositoryVerifyExitCode": 0,
+    "networkIsolated": true,
+    "liveCalls": 0
+  },
+  "gateSha256": "47eb5efd7a343640c49f69865487e7becc961b64195929719b92a637bfadf922",
+  "currentAccounting": {
+    "prior": 167,
+    "maximum": 500,
+    "inventoryLedgerSha256": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+    "stoppedPreviewLedgerSha256": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+    "failedAuthenticationLedgerSha256": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+    "failedCampaignClaimSha256": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+    "failedAuthenticationProjectionSha256": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+    "secondFailedAuthenticationLedgerSha256": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+    "secondFailedCampaignClaimSha256": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a",
+    "secondFailedAuthenticationProjectionSha256": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1"
+  },
+  "transportSuite": {
+    "tooling": {
+      "sstSha256": "539659fa60f00e8b9610b7dfd967928d382b4800ca25452d9697e31a4eb521fd",
+      "pulumiAwsProviderSha256": "741bfe58a4f6100dfa839beb98d53e0f27c9b63998d53a293cbbfb7a6b23a797",
+      "node": "v26.12.1",
+      "go": "go version go1.27.3-X:nodwarf5 linux/amd64",
+      "bwrap": "bubblewrap 0.13.1"
+    },
+    "codeSha256": {
+      "test_diagnostics.py": "6c102277668a72adf4aacaa9eda43440b2f17ff62a1360d4f56880204b4fd3aa",
+      "auth_diagnostics.py": "e29e30c1e7d73ac6f352b147fc2840f28dc1be2b2fed16a1b9f7c8d2757b95fd",
+      "test_auth_transport_diagnostics.py": "6806c5a527696330e87240f8b8347893b99667dba64f272d01fb3d2ac7398ee1",
+      "policy.py": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+      "handoff.py": "f4db450215daa185e2295f6d85987114ecb4e5a1140d768b8b35d748c8c88059",
+      "test_transport.py": "e273a6d649a878eed4e34bdd1696701e238aab210b439c9d39755695d0911f93",
+      "network_probe.py": "2cdbed9b06fe7676722eaaddab104c7509ddcddbda9b0960718f5b1a98c3c446",
+      "test_unit.py": "6f77bfc13af9a0bac06af081637b4efcc7e6e98d53934e4f4d488b72f610fc28",
+      "proxy.py": "efb37c1800295e1b8151ac2dd810ed85e08f28c81a3a37c3547bb23cca5f73d0",
+      "authentication.py": "c9565d8902a8720d5ac0cdb0818f76ef2f66429f1e772ccf8a9cd7cc64c71286",
+      "diagnostics.py": "e145bed68d269065352ce428c28dbfbc4cfa80edf3f7de77d6ffe72e0fad0006",
+      "test_handoff.py": "74c008c81350b896749163f214ba2aa6f4e95767da1cdcff64ac6d690e8f1f28",
+      "accounting.py": "c16296ed98737f23995d13dd1f0ee2635bd9fa995e433b72c0643689983df856",
+      "run.py": "6f8f9af56a2c1bb5100ed16cdf8ae86899df71c948b0ebced6f74a0ad3cf5a06",
+      "test_network_probe.py": "89a49592b32c19d0311023fc5ff65aa5b76beeec0f8ca21db3c710b69e1e186b"
+    },
+    "fixtureOnly": true,
+    "realCumulativeUsagePreserved": 167,
+    "awsCalls": 0,
+    "releaseAndRollbackVerifiedUnchanged": true,
+    "results": [
+      {
+        "case": "shared-real-SST-Pulumi-Go-Node",
+        "attempts": 14,
+        "goRetryPages": 3,
+        "nodeRetryPages": 3,
+        "exitCode": 0,
+        "namespaceBypassHeld": true,
+        "httpVersions": ["HTTP/1.1", "HTTP/2.0"],
+        "realSST": true,
+        "realPulumiAWSProvider": true,
+        "attemptCounts": {
+          "dynamodb:ListTables": 3,
+          "s3:GET": 6,
+          "ssm:GetParameter": 2,
+          "sts:GetCallerIdentity": 3
+        }
+      },
+      {
+        "case": "write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "state-write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "transaction-write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "limit",
+        "attempts": 333,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "deadline",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": true
+      },
+      {
+        "case": "concurrent",
+        "attempts": 4,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "redirect",
+        "attempts": 1,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "disconnect",
+        "attempts": 1,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "persistence",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "denied-host",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793223479.9125729,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "endpoint-held",
+          "hostname": "sts.us-east-1.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "secret-host-label",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793223480.901758,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "endpoint-held",
+          "hostname": "<redacted-host>",
+          "hostnameStatus": "redacted",
+          "trailingDot": false,
+          "port": 443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "denied-port",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793223481.8934853,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "port-held",
+          "hostname": "sts.us-east-2.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 8443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "denied-http",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793223482.8881676,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "tls-required",
+          "hostname": "sts.us-east-2.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 80,
+          "scheme": "http",
+          "httpVersion": "HTTP/1.1",
+          "method": "POST",
+          "phase": "request"
+        }
+      },
+      {
+        "case": "production-branch-shared-handoff-denial",
+        "attempts": 0,
+        "syntheticAuthenticationAttempts": 2,
+        "providerPrior": 169,
+        "originalDeadlinePreserved": true,
+        "singleUseClaim": true,
+        "allDescendantsStopped": true
+      }
+    ]
+  },
+  "fixtureOnly": true,
+  "awsCalls": 0,
+  "limits": {
+    "dns": 2,
+    "tcp": 2,
+    "tls": 1,
+    "seconds": 45,
+    "awsPrior": 167,
+    "awsMaximum": 500
+  },
+  "eligibility": "One conditional execution authorized by user only; no live result in this offline receipt"
+}
