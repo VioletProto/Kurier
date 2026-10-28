@@ -1,5 +1,18 @@
 # Project environments implementation and local verification
 
+## Offline operation-endpoint comparison — no live work
+
+The [comparison](project-environments-auth-path-comparison.md) confirms that
+installed default SDK/CLI CreateOAuth2Token selects
+us-east-2.signin.aws.amazon.com, while the unchanged helper forces
+signin.us-east-2.amazonaws.com. Identical client base hostnames had masked this
+operation-level divergence. Region/current proxy/TLS settings match; timeout and
+retry configuration differ. This is not proof of historical causation. No
+endpoints, cache, policy or networking changed; no network requests/probes/refresh ran.
+Usage 168/500 and every historical proof/claim and release/rollback byte remain
+preserved. The smallest next action is review of an authentication-only
+operation-endpoint alignment proposal; no live continuation is authorized.
+
 ## Authorized DNS/TCP diagnostic stopped — cumulative168
 
 The [once-only diagnostic result](project-environments-network-probe-result.md)
