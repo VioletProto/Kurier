@@ -106,9 +106,9 @@ class DiagnosticTests(unittest.TestCase):
             )
 
     def test_accounting_preserves_both_original_ledgers(self):
-        self.assertEqual(PRIOR, 166)
+        self.assertEqual(PRIOR, 167)
         b = baseline(ROOT)
-        self.assertEqual((b["prior"], b["maximum"]), (166, 500))
+        self.assertEqual((b["prior"], b["maximum"]), (167, 500))
         with tempfile.TemporaryDirectory() as t:
             root = Path(t)
             dest = root / "docs/development"

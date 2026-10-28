@@ -1,5 +1,16 @@
 # Project environments implementation and local verification
 
+## Local network-context comparison and167 accounting — review only
+
+The [context comparison and probe proposal](project-environments-network-context.md)
+compare retained successful/failed invocation history with local namespaces,
+routes, resolver/proxy, firewall/VPN configuration and journal evidence. Earlier
+Wi-Fi/DHCP events do not establish the connect-timeout cause; historical actual
+network snapshots and live firewall visibility are incomplete. Both refresh
+outcomes remain uncertain. Accounting verifies167/500 and preserves all original
+proofs/claims. No authentication, preview, external probe or repair ran. The
+bounded DNS/TCP/TLS plan is proposed only; release bytes and all holds remain.
+
 ## Authorized review-4 stopped — typed connect-timeout
 
 The [review-4 result](project-environments-refresh-preview-review-4.md) records
