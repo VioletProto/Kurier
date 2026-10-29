@@ -1,5 +1,19 @@
 # Project environments implementation and local verification
 
+## Authorized review-6 stopped — reviewed S3 Control host, cumulative 231
+
+The [review-6 result](project-environments-refresh-preview-review-6.md) records
+one clean `3109170` execution with private CONNECT capture. Cached credentials
+were valid: no refresh; required STS verification succeeded, followed by 30
+provider attempts. Actual usage is **231/500**. Private review approved disclosure
+of the same-account regional S3 Control hostname; raw receipt/hash remain private
+and excluded from public evidence. CONNECT establishes no HTTP operation.
+The [separate proposal](project-environments-s3control-connect-proposal.md) is
+exact-host recognition with all S3 Control HTTP requests still held, not an
+applied read allowance. No policy change/restart/repair occurred. Diff remains
+partial; frontend matches, no new ZIP completed, release/rollback bytes and all
+original proofs/claims remain intact. All deployment/runtime holds remain.
+
 ## Local CONNECT investigation — private capture proposed, cumulative 200
 
 The [review-5 investigation](project-environments-denied-connect-review-5.md)

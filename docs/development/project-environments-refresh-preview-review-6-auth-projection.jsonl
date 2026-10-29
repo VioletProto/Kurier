@@ -1,0 +1,5 @@
+{"at":1793243985.66062,"monotonic":72264.940259411,"event":"created","prior":200,"maximum":500,"seconds":3600}
+{"at":1793243985.6628094,"monotonic":72264.942446465,"event":"shared-window"}
+{"at":1793243985.6892273,"monotonic":72264.968866999,"event":"attempt","count":201,"service":"sts","operation":"GetCallerIdentity","protocol":"HTTP/1.1"}
+{"at":1793243985.8475192,"monotonic":72265.127154305,"event":"outcome","attempt":201,"status":200,"transportError":false}
+{"at":1793243985.8591785,"monotonic":72265.138816424,"event":"authenticated","identityVerified":true,"count":201}
