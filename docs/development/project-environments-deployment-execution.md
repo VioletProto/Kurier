@@ -1,5 +1,10 @@
 # Project environments: adopted artifacts and execution review
 
+**Latest execution:** [collection from 301 stopped during reader-child startup](project-environments-collection-from-301.md).
+Actual usage is **303/1,799**. The 301-based proposal below was consumed once;
+preserve its stopped campaign and claim. Do not reuse its command or infer
+continuation from the previously approved ceiling or credential policy.
+
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
 [binding attestation cb74c992](project-environments-key-observation.md).
@@ -8,9 +13,9 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting is **301/1,799**, carrying forward the two attempts in the
+The consumed proposal's accounting baseline was **301/1,799**, carrying forward the two attempts in the
 [stopped initial collection](project-environments-collection-stop.md). The
-expanded cumulative ceiling was explicitly approved; **1,498** attempts remain.
+expanded cumulative ceiling was explicitly approved; **1,498** attempts remained then.
 The same cumulative **$1 procedural allowance** remains; billing is unmeasured.
 The initial campaign is stopped and cannot restart. The
 [credential correction](project-environments-credential-renewal.md) is locally
