@@ -6,6 +6,8 @@ import re
 import time
 from urllib.parse import parse_qs, urlsplit
 
+from s3control_tags import allowed as allowed_s3control_tags
+
 PARENT_SHA = "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171"
 SOURCE = "44f1fb79d943501c95e06fcc1a6114111a7c1ea4"
 PRIOR = 135
@@ -103,6 +105,8 @@ def service(host):
 def classify(method, host, path, headers, body):
     svc = service(host)
     if svc == "s3control":
+        if allowed_s3control_tags(method, host, path, headers, body):
+            return svc, "ListTagsForResource"
         raise Stop("s3control-operation-held")
     if len(body) > 1024 * 1024:
         raise Stop("request-size")

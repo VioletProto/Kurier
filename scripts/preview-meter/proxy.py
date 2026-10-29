@@ -13,6 +13,7 @@ from mitmproxy import http
 from operation_diagnostics import capture_operation
 from policy import Budget, Stop, classify, service
 from private_diagnostics import capture
+from s3control_tags import target_allowed as s3control_target_allowed
 
 
 class Gate:
@@ -112,7 +113,9 @@ class Gate:
             q = flow.request
             if q.scheme != "https" or q.port != 443:
                 raise Stop("tls-required")
-            if service(q.host) == "s3control":
+            if service(q.host) == "s3control" and not s3control_target_allowed(
+                q.method, q.host, q.path
+            ):
                 raise Stop("s3control-operation-held")
             svc, op = classify(
                 q.method, q.host, q.path, q.headers, q.raw_content or b""

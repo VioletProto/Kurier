@@ -14,9 +14,11 @@ from unittest.mock import patch
 from urllib.parse import parse_qs
 
 import run as runner
+import s3control_tags as tags
 from handoff import SharedBudget, begin, seal
 from private_diagnostics import FILENAME, OPERATION_FILENAME
 from run import PRIOR, ROOT, SST, launch, valid_parent
+from test_s3control_tags import fixture_headers
 
 FAKE = {
     "AWS_ACCESS_KEY_ID": "localfixture",
@@ -26,6 +28,8 @@ FAKE = {
 S3 = "https://sst-state-moshrdrrbeba.s3.us-east-2.amazonaws.com"
 COUNTS = collections.Counter()
 AUDIT = []
+SCOPED_RETRY = False
+SCOPED_LEDGER = None
 
 
 class Origin(http.server.BaseHTTPRequestHandler):
@@ -121,6 +125,22 @@ class Origin(http.server.BaseHTTPRequestHandler):
         AUDIT.append(
             ("GET", self.path.split("?")[0], self.headers.get("User-Agent", ""))
         )
+        if self.path == tags.PATH:
+            # Receipt must already exist durably before fixture forwarding.
+            rows = [json.loads(x) for x in SCOPED_LEDGER.read_text().splitlines()]
+            attempts = [x for x in rows if x["event"] == "attempt"]
+            assert attempts[-1]["operation"] == "ListTagsForResource"
+            assert attempts[-1]["service"] == "s3control"
+            COUNTS["scoped-tags"] += 1
+            if SCOPED_RETRY and COUNTS["scoped-tags"] == 1:
+                return self.reply(
+                    503, "<Error><Code>SlowDown</Code></Error>", "application/xml"
+                )
+            return self.reply(
+                200,
+                "<ListTagsForResourceResult><Tags/></ListTagsForResourceResult>",
+                "application/xml",
+            )
         if self.path == "/redirect":
             COUNTS["redirect"] += 1
             return self.reply(302, "", headers={"Location": S3 + "/must-not-follow"})
@@ -179,6 +199,7 @@ export default $config({app(){return {name:"kurier",home:"aws",providers:{aws:{p
 
 
 def main():
+    global SCOPED_RETRY, SCOPED_LEDGER
     # Outer namespace has no external network route. A mistake in test-origin
     # rewriting still cannot contact AWS. No real credentials are read here.
     with socket.socket() as sock:
@@ -204,6 +225,15 @@ func main(){ctx:=context.Background();c,e:=config.LoadDefaultConfig(ctx,config.W
             subprocess.run(
                 ["go", "build", "-o", str(source / "go-client"), str(gofile)],
                 cwd=ROOT / "services/api",
+                check=True,
+                capture_output=True,
+            )
+            wire = d / "scoped-wire.go"
+            wire.write_text(
+                'package main\nimport("encoding/json";"io";"net/http";"os";"strings";"strconv")\nfunc main(){var h map[string]string;if e:=json.Unmarshal([]byte(os.Args[2]),&h);e!=nil{panic(e)};n,_:=strconv.Atoi(os.Args[4]);for i:=1;i<=n;i++{q,e:=http.NewRequest("GET",os.Args[1],strings.NewReader(os.Args[3]));if e!=nil{panic(e)};for k,v:=range h{if k=="host"{q.Host=v}else{q.Header.Set(k,v)}};q.Header.Set("Amz-Sdk-Request","attempt="+strconv.Itoa(i)+"; max=3");r,e:=http.DefaultClient.Do(q);if e!=nil{return};io.Copy(io.Discard,r.Body);r.Body.Close();if r.StatusCode!=503{return}}}\n'
+            )
+            subprocess.run(
+                ["go", "build", "-o", str(source / "scoped-wire"), str(wire)],
                 check=True,
                 capture_output=True,
             )
@@ -389,323 +419,414 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                         "descendantShutdownVerified": name == "deadline",
                     }
                 )
-        # Each new endpoint scenario uses the production sandbox, but all
-        # supervisor/proxy/origin networking remains in the outer offline namespace.
-        for name, url, expected_host, expected_port, expected_phase in [
-            (
-                "denied-host",
-                "https://sts.us-east-1.amazonaws.com/private-local-private-canary?token=local-private-canary",
-                "sts.us-east-1.amazonaws.com",
-                443,
-                "connect",
-            ),
-            (
-                "secret-host-label",
-                "https://local-private-canary.example.invalid/private?token=local-private-canary",
-                "<redacted-host>",
-                443,
-                "connect",
-            ),
-            (
-                "private-capture-exists",
-                "https://local-private-canary.example.invalid/private?token=local-private-canary",
-                "<redacted-host>",
-                443,
-                "connect",
-            ),
-            (
-                "denied-port",
-                "https://sts.us-east-2.amazonaws.com:8443/private?token=local-private-canary",
-                "sts.us-east-2.amazonaws.com",
-                8443,
-                "connect",
-            ),
-            (
-                "denied-http",
-                "http://sts.us-east-2.amazonaws.com/private?token=local-private-canary",
-                "sts.us-east-2.amazonaws.com",
-                80,
-                "request",
-            ),
-            (
-                "s3control-read",
-                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/arn%3Aaws%3As3%3A%3A%3Alocal-private-canary?X-Amz-Credential=local-private-canary",
-                "<redacted-host>",
-                443,
-                "request",
-            ),
-            (
-                "s3control-write",
-                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/configuration/publicAccessBlock?secret=local-private-canary",
-                "<redacted-host>",
-                443,
-                "request",
-            ),
-            (
-                "s3control-default-off",
-                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/local-private-canary",
-                "<redacted-host>",
-                443,
-                "request",
-            ),
-            (
-                "s3control-capture-exists",
-                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/local-private-canary",
-                "<redacted-host>",
-                443,
-                "request",
-            ),
-            (
-                "s3control-wrong-account",
-                "https://000000000000.s3-control.us-east-2.amazonaws.com/v20180820/configuration/publicAccessBlock",
-                "<redacted-host>",
-                443,
-                "connect",
-            ),
-            (
-                "s3control-wrong-region",
-                "https://747336059622.s3-control.us-east-1.amazonaws.com/v20180820/configuration/publicAccessBlock",
-                "<redacted-host>",
-                443,
-                "connect",
-            ),
-        ]:
-            code = """const{spawn}=await import('node:child_process');const fs=await import('node:fs');
-const grand=\"const fs=require('node:fs');setInterval(()=>fs.appendFileSync('/work/grand-pulse','x'),40)\";
-const child=\"const{spawn}=require('node:child_process');const fs=require('node:fs');spawn('node',['-e',\"+JSON.stringify(grand)+\"],{stdio:'ignore'});setInterval(()=>fs.appendFileSync('/work/child-pulse','x'),40)\";
-spawn('node',['-e',child],{stdio:'ignore'});setInterval(()=>fs.appendFileSync('/work/root-pulse','x'),40);
-for(let i=0;i<100&&!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse'));i++)await new Promise(r=>setTimeout(r,20));
-if(!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse')))throw Error('fixture descendants did not start');
-try{await fetch(TARGET,{method:METHOD,headers:{Authorization:'Bearer local-private-canary',Cookie:'session=local-private-canary','X-Private':'local-private-canary'},...(METHOD==='GET'?{}:{body:'local-private-canary'})})}catch{}
-await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url)).replace(
-                "METHOD",
-                json.dumps(
-                    "DELETE"
-                    if name == "s3control-write"
-                    else "GET"
-                    if name.startswith("s3control-")
-                    else "POST"
+            # Each new endpoint scenario uses the production sandbox, but all
+            # supervisor/proxy/origin networking remains in the outer offline namespace.
+            for name, url, expected_host, expected_port, expected_phase in [
+                (
+                    "denied-host",
+                    "https://sts.us-east-1.amazonaws.com/private-local-private-canary?token=local-private-canary",
+                    "sts.us-east-1.amazonaws.com",
+                    443,
+                    "connect",
                 ),
-            )
-            old_audit = len(AUDIT)
-            real_write = runner.write
-
-            def configure(path, value, real_write=real_write, name=name):
-                real_write(path, value)
-                if name == "private-capture-exists" and path.name == "config.json":
-                    real_write(path.parent / FILENAME, {"fixtureOriginal": True})
-                if name == "s3control-capture-exists" and path.name == "config.json":
-                    real_write(
-                        path.parent / OPERATION_FILENAME, {"fixtureOriginal": True}
+                (
+                    "secret-host-label",
+                    "https://local-private-canary.example.invalid/private?token=local-private-canary",
+                    "<redacted-host>",
+                    443,
+                    "connect",
+                ),
+                (
+                    "private-capture-exists",
+                    "https://local-private-canary.example.invalid/private?token=local-private-canary",
+                    "<redacted-host>",
+                    443,
+                    "connect",
+                ),
+                (
+                    "denied-port",
+                    "https://sts.us-east-2.amazonaws.com:8443/private?token=local-private-canary",
+                    "sts.us-east-2.amazonaws.com",
+                    8443,
+                    "connect",
+                ),
+                (
+                    "denied-http",
+                    "http://sts.us-east-2.amazonaws.com/private?token=local-private-canary",
+                    "sts.us-east-2.amazonaws.com",
+                    80,
+                    "request",
+                ),
+                (
+                    "s3control-read",
+                    "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/arn%3Aaws%3As3%3A%3A%3Alocal-private-canary?X-Amz-Credential=local-private-canary",
+                    "<redacted-host>",
+                    443,
+                    "request",
+                ),
+                (
+                    "s3control-write",
+                    "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/configuration/publicAccessBlock?secret=local-private-canary",
+                    "<redacted-host>",
+                    443,
+                    "request",
+                ),
+                (
+                    "s3control-default-off",
+                    "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/local-private-canary",
+                    "<redacted-host>",
+                    443,
+                    "request",
+                ),
+                (
+                    "s3control-capture-exists",
+                    "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/local-private-canary",
+                    "<redacted-host>",
+                    443,
+                    "request",
+                ),
+                *[
+                    (
+                        name,
+                        "https://" + tags.HOST + tags.PATH,
+                        "<redacted-host>",
+                        443,
+                        "request",
                     )
+                    for name in [
+                        "s3control-scoped-positive",
+                        "s3control-scoped-retry",
+                        "s3control-scoped-wrong-header",
+                        "s3control-scoped-body",
+                    ]
+                ],
+                (
+                    "s3control-wrong-account",
+                    "https://000000000000.s3-control.us-east-2.amazonaws.com/v20180820/configuration/publicAccessBlock",
+                    "<redacted-host>",
+                    443,
+                    "connect",
+                ),
+                (
+                    "s3control-wrong-region",
+                    "https://747336059622.s3-control.us-east-1.amazonaws.com/v20180820/configuration/publicAccessBlock",
+                    "<redacted-host>",
+                    443,
+                    "connect",
+                ),
+            ]:
+                code = """const{spawn}=await import('node:child_process');const fs=await import('node:fs');
+    const grand=\"const fs=require('node:fs');setInterval(()=>fs.appendFileSync('/work/grand-pulse','x'),40)\";
+    const child=\"const{spawn}=require('node:child_process');const fs=require('node:fs');spawn('node',['-e',\"+JSON.stringify(grand)+\"],{stdio:'ignore'});setInterval(()=>fs.appendFileSync('/work/child-pulse','x'),40)\";
+    spawn('node',['-e',child],{stdio:'ignore'});setInterval(()=>fs.appendFileSync('/work/root-pulse','x'),40);
+    for(let i=0;i<100&&!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse'));i++)await new Promise(r=>setTimeout(r,20));
+    if(!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse')))throw Error('fixture descendants did not start');
+    try{await fetch(TARGET,{method:METHOD,headers:{Authorization:'Bearer local-private-canary',Cookie:'session=local-private-canary','X-Private':'local-private-canary'},...(METHOD==='GET'?{}:{body:'local-private-canary'})})}catch{}
+    await new Promise(r=>setTimeout(r,3000));""".replace(
+                    "TARGET", json.dumps(url)
+                ).replace(
+                    "METHOD",
+                    json.dumps(
+                        "DELETE"
+                        if name == "s3control-write"
+                        else "GET"
+                        if name.startswith("s3control-")
+                        else "POST"
+                    ),
+                )
+                scoped = name.startswith("s3control-scoped-")
+                positive = name in {
+                    "s3control-scoped-positive",
+                    "s3control-scoped-retry",
+                }
+                tries = 2 if name == "s3control-scoped-retry" else 1
+                if scoped:
+                    headers = fixture_headers()
+                    if name == "s3control-scoped-wrong-header":
+                        headers["x-amz-account-id"] = "000000000000"
+                    body = "unexpected" if name == "s3control-scoped-body" else ""
+                    start = code.index("try{await fetch(")
+                    end = code.index("await new Promise(r=>setTimeout(r,3000));", start)
+                    args = [url, json.dumps(headers), body, str(tries)]
+                    code = (
+                        code[:start]
+                        + "await new Promise(r=>{const p=spawn('./scoped-wire',"
+                        + json.dumps(args)
+                        + ",{stdio:'ignore'});p.on('exit',r)});\n"
+                        + code[end:]
+                    )
+                    SCOPED_RETRY = tries == 2
+                    SCOPED_LEDGER = d / name / "attempts.jsonl"
+                    COUNTS["scoped-tags"] = 0
+                old_audit = len(AUDIT)
+                real_write = runner.write
 
-            with patch.object(runner, "write", configure):
-                rr = launch(
-                    source,
-                    d / name,
-                    ["node", "--input-type=module", "-e", code],
-                    FAKE,
-                    fixture_origin=origin.server_port,
-                    private_denied_connect=name
-                    in {"secret-host-label", "private-capture-exists"},
-                    private_s3control_operation=name
-                    in {
-                        "s3control-read",
-                        "s3control-write",
-                        "s3control-capture-exists",
-                    },
+                def configure(path, value, real_write=real_write, name=name):
+                    real_write(path, value)
+                    if name == "private-capture-exists" and path.name == "config.json":
+                        real_write(path.parent / FILENAME, {"fixtureOriginal": True})
+                    if (
+                        name == "s3control-capture-exists"
+                        and path.name == "config.json"
+                    ):
+                        real_write(
+                            path.parent / OPERATION_FILENAME, {"fixtureOriginal": True}
+                        )
+
+                with patch.object(runner, "write", configure):
+                    rr = launch(
+                        source,
+                        d / name,
+                        ["node", "--input-type=module", "-e", code],
+                        FAKE,
+                        fixture_origin=origin.server_port,
+                        budget={"maximum": PRIOR + tries, "seconds": 30}
+                        if positive
+                        else None,
+                        private_denied_connect=name
+                        in {"secret-host-label", "private-capture-exists"},
+                        private_s3control_operation=name
+                        in {
+                            "s3control-read",
+                            "s3control-write",
+                            "s3control-capture-exists",
+                        },
+                    )
+                if positive:
+                    aa = [x for x in rr["rows"] if x["event"] == "attempt"]
+                    outcomes = [x for x in rr["rows"] if x["event"] == "outcome"]
+                    assert (
+                        len(AUDIT) - old_audit
+                        == tries
+                        == len(aa)
+                        == COUNTS["scoped-tags"]
+                    ), (name, len(AUDIT) - old_audit, len(aa), rr["rows"])
+                    assert [x["count"] for x in aa] == list(
+                        range(PRIOR + 1, PRIOR + tries + 1)
+                    )
+                    assert [x["status"] for x in outcomes] == (
+                        [503, 200] if tries == 2 else [200]
+                    )
+                    assert any(
+                        x["event"] == "stop" and x["count"] == PRIOR + tries
+                        for x in rr["rows"]
+                    )
+                    pulses = [
+                        d / name / "work" / (x + "-pulse")
+                        for x in ["root", "child", "grand"]
+                    ]
+                    sizes = [p.stat().st_size for p in pulses]
+                    time.sleep(0.2)
+                    assert all(sizes) and sizes == [p.stat().st_size for p in pulses]
+                    results.append(
+                        {
+                            "case": name,
+                            "attempts": tries,
+                            "fixtureOnly": True,
+                            "receiptBeforeForwarding": True,
+                            "allDescendantsStopped": True,
+                            "budgetExhaustionStops": True,
+                        }
+                    )
+                    continue
+                assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
+                assert not any(x["event"] == "attempt" for x in rr["rows"])
+                denied = [x for x in rr["rows"] if x["event"] == "denied-endpoint"]
+                assert len(denied) == 1
+                record = denied[0]
+                assert (
+                    record["hostname"] == expected_host
+                    and record["port"] == expected_port
+                    and record["phase"] == expected_phase
                 )
-            assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
-            assert not any(x["event"] == "attempt" for x in rr["rows"])
-            denied = [x for x in rr["rows"] if x["event"] == "denied-endpoint"]
-            assert len(denied) == 1
-            record = denied[0]
-            assert (
-                record["hostname"] == expected_host
-                and record["port"] == expected_port
-                and record["phase"] == expected_phase
-            )
-            assert record["count"] == PRIOR
-            if name.startswith("s3control-") and expected_phase == "request":
-                assert record["reason"] == "s3control-operation-held"
-            if name == "private-capture-exists":
-                assert rr["exitCode"] == 77
-                assert json.loads((d / name / FILENAME).read_text()) == {
-                    "fixtureOriginal": True
-                }
-            elif name == "s3control-capture-exists":
-                assert rr["exitCode"] == 77
-                assert json.loads((d / name / OPERATION_FILENAME).read_text()) == {
-                    "fixtureOriginal": True
-                }
-            else:
-                assert any(
-                    x["event"] == "stop" and x["count"] == PRIOR for x in rr["rows"]
-                )
-            receipt = d / name / FILENAME
-            if name == "secret-host-label":
-                captured = json.loads(receipt.read_text())
-                assert captured["hostname"] == "local-private-canary.example.invalid"
-                assert captured["count"] == PRIOR and captured["port"] == 443
-                assert receipt.stat().st_mode & 0o777 == 0o600
-                assert receipt.stat().st_size <= 512
-                assert set(captured) == {
-                    "version",
-                    "phase",
-                    "count",
-                    "port",
-                    "hostnameStatus",
-                    "hostname",
-                }
-                assert not (d / name / "work" / FILENAME).exists()
-            elif name != "private-capture-exists":
-                assert not receipt.exists()
-            operation_receipt = d / name / OPERATION_FILENAME
-            if name in {"s3control-read", "s3control-write"}:
-                captured_operation = json.loads(operation_receipt.read_text())
-                expected_operation = (
-                    "ListTagsForResource"
-                    if name == "s3control-read"
-                    else "DeletePublicAccessBlock"
-                )
-                assert captured_operation["candidateOperations"] == [expected_operation]
-                assert captured_operation["matchStatus"] == "unique"
-                assert captured_operation["count"] == PRIOR
-                assert operation_receipt.stat().st_mode & 0o777 == 0o600
-                assert operation_receipt.stat().st_size <= 1024
+                assert record["count"] == PRIOR
+                if name.startswith("s3control-") and expected_phase == "request":
+                    assert record["reason"] == "s3control-operation-held"
+                if name == "private-capture-exists":
+                    assert rr["exitCode"] == 77
+                    assert json.loads((d / name / FILENAME).read_text()) == {
+                        "fixtureOriginal": True
+                    }
+                elif name == "s3control-capture-exists":
+                    assert rr["exitCode"] == 77
+                    assert json.loads((d / name / OPERATION_FILENAME).read_text()) == {
+                        "fixtureOriginal": True
+                    }
+                else:
+                    assert any(
+                        x["event"] == "stop" and x["count"] == PRIOR for x in rr["rows"]
+                    )
+                receipt = d / name / FILENAME
+                if name == "secret-host-label":
+                    captured = json.loads(receipt.read_text())
+                    assert (
+                        captured["hostname"] == "local-private-canary.example.invalid"
+                    )
+                    assert captured["count"] == PRIOR and captured["port"] == 443
+                    assert receipt.stat().st_mode & 0o777 == 0o600
+                    assert receipt.stat().st_size <= 512
+                    assert set(captured) == {
+                        "version",
+                        "phase",
+                        "count",
+                        "port",
+                        "hostnameStatus",
+                        "hostname",
+                    }
+                    assert not (d / name / "work" / FILENAME).exists()
+                elif name != "private-capture-exists":
+                    assert not receipt.exists()
+                operation_receipt = d / name / OPERATION_FILENAME
+                if name in {"s3control-read", "s3control-write"}:
+                    captured_operation = json.loads(operation_receipt.read_text())
+                    expected_operation = (
+                        "ListTagsForResource"
+                        if name == "s3control-read"
+                        else "DeletePublicAccessBlock"
+                    )
+                    assert captured_operation["candidateOperations"] == [
+                        expected_operation
+                    ]
+                    assert captured_operation["matchStatus"] == "unique"
+                    assert captured_operation["count"] == PRIOR
+                    assert operation_receipt.stat().st_mode & 0o777 == 0o600
+                    assert operation_receipt.stat().st_size <= 1024
+                    assert all(
+                        x not in operation_receipt.read_text()
+                        for x in [
+                            "local-private-canary",
+                            "Authorization",
+                            "X-Amz-Credential",
+                            "/v20180820",
+                            "body",
+                            "headers",
+                        ]
+                    )
+                    assert not (d / name / "work" / OPERATION_FILENAME).exists()
+                elif name != "s3control-capture-exists":
+                    assert not operation_receipt.exists()
+                raw = (d / name / "attempts.jsonl").read_text()
                 assert all(
-                    x not in operation_receipt.read_text()
-                    for x in [
+                    value not in raw
+                    for value in [
                         "local-private-canary",
                         "Authorization",
-                        "X-Amz-Credential",
-                        "/v20180820",
-                        "body",
-                        "headers",
+                        "Cookie",
+                        "token=",
+                        "/private",
+                        "https://",
+                        "http://",
                     ]
                 )
-                assert not (d / name / "work" / OPERATION_FILENAME).exists()
-            elif name != "s3control-capture-exists":
-                assert not operation_receipt.exists()
-            raw = (d / name / "attempts.jsonl").read_text()
-            assert all(
-                value not in raw
-                for value in [
-                    "local-private-canary",
-                    "Authorization",
-                    "Cookie",
-                    "token=",
-                    "/private",
-                    "https://",
-                    "http://",
+                pulses = [
+                    d / name / "work" / (x + "-pulse")
+                    for x in ["root", "child", "grand"]
                 ]
+                sizes = [p.stat().st_size for p in pulses]
+                assert all(sizes)
+                time.sleep(0.2)
+                assert sizes == [p.stat().st_size for p in pulses]
+                results.append(
+                    {
+                        "case": name,
+                        "attempts": 0,
+                        "stopped": True,
+                        "allDescendantsStopped": True,
+                        "sanitizedDiagnostic": record,
+                        "privateCaptureOptIn": name
+                        in {"secret-host-label", "private-capture-exists"},
+                        "privateCaptureFailureHeld": name == "private-capture-exists",
+                        "privateHostnameOmittedFromPublicReceipt": True,
+                        "s3ControlRequestHeld": name.startswith("s3control-")
+                        and expected_phase == "request",
+                        "privateOperationCapture": name
+                        in {"s3control-read", "s3control-write"},
+                        "zeroUpstreamRequests": True,
+                    }
+                )
+            # The real production proxy branch consumes a synthetic authentication
+            # handoff. Outer --unshare-net and a denied request prohibit AWS traffic.
+            shared = d / "shared-auth-window"
+            window = begin(shared, ROOT)
+            b = SharedBudget(shared / "authentication.jsonl", window, prior=PRIOR)
+            for service, operation in [
+                ("signin", "CreateOAuth2Token"),
+                ("sts", "GetCallerIdentity"),
+            ]:
+                n = b.admit(service, operation, "HTTP/1.1")
+                b.outcome(n, 200)
+            b.record(event="authenticated", count=b.count, identityVerified=True)
+            b.close()
+            receipt = seal(shared, ROOT)
+            old_audit = len(AUDIT)
+            rr = launch(
+                source,
+                shared / "provider",
+                ["node", "--input-type=module", "-e", code],
+                FAKE,
+                handoff=receipt,
+            )
+            assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
+            assert (shared / "provider-claim.json").is_file()
+            assert rr["rows"][0]["prior"] == PRIOR + 2
+            assert rr["rows"][1]["window"]["deadline"] == window["deadline"]
+            assert not any(x["event"] == "attempt" for x in rr["rows"])
+            assert any(
+                x["event"] == "stop" and x["count"] == PRIOR + 2 for x in rr["rows"]
             )
             pulses = [
-                d / name / "work" / (x + "-pulse") for x in ["root", "child", "grand"]
+                shared / "provider/work" / (x + "-pulse")
+                for x in ["root", "child", "grand"]
             ]
             sizes = [p.stat().st_size for p in pulses]
-            assert all(sizes)
             time.sleep(0.2)
-            assert sizes == [p.stat().st_size for p in pulses]
+            assert all(sizes) and sizes == [p.stat().st_size for p in pulses]
             results.append(
                 {
-                    "case": name,
+                    "case": "production-branch-shared-handoff-denial",
                     "attempts": 0,
-                    "stopped": True,
+                    "syntheticAuthenticationAttempts": 2,
+                    "providerPrior": PRIOR + 2,
+                    "originalDeadlinePreserved": True,
+                    "singleUseClaim": True,
                     "allDescendantsStopped": True,
-                    "sanitizedDiagnostic": record,
-                    "privateCaptureOptIn": name
-                    in {"secret-host-label", "private-capture-exists"},
-                    "privateCaptureFailureHeld": name == "private-capture-exists",
-                    "privateHostnameOmittedFromPublicReceipt": True,
-                    "s3ControlHttpAlwaysHeld": name.startswith("s3control-")
-                    and expected_phase == "request",
-                    "privateOperationCapture": name
-                    in {"s3control-read", "s3control-write"},
-                    "zeroUpstreamRequests": True,
                 }
             )
-        # The real production proxy branch consumes a synthetic authentication
-        # handoff. Outer --unshare-net and a denied request prohibit AWS traffic.
-        shared = d / "shared-auth-window"
-        window = begin(shared, ROOT)
-        b = SharedBudget(shared / "authentication.jsonl", window, prior=PRIOR)
-        for service, operation in [
-            ("signin", "CreateOAuth2Token"),
-            ("sts", "GetCallerIdentity"),
-        ]:
-            n = b.admit(service, operation, "HTTP/1.1")
-            b.outcome(n, 200)
-        b.record(event="authenticated", count=b.count, identityVerified=True)
-        b.close()
-        receipt = seal(shared, ROOT)
-        old_audit = len(AUDIT)
-        rr = launch(
-            source,
-            shared / "provider",
-            ["node", "--input-type=module", "-e", code],
-            FAKE,
-            handoff=receipt,
-        )
-        assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
-        assert (shared / "provider-claim.json").is_file()
-        assert rr["rows"][0]["prior"] == PRIOR + 2
-        assert rr["rows"][1]["window"]["deadline"] == window["deadline"]
-        assert not any(x["event"] == "attempt" for x in rr["rows"])
-        assert any(x["event"] == "stop" and x["count"] == PRIOR + 2 for x in rr["rows"])
-        pulses = [
-            shared / "provider/work" / (x + "-pulse")
-            for x in ["root", "child", "grand"]
-        ]
-        sizes = [p.stat().st_size for p in pulses]
-        time.sleep(0.2)
-        assert all(sizes) and sizes == [p.stat().st_size for p in pulses]
-        results.append(
-            {
-                "case": "production-branch-shared-handoff-denial",
-                "attempts": 0,
-                "syntheticAuthenticationAttempts": 2,
-                "providerPrior": PRIOR + 2,
-                "originalDeadlinePreserved": True,
-                "singleUseClaim": True,
-                "allDescendantsStopped": True,
+            assert COUNTS["mutation"] == 0
+            assert before_hashes == {
+                p["name"]: p["zipSha256"] for p in valid_parent()["packages"]
             }
-        )
-        assert COUNTS["mutation"] == 0
-        assert before_hashes == {
-            p["name"]: p["zipSha256"] for p in valid_parent()["packages"]
-        }
-        host_socket.close()
-        output = {
-            "tooling": {
-                "sstSha256": hashlib.sha256(SST.read_bytes()).hexdigest(),
-                "pulumiAwsProviderSha256": hashlib.sha256(
-                    (
-                        Path.home()
-                        / ".config/sst/plugins/resource-aws-v7.40.0/pulumi-resource-aws"
-                    ).read_bytes()
-                ).hexdigest(),
-                "node": subprocess.check_output(
-                    ["node", "--version"], text=True
-                ).strip(),
-                "go": subprocess.check_output(["go", "version"], text=True).strip(),
-                "bwrap": subprocess.check_output(
-                    ["bwrap", "--version"], text=True
-                ).strip(),
-            },
-            "codeSha256": {
-                p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-                for p in Path(__file__).parent.glob("*.py")
-            },
-            "fixtureOnly": True,
-            "realCumulativeUsagePreserved": PRIOR,
-            "awsCalls": 0,
-            "releaseAndRollbackVerifiedUnchanged": True,
-            "results": results,
-        }
-        path = ROOT / ".build/project-environments-preview-meter-tests.json"
-        path.write_text(json.dumps(output, indent=2) + "\n")
-        print(json.dumps(output))
+            host_socket.close()
+            output = {
+                "tooling": {
+                    "sstSha256": hashlib.sha256(SST.read_bytes()).hexdigest(),
+                    "pulumiAwsProviderSha256": hashlib.sha256(
+                        (
+                            Path.home()
+                            / ".config/sst/plugins/resource-aws-v7.40.0/pulumi-resource-aws"
+                        ).read_bytes()
+                    ).hexdigest(),
+                    "node": subprocess.check_output(
+                        ["node", "--version"], text=True
+                    ).strip(),
+                    "go": subprocess.check_output(["go", "version"], text=True).strip(),
+                    "bwrap": subprocess.check_output(
+                        ["bwrap", "--version"], text=True
+                    ).strip(),
+                },
+                "codeSha256": {
+                    p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                    for p in Path(__file__).parent.glob("*.py")
+                },
+                "fixtureOnly": True,
+                "realCumulativeUsagePreserved": PRIOR,
+                "awsCalls": 0,
+                "releaseAndRollbackVerifiedUnchanged": True,
+                "results": results,
+            }
+            path = ROOT / ".build/project-environments-preview-meter-tests.json"
+            path.write_text(json.dumps(output, indent=2) + "\n")
+            print(json.dumps(output))
     finally:
         origin.shutdown()
         origin.server_close()

@@ -246,8 +246,8 @@ def baseline_200(root):
 
 # Review-6 reused cached credentials: one verified STS attempt + thirty reads.
 # The private hostname receipt/review sidecar must never be hashed or published.
-CURRENT_PRIOR = 231
-CURRENT_FROZEN_FILES = {
+BASELINE_231_PRIOR = 231
+BASELINE_231_FILES = {
     **BASELINE_200_FILES,
     ".build/project-environments-preview/review-6/authentication.jsonl": "0114634ea8e4b0055ccdb6da2427101272ce6ab15e76bb5a6b0f27cfef209407",
     ".build/project-environments-preview/review-6/window.json": "6f768122035d9dcd116e0d8681cfcdf729fa5e830dc41977a578248a0b96f831",
@@ -270,9 +270,9 @@ CURRENT_FROZEN_FILES = {
 }
 
 
-def current_baseline(root):
+def baseline_231(root):
     previous = baseline_200(root)
-    for name, expected in CURRENT_FROZEN_FILES.items():
+    for name, expected in BASELINE_231_FILES.items():
         if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
             raise ValueError("current-accounting-proof-hash")
     run = root / ".build/project-environments-preview/review-6"
@@ -296,23 +296,98 @@ def current_baseline(root):
         or auth[-1]["identityVerified"] is not True
         or provider[-1]["event"] != "stop"
         or provider[-1]["reason"] != "endpoint-held"
-        or provider[-1]["count"] != CURRENT_PRIOR
+        or provider[-1]["count"] != BASELINE_231_PRIOR
         or usage["priorCalls"] != 200
         or usage["newCalls"] != 31
-        or usage["cumulativeCalls"] != CURRENT_PRIOR
+        or usage["cumulativeCalls"] != BASELINE_231_PRIOR
         or usage["ledgerIntegrity"] is not True
     ):
         raise ValueError("stopped-review-6-accounting")
     return {
         **previous,
-        "prior": CURRENT_PRIOR,
-        "review6AuthenticationSha256": CURRENT_FROZEN_FILES[
+        "prior": BASELINE_231_PRIOR,
+        "review6AuthenticationSha256": BASELINE_231_FILES[
             ".build/project-environments-preview/review-6/authentication.jsonl"
         ],
-        "review6ProviderSha256": CURRENT_FROZEN_FILES[
+        "review6ProviderSha256": BASELINE_231_FILES[
             ".build/project-environments-preview/review-6/provider/attempts.jsonl"
         ],
-        "review6CampaignClaimSha256": CURRENT_FROZEN_FILES[
+        "review6CampaignClaimSha256": BASELINE_231_FILES[
             ".build/project-environments-preview/window-from-200.json"
+        ],
+    }
+
+
+# One existing-session refresh, verified STS, and thirty provider reads in review-7.
+# Raw private operation/hostname receipts remain excluded from every digest list.
+CURRENT_PRIOR = 263
+CURRENT_FROZEN_FILES = {
+    **BASELINE_231_FILES,
+    ".build/project-environments-preview/review-7/authentication.jsonl": "7d44ce1d4a9b68c53c7d4ab1a5638e919c49ba52871964dd38409eeff309016f",
+    ".build/project-environments-preview/review-7/window.json": "970c68deb10d12fcadb0de9ac8b77ef342e2e2181c7fb41eedb129cd858152ed",
+    ".build/project-environments-preview/review-7/handoff.json": "d0b328fc205327aee551e7e14d16927e1c742ae1ced3670ed42d5c55b2bf0dab",
+    ".build/project-environments-preview/review-7/provider-claim.json": "41ebb96eebfbf225a16f2e8ed03ed15a73a80ce2003376b35c2b1172e0feedbe",
+    ".build/project-environments-preview/review-7/cumulative-usage.json": "32657dde4b27d69a76d069e13834910f590fef1fdd2d4606a5bd577e6e41c097",
+    ".build/project-environments-preview/review-7/packaging-review.json": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+    ".build/project-environments-preview/review-7/provider/attempts.jsonl": "9b7c95f02a29286aeb6672fa5fb2d196a9252cebea921f48f81a6e78a1bf9535",
+    ".build/project-environments-preview/review-7/provider/config.json": "e164892d65f382b55fa33f2ad8dd9add1950c92f8d8cc7ffdf2f2acefbc90e0e",
+    ".build/project-environments-preview/review-7/provider/private-output.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".build/project-environments-preview/review-7/provider/meter-errors.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".build/project-environments-preview/review-7/provider/work/sst/frontend-hosting-artifact.json": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230",
+    ".build/project-environments-preview/review-7/provider/work/sst/pulumi/fe5e7a267ae65dc9ddca0788/eventlog.json": "aa14d95ce52f50ec60f03f89b60654559b3e445453f709e54ebf0bb886f1f8aa",
+    ".build/project-environments-preview/review-7/provider/work/sst/log/pulumi.log": "437375365ff101812efe06af2fee2de63bf35e35d1a4bd4396d51bb52f98df37",
+    ".build/project-environments-preview/review-7/provider/work/sst/log/pulumi.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".build/project-environments-preview/window-from-231.json": "22a515a776070f0d94fadd55eef3f284e7d9afe344cc8cd1b9960001dbd8268e",
+    "docs/development/project-environments-refresh-preview-review-7.json": "22d2a3089288770100901569c0447c4a45db53ee6703fe2e685ef2f33bdc0e95",
+    "docs/development/project-environments-refresh-preview-review-7-auth-projection.jsonl": "f64593f835df39316cd6d9371fb5d9d06dcc8f29f85cbbf1ea34a812ff259cb8",
+    "docs/development/project-environments-refresh-preview-review-7-provider-projection.jsonl": "072e866035a36a7a93f3e0ddcc31618fb067c51364e97e779a19d0b39fc05e51",
+}
+
+
+def current_baseline(root):
+    previous = baseline_231(root)
+    for name, expected in CURRENT_FROZEN_FILES.items():
+        if hashlib.sha256((root / name).read_bytes()).hexdigest() != expected:
+            raise ValueError("current-accounting-proof-hash")
+    run = root / ".build/project-environments-preview/review-7"
+    auth = [
+        json.loads(x) for x in (run / "authentication.jsonl").read_text().splitlines()
+    ]
+    provider = [
+        json.loads(x)
+        for x in (run / "provider/attempts.jsonl").read_text().splitlines()
+    ]
+    usage = json.loads((run / "cumulative-usage.json").read_text())
+    attempts = [x["count"] for x in auth + provider if x["event"] == "attempt"]
+    outcomes = [x["attempt"] for x in auth + provider if x["event"] == "outcome"]
+    auth_ops = [(x["service"], x["operation"]) for x in auth if x["event"] == "attempt"]
+    stops = [x for x in provider if x["event"] == "stop"]
+    if (
+        previous["prior"] != 231
+        or attempts != list(range(232, 264))
+        or sorted(outcomes) != attempts
+        or auth_ops != [("signin", "CreateOAuth2Token"), ("sts", "GetCallerIdentity")]
+        or auth[-1]["event"] != "authenticated"
+        or auth[-1]["identityVerified"] is not True
+        or len(stops) != 1
+        or stops[0]["reason"] != "s3control-operation-held"
+        or stops[0]["count"] != CURRENT_PRIOR
+        or usage["priorCalls"] != 231
+        or usage["newCalls"] != 32
+        or usage["cumulativeCalls"] != CURRENT_PRIOR
+        or usage["ledgerIntegrity"] is not True
+    ):
+        raise ValueError("stopped-review-7-accounting")
+    return {
+        **previous,
+        "prior": CURRENT_PRIOR,
+        "review7AuthenticationSha256": CURRENT_FROZEN_FILES[
+            ".build/project-environments-preview/review-7/authentication.jsonl"
+        ],
+        "review7ProviderSha256": CURRENT_FROZEN_FILES[
+            ".build/project-environments-preview/review-7/provider/attempts.jsonl"
+        ],
+        "review7CampaignClaimSha256": CURRENT_FROZEN_FILES[
+            ".build/project-environments-preview/window-from-231.json"
         ],
     }

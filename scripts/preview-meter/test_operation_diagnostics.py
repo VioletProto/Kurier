@@ -37,7 +37,7 @@ class Tests(unittest.TestCase):
             with self.assertRaisesRegex(policy.Stop, "endpoint-held"):
                 policy.service(wrong)
 
-    def test_all_operations_hold_before_headers_or_body_are_needed(self):
+    def test_unreviewed_targets_hold_before_headers_or_body_are_needed(self):
         self.assertNotIn(
             "s3control", policy.REST | set(policy.JSON_READS) | set(policy.QUERY_READS)
         )

@@ -33,21 +33,21 @@ class DiagnosticTests(unittest.TestCase):
                 self.assertEqual(value["phase"], "connect")
                 self.assertEqual(value["port"], 443)
                 self.assertLessEqual(len(json.dumps(value)), 512)
-        # Only the accepted exact-host recognition + all-operation hold may differ.
+        # Other service rules are byte-identical to the reviewed hold-only parent.
         original = subprocess.check_output(
             [
                 "git",
                 "show",
-                "3579f56c9856435dde0733b65b4a74d2fbbe733f:scripts/preview-meter/policy.py",
+                "6ba4c1c740bef1062028dd7af09c9b5b07cbc797:scripts/preview-meter/policy.py",
             ],
             cwd=ROOT,
         ).decode()
         expected = original.replace(
-            "    host = host.lower()\n",
-            '    host = host.lower()\n    if host == "747336059622.s3-control.us-east-2.amazonaws.com":\n        return "s3control"\n',
+            "from urllib.parse import parse_qs, urlsplit\n",
+            "from urllib.parse import parse_qs, urlsplit\n\nfrom s3control_tags import allowed as allowed_s3control_tags\n",
         ).replace(
-            "    svc = service(host)\n",
-            '    svc = service(host)\n    if svc == "s3control":\n        raise Stop("s3control-operation-held")\n',
+            '    if svc == "s3control":\n        raise Stop("s3control-operation-held")',
+            '    if svc == "s3control":\n        if allowed_s3control_tags(method, host, path, headers, body):\n            return svc, "ListTagsForResource"\n        raise Stop("s3control-operation-held")',
         )
         self.assertEqual(
             (ROOT / "scripts/preview-meter/policy.py").read_text(), expected

@@ -1,7 +1,7 @@
 """Private model-matched API names only. Never retain paths/query/header/body data.
 
-This module is diagnostic, not an authorization classifier. Every S3 Control
-request remains held regardless of its match, including recognized read APIs.
+This module is diagnostic, not an authorization classifier. It describes held
+requests only; a model match never changes the resource-scoped policy decision.
 """
 
 import functools

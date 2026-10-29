@@ -275,13 +275,13 @@ class Tests(unittest.TestCase):
 
     def test_frozen_failed_attempt_and_claim_are_required_and_unchanged(self):
         current = baseline(ROOT)
-        self.assertEqual(current["prior"], 231)
+        self.assertEqual(current["prior"], 263)
         self.assertEqual(current["maximum"], 500)
         self.assertEqual(current["failedAuthenticationLedgerSha256"], AUTH_SHA)
         self.assertEqual(current["failedCampaignClaimSha256"], CLAIM_SHA)
         self.assertEqual(current["secondFailedAuthenticationLedgerSha256"], AUTH4_SHA)
         self.assertEqual(current["secondFailedCampaignClaimSha256"], CLAIM4_SHA)
-        self.assertEqual(PRIOR, 231)
+        self.assertEqual(PRIOR, 263)
         import shutil
 
         with tempfile.TemporaryDirectory() as tmp:
