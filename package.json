@@ -40,7 +40,9 @@
     "dev:cloud": "node scripts/local-dev.mjs cloud-web",
     "test:aws:integration": "node scripts/aws-integration.mjs",
     "test:assertions-tooling": "node --test scripts/workflow-assertions-activation.test.mjs scripts/workflow-assertions-release.test.mjs && python3 -m unittest discover -s scripts/attempt-meter -p 'test_*.py'",
-    "test:environment-release": "node scripts/project-environments-activation.test.mjs && python3 -B scripts/environment-release-check.test.py"
+    "test:environment-release": "node scripts/project-environments-activation.test.mjs && python3 -B scripts/environment-release-check.test.py",
+    "test:environment-execution": "python3 -B scripts/environment-deploy/test_unit.py",
+    "test:environment-execution:integration": "python3 -B scripts/environment-deploy/run_transport_isolated.py"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
