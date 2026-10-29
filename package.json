@@ -24,7 +24,7 @@
     "sst:install:db": "sst install --stage db-viability",
     "sst:remove:db": "sst remove --stage db-viability",
     "sst:state:list:db": "sst state list --stage db-viability",
-    "test": "npm run test --workspaces --if-present && npm run test:infra && npm run test:workflow-poll && npm run test:assertions-tooling",
+    "test": "npm run test --workspaces --if-present && npm run test:infra && npm run test:workflow-poll && npm run test:assertions-tooling && npm run test:environment-release",
     "test:workflow-poll": "node --test scripts/workflow-run-poll.test.mjs scripts/workflow-coordinator-transport.test.mjs scripts/workflow-assertions-collector.test.mjs scripts/workflow-assertions-hl.test.mjs",
     "verify": "npm run format:check && npm run lint && npm run test && npm run build && npm run verify:go",
     "verify:go": "set -e; for service in services/api services/worker services/local-agent services/mcp services/request-runtime infra/spikes/sst-viability/service infra/spikes/sst-db-viability/service spikes/openapi-library-selection spikes/environment-resolution; do (cd \"$service\" && go test ./... && go vet ./...); done && (cd spikes/openapi-library-selection && go test -c -o /tmp/kurier-openapi-selection.test) && (cd spikes/environment-resolution && go test -c -o /tmp/kurier-environment-resolution.test)",
@@ -39,7 +39,8 @@
     "sst:deploy:api": "node scripts/sst-auth.mjs deploy dev-api",
     "dev:cloud": "node scripts/local-dev.mjs cloud-web",
     "test:aws:integration": "node scripts/aws-integration.mjs",
-    "test:assertions-tooling": "node --test scripts/workflow-assertions-activation.test.mjs scripts/workflow-assertions-release.test.mjs && python3 -m unittest discover -s scripts/attempt-meter -p 'test_*.py'"
+    "test:assertions-tooling": "node --test scripts/workflow-assertions-activation.test.mjs scripts/workflow-assertions-release.test.mjs && python3 -m unittest discover -s scripts/attempt-meter -p 'test_*.py'",
+    "test:environment-release": "node scripts/project-environments-activation.test.mjs && python3 -B scripts/environment-release-check.test.py"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
