@@ -1,5 +1,19 @@
 # Project environments implementation and local verification
 
+## Resource-scoped ListTagsForResource amendment — local review only, cumulative 263
+
+The [new packet](project-environments-listtags-resource-review.md) establishes
+one ARN from the diagnosed FrontendWebAssets bucket, retained inventory/state
+and the pinned provider's bucket-ARN construction. The dedicated gate permits
+only its canonical empty-body GET on the exact account/region endpoint, with
+strict query/header/signing constraints. Other resources, mutations and generic
+S3 Control allowances remain held. **90 unit tests and 26 offline transport/
+process scenarios passed**, as did repository verification. No AWS calls ran;
+**263/500**, 74 frozen proof files and all release/rollback bytes are preserved.
+Proposed exact tooling `1fd9812f8b974d527ba77e71ac78f7db63db276e` and a fresh
+60-minute/237-attempt command are published for review, not execution. All live
+work and deployment/runtime holds remain; historical results below are unchanged.
+
 ## Authorized review-7 stopped — GET ListTagsForResource, cumulative 263
 
 The [review-7 result](project-environments-refresh-preview-review-7.md) records
