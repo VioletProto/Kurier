@@ -87,19 +87,19 @@ session must cover the deadline after at most one approved refresh. STS identity
 verification is mandatory. Authentication and providers share one durable ledger
 and deadline; credential expiry or cache replacement stops later phases.
 
-Create a separate clean tooling worktree before these commands (the packet-only
-follow-up commit does not change tooling):
+Use the original workspace so retained cache links keep their reviewed paths.
+Require a clean working tree before selecting the exact tooling commit; preserve
+the review branch and do not reset or remove any evidence:
 
 ```sh
-git worktree add --detach /tmp/kurier-environments-deployment-tooling c5d794b4e3c3afacab7c478fd4fdeab84ff4a886
+cd /home/king/Neumont/Kurier
+git switch --detach c5d794b4e3c3afacab7c478fd4fdeab84ff4a886
 ```
 
-The retained artifacts and existing dependency caches must be exposed at the
-same paths relative to that tooling checkout; copy or link only the existing
-verified `.build`, `.sst` and `node_modules` caches. Do not rebuild them. Keep
-the canonical release source worktree at its pinned `/tmp` location. Run
-`check` from the clean tooling worktree; any cache/source/hash mismatch is a
-stop for review.
+Run `check` there with the existing `.build`, `.sst` and `node_modules` caches.
+Do not rebuild adopted archives or install/download dependencies. Keep the clean
+release source worktree at its pinned `/tmp` location. Any cache/source/hash
+mismatch stops for review.
 
 Exact commands below are proposals. Do not run `start` or `phase` until the
 corresponding authorization has been granted. Select a fresh campaign directory
