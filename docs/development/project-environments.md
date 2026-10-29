@@ -1,5 +1,19 @@
 # Project environments implementation and local verification
 
+## S3 Control exact-host amendment — all HTTP operations held, cumulative 231
+
+The [implemented amendment](project-environments-s3control-operation-review.md)
+recognizes only the accepted account/region hostname and blocks every S3 Control
+HTTP request before admission/forwarding. Local source inspection still cannot
+establish the historical API. Default-off private diagnostics emit only bounded,
+model-derived operation names/status; no paths, query keys/values, headers,
+credentials or bodies are retained. **80 unit tests and 22 offline process/
+transport scenarios** passed, including zero upstream requests and descendant
+shutdown. Accounting verifies **231/500** and 56 protected original files; release/
+rollback bytes and all prior claims remain intact. Exact proposed execution at
+`987b89422c4da2d06a75ce9bd49988de0790cd86` is for review only. No live execution,
+S3 Control API operation, deployment or runtime continuation is authorized.
+
 ## Authorized review-6 stopped — reviewed S3 Control host, cumulative 231
 
 The [review-6 result](project-environments-refresh-preview-review-6.md) records

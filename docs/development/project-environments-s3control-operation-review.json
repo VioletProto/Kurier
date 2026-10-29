@@ -1,0 +1,304 @@
+{
+  "localOnly": true,
+  "toolingCommit": "987b89422c4da2d06a75ce9bd49988de0790cd86",
+  "acceptedProposalCommit": "3579f56c9856435dde0733b65b4a74d2fbbe733f",
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "findings": {
+    "historicalRequestedApiEstablished": false,
+    "retainedConnectDoesNotContainHttpOperation": true,
+    "pinnedProviderTagHelperConstructsS3ControlClient": true,
+    "localSourceInspectionAttemptedBeforeDiagnosticImplementation": true,
+    "offlineModelFixturesAreNotHistoricalReplay": true,
+    "noSourceDownloadOrNetworkProbe": true
+  },
+  "policy": {
+    "exactHostname": "747336059622.s3-control.us-east-2.amazonaws.com",
+    "connectPort": 443,
+    "serviceLabel": "s3control",
+    "everyHttpOperationBlocked": true,
+    "blockReason": "s3control-operation-held",
+    "blockedBeforeHeadersBodyAndAdmission": true,
+    "genericRestJsonQueryAllowlistAddition": false,
+    "wrongAccountRegionAliasesAndTrailingDotRejected": true,
+    "exactAcceptedFourLineDeltaVerified": true,
+    "beforeSha256": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "afterSha256": "cf2f92ae8f9b720505141d9b8be8310454d4bbec0d1aae59f9879888d286ac6e"
+  },
+  "privateDiagnostic": {
+    "defaultEnabled": false,
+    "flag": "--private-s3control-operation",
+    "hostConfigKey": "privateS3ControlOperationCapture",
+    "privateFilename": "s3control-operation.private.json",
+    "trigger": "first denied exact-host S3 Control HTTP request",
+    "recordFields": [
+      "version",
+      "phase",
+      "count",
+      "modelSha256",
+      "method",
+      "candidateOperations",
+      "matchStatus"
+    ],
+    "maxRecordBytes": 1024,
+    "maxRequestTargetCharactersProcessed": 8192,
+    "maxQueryFieldsProcessed": 64,
+    "maxCandidateOperationNames": 4,
+    "fileMode": "0600",
+    "directoryMode": "0700",
+    "exclusiveNoOverwrite": true,
+    "fileAndDirectoryFsync": true,
+    "outsideGitAndChildMounts": true,
+    "rawPathsOrQueryKeysValuesRetained": false,
+    "requestDerivedHashesRetained": false,
+    "modelVersion": "1.43.108",
+    "sourceModelSha256": "f53fa36be1d92506430709b755ec59d8c78416bb35e8238f66f52befcaefc09a",
+    "catalogSha256": "44aecbaac03513c4bb75e47f54fdcab33267501b6dc9dd4c349042abb62f0627",
+    "catalogBytes": 13760,
+    "catalogOperations": 97,
+    "catalogMatchesInstalledPinnedModel": true,
+    "proxyUsesStdlibOnly": true,
+    "privateDisclosureReviewRequired": true,
+    "rawPrivateReceiptsOrHashesPublished": false,
+    "headerAuthorizationOrBodyArgumentAccepted": false,
+    "credentialOrResourceValuesRetained": false,
+    "sensitiveTargetDataProcessedTransientlyOnly": true,
+    "proposedCommandEnablesConnectHostCapture": false
+  },
+  "accounting": {
+    "prior": 231,
+    "newAttempts": 0,
+    "cumulative": 231,
+    "maximum": 500,
+    "remaining": 269,
+    "newLiveWindowOrClaim": false,
+    "proposedSeconds": 3600,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false,
+    "historicalFailedRefreshOutcomesStillUncertain": true
+  },
+  "verification": {
+    "unitSuiteCounts": [4, 4, 8, 8, 24, 7, 3, 22],
+    "unitTestsPassed": 80,
+    "offlineTransportScenariosPassed": 22,
+    "allModelRoutesMatched": {
+      "unique": 94,
+      "ambiguous": 3
+    },
+    "s3ControlFixtureCases": [
+      {
+        "case": "s3control-read",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": false,
+        "privateCaptureFailureHeld": false,
+        "privateHostnameOmittedFromPublicReceipt": true,
+        "s3ControlHttpAlwaysHeld": true,
+        "privateOperationCapture": true,
+        "zeroUpstreamRequests": true
+      },
+      {
+        "case": "s3control-write",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": false,
+        "privateCaptureFailureHeld": false,
+        "privateHostnameOmittedFromPublicReceipt": true,
+        "s3ControlHttpAlwaysHeld": true,
+        "privateOperationCapture": true,
+        "zeroUpstreamRequests": true
+      },
+      {
+        "case": "s3control-default-off",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": false,
+        "privateCaptureFailureHeld": false,
+        "privateHostnameOmittedFromPublicReceipt": true,
+        "s3ControlHttpAlwaysHeld": true,
+        "privateOperationCapture": false,
+        "zeroUpstreamRequests": true
+      },
+      {
+        "case": "s3control-capture-exists",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": false,
+        "privateCaptureFailureHeld": false,
+        "privateHostnameOmittedFromPublicReceipt": true,
+        "s3ControlHttpAlwaysHeld": true,
+        "privateOperationCapture": false,
+        "zeroUpstreamRequests": true
+      },
+      {
+        "case": "s3control-wrong-account",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": false,
+        "privateCaptureFailureHeld": false,
+        "privateHostnameOmittedFromPublicReceipt": true,
+        "s3ControlHttpAlwaysHeld": false,
+        "privateOperationCapture": false,
+        "zeroUpstreamRequests": true
+      },
+      {
+        "case": "s3control-wrong-region",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": false,
+        "privateCaptureFailureHeld": false,
+        "privateHostnameOmittedFromPublicReceipt": true,
+        "s3ControlHttpAlwaysHeld": false,
+        "privateOperationCapture": false,
+        "zeroUpstreamRequests": true
+      }
+    ],
+    "syntheticDiagnosticExamples": [
+      "ListTagsForResource",
+      "DeletePublicAccessBlock"
+    ],
+    "zeroUpstreamRequestsForAllS3ControlFixtures": true,
+    "parentChildGrandchildShutdownVerified": true,
+    "modelPinFailureAndCaptureCollisionFailClosed": true,
+    "defaultOffVerified": true,
+    "fullRepositoryVerifyPassedOffline": true,
+    "downloadsDisabled": true,
+    "ruffCheckAndFormatPassed": true,
+    "localPreflightPrior": 231,
+    "localPreflightRemaining": 269,
+    "verificationLogSha256": {
+      "/tmp/kurier-s3control-operation-tests-final.log": "b8cb6975ec3f51894e47b6358db57df99c189f74d6fd3dd0df28a8e34c6399df",
+      "/tmp/kurier-s3control-operation-repository-final.log": "9257d6d46d2605deb167d50e8c3033a724429b15ea6d8181351be67c5756254a"
+    }
+  },
+  "preservation": {
+    "originalProtectedFiles": 56,
+    "originalFileSha256": {
+      "docs/development/project-environments-inventory-attempts.jsonl": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+      "docs/development/project-environments-preview-attempts.jsonl": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+      "docs/development/project-environments-refresh-preview-auth-projection.jsonl": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+      ".build/project-environments-preview/review-3/authentication.jsonl": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+      ".build/project-environments-preview/review-3/window.json": "19c362f32d5ce9e0ea4c8ad67c9f76e8ee03130f58c3e257aadbcdf1aa4c8f39",
+      ".build/project-environments-preview/review-3/cumulative-usage.json": "346fa66374bac7ac87fd48ef250e4eb438d8d3ad725ca23876f9a7cacf684671",
+      ".build/project-environments-preview/window-from-165.json": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+      "docs/development/project-environments-refresh-preview-review-4-auth-projection.jsonl": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1",
+      ".build/project-environments-preview/review-4/authentication.jsonl": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+      ".build/project-environments-preview/review-4/window.json": "538921f5c442ae7b2f3492267c62c8fe55bf1cd3f060e34d486923cde60b911e",
+      ".build/project-environments-preview/review-4/cumulative-usage.json": "1cca6aaeef18233ab7db538f4560684375167c731a8182b04756c7e2c5595765",
+      ".build/project-environments-preview/window-from-166.json": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a",
+      ".build/project-environments-network-diagnostics/review-1/attempts.jsonl": "ad009e85a025ebbbd6b8b9398b56e4ea799d3d705e3b85d393ba0f55db9da9e9",
+      ".build/project-environments-network-diagnostics/review-1/result.json": "d0bd6f4c37cb92dbe18b33a995e4975688a24a04505b2d34881ac42cc3699432",
+      ".build/project-environments-network-diagnostics/review-1/context.json": "5b442af2a0ea0a552e93b476c6a22e6234ba2cce8e1ce5b032e13fe55d50f4fe",
+      ".build/project-environments-network-diagnostics/review-1/addresses.json": "b45ee55d1ba9a6781ff8a557dfb541fb388c7a3165bad4745f58c89cb6ed5874",
+      ".build/project-environments-network-diagnostics/review-1/route-4.json": "f7b7e49d6681f43ef44abebc61aa8930d7e112d95d4d2a0b04eaf9397f91e9a0",
+      ".build/project-environments-preview/window-from-167.json": "9e27595362462d7c24741b98dcc2274c152af3cbec2093b5c1b9d822e276181b",
+      ".build/project-environments-network-probe-offline/gate.json": "47eb5efd7a343640c49f69865487e7becc961b64195929719b92a637bfadf922",
+      "docs/development/project-environments-network-probe-ledger.jsonl": "2e3beb072185a8636635181f10a6efcb0733961369df0b23205fe1e9a5a470aa",
+      "docs/development/project-environments-network-probe-result.json": "80294d852d9c4d02dde6edf23854e14cdda4c2bcc6534bbbd325ddf1f580c262",
+      ".build/project-environments-preview/review-5/authentication.jsonl": "501661d3f821573433eb8346f8743aa183ff71306b875bb2b69a81c0ba28e4d7",
+      ".build/project-environments-preview/review-5/window.json": "58ad715a37148bbf4524cdcdd483ba1eb6054963c9685686c0ac8c12f3154e49",
+      ".build/project-environments-preview/review-5/handoff.json": "cf480799d0a115ff1e7da27bd0834ce030914f9c36e9c653845391cc1377a072",
+      ".build/project-environments-preview/review-5/provider-claim.json": "c48455b015efbf09b929cc0e014213283451ece22a3b150f16536032c6ac0fc7",
+      ".build/project-environments-preview/review-5/cumulative-usage.json": "6863ccb4e79eaeb84131e20322a117265d2d2507660f8609e477e646e6c44500",
+      ".build/project-environments-preview/review-5/packaging-review.json": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+      ".build/project-environments-preview/review-5/provider/attempts.jsonl": "6a5cbd7c4b77b9850f3c10a8879f961d800819ff6fda1011fcea8bd59b4d0ba8",
+      ".build/project-environments-preview/review-5/provider/private-output.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-5/provider/meter-errors.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-5/provider/work/sst/frontend-hosting-artifact.json": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230",
+      ".build/project-environments-preview/review-5/provider/work/sst/pulumi/fe5e7b5733952fb9878de32b/eventlog.json": "31f611ce30be7bc7e6db1a9678223aef20c683d263c7fc2ae73b72d0758332b6",
+      ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.log": "7497186ba072fc862dfcf8995a3e45784f0244a2ba77a12c01934c29a7eb3bca",
+      ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/window-from-168.json": "c1300008f5959c0ec7ee88dce165b749169a7ea4030795819ea97245bec9da2e",
+      "docs/development/project-environments-refresh-preview-review-5.json": "3caf9a2ee8ed94a2740919d1cbf51e4bca51f24e62d1b5c1e9ac6d997ef3599b",
+      "docs/development/project-environments-refresh-preview-review-5-auth-projection.jsonl": "272d7399d929bb87b80d0c42fedc2822a3ca115cd7216ded1473b7a667a10b03",
+      "docs/development/project-environments-refresh-preview-review-5-provider-projection.jsonl": "f88a1b84695ee6d32a890b34df4630b8228ea665c9bbed8ba48f7181f04d0ca7",
+      ".build/project-environments-preview/review-6/authentication.jsonl": "0114634ea8e4b0055ccdb6da2427101272ce6ab15e76bb5a6b0f27cfef209407",
+      ".build/project-environments-preview/review-6/window.json": "6f768122035d9dcd116e0d8681cfcdf729fa5e830dc41977a578248a0b96f831",
+      ".build/project-environments-preview/review-6/handoff.json": "f20980c41e590419fd0f31300013cc87173578c3317690bce63e94c2e0e9a7f1",
+      ".build/project-environments-preview/review-6/provider-claim.json": "00002d02bf2f1005cae24f9676d0bd3662731ed2ae200e55549aaddc59985a82",
+      ".build/project-environments-preview/review-6/cumulative-usage.json": "6edb2ee9a393bc902551453cf25e44c4b7eb8b8493f0d0331aa5faf89029f27e",
+      ".build/project-environments-preview/review-6/packaging-review.json": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+      ".build/project-environments-preview/review-6/provider/attempts.jsonl": "36944d81c58f361ff0452d907d0f57d40194f4e97b4effbab268ebd55d61d037",
+      ".build/project-environments-preview/review-6/provider/config.json": "1b4bd7160afb91fdffbff7f0e30b1864bb5f84d639ce67da6ed2b316cfaaedaf",
+      ".build/project-environments-preview/review-6/provider/private-output.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-6/provider/meter-errors.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-6/provider/work/sst/frontend-hosting-artifact.json": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230",
+      ".build/project-environments-preview/review-6/provider/work/sst/pulumi/fe5e7a5444a57558a228dfee/eventlog.json": "4c6d00c499928e87d10723da591aa52906f3485609bc249421f8d5c3f0dfb888",
+      ".build/project-environments-preview/review-6/provider/work/sst/log/pulumi.log": "c750f97f6924523edbdaa67de2a8580687f9dc06a417f13dd060cf6c538632ff",
+      ".build/project-environments-preview/review-6/provider/work/sst/log/pulumi.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/window-from-200.json": "29112244171d5eca5153a52bd8ed607c3e34a43df58b0e00cf95dba43e2e4a10",
+      "docs/development/project-environments-refresh-preview-review-6.json": "e192e3b0e2b0c10748e3af9198bb9e5163ccb180250c70169c15b71fb936cd1c",
+      "docs/development/project-environments-refresh-preview-review-6-auth-projection.jsonl": "7789344050f7b9c1b0b34dfbd24bcd81921dc04cedc81cf7e8d383312027a9ea",
+      "docs/development/project-environments-refresh-preview-review-6-provider-projection.jsonl": "ae57394cd8df9aa34966d9d7e007d3ab1f0b2177b9f54069596a7d3e004b77c4"
+    },
+    "rawConnectReceiptAndReviewSidecarExcludedFromHashes": true,
+    "releaseAndRollbackIntegrityPassed": true,
+    "releaseManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "releaseArtifactHashDifferences": [],
+    "authenticationSdkPinsPublicSanitizerAndDeadlineCodeUnchanged": true
+  },
+  "toolingHashChanges": {
+    "scripts/preview-meter/accounting.py": {
+      "beforeSha256": "2e6a6aec9f2681c046d47c5efb30b43929467426cf0f0909ba7cdbc95fd7a51f",
+      "afterSha256": "d52d1696bf783dd02b9535108d3bb856d3be3a31d65aa8959ea3085f454fc6de"
+    },
+    "scripts/preview-meter/operation_diagnostics.py": {
+      "beforeSha256": null,
+      "afterSha256": "d1f97b51df59d69854d6392a811068eab7c1054babbd03bfe21c9a366472050d"
+    },
+    "scripts/preview-meter/policy.py": {
+      "beforeSha256": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+      "afterSha256": "cf2f92ae8f9b720505141d9b8be8310454d4bbec0d1aae59f9879888d286ac6e"
+    },
+    "scripts/preview-meter/private_diagnostics.py": {
+      "beforeSha256": "9965cbbf5b1a6c124ca2a6dc64834df8ca05af9dc0f7c1b7bbb63ca3c185b9bf",
+      "afterSha256": "03012fcfbd3a6d0399969707f5f728bd977581e878ed45212b5e0edda9fc408e"
+    },
+    "scripts/preview-meter/proxy.py": {
+      "beforeSha256": "5f0d5504040528633326da1fec69fe862f4ff18974282d86e68cf049e979fd0b",
+      "afterSha256": "7c5a992add0172742cbd2b8e9d80c56eb2d57adee822fb086c3f16227139e1ed"
+    },
+    "scripts/preview-meter/run.py": {
+      "beforeSha256": "0b6a0a85af86ed0984b596622edb7bcb24d23a4a03d18760ba0ed4447fea82ee",
+      "afterSha256": "c523e82ddcd662edfadb123162cb95515305a15d5183cb7619399f290bc049eb"
+    },
+    "scripts/preview-meter/s3control-operation-routes.json": {
+      "beforeSha256": null,
+      "afterSha256": "44aecbaac03513c4bb75e47f54fdcab33267501b6dc9dd4c349042abb62f0627"
+    },
+    "scripts/preview-meter/test.sh": {
+      "beforeSha256": "21fc00396f1fd3f6913c37870033f5192cd28cbd359631fb4b1f6d8e0d629fc7",
+      "afterSha256": "14c173d4632b6184cc071fac737990aab65d00e33dd27e2cc526cab652a429c1"
+    },
+    "scripts/preview-meter/test_auth_transport_diagnostics.py": {
+      "beforeSha256": "8ebca8ba3b3510bd8b910503ea525a4a9e82a88b3d2e7c8ee1c524dc993046f6",
+      "afterSha256": "c4b924e2a2e03c7c664416cf1bbcb5d72d74894c8e1591fe1556f5e3a9276583"
+    },
+    "scripts/preview-meter/test_diagnostics.py": {
+      "beforeSha256": "6c102277668a72adf4aacaa9eda43440b2f17ff62a1360d4f56880204b4fd3aa",
+      "afterSha256": "0668ef48ddd7fa807235b10b8b2eb35752949a6705d800bf1561a19a18ad44be"
+    },
+    "scripts/preview-meter/test_operation_diagnostics.py": {
+      "beforeSha256": null,
+      "afterSha256": "c95460af1ddd14caa3758cfdef3c2b42271ead60cd6cffba752599d8717622d0"
+    },
+    "scripts/preview-meter/test_transport.py": {
+      "beforeSha256": "5aa62a178c9e3ab225edb376a6fd24db4af467cd61ba8dbd40bbd3d3b56a98b2",
+      "afterSha256": "d5259dd22b610d432923a83dd45fbf65744ddc3257878c83aaed0facfc090fcf"
+    }
+  },
+  "proposedCommand": "python3 -B scripts/preview-meter/run.py refresh-preview --review-commit 987b89422c4da2d06a75ce9bd49988de0790cd86 --source /tmp/kurier-environments-release-source --output /home/king/Neumont/Kurier/.build/project-environments-preview/review-7 --private-s3control-operation",
+  "holds": {
+    "noLivePreviewOrAuthentication": true,
+    "noS3ControlAwsOperationAuthorizedOrForwarded": true,
+    "noDeploymentClosureMigrationActivation": true,
+    "noIdentityProjectCreationOrTargets": true,
+    "noNetworkCacheRepairs": true,
+    "noAutomaticContinuation": true
+  }
+}
