@@ -8,10 +8,14 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting remains **299/500**, zero new AWS calls for this implementation.
-The remaining 201 calls are arithmetic headroom, not an accepted deployment
-estimate. The same cumulative **$1 procedural allowance** remains; billing is
-unmeasured. No automatic continuation is authorized by this packet.
+Accounting is **301/1,799**, carrying forward the two attempts in the
+[stopped initial collection](project-environments-collection-stop.md). The
+expanded cumulative ceiling was explicitly approved; **1,498** attempts remain.
+The same cumulative **$1 procedural allowance** remains; billing is unmeasured.
+The initial campaign is stopped and cannot restart. The
+[credential correction](project-environments-credential-renewal.md) is locally
+verified; renewed live execution and every later phase require separate approval.
+No AWS calls or authentication-setting changes occurred during this correction.
 
 ## Artifacts and byte enforcement
 
@@ -69,23 +73,46 @@ loop that automatically advances phases.
 
 ## Proposed future execution and allowances
 
-Proposal only: one **55-minute** shared monotonic window, starting before
-refresh/STS, at most **1,500 additional physical attempts**, proposed cumulative
-ceiling **1,799**, retaining prior 299. This requires explicit approval to expand
-the current 500 ceiling. The closed-stage subwindow is at most **30 minutes**,
-bounded by the original deadline. The $1 cumulative procedural allowance is
-unchanged; the call cap is a stop bound rather than a measured prediction of
-cost or sufficient deployment capacity. Zero runtime requests, new identities,
-new projects or runtime fixtures are included.
+Proposal only: a separately authorized new campaign starts from **301**, retaining
+all prior usage and the approved **1,799** cumulative ceiling, with at most
+**1,498 additional physical attempts**. Keep one original **55-minute** monotonic
+window starting before authentication and at most a **30-minute** closed-stage
+subwindow bounded by that original deadline. The $1 cumulative procedural
+allowance is unchanged; call headroom does not establish cost or capacity. Zero
+runtime requests, new identities, new projects or runtime fixtures are included.
 
-Use clean tooling commit **c5d794b4e3c3afacab7c478fd4fdeab84ff4a886** from this PR and the clean detached
-release worktree at the source above. Required caches are SST 4.17.1, pinned
-Pulumi AWS provider 7.40.0, reviewed SDK/models and existing dependencies.
-`driver.py check` verifies tool, source, attestation and retained artifact pins.
-No install/download/repair is part of execution. The same existing non-root
-session must cover the deadline after at most one approved refresh. STS identity
-verification is mandatory. Authentication and providers share one durable ledger
-and deadline; credential expiry or cache replacement stops later phases.
+Use clean tooling commit **3e380db5f1ef7dba6587abb003d953bc79436871** from this PR
+and the clean detached release worktree at the unchanged source above. Required
+caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
+existing dependencies. `driver.py check` also validates the stopped parent's
+sanitized record, original authorization/claim, 300–301 attempt outcomes and
+recorded same-session cache metadata. No install/download/repair is included.
+
+The pinned Sign-In model caps credential lifetime at **900 seconds**, with no
+requested-duration input. The pinned SDK renews at **300 seconds or less**;
+renewal rotates the same locked cache. Credentials need to cover the bounded
+phase, rather than the entire campaign. Every phase has a **240-second** ceiling,
+including authentication, bounded by both original campaign and closed-stage
+deadlines. Before its work, require credential validity through that phase's
+remaining time plus **five seconds**. Collection's reader inventory and SST diff
+share one four-minute phase and one credential boundary.
+
+Each separately approved phase permits at most one metered existing-session
+renewal if the SDK requires it, followed by mandatory STS account/non-root
+identity verification. Six phases permit at most **six renewals and six host STS
+checks** in total; child/provider STS calls also consume the same shared budget.
+Approval is checked before authentication. No background or mid-phase renewal,
+second renewal within a phase, write retry, clock extension or session replacement
+is permitted. External cache changes, expired refresh grants, renewal/STS failure,
+insufficient validity or any deadline exhaustion latch a stop. The first boundary
+must match the cache metadata retained by the stopped parent; later boundaries
+must match the preceding successful boundary. New session selection needs review.
+
+Four minutes is a strict stop bound, not demonstrated live deployment capacity.
+A phase timeout while closed leaves the stage closed for separately authorized
+inspection/recovery. See the linked credential review for source evidence,
+limitations and offline regressions. Longer-lived credentials cannot be requested
+through this existing login mechanism; no authentication configuration changed.
 
 Use the original workspace so retained cache links keep their reviewed paths.
 Require a clean working tree before selecting the exact tooling commit; preserve
@@ -93,7 +120,7 @@ the review branch and do not reset or remove any evidence:
 
 ```sh
 cd /home/king/Neumont/Kurier
-git switch --detach c5d794b4e3c3afacab7c478fd4fdeab84ff4a886
+git switch --detach 3e380db5f1ef7dba6587abb003d953bc79436871
 ```
 
 Run `check` there with the existing `.build`, `.sst` and `node_modules` caches.
@@ -102,23 +129,31 @@ release source worktree at its pinned `/tmp` location. Any cache/source/hash
 mismatch stops for review.
 
 Exact commands below are proposals. Do not run `start` or `phase` until the
-corresponding authorization has been granted. Select a fresh campaign directory
-once; never reuse a failed claim or remove the window claim to restart.
+corresponding authorization has been granted. The stopped `release-from-299`,
+its original authorization and `window-from-299` claim must remain intact. The proposed new `release-from-301` and its
+`window-from-301` claim must be absent; never reuse or remove a failed claim.
 
 ```sh
 python3 -B scripts/environment-deploy/driver.py check
-mkdir -p .build/project-environments-execution
-chmod 700 .build/project-environments-execution
-python3 -B scripts/environment-deploy/driver.py template > .build/project-environments-execution/authorization.json
+umask 077
+set -C
+python3 -B scripts/environment-deploy/driver.py template > .build/project-environments-execution/authorization-from-301.json
 ```
 
 The template is deliberately `authorized: false`. Review every field and approve
-it only after explicit expanded-budget execution authorization. It binds the
-current exact clean commit and manifest/scope hashes. Then the sole start command:
+it only after explicit approval of this credential policy and a new initial
+collection. It binds the current exact clean tooling commit, manifest/scope
+hashes, 301 baseline and bounded credential policy. The ceiling approval remains
+in effect but does not authorize this new campaign. Then the sole start command:
 
 ```sh
-python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-from-299 --authorization .build/project-environments-execution/authorization.json
+python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-from-301 --authorization .build/project-environments-execution/authorization-from-301.json
 ```
+
+Stop after initial collection. Review its baseline/quiescence findings,
+configuration/IAM comparisons, complete diff, generated hashes, ledger and remaining
+time before deciding on closure. The later commands below remain proposals. No
+phase approval is granted by the credential correction.
 
 Review the fresh collection, complete diff, generated hashes and ledger before
 closure. For each phase, substitute exactly one of `close`, `deploy`, `verify`,
@@ -127,9 +162,9 @@ obtain separate authorization before changing only `authorized` to true.
 Do not script a phase loop or approve all phases in advance.
 
 ```sh
-python3 -B scripts/environment-deploy/driver.py prepare --campaign .build/project-environments-execution/release-from-299 --phase PHASE > .build/project-environments-execution/PHASE-approval.json
-python3 -B scripts/environment-deploy/driver.py phase --campaign .build/project-environments-execution/release-from-299 --phase PHASE --approval .build/project-environments-execution/PHASE-approval.json
-python3 -B scripts/environment-deploy/driver.py report --campaign .build/project-environments-execution/release-from-299
+python3 -B scripts/environment-deploy/driver.py prepare --campaign .build/project-environments-execution/release-from-301 --phase PHASE > .build/project-environments-execution/PHASE-approval.json
+python3 -B scripts/environment-deploy/driver.py phase --campaign .build/project-environments-execution/release-from-301 --phase PHASE --approval .build/project-environments-execution/PHASE-approval.json
+python3 -B scripts/environment-deploy/driver.py report --campaign .build/project-environments-execution/release-from-301
 ```
 
 Deploy first warms hashed frontend assets and their KVS entries, then runs the
@@ -162,10 +197,10 @@ migration is currently planned, and no migration is authorized here.
 
 The isolated transport fixture runs real pinned SST/Pulumi plus Go, Node and
 Python children against loopback responses with synthetic credentials. All 11
-shared attempts reconcile with fixture forwards. Seven cases cover shared
-accounting, call exhaustion, continuous deadline, mutations, endpoint denial,
+shared attempts reconcile with fixture forwards. Eight cases cover shared
+accounting, call exhaustion, continuous campaign and phase deadlines, mutations, endpoint denial,
 exact upload success and altered upload rejection; descendant pulse files stop.
-17 offline policy/accounting tests pass. `npm run verify` passed (format, lint, application/infrastructure/tooling tests, frontend build and Go tests/vet); dependency fetching was disabled. Python Ruff lint and format checks also passed. The artifact/adoption/source verifier
+17 offline policy/accounting tests and 22 credential regressions pass. `npm run verify` passed (format, lint, application/infrastructure/tooling tests, frontend build and Go tests/vet); dependency fetching was disabled. Python Ruff lint and format checks also passed. The artifact/adoption/source verifier
 passes with zero AWS calls.
 
 The startup failure was an import error: mitmproxy's dedicated Python environment
@@ -181,7 +216,9 @@ is absent from the provider sandbox mounts. Logs are private and not published.
 Local fixtures do not establish current cloud configuration, absence of live
 traffic/drift, actual provider write variants, propagation, or runtime behavior.
 Those remain future observations. Unknown variants are held rather than repaired.
-Fresh baseline, expanded call authorization, phase-specific approvals, the closed
-window and separate runtime/rollback allowances remain decisions for review.
+Fresh baseline, acceptance of the bounded renewal policy, a newly authorized
+initial campaign, phase-specific approvals, the closed window and separate
+runtime/rollback allowances remain decisions for review. The expanded ceiling
+itself is approved; no current live continuation is authorized.
 The prior readiness and runtime validation plans remain applicable; OpenAPI
 production scope remains separate.

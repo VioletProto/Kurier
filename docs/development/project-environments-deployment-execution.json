@@ -1,20 +1,23 @@
 {
-  "toolingCommit": "c5d794b4e3c3afacab7c478fd4fdeab84ff4a886",
+  "toolingCommit": "3e380db5f1ef7dba6587abb003d953bc79436871",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 0,
   "accounting": {
-    "cumulative": 299,
-    "authorizedCeiling": 500,
+    "cumulative": 301,
+    "authorizedCeiling": 1799,
     "billingMeasured": false,
-    "proceduralAllowanceUsd": 1
+    "proceduralAllowanceUsd": 1,
+    "remainingAttempts": 1498,
+    "newCallsForCredentialCorrection": 0
   },
   "checks": {
     "unitTestsPassed": 17,
-    "isolatedTransportCasesPassed": 7,
+    "isolatedTransportCasesPassed": 8,
     "sharedFixturePhysicalAttempts": 11,
     "repositoryVerifyPassed": true,
     "ruffPassed": true,
-    "artifactAndEvidencePinsPassed": true
+    "artifactAndEvidencePinsPassed": true,
+    "credentialTestsPassed": 22
   },
   "hashes": {
     "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
@@ -22,5 +25,17 @@
     "docs/development/project-environments-release.json": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
     "docs/development/project-environments-sst-release.json": "25ef3cd0c8f0c09037607c564bfb8964c1ef8e8e14a3aa0ae8757894918895a9"
   },
-  "liveExecutionAuthorized": false
+  "liveExecutionAuthorized": false,
+  "credentialPolicy": {
+    "renewal": "approved-phase-boundaries-only",
+    "phaseSeconds": 240,
+    "expiryGuardSeconds": 5,
+    "maximumRefreshes": 6
+  },
+  "originalCampaignSeconds": 3300,
+  "closedStageMaximumSeconds": 1800,
+  "newCampaignAuthorizationRequired": true,
+  "stoppedParentRecord": "docs/development/project-environments-collection-stop.json",
+  "credentialReview": "docs/development/project-environments-credential-renewal.md",
+  "verificationLogSha256": "c9ad05d3fd0c0065084f14f19fd229039ccf15a57293b20bd03b3fca849e7cc8"
 }
