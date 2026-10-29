@@ -1,5 +1,15 @@
 # Project environments implementation and local verification
 
+## Artifacts adopted; metered deployment tooling prepared locally
+
+The [consolidated execution packet](project-environments-deployment-execution.md)
+records explicit adoption of the review-8 ZIPs in the new adopted manifest,
+linked to binding attestation cb74c992. Historical manifests and rollback bytes
+remain intact. The collector, guarded stage adapter and actual upload-byte gate
+are implemented and locally verified. Current accounting remains **299/500**;
+zero new AWS calls. A proposed expanded deployment window and separate phase
+approvals require review. All live-work holds remain.
+
 ## Authorized key observation succeeded — cumulative 299; adoption still pending
 
 The [key-observation result](project-environments-key-observation.md) records

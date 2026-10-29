@@ -1,0 +1,26 @@
+{
+  "toolingCommit": "c5d794b4e3c3afacab7c478fd4fdeab84ff4a886",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCalls": 0,
+  "accounting": {
+    "cumulative": 299,
+    "authorizedCeiling": 500,
+    "billingMeasured": false,
+    "proceduralAllowanceUsd": 1
+  },
+  "checks": {
+    "unitTestsPassed": 17,
+    "isolatedTransportCasesPassed": 7,
+    "sharedFixturePhysicalAttempts": 11,
+    "repositoryVerifyPassed": true,
+    "ruffPassed": true,
+    "artifactAndEvidencePinsPassed": true
+  },
+  "hashes": {
+    "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+    "docs/development/project-environments-execution-scope.json": "3f559dfb51f1ad9dc11e7fd2c81b9d809e5709696aa6bf6070068e07b2b269dc",
+    "docs/development/project-environments-release.json": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "docs/development/project-environments-sst-release.json": "25ef3cd0c8f0c09037607c564bfb8964c1ef8e8e14a3aa0ae8757894918895a9"
+  },
+  "liveExecutionAuthorized": false
+}
