@@ -1,0 +1,744 @@
+{
+  "status": "completed-read-only-preview",
+  "toolingCommit": "1fd9812f8b974d527ba77e71ac78f7db63db276e",
+  "authorizedPacketCommit": "67201d7e3db780d699049a44966d8be15f349180",
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "command": "python3 -B scripts/preview-meter/run.py refresh-preview --review-commit 1fd9812f8b974d527ba77e71ac78f7db63db276e --source /tmp/kurier-environments-release-source --output /home/king/Neumont/Kurier/.build/project-environments-preview/review-8",
+  "launcherExitCode": 0,
+  "sandboxExitCode": 0,
+  "window": {
+    "seconds": 3600,
+    "startedUTC": "2026-10-29T18:04:57.748049+00:00",
+    "lastReceiptUTC": "2026-10-29T18:05:10.916498+00:00",
+    "elapsedThroughLastReceiptSeconds": 13.16855360500631,
+    "additionalAttemptLimit": 237,
+    "originalDeadlinePreserved": true
+  },
+  "authentication": {
+    "refreshAttempts": 1,
+    "refreshOrdinal": 264,
+    "refreshStatus": 200,
+    "stsVerificationOrdinal": 265,
+    "stsVerificationStatus": 200,
+    "sameAccountAndIdentityVerified": true,
+    "providerHandoffConsumed": true,
+    "bothEarlierFailedRefreshOutcomesRemainUncertain": true
+  },
+  "provider": {
+    "attempts": 31,
+    "firstOrdinal": 266,
+    "lastOrdinal": 296,
+    "statuses": {
+      "200": 24,
+      "404": 7
+    },
+    "unmatchedAttempts": 0,
+    "s3controlAwsAttempts": 1,
+    "listTagsForResourceStatus": 200,
+    "operationCounts": [
+      {
+        "service": "cognito-idp",
+        "operation": "DescribeUserPool",
+        "attempts": 1
+      },
+      {
+        "service": "cognito-idp",
+        "operation": "DescribeUserPoolClient",
+        "attempts": 1
+      },
+      {
+        "service": "dynamodb",
+        "operation": "DescribeTable",
+        "attempts": 2
+      },
+      {
+        "service": "s3",
+        "operation": "GET",
+        "attempts": 15
+      },
+      {
+        "service": "s3",
+        "operation": "HEAD",
+        "attempts": 2
+      },
+      {
+        "service": "s3control",
+        "operation": "ListTagsForResource",
+        "attempts": 1
+      },
+      {
+        "service": "ssm",
+        "operation": "GetParameter",
+        "attempts": 2
+      },
+      {
+        "service": "sts",
+        "operation": "GetCallerIdentity",
+        "attempts": 7
+      }
+    ]
+  },
+  "denials": [],
+  "accounting": {
+    "priorCalls": 263,
+    "newCalls": 33,
+    "cumulativeCalls": 296,
+    "ledgerIntegrity": true,
+    "maximum": 500,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false,
+    "automaticContinuation": false,
+    "requiresInspection": false,
+    "deadline": 84859.884263277,
+    "remainingArithmeticHeadroom": 204,
+    "frozenToolingBaselineStillReports": 263,
+    "futureLiveWorkNeedsReviewed296BasedProofAndExplicitAuthorization": true
+  },
+  "completedDiff": {
+    "complete": true,
+    "representation": "successful SST diff --json change list; not a fresh complete AWS inventory",
+    "rawEntries": 60,
+    "uniqueResourceUrns": 44,
+    "rawOperationCounts": {
+      "create": 40,
+      "read": 1,
+      "update": 7,
+      "create-replacement": 4,
+      "replace": 4,
+      "delete-replaced": 4
+    },
+    "uniqueResourceClassifications": {
+      "api-route-component": 8,
+      "existing-bucket-read": 1,
+      "frontend-dynamic-resource": 3,
+      "lambda-code-object": 4,
+      "application-lambda": 4,
+      "lambda-invoke-permission": 8,
+      "api-gateway": 16
+    },
+    "uniqueCreateResources": 32,
+    "uniqueUpdateResources": 7,
+    "uniqueReplacementResources": 4,
+    "uniqueReadResources": 1,
+    "duplicateComponentCreateEntries": 8,
+    "sameResourcesOmittedByChangeList": true,
+    "resources": [
+      {
+        "name": "DevelopmentHttpApiRouteBatecoIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBatecoRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "POST /api/v1/projects/{projectId}/environments",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbrzwoIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbrzwoRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "GET /api/v1/projects/{projectId}/environments/{environmentId}",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcuohnIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcuohnRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "GET /api/v1/projects/{projectId}/environments",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKbebwhIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKbebwhRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "POST /api/v1/local-agent/capabilities",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKotabwIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKotabwRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "OPTIONS /api/v1/projects/{projectId}/environments",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteRdfcmsIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteRdfcmsRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "DELETE /api/v1/projects/{projectId}/environments/{environmentId}",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteSndcdbIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteSndcdbRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "OPTIONS /api/v1/projects/{projectId}/environments/{environmentId}",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVxffawIntegration",
+        "type": "aws:apigatewayv2/integration:Integration",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVxffawRoute",
+        "type": "aws:apigatewayv2/route:Route",
+        "category": "api-gateway",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1,
+        "route": "PATCH /api/v1/projects/{projectId}/environments/{environmentId}",
+        "gatewayAuthorizationType": "NONE"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBateco",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbrzwo",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcuohn",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKbebwh",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKotabw",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "DevelopmentHttpApiRouteRdfcms",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "DevelopmentHttpApiRouteSndcdb",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVxffaw",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "category": "api-route-component",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 2
+      },
+      {
+        "name": "CloudExecutionWorkerFunction",
+        "type": "aws:lambda/function:Function",
+        "category": "application-lambda",
+        "operations": ["update"],
+        "changedTopLevelFields": ["lastModified", "s3Key"],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "EmptyProjectCleanupFunction",
+        "type": "aws:lambda/function:Function",
+        "category": "application-lambda",
+        "operations": ["update"],
+        "changedTopLevelFields": ["lastModified", "s3Key"],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "ExecutionControlledEndpointFunction",
+        "type": "aws:lambda/function:Function",
+        "category": "application-lambda",
+        "operations": ["update"],
+        "changedTopLevelFields": ["lastModified", "s3Key"],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "UsersProjectsApiFunction",
+        "type": "aws:lambda/function:Function",
+        "category": "application-lambda",
+        "operations": ["update"],
+        "changedTopLevelFields": ["lastModified", "s3Key"],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "FrontendWebAssets",
+        "type": "aws:s3/bucket:Bucket",
+        "category": "existing-bucket-read",
+        "operations": ["read"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "FrontendWebAssetFiles.sst.aws.BucketFiles",
+        "type": "pulumi-nodejs:dynamic:Resource",
+        "category": "frontend-dynamic-resource",
+        "operations": ["update"],
+        "changedTopLevelFields": ["files"],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "FrontendWebInvalidation.sst.aws.DistributionInvalidation",
+        "type": "pulumi-nodejs:dynamic:Resource",
+        "category": "frontend-dynamic-resource",
+        "operations": ["update"],
+        "changedTopLevelFields": ["version"],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "FrontendWebKvKeys.sst.aws.KvKeys",
+        "type": "pulumi-nodejs:dynamic:Resource",
+        "category": "frontend-dynamic-resource",
+        "operations": ["update"],
+        "changedTopLevelFields": ["entries"],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "CloudExecutionWorkerCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "category": "lambda-code-object",
+        "operations": ["create-replacement", "replace", "delete-replaced"],
+        "changedTopLevelFields": ["key", "source", "versionId"],
+        "rawEntryCount": 3
+      },
+      {
+        "name": "EmptyProjectCleanupCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "category": "lambda-code-object",
+        "operations": ["create-replacement", "replace", "delete-replaced"],
+        "changedTopLevelFields": ["key", "source", "versionId"],
+        "rawEntryCount": 3
+      },
+      {
+        "name": "ExecutionControlledEndpointCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "category": "lambda-code-object",
+        "operations": ["create-replacement", "replace", "delete-replaced"],
+        "changedTopLevelFields": ["key", "source", "versionId"],
+        "rawEntryCount": 3
+      },
+      {
+        "name": "UsersProjectsApiCode",
+        "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+        "category": "lambda-code-object",
+        "operations": ["create-replacement", "replace", "delete-replaced"],
+        "changedTopLevelFields": ["key", "source", "versionId"],
+        "rawEntryCount": 3
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBatecoPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbrzwoPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcuohnPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKbebwhPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKotabwPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteRdfcmsPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteSndcdbPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVxffawPermissions",
+        "type": "aws:lambda/permission:Permission",
+        "category": "lambda-invoke-permission",
+        "operations": ["create"],
+        "changedTopLevelFields": [],
+        "rawEntryCount": 1
+      }
+    ],
+    "iamRoleOrIdentityOrManagedPolicyChangesInDiff": false,
+    "newLambdaInvokePermissions": 8,
+    "lambdaInvokePrincipal": "apigateway.amazonaws.com",
+    "lambdaInvokeAction": "lambda:InvokeFunction",
+    "lambdaInvokeSourceArnMatchesInventoriedApiWildcard": true,
+    "routeGatewayAuthorizationTypes": ["NONE"],
+    "runtimeAuthenticationNotExercised": true,
+    "noTableQueueKmsCognitoCloudFrontDistributionOrStageMetadataChangeInDiff": true
+  },
+  "artifacts": {
+    "packages": [
+      {
+        "name": "UsersProjectsApi",
+        "preparedZipSha256": "118621a9b8d84c7941b2ea795783da1183a018ae58295d2d761954ea176078c6",
+        "previewZipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+        "previewZipBytes": 9363094,
+        "matchesPreparedZip": false,
+        "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+        "matchesPreparedBootstrap": true,
+        "preparedMembers": ["bootstrap"],
+        "previewMembers": ["./", "bootstrap", "resource.enc"],
+        "addedResourceEncBytes": 18,
+        "addedRootDirectoryEntry": true,
+        "bindingContentsReviewed": false,
+        "requiresArtifactReview": true
+      },
+      {
+        "name": "EmptyProjectCleanup",
+        "preparedZipSha256": "118621a9b8d84c7941b2ea795783da1183a018ae58295d2d761954ea176078c6",
+        "previewZipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+        "previewZipBytes": 9363094,
+        "matchesPreparedZip": false,
+        "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+        "matchesPreparedBootstrap": true,
+        "preparedMembers": ["bootstrap"],
+        "previewMembers": ["./", "bootstrap", "resource.enc"],
+        "addedResourceEncBytes": 18,
+        "addedRootDirectoryEntry": true,
+        "bindingContentsReviewed": false,
+        "requiresArtifactReview": true
+      },
+      {
+        "name": "CloudExecutionWorker",
+        "preparedZipSha256": "d1bb890914413b1bad1e2108080296a5c05f63e3f023b851836860404b3a29fb",
+        "previewZipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+        "previewZipBytes": 8738299,
+        "matchesPreparedZip": false,
+        "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+        "matchesPreparedBootstrap": true,
+        "preparedMembers": ["bootstrap"],
+        "previewMembers": ["./", "bootstrap", "resource.enc"],
+        "addedResourceEncBytes": 18,
+        "addedRootDirectoryEntry": true,
+        "bindingContentsReviewed": false,
+        "requiresArtifactReview": true
+      },
+      {
+        "name": "ExecutionControlledEndpoint",
+        "preparedZipSha256": "d1bb890914413b1bad1e2108080296a5c05f63e3f023b851836860404b3a29fb",
+        "previewZipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+        "previewZipBytes": 8738299,
+        "matchesPreparedZip": false,
+        "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+        "matchesPreparedBootstrap": true,
+        "preparedMembers": ["bootstrap"],
+        "previewMembers": ["./", "bootstrap", "resource.enc"],
+        "addedResourceEncBytes": 18,
+        "addedRootDirectoryEntry": true,
+        "bindingContentsReviewed": false,
+        "requiresArtifactReview": true
+      }
+    ],
+    "frontendMatchesPrepared": true,
+    "preparedReleaseAndRollbackVerifiedUnchanged": true,
+    "releaseManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "archiveDifferenceExplanation": "Prepared archives contained bootstrap only; preview packages additionally contain a directory entry and resource.enc. All bootstrap bytes match. Encrypted binding contents were not decrypted/validated.",
+    "newPackagesAdoptedAsReleaseArtifacts": false
+  },
+  "preservation": {
+    "protectedOriginalFiles": 74,
+    "originalProofSha256": {
+      "docs/development/project-environments-inventory-attempts.jsonl": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+      "docs/development/project-environments-preview-attempts.jsonl": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+      "docs/development/project-environments-refresh-preview-auth-projection.jsonl": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+      ".build/project-environments-preview/review-3/authentication.jsonl": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+      ".build/project-environments-preview/review-3/window.json": "19c362f32d5ce9e0ea4c8ad67c9f76e8ee03130f58c3e257aadbcdf1aa4c8f39",
+      ".build/project-environments-preview/review-3/cumulative-usage.json": "346fa66374bac7ac87fd48ef250e4eb438d8d3ad725ca23876f9a7cacf684671",
+      ".build/project-environments-preview/window-from-165.json": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+      "docs/development/project-environments-refresh-preview-review-4-auth-projection.jsonl": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1",
+      ".build/project-environments-preview/review-4/authentication.jsonl": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+      ".build/project-environments-preview/review-4/window.json": "538921f5c442ae7b2f3492267c62c8fe55bf1cd3f060e34d486923cde60b911e",
+      ".build/project-environments-preview/review-4/cumulative-usage.json": "1cca6aaeef18233ab7db538f4560684375167c731a8182b04756c7e2c5595765",
+      ".build/project-environments-preview/window-from-166.json": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a",
+      ".build/project-environments-network-diagnostics/review-1/attempts.jsonl": "ad009e85a025ebbbd6b8b9398b56e4ea799d3d705e3b85d393ba0f55db9da9e9",
+      ".build/project-environments-network-diagnostics/review-1/result.json": "d0bd6f4c37cb92dbe18b33a995e4975688a24a04505b2d34881ac42cc3699432",
+      ".build/project-environments-network-diagnostics/review-1/context.json": "5b442af2a0ea0a552e93b476c6a22e6234ba2cce8e1ce5b032e13fe55d50f4fe",
+      ".build/project-environments-network-diagnostics/review-1/addresses.json": "b45ee55d1ba9a6781ff8a557dfb541fb388c7a3165bad4745f58c89cb6ed5874",
+      ".build/project-environments-network-diagnostics/review-1/route-4.json": "f7b7e49d6681f43ef44abebc61aa8930d7e112d95d4d2a0b04eaf9397f91e9a0",
+      ".build/project-environments-preview/window-from-167.json": "9e27595362462d7c24741b98dcc2274c152af3cbec2093b5c1b9d822e276181b",
+      ".build/project-environments-network-probe-offline/gate.json": "47eb5efd7a343640c49f69865487e7becc961b64195929719b92a637bfadf922",
+      "docs/development/project-environments-network-probe-ledger.jsonl": "2e3beb072185a8636635181f10a6efcb0733961369df0b23205fe1e9a5a470aa",
+      "docs/development/project-environments-network-probe-result.json": "80294d852d9c4d02dde6edf23854e14cdda4c2bcc6534bbbd325ddf1f580c262",
+      ".build/project-environments-preview/review-5/authentication.jsonl": "501661d3f821573433eb8346f8743aa183ff71306b875bb2b69a81c0ba28e4d7",
+      ".build/project-environments-preview/review-5/window.json": "58ad715a37148bbf4524cdcdd483ba1eb6054963c9685686c0ac8c12f3154e49",
+      ".build/project-environments-preview/review-5/handoff.json": "cf480799d0a115ff1e7da27bd0834ce030914f9c36e9c653845391cc1377a072",
+      ".build/project-environments-preview/review-5/provider-claim.json": "c48455b015efbf09b929cc0e014213283451ece22a3b150f16536032c6ac0fc7",
+      ".build/project-environments-preview/review-5/cumulative-usage.json": "6863ccb4e79eaeb84131e20322a117265d2d2507660f8609e477e646e6c44500",
+      ".build/project-environments-preview/review-5/packaging-review.json": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+      ".build/project-environments-preview/review-5/provider/attempts.jsonl": "6a5cbd7c4b77b9850f3c10a8879f961d800819ff6fda1011fcea8bd59b4d0ba8",
+      ".build/project-environments-preview/review-5/provider/private-output.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-5/provider/meter-errors.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-5/provider/work/sst/frontend-hosting-artifact.json": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230",
+      ".build/project-environments-preview/review-5/provider/work/sst/pulumi/fe5e7b5733952fb9878de32b/eventlog.json": "31f611ce30be7bc7e6db1a9678223aef20c683d263c7fc2ae73b72d0758332b6",
+      ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.log": "7497186ba072fc862dfcf8995a3e45784f0244a2ba77a12c01934c29a7eb3bca",
+      ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/window-from-168.json": "c1300008f5959c0ec7ee88dce165b749169a7ea4030795819ea97245bec9da2e",
+      "docs/development/project-environments-refresh-preview-review-5.json": "3caf9a2ee8ed94a2740919d1cbf51e4bca51f24e62d1b5c1e9ac6d997ef3599b",
+      "docs/development/project-environments-refresh-preview-review-5-auth-projection.jsonl": "272d7399d929bb87b80d0c42fedc2822a3ca115cd7216ded1473b7a667a10b03",
+      "docs/development/project-environments-refresh-preview-review-5-provider-projection.jsonl": "f88a1b84695ee6d32a890b34df4630b8228ea665c9bbed8ba48f7181f04d0ca7",
+      ".build/project-environments-preview/review-6/authentication.jsonl": "0114634ea8e4b0055ccdb6da2427101272ce6ab15e76bb5a6b0f27cfef209407",
+      ".build/project-environments-preview/review-6/window.json": "6f768122035d9dcd116e0d8681cfcdf729fa5e830dc41977a578248a0b96f831",
+      ".build/project-environments-preview/review-6/handoff.json": "f20980c41e590419fd0f31300013cc87173578c3317690bce63e94c2e0e9a7f1",
+      ".build/project-environments-preview/review-6/provider-claim.json": "00002d02bf2f1005cae24f9676d0bd3662731ed2ae200e55549aaddc59985a82",
+      ".build/project-environments-preview/review-6/cumulative-usage.json": "6edb2ee9a393bc902551453cf25e44c4b7eb8b8493f0d0331aa5faf89029f27e",
+      ".build/project-environments-preview/review-6/packaging-review.json": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+      ".build/project-environments-preview/review-6/provider/attempts.jsonl": "36944d81c58f361ff0452d907d0f57d40194f4e97b4effbab268ebd55d61d037",
+      ".build/project-environments-preview/review-6/provider/config.json": "1b4bd7160afb91fdffbff7f0e30b1864bb5f84d639ce67da6ed2b316cfaaedaf",
+      ".build/project-environments-preview/review-6/provider/private-output.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-6/provider/meter-errors.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-6/provider/work/sst/frontend-hosting-artifact.json": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230",
+      ".build/project-environments-preview/review-6/provider/work/sst/pulumi/fe5e7a5444a57558a228dfee/eventlog.json": "4c6d00c499928e87d10723da591aa52906f3485609bc249421f8d5c3f0dfb888",
+      ".build/project-environments-preview/review-6/provider/work/sst/log/pulumi.log": "c750f97f6924523edbdaa67de2a8580687f9dc06a417f13dd060cf6c538632ff",
+      ".build/project-environments-preview/review-6/provider/work/sst/log/pulumi.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/window-from-200.json": "29112244171d5eca5153a52bd8ed607c3e34a43df58b0e00cf95dba43e2e4a10",
+      "docs/development/project-environments-refresh-preview-review-6.json": "e192e3b0e2b0c10748e3af9198bb9e5163ccb180250c70169c15b71fb936cd1c",
+      "docs/development/project-environments-refresh-preview-review-6-auth-projection.jsonl": "7789344050f7b9c1b0b34dfbd24bcd81921dc04cedc81cf7e8d383312027a9ea",
+      "docs/development/project-environments-refresh-preview-review-6-provider-projection.jsonl": "ae57394cd8df9aa34966d9d7e007d3ab1f0b2177b9f54069596a7d3e004b77c4",
+      ".build/project-environments-preview/review-7/authentication.jsonl": "7d44ce1d4a9b68c53c7d4ab1a5638e919c49ba52871964dd38409eeff309016f",
+      ".build/project-environments-preview/review-7/window.json": "970c68deb10d12fcadb0de9ac8b77ef342e2e2181c7fb41eedb129cd858152ed",
+      ".build/project-environments-preview/review-7/handoff.json": "d0b328fc205327aee551e7e14d16927e1c742ae1ced3670ed42d5c55b2bf0dab",
+      ".build/project-environments-preview/review-7/provider-claim.json": "41ebb96eebfbf225a16f2e8ed03ed15a73a80ce2003376b35c2b1172e0feedbe",
+      ".build/project-environments-preview/review-7/cumulative-usage.json": "32657dde4b27d69a76d069e13834910f590fef1fdd2d4606a5bd577e6e41c097",
+      ".build/project-environments-preview/review-7/packaging-review.json": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+      ".build/project-environments-preview/review-7/provider/attempts.jsonl": "9b7c95f02a29286aeb6672fa5fb2d196a9252cebea921f48f81a6e78a1bf9535",
+      ".build/project-environments-preview/review-7/provider/config.json": "e164892d65f382b55fa33f2ad8dd9add1950c92f8d8cc7ffdf2f2acefbc90e0e",
+      ".build/project-environments-preview/review-7/provider/private-output.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-7/provider/meter-errors.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-7/provider/work/sst/frontend-hosting-artifact.json": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230",
+      ".build/project-environments-preview/review-7/provider/work/sst/pulumi/fe5e7a267ae65dc9ddca0788/eventlog.json": "aa14d95ce52f50ec60f03f89b60654559b3e445453f709e54ebf0bb886f1f8aa",
+      ".build/project-environments-preview/review-7/provider/work/sst/log/pulumi.log": "437375365ff101812efe06af2fee2de63bf35e35d1a4bd4396d51bb52f98df37",
+      ".build/project-environments-preview/review-7/provider/work/sst/log/pulumi.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/window-from-231.json": "22a515a776070f0d94fadd55eef3f284e7d9afe344cc8cd1b9960001dbd8268e",
+      "docs/development/project-environments-refresh-preview-review-7.json": "22d2a3089288770100901569c0447c4a45db53ee6703fe2e685ef2f33bdc0e95",
+      "docs/development/project-environments-refresh-preview-review-7-auth-projection.jsonl": "f64593f835df39316cd6d9371fb5d9d06dcc8f29f85cbbf1ea34a812ff259cb8",
+      "docs/development/project-environments-refresh-preview-review-7-provider-projection.jsonl": "072e866035a36a7a93f3e0ddcc31618fb067c51364e97e779a19d0b39fc05e51"
+    },
+    "privateEvidenceExcludingCaptures": {
+      ".build/project-environments-preview/review-8/authentication.jsonl": {
+        "bytes": 3169,
+        "sha256": "989a06a36c830c16c32c0a16bffa60833ad921fc346343b56c24b0257f25c3a0"
+      },
+      ".build/project-environments-preview/review-8/window.json": {
+        "bytes": 2281,
+        "sha256": "53fba1ff056973a089efa7259702c2b48d28dbcd6f268575e1145b6b6cd63122"
+      },
+      ".build/project-environments-preview/review-8/handoff.json": {
+        "bytes": 191,
+        "sha256": "41c4611e947da08996dfc5828288073d344a36ea4163e863a269c2ff357e8d94"
+      },
+      ".build/project-environments-preview/review-8/provider-claim.json": {
+        "bytes": 129,
+        "sha256": "952287b87469127e280e1bada566d3ac867ba10dd036bd22529e0b83681ade6e"
+      },
+      ".build/project-environments-preview/review-8/cumulative-usage.json": {
+        "bytes": 245,
+        "sha256": "af9c559d738ae8a5ae9ac6abb04954c30b3126e8cd41d6e6df6ee7faf49db531"
+      },
+      ".build/project-environments-preview/review-8/packaging-review.json": {
+        "bytes": 2140,
+        "sha256": "a2b77975dda81ca5d39b29fa6d71c1de671ad25c0e62e86a81af7ba2da4c9510"
+      },
+      ".build/project-environments-preview/review-8/provider/attempts.jsonl": {
+        "bytes": 12765,
+        "sha256": "4f54d58626f19fefd160ffad4a42684da14cfccd71551b9203458ecb316977fa"
+      },
+      ".build/project-environments-preview/review-8/provider/config.json": {
+        "bytes": 2163,
+        "sha256": "2b570f63a3fa6791333fcde117a3ba3d41fa1f2c1daa7a09dbc60ba99d4017b7"
+      },
+      ".build/project-environments-preview/review-8/provider/private-output.txt": {
+        "bytes": 309795,
+        "sha256": "487eef102417d92a956ee5e3682f148dcf999fcc3d3acd095b47cf60778ab7bf"
+      },
+      ".build/project-environments-preview/review-8/provider/meter-errors.txt": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      ".build/project-environments-preview/review-8/provider/work/sst/frontend-hosting-artifact.json": {
+        "bytes": 1493,
+        "sha256": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230"
+      },
+      ".build/project-environments-preview/review-8/provider/work/sst/log/sst.log": {
+        "bytes": 7137,
+        "sha256": "74c78d26cbfe336ea75cf6094ef34c08584fca4e692f5188eeb06f76ffb7d131"
+      },
+      ".build/project-environments-preview/review-8/provider/work/sst/log/pulumi.log": {
+        "bytes": 12308,
+        "sha256": "b367233630b468f99dee65d2864c8209e7c618222b39b79585945cf13ba0aeae"
+      },
+      ".build/project-environments-preview/review-8/provider/work/sst/log/pulumi.err.log": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      ".build/project-environments-preview/window-from-263.json": {
+        "bytes": 2010,
+        "sha256": "7e58a4deff93fd0b463d251502877143b73196d84ee364c2f321851e44b78669"
+      },
+      ".build/review-8-launch.private.txt": {
+        "bytes": 90,
+        "sha256": "fb2a20c31af7f022a4450d65cd311c0cf81c5b3b96d9b3b2faa97769b8e33da5"
+      }
+    },
+    "rawPrivateCaptureHashesPublished": false,
+    "previewPolicySha256": "7592b876c4a81315dc4cd1b51f9406d6e6689d42e74594f209c95096cf4eaa75",
+    "toolingChanged": false,
+    "newCampaignAndProviderClaimsPreserved": true
+  },
+  "verification": {
+    "localReceiptReconciliationPassed": true,
+    "originalProofsAndArtifactsPassed": true,
+    "postCompletionAwsCalls": 0,
+    "fullRepositoryVerifyPassedOffline": true,
+    "dependencyDownloadsDisabled": true,
+    "publicationVerifyLogSha256": "a32afa98523554756d599bfbbeacdd39dca313c5a19ff578e39e06b2049ff862"
+  },
+  "nextDecisions": [
+    "Review complete resource diff including API-wide Lambda invoke source scope and application-enforced authentication on routes",
+    "Review preview ZIP hashes and added SST resource.enc bindings before selecting final deployment packages",
+    "Separate explicit approval required for any stage closure, deployment, migration/activation or runtime validation; no automatic continuation"
+  ],
+  "holds": {
+    "restartAttempted": false,
+    "policyChanged": false,
+    "repairPerformed": false,
+    "deploymentClosureMigrationActivationPerformed": false,
+    "identityOrProjectCreated": false,
+    "targetRequestsPerformed": false,
+    "automaticContinuation": false
+  }
+}

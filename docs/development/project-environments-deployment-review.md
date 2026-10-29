@@ -1,5 +1,19 @@
 # Project environments deployment review
 
+## Authorized review-8 completed — cumulative 296, ZIP differences for review
+
+The [review-8 result](project-environments-refresh-preview-review-8.md) records
+one successful clean `1fd9812` execution: refresh + mandatory STS + 31 provider
+reads, including the exact bucket ListTagsForResource (HTTP 200), with no denial.
+**296/500 cumulative**; no restart or continuation. The completed SST change list
+covers eight routes/integrations/invoke permissions, four Lambda code changes,
+frontend changes and an existing bucket read. Four new ZIP hashes differ because
+SST adds `resource.enc` and a directory entry; all bootstrap bytes and frontend
+metadata match prepared bytes. New ZIPs/bindings require review and are not adopted
+as release artifacts. All 74 original proof files, claims and release/rollback
+bytes remain intact. All deployment/runtime holds remain; no further live work
+is authorized. Historical packets below retain their original status/accounting.
+
 ## Resource-scoped ListTagsForResource amendment — local review only, cumulative 263
 
 The [new packet](project-environments-listtags-resource-review.md) establishes
