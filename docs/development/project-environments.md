@@ -1,5 +1,18 @@
 # Project environments implementation and local verification
 
+## Authorized key observation succeeded — cumulative 299; adoption still pending
+
+The [key-observation result](project-environments-key-observation.md) records
+one bounded existing-session refresh, required STS and exact UsersProjectsApi
+configuration read, all HTTP 200. **299/500 cumulative**. All four retained
+resource.enc blobs authenticated and matched the required empty bindings; no
+credential or unrelated binding occurs in them. No key/plaintext/full environment
+was retained or published. This resolves the earlier content-validation gap;
+both manifests and all original/rollback evidence remain unchanged. Candidate
+adoption remains pending review. Live metered adapter/upload-boundary and other
+release gates remain unresolved; no deployment, closure, activation or runtime
+continuation occurred. Same cumulative $1 procedural allowance, billing unmeasured.
+
 ## Final readiness review — local prerequisites verified, deployment still blocked
 
 The [readiness packet](project-environments-final-readiness.md) proposes the exact

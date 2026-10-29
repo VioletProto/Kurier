@@ -1,0 +1,9 @@
+{"at":1793302692.007784,"monotonic":86854.144106254,"event":"created","prior":296,"maximum":299,"cumulativeCeiling":500,"seconds":600,"started":86854.144053046,"deadline":87454.144053046}
+{"at":1793302692.0521514,"monotonic":86854.188473076,"event":"attempt","count":297,"service":"signin","operation":"CreateOAuth2Token","protocol":"HTTP/1.1"}
+{"at":1793302692.371495,"monotonic":86854.50781726,"event":"outcome","attempt":297,"status":200,"transportError":false}
+{"at":1793302692.392373,"monotonic":86854.528694661,"event":"attempt","count":298,"service":"sts","operation":"GetCallerIdentity","protocol":"HTTP/1.1"}
+{"at":1793302692.5581656,"monotonic":86854.694487959,"event":"outcome","attempt":298,"status":200,"transportError":false}
+{"at":1793302692.5689003,"monotonic":86854.705221911,"event":"identity-verified","count":298}
+{"at":1793302692.5871186,"monotonic":86854.723440414,"event":"attempt","count":299,"service":"lambda","operation":"GetFunctionConfiguration","protocol":"HTTP/1.1"}
+{"at":1793302692.8507164,"monotonic":86854.987039254,"event":"outcome","attempt":299,"status":200,"transportError":false}
+{"at":1793302693.2808354,"monotonic":86855.417157786,"event":"validated","count":299,"allFourAuthenticatedEmptyBindings":true}
