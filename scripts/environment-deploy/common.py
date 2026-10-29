@@ -8,7 +8,16 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PRIOR = 299
+PRIOR = 301
+PHASE_SECONDS = 240
+CREDENTIAL_GUARD_SECONDS = 5
+MAX_REFRESHES = 6
+CREDENTIAL_POLICY = {
+    "renewal": "approved-phase-boundaries-only",
+    "phaseSeconds": PHASE_SECONDS,
+    "expiryGuardSeconds": CREDENTIAL_GUARD_SECONDS,
+    "maximumRefreshes": MAX_REFRESHES,
+}
 PHASES = ("collect", "close", "deploy", "verify", "activate", "final")
 
 
@@ -114,6 +123,7 @@ class Campaign:
                 "nextPhase": 0,
                 "activePhase": None,
                 "closedDeadline": None,
+                "phaseDeadline": None,
             }.items():
                 self.put(k, v)
             self.event(
@@ -158,6 +168,13 @@ class Campaign:
         ):
             self.stop("closed-window-exhausted")
 
+        if (
+            self.get("activePhase") is not None
+            and self.get("phaseDeadline") is not None
+            and self.clock() >= self.get("phaseDeadline")
+        ):
+            self.stop("phase-window-exhausted")
+
     def begin(self, phase):
         self.db.execute("BEGIN IMMEDIATE")
         try:
@@ -173,6 +190,14 @@ class Campaign:
                 self.put(
                     "closedDeadline", min(self.get("deadline"), self.clock() + 1800)
                 )
+            self.put(
+                "phaseDeadline",
+                min(
+                    self.get("deadline"),
+                    self.get("closedDeadline") or self.get("deadline"),
+                    self.clock() + PHASE_SECONDS,
+                ),
+            )
             self.event("phase-start", phase=phase)
         finally:
             self.db.execute("COMMIT")
@@ -229,6 +254,7 @@ class Campaign:
             self.stop("incomplete-phase-or-outcomes")
         self.put("proof:" + phase, proof)
         self.put("activePhase", None)
+        self.put("phaseDeadline", None)
         self.put("nextPhase", self.get("nextPhase") + 1)
         if phase == "activate":
             self.put("closedDeadline", None)

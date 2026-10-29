@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +16,7 @@ def main():
         raise SystemExit("pinned-release-worktree-missing")
     PRIVATE.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chmod(PRIVATE, 0o700)
+    private_run = Path(tempfile.mkdtemp(prefix="credential-review-", dir=PRIVATE))
     args = [
         "bwrap",
         "--unshare-all",
@@ -51,8 +53,8 @@ def main():
         str(ROOT),
         str(ROOT),
         "--bind",
-        str(PRIVATE),
-        str(PRIVATE),
+        str(private_run),
+        str(private_run),
     ]
     for path in [
         Path.home() / "go/pkg/mod",
@@ -77,7 +79,7 @@ def main():
             "GOCACHE": "/tmp/kurier-fixture-go-cache",
             "GOPROXY": "off",
             "GOTOOLCHAIN": "local",
-            "KURIER_TEST_PRIVATE_DIR": str(PRIVATE),
+            "KURIER_TEST_PRIVATE_DIR": str(private_run),
         },
     ).returncode
 

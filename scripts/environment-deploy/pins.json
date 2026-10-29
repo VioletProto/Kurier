@@ -7,5 +7,6 @@
     "data/apigatewayv2/2018-11-29/service-2.json": "fdb831dc9be4cb380b42e21525a1a7e6e379958b7d8a3df7fd71c6c7f50df47c",
     "data/cloudfront-keyvaluestore/2022-07-26/service-2.json": "9bc300ee21019a5f77cd91dd0dc01144930107bb2193b3da02d79743dcb4ea36",
     "data/cloudfront/2020-05-31/service-2.json": "4e5f9c9aa1623f473f70ab272ecf7b89ee1d4321b04098447bb82b40e7ac7adf"
-  }
+  },
+  "stoppedParent": "633471db8b97d2546cac9ed831d25bb37c90c0ac3451267800ba62efb416db14"
 }

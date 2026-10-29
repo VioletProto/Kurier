@@ -80,7 +80,7 @@ def new_campaign(d, maximum=1799, clock=time.monotonic, boot=lambda: "fixture-bo
     return Campaign(
         Path(d) / "campaign",
         create={
-            "prior": 299,
+            "prior": 301,
             "maximum": maximum,
             "seconds": 3300,
             "manifestSha256": PINS["manifest"],
@@ -437,7 +437,7 @@ class Tests(unittest.TestCase):
 
     def test_campaign_count_is_shared_and_atomic_under_concurrency(self):
         with tempfile.TemporaryDirectory() as d:
-            c = new_campaign(d, maximum=309)
+            c = new_campaign(d, maximum=311)
             c.begin("collect")
 
             def call(_):
@@ -451,10 +451,10 @@ class Tests(unittest.TestCase):
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
                 numbers = list(pool.map(call, range(10)))
-            self.assertEqual(sorted(numbers), list(range(300, 310)))
+            self.assertEqual(sorted(numbers), list(range(302, 312)))
             with self.assertRaises(Held):
                 c.admit("fixture/read", False)
-            self.assertEqual(c.get("count"), 309)
+            self.assertEqual(c.get("count"), 311)
             c.close()
 
     def test_shared_deadline_and_closed_deadline_cannot_reset_between_phases(self):
@@ -517,7 +517,7 @@ class Tests(unittest.TestCase):
                 n = c.admit("fixture/write", True)
                 with self.assertRaises(Held):
                     c.outcome(n, status)
-                self.assertEqual(c.get("count"), 300)
+                self.assertEqual(c.get("count"), 302)
                 self.assertTrue(c.get("stopped"))
                 c.close()
 

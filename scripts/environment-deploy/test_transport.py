@@ -158,7 +158,7 @@ def campaign(path, phase, maximum=329, seconds=3300):
     c = Campaign(
         path,
         create={
-            "prior": 299,
+            "prior": 301,
             "maximum": maximum,
             "seconds": seconds,
             "manifestSha256": P["manifest"],
@@ -256,6 +256,7 @@ if len(sys.argv)>1:
             for name in [
                 "call-limit",
                 "deadline",
+                "phase-deadline",
                 "mutation",
                 "endpoint",
                 "upload-good",
@@ -265,9 +266,11 @@ if len(sys.argv)>1:
                 c = campaign(
                     d / name,
                     phase,
-                    maximum=303 if name == "call-limit" else 329,
+                    maximum=305 if name == "call-limit" else 329,
                     seconds=5 if name == "deadline" else 3300,
                 )
+                if name == "phase-deadline":
+                    c.put("phaseDeadline", time.monotonic() + 5)
                 old = len(AUDIT)
                 if name == "call-limit":
                     tail = (
@@ -275,7 +278,7 @@ if len(sys.argv)>1:
                         + S["stateBucket"]
                         + ".s3.us-east-2.amazonaws.com/app/kurier/dev-api.json');"
                     )
-                elif name == "deadline":
+                elif name in {"deadline", "phase-deadline"}:
                     tail = "await new Promise(r=>setTimeout(r,10000));"
                 elif name == "mutation":
                     tail = (
@@ -320,10 +323,10 @@ if len(sys.argv)>1:
                     )
                 else:
                     assert not writes, (name, writes)
-                if name in {"mutation", "endpoint", "deadline"}:
+                if name in {"mutation", "endpoint", "deadline", "phase-deadline"}:
                     assert len(AUDIT) == old, (name, AUDIT[old:])
                 if name == "call-limit":
-                    assert c.get("count") == 303 and len(AUDIT) - old == 4
+                    assert c.get("count") == 305 and len(AUDIT) - old == 4
                 pulses = [
                     d / (name + "-child") / "work" / x
                     for x in ["root", "child", "grand"]
@@ -334,7 +337,7 @@ if len(sys.argv)>1:
                 results.append(
                     {
                         "case": name,
-                        "attempts": c.get("count") - 299,
+                        "attempts": c.get("count") - 301,
                         "allDescendantsStopped": True,
                         "upstreamWrites": len(writes),
                         "actualUploadHashVerified": name == "upload-good",
@@ -348,7 +351,7 @@ if len(sys.argv)>1:
                 {
                     "fixtureOnly": True,
                     "awsCalls": 0,
-                    "priorUsageUnchanged": 299,
+                    "priorUsageUnchanged": 301,
                     "cases": results,
                 }
             )

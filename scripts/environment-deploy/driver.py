@@ -1,41 +1,84 @@
 """Reviewed phase-by-phase execution tooling. Default check is local only."""
 
 import argparse
-import datetime
 import json
-import os
+import sqlite3
 import subprocess
 import sys
-import time
 import uuid
+from contextlib import closing
 from pathlib import Path
-from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "preview-meter"))
 from artifacts import load_objects
-from authentication import (
-    ACCOUNT,
-    STS,
-    ExistingCache,
-    Transport,
-    deadline_alarm,
-    sdk_pins,
+from authentication import sdk_pins
+from common import (
+    CREDENTIAL_POLICY,
+    PRIOR,
+    ROOT,
+    Campaign,
+    Held,
+    canonical,
+    digest,
+    private_write,
 )
-from botocore import UNSIGNED
-from botocore.config import Config
-from botocore.credentials import LoginCredentialFetcher
-from botocore.httpsession import URLLib3Session
-from botocore.session import Session
-from common import PRIOR, ROOT, Campaign, Held, canonical, digest, private_write
 from isolation import launch
+from phase_credentials import credentials
 from run import PROVIDER, PROVIDER_SHA, SOURCE, SST, SST_SHA, git, sha, valid_parent
 
 SOURCE_DIR = Path("/tmp/kurier-environments-release-source")
 MANIFEST = ROOT / "docs/development/project-environments-adopted-release.json"
 SCOPE = ROOT / "docs/development/project-environments-execution-scope.json"
 BASE = ROOT / ".build/project-environments-execution"
+
+
+def stopped_parent():
+    """Read the retained stopped ledger, never reopen or reset its campaign."""
+    pins = json.loads((HERE / "pins.json").read_bytes())
+    path = ROOT / "docs/development/project-environments-collection-stop.json"
+    if sha(path) != pins["stoppedParent"]:
+        raise Held("stopped-parent-record-held")
+    record = json.loads(path.read_bytes())
+    directory = ROOT / record["campaign"]
+    auth = directory.parent / "authorization.json"
+    claim = json.loads((directory.parent / "window-from-299.json").read_bytes())
+    wal = directory / "campaign.sqlite-wal"
+    if wal.exists() and wal.stat().st_size:
+        raise Held("stopped-parent-pending-wal-held")
+    with closing(
+        sqlite3.connect(
+            "file:" + str(directory / "campaign.sqlite") + "?mode=ro&immutable=1",
+            uri=True,
+        )
+    ) as db:
+        config = {k: json.loads(v) for k, v in db.execute("SELECT k,v FROM config")}
+        rows = db.execute(
+            "SELECT n,phase,op,write,status,outcome FROM attempts ORDER BY n"
+        ).fetchall()
+    if (
+        not config["stopped"]
+        or config["prior"] != 299
+        or config["count"] != PRIOR
+        or config["nextPhase"] != 0
+        or config["closedDeadline"] is not None
+        or config["reviewCommit"] != record["toolingCommit"]
+        or config["manifestSha256"] != record["manifestSha256"]
+        or config["scopeSha256"] != record["scopeSha256"]
+        or rows
+        != [
+            (300, "collect", "signin/CreateOAuth2Token", 1, 200, 1),
+            (301, "collect", "sts/GetCallerIdentity", 0, 200, 1),
+        ]
+        or sha(auth) != record["authorizationSha256"]
+        or config["authorizationSha256"] != record["authorizationSha256"]
+        or claim["authorizationSha256"] != record["authorizationSha256"]
+        or claim["directory"] != str(directory.resolve())
+        or not config.get("cacheStat")
+    ):
+        raise Held("stopped-parent-accounting-held")
+    return config["cacheStat"]
 
 
 def check():
@@ -75,7 +118,7 @@ def check():
         if sha(ROOT / name) != proof["sha256"]:
             raise Held("key-observation-proof-held")
     if (
-        att["accounting"]["cumulativeCalls"] != PRIOR
+        att["accounting"]["cumulativeCalls"] != 299
         or att["accounting"]["newCalls"] != 3
     ):
         raise Held("accounting-held")
@@ -92,6 +135,7 @@ def check():
             != p["zipSha256"]
         ):
             raise Held("adopted-bytes-held")
+    stopped_parent()
     load_objects(scope, release)
     valid_parent()
     sdk_pins()
@@ -108,130 +152,6 @@ def check():
     ):
         raise Held("pinned-source-toolchain-held")
     return release, scope, pins
-
-
-class AuthBudget:
-    def __init__(self, c):
-        self.c = c
-
-    @property
-    def count(self):
-        return self.c.get("count")
-
-    @property
-    def stopped(self):
-        return self.c.get("stopped")
-
-    def check(self):
-        return self.c.check()
-
-    def stop(self, r):
-        return self.c.stop(r)
-
-    def admit(self, s, o, _protocol):
-        return self.c.admit(s + "/" + o, s == "signin")
-
-    def record(self, **v):
-        return self.c.event(v.pop("event"), **v)
-
-    def outcome(self, n, status=None, error=False):
-        return self.c.outcome(n, None if error else status)
-
-
-def credentials(c, scope, *, authenticate=False):
-    cache = ExistingCache()
-    clients = []
-    try:
-        if cache.identity != scope["identityArn"]:
-            raise Held("inventoried-session-required")
-        if authenticate:
-            t = Transport(AuthBudget(c), cache.original, URLLib3Session.send)
-            session = Session(
-                session_vars={
-                    "config_file": (None, None, "/dev/null", None),
-                    "credentials_file": (None, None, "/dev/null", None),
-                    "data_path": (None, None, None, None),
-                    "csm_enabled": (None, None, False, None),
-                }
-            )
-
-            def client(service, config=None, credentials=None):
-                if service not in {"signin", "sts"}:
-                    raise Held("authentication-service-held")
-                v = credentials or {}
-                instance = session.create_client(
-                    service,
-                    region_name="us-east-2",
-                    endpoint_url=None if service == "signin" else STS,
-                    verify=True,
-                    aws_access_key_id=v.get("access_key", "unused"),
-                    aws_secret_access_key=v.get("secret_key", "unused"),
-                    aws_session_token=v.get("token"),
-                    config=Config(
-                        signature_version=UNSIGNED if service == "signin" else "v4",
-                        proxies={},
-                        retries={"total_max_attempts": 1},
-                        connect_timeout=10,
-                        read_timeout=30,
-                    ),
-                )
-                clients.append(instance)
-                return instance
-
-            import logging
-
-            old = logging.root.manager.disable
-            logging.disable(logging.CRITICAL)
-            try:
-                with (
-                    deadline_alarm(c.get("deadline")),
-                    patch.object(
-                        URLLib3Session,
-                        "send",
-                        lambda physical, request: t.forward(physical, request),
-                    ),
-                ):
-                    creds = LoginCredentialFetcher(
-                        cache.identity, cache, client
-                    ).refresh_credentials()
-                    identity = client("sts", credentials=creds).get_caller_identity()
-                    if (
-                        identity.get("Account") != ACCOUNT
-                        or identity.get("Arn") != scope["identityArn"]
-                    ):
-                        raise Held("authentication-identity-held")
-            finally:
-                logging.disable(old)
-            c.put(
-                "cacheStat",
-                [
-                    os.fstat(cache.fd).st_ino,
-                    os.fstat(cache.fd).st_size,
-                    os.fstat(cache.fd).st_mtime_ns,
-                ],
-            )
-        stat = os.fstat(cache.fd)
-        if c.get("cacheStat") != [stat.st_ino, stat.st_size, stat.st_mtime_ns]:
-            raise Held("session-changed-no-unmetered-refresh")
-        token = cache.load_token(cache.identity)["accessToken"]
-        if (
-            token["accountId"] != ACCOUNT
-            or (
-                datetime.datetime.fromisoformat(token["expiresAt"])
-                - datetime.datetime.now(datetime.UTC)
-            ).total_seconds()
-            < c.get("deadline") - time.monotonic() + 5
-        ):
-            raise Held("credential-window-too-short-no-refresh-restart")
-        return {
-            "AWS_ACCESS_KEY_ID": token["accessKeyId"],
-            "AWS_SECRET_ACCESS_KEY": token["secretAccessKey"],
-            "AWS_SESSION_TOKEN": token["sessionToken"],
-        }
-    finally:
-        for client in clients:
-            client.close()
-        cache.close()
 
 
 def mounts(*files):
@@ -351,11 +271,12 @@ def prepare(c, phase):
     return approval
 
 
-def execute_phase(c, phase, approval, scope, creds):
+def execute_phase(c, phase, approval, scope):
     expected = prepare(c, phase)
     if approval != {**expected, "authorized": True}:
         raise Held("explicit-fresh-phase-approval-required")
     c.begin(phase)
+    creds = credentials(c, scope)
     context = {"sst": str(SST)}
     closed = None
     if phase != "close":
@@ -408,8 +329,9 @@ def execute_phase(c, phase, approval, scope, creds):
 
 
 def start(c, scope):
+    c.put("cacheStat", stopped_parent())
     c.begin("collect")
-    creds = credentials(c, scope, authenticate=True)
+    creds = credentials(c, scope)
     directory, _summary = child(c, "collect", "collect-readers", {}, creds)
     bundle = json.loads((directory / "private-output.txt").read_bytes())
     directory, _summary = child(
@@ -461,11 +383,12 @@ def report(c):
         "SELECT n,phase,op,write,status,outcome FROM attempts ORDER BY n"
     ).fetchall()
     return {
-        "prior": PRIOR,
+        "prior": c.get("prior"),
         "newAttempts": len(rows),
         "cumulative": c.get("count"),
         "maximum": c.get("maximum"),
         "deadline": c.get("deadline"),
+        "phaseDeadline": c.get("phaseDeadline"),
         "closedDeadline": c.get("closedDeadline"),
         "nextPhase": c.get("nextPhase"),
         "stopped": c.get("stopped"),
@@ -518,8 +441,9 @@ def main():
                     "localChecksPassed": True,
                     "artifactsAdopted": True,
                     "awsCalls": 0,
-                    "prior": 299,
-                    "currentPreparationCeiling": 500,
+                    "prior": PRIOR,
+                    "authorizedCumulativeCeiling": 1799,
+                    "credentialPolicy": CREDENTIAL_POLICY,
                     "executionRequiresSeparateAuthorization": True,
                 }
             )
@@ -537,7 +461,7 @@ def main():
                     "manifestSha256": pins["manifest"],
                     "scopeSha256": pins["scope"],
                     "proceduralAllowanceUsd": 1,
-                    "allowExistingSessionRefresh": True,
+                    "credentialPolicy": CREDENTIAL_POLICY,
                 },
                 indent=2,
             )
@@ -562,13 +486,13 @@ def main():
                 "manifestSha256": pins["manifest"],
                 "scopeSha256": pins["scope"],
                 "proceduralAllowanceUsd": 1,
-                "allowExistingSessionRefresh": True,
+                "credentialPolicy": CREDENTIAL_POLICY,
             }
             if auth != expected:
                 raise Held("explicit-expanded-execution-authorization-required")
             BASE.mkdir(mode=0o700, exist_ok=True)
             private_write(
-                BASE / "window-from-299.json",
+                BASE / "window-from-301.json",
                 canonical(
                     {
                         "authorizationSha256": sha(a.authorization),
@@ -604,10 +528,7 @@ def main():
                 print(json.dumps(prepare(c, a.phase), indent=2))
                 return
             if a.action == "phase":
-                creds = credentials(c, scope)
-                execute_phase(
-                    c, a.phase, json.loads(a.approval.read_bytes()), scope, creds
-                )
+                execute_phase(c, a.phase, json.loads(a.approval.read_bytes()), scope)
         print(json.dumps(report(c), indent=2))
     except BaseException:
         if c is not None:
