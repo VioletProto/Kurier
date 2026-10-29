@@ -4,6 +4,7 @@ cd "$(dirname "$0")/../.."
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_unit.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_diagnostics.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_private_diagnostics.py
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_operation_diagnostics.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_handoff.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_auth_transport_diagnostics.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/preview-meter/test_compare_auth_paths.py

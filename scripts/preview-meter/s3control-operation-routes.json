@@ -1,0 +1,497 @@
+{
+  "sourceVersion": "1.43.108",
+  "sourceModelSha256": "f53fa36be1d92506430709b755ec59d8c78416bb35e8238f66f52befcaefc09a",
+  "operations": [
+    {
+      "name": "AssociateAccessGrantsIdentityCenter",
+      "method": "POST",
+      "requestUri": "/v20180820/accessgrantsinstance/identitycenter"
+    },
+    {
+      "name": "CreateAccessGrant",
+      "method": "POST",
+      "requestUri": "/v20180820/accessgrantsinstance/grant"
+    },
+    {
+      "name": "CreateAccessGrantsInstance",
+      "method": "POST",
+      "requestUri": "/v20180820/accessgrantsinstance"
+    },
+    {
+      "name": "CreateAccessGrantsLocation",
+      "method": "POST",
+      "requestUri": "/v20180820/accessgrantsinstance/location"
+    },
+    {
+      "name": "CreateAccessPoint",
+      "method": "PUT",
+      "requestUri": "/v20180820/accesspoint/{name}"
+    },
+    {
+      "name": "CreateAccessPointForObjectLambda",
+      "method": "PUT",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}"
+    },
+    {
+      "name": "CreateBucket",
+      "method": "PUT",
+      "requestUri": "/v20180820/bucket/{name}"
+    },
+    {
+      "name": "CreateJob",
+      "method": "POST",
+      "requestUri": "/v20180820/jobs"
+    },
+    {
+      "name": "CreateMultiRegionAccessPoint",
+      "method": "POST",
+      "requestUri": "/v20180820/async-requests/mrap/create"
+    },
+    {
+      "name": "CreateStorageLensGroup",
+      "method": "POST",
+      "requestUri": "/v20180820/storagelensgroup",
+      "responseCode": 204
+    },
+    {
+      "name": "DeleteAccessGrant",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accessgrantsinstance/grant/{id}"
+    },
+    {
+      "name": "DeleteAccessGrantsInstance",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accessgrantsinstance"
+    },
+    {
+      "name": "DeleteAccessGrantsInstanceResourcePolicy",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accessgrantsinstance/resourcepolicy"
+    },
+    {
+      "name": "DeleteAccessGrantsLocation",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accessgrantsinstance/location/{id}"
+    },
+    {
+      "name": "DeleteAccessPoint",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accesspoint/{name}"
+    },
+    {
+      "name": "DeleteAccessPointForObjectLambda",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}"
+    },
+    {
+      "name": "DeleteAccessPointPolicy",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accesspoint/{name}/policy"
+    },
+    {
+      "name": "DeleteAccessPointPolicyForObjectLambda",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}/policy"
+    },
+    {
+      "name": "DeleteAccessPointScope",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accesspoint/{name}/scope"
+    },
+    {
+      "name": "DeleteBucket",
+      "method": "DELETE",
+      "requestUri": "/v20180820/bucket/{name}"
+    },
+    {
+      "name": "DeleteBucketLifecycleConfiguration",
+      "method": "DELETE",
+      "requestUri": "/v20180820/bucket/{name}/lifecycleconfiguration"
+    },
+    {
+      "name": "DeleteBucketPolicy",
+      "method": "DELETE",
+      "requestUri": "/v20180820/bucket/{name}/policy"
+    },
+    {
+      "name": "DeleteBucketReplication",
+      "method": "DELETE",
+      "requestUri": "/v20180820/bucket/{name}/replication"
+    },
+    {
+      "name": "DeleteBucketTagging",
+      "method": "DELETE",
+      "requestUri": "/v20180820/bucket/{name}/tagging",
+      "responseCode": 204
+    },
+    {
+      "name": "DeleteJobTagging",
+      "method": "DELETE",
+      "requestUri": "/v20180820/jobs/{id}/tagging"
+    },
+    {
+      "name": "DeleteMultiRegionAccessPoint",
+      "method": "POST",
+      "requestUri": "/v20180820/async-requests/mrap/delete"
+    },
+    {
+      "name": "DeletePublicAccessBlock",
+      "method": "DELETE",
+      "requestUri": "/v20180820/configuration/publicAccessBlock"
+    },
+    {
+      "name": "DeleteStorageLensConfiguration",
+      "method": "DELETE",
+      "requestUri": "/v20180820/storagelens/{storagelensid}"
+    },
+    {
+      "name": "DeleteStorageLensConfigurationTagging",
+      "method": "DELETE",
+      "requestUri": "/v20180820/storagelens/{storagelensid}/tagging"
+    },
+    {
+      "name": "DeleteStorageLensGroup",
+      "method": "DELETE",
+      "requestUri": "/v20180820/storagelensgroup/{name}",
+      "responseCode": 204
+    },
+    {
+      "name": "DescribeJob",
+      "method": "GET",
+      "requestUri": "/v20180820/jobs/{id}"
+    },
+    {
+      "name": "DescribeMultiRegionAccessPointOperation",
+      "method": "GET",
+      "requestUri": "/v20180820/async-requests/mrap/{request_token+}"
+    },
+    {
+      "name": "DissociateAccessGrantsIdentityCenter",
+      "method": "DELETE",
+      "requestUri": "/v20180820/accessgrantsinstance/identitycenter"
+    },
+    {
+      "name": "GetAccessGrant",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/grant/{id}"
+    },
+    {
+      "name": "GetAccessGrantsInstance",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance"
+    },
+    {
+      "name": "GetAccessGrantsInstanceForPrefix",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/prefix"
+    },
+    {
+      "name": "GetAccessGrantsInstanceResourcePolicy",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/resourcepolicy"
+    },
+    {
+      "name": "GetAccessGrantsLocation",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/location/{id}"
+    },
+    {
+      "name": "GetAccessPoint",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspoint/{name}"
+    },
+    {
+      "name": "GetAccessPointConfigurationForObjectLambda",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}/configuration"
+    },
+    {
+      "name": "GetAccessPointForObjectLambda",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}"
+    },
+    {
+      "name": "GetAccessPointPolicy",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspoint/{name}/policy"
+    },
+    {
+      "name": "GetAccessPointPolicyForObjectLambda",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}/policy"
+    },
+    {
+      "name": "GetAccessPointPolicyStatus",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspoint/{name}/policyStatus"
+    },
+    {
+      "name": "GetAccessPointPolicyStatusForObjectLambda",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}/policyStatus"
+    },
+    {
+      "name": "GetAccessPointScope",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspoint/{name}/scope"
+    },
+    {
+      "name": "GetBucket",
+      "method": "GET",
+      "requestUri": "/v20180820/bucket/{name}"
+    },
+    {
+      "name": "GetBucketLifecycleConfiguration",
+      "method": "GET",
+      "requestUri": "/v20180820/bucket/{name}/lifecycleconfiguration"
+    },
+    {
+      "name": "GetBucketPolicy",
+      "method": "GET",
+      "requestUri": "/v20180820/bucket/{name}/policy"
+    },
+    {
+      "name": "GetBucketReplication",
+      "method": "GET",
+      "requestUri": "/v20180820/bucket/{name}/replication"
+    },
+    {
+      "name": "GetBucketTagging",
+      "method": "GET",
+      "requestUri": "/v20180820/bucket/{name}/tagging"
+    },
+    {
+      "name": "GetBucketVersioning",
+      "method": "GET",
+      "requestUri": "/v20180820/bucket/{name}/versioning"
+    },
+    {
+      "name": "GetDataAccess",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/dataaccess"
+    },
+    {
+      "name": "GetJobTagging",
+      "method": "GET",
+      "requestUri": "/v20180820/jobs/{id}/tagging"
+    },
+    {
+      "name": "GetMultiRegionAccessPoint",
+      "method": "GET",
+      "requestUri": "/v20180820/mrap/instances/{name+}"
+    },
+    {
+      "name": "GetMultiRegionAccessPointPolicy",
+      "method": "GET",
+      "requestUri": "/v20180820/mrap/instances/{name+}/policy"
+    },
+    {
+      "name": "GetMultiRegionAccessPointPolicyStatus",
+      "method": "GET",
+      "requestUri": "/v20180820/mrap/instances/{name+}/policystatus"
+    },
+    {
+      "name": "GetMultiRegionAccessPointRoutes",
+      "method": "GET",
+      "requestUri": "/v20180820/mrap/instances/{mrap+}/routes"
+    },
+    {
+      "name": "GetPublicAccessBlock",
+      "method": "GET",
+      "requestUri": "/v20180820/configuration/publicAccessBlock"
+    },
+    {
+      "name": "GetStorageLensConfiguration",
+      "method": "GET",
+      "requestUri": "/v20180820/storagelens/{storagelensid}"
+    },
+    {
+      "name": "GetStorageLensConfigurationTagging",
+      "method": "GET",
+      "requestUri": "/v20180820/storagelens/{storagelensid}/tagging"
+    },
+    {
+      "name": "GetStorageLensGroup",
+      "method": "GET",
+      "requestUri": "/v20180820/storagelensgroup/{name}"
+    },
+    {
+      "name": "ListAccessGrants",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/grants"
+    },
+    {
+      "name": "ListAccessGrantsInstances",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstances"
+    },
+    {
+      "name": "ListAccessGrantsLocations",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/locations"
+    },
+    {
+      "name": "ListAccessPoints",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspoint"
+    },
+    {
+      "name": "ListAccessPointsForDirectoryBuckets",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspointfordirectory"
+    },
+    {
+      "name": "ListAccessPointsForObjectLambda",
+      "method": "GET",
+      "requestUri": "/v20180820/accesspointforobjectlambda"
+    },
+    {
+      "name": "ListCallerAccessGrants",
+      "method": "GET",
+      "requestUri": "/v20180820/accessgrantsinstance/caller/grants"
+    },
+    {
+      "name": "ListJobs",
+      "method": "GET",
+      "requestUri": "/v20180820/jobs"
+    },
+    {
+      "name": "ListMultiRegionAccessPoints",
+      "method": "GET",
+      "requestUri": "/v20180820/mrap/instances"
+    },
+    {
+      "name": "ListRegionalBuckets",
+      "method": "GET",
+      "requestUri": "/v20180820/bucket"
+    },
+    {
+      "name": "ListStorageLensConfigurations",
+      "method": "GET",
+      "requestUri": "/v20180820/storagelens"
+    },
+    {
+      "name": "ListStorageLensGroups",
+      "method": "GET",
+      "requestUri": "/v20180820/storagelensgroup"
+    },
+    {
+      "name": "ListTagsForResource",
+      "method": "GET",
+      "requestUri": "/v20180820/tags/{resourceArn+}"
+    },
+    {
+      "name": "PutAccessGrantsInstanceResourcePolicy",
+      "method": "PUT",
+      "requestUri": "/v20180820/accessgrantsinstance/resourcepolicy"
+    },
+    {
+      "name": "PutAccessPointConfigurationForObjectLambda",
+      "method": "PUT",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}/configuration"
+    },
+    {
+      "name": "PutAccessPointPolicy",
+      "method": "PUT",
+      "requestUri": "/v20180820/accesspoint/{name}/policy"
+    },
+    {
+      "name": "PutAccessPointPolicyForObjectLambda",
+      "method": "PUT",
+      "requestUri": "/v20180820/accesspointforobjectlambda/{name}/policy"
+    },
+    {
+      "name": "PutAccessPointScope",
+      "method": "PUT",
+      "requestUri": "/v20180820/accesspoint/{name}/scope"
+    },
+    {
+      "name": "PutBucketLifecycleConfiguration",
+      "method": "PUT",
+      "requestUri": "/v20180820/bucket/{name}/lifecycleconfiguration"
+    },
+    {
+      "name": "PutBucketPolicy",
+      "method": "PUT",
+      "requestUri": "/v20180820/bucket/{name}/policy"
+    },
+    {
+      "name": "PutBucketReplication",
+      "method": "PUT",
+      "requestUri": "/v20180820/bucket/{name}/replication"
+    },
+    {
+      "name": "PutBucketTagging",
+      "method": "PUT",
+      "requestUri": "/v20180820/bucket/{name}/tagging"
+    },
+    {
+      "name": "PutBucketVersioning",
+      "method": "PUT",
+      "requestUri": "/v20180820/bucket/{name}/versioning"
+    },
+    {
+      "name": "PutJobTagging",
+      "method": "PUT",
+      "requestUri": "/v20180820/jobs/{id}/tagging"
+    },
+    {
+      "name": "PutMultiRegionAccessPointPolicy",
+      "method": "POST",
+      "requestUri": "/v20180820/async-requests/mrap/put-policy"
+    },
+    {
+      "name": "PutPublicAccessBlock",
+      "method": "PUT",
+      "requestUri": "/v20180820/configuration/publicAccessBlock"
+    },
+    {
+      "name": "PutStorageLensConfiguration",
+      "method": "PUT",
+      "requestUri": "/v20180820/storagelens/{storagelensid}"
+    },
+    {
+      "name": "PutStorageLensConfigurationTagging",
+      "method": "PUT",
+      "requestUri": "/v20180820/storagelens/{storagelensid}/tagging"
+    },
+    {
+      "name": "SubmitMultiRegionAccessPointRoutes",
+      "method": "PATCH",
+      "requestUri": "/v20180820/mrap/instances/{mrap+}/routes"
+    },
+    {
+      "name": "TagResource",
+      "method": "POST",
+      "requestUri": "/v20180820/tags/{resourceArn+}",
+      "responseCode": 204
+    },
+    {
+      "name": "UntagResource",
+      "method": "DELETE",
+      "requestUri": "/v20180820/tags/{resourceArn+}",
+      "responseCode": 204
+    },
+    {
+      "name": "UpdateAccessGrantsLocation",
+      "method": "PUT",
+      "requestUri": "/v20180820/accessgrantsinstance/location/{id}"
+    },
+    {
+      "name": "UpdateJobPriority",
+      "method": "POST",
+      "requestUri": "/v20180820/jobs/{id}/priority"
+    },
+    {
+      "name": "UpdateJobStatus",
+      "method": "POST",
+      "requestUri": "/v20180820/jobs/{id}/status"
+    },
+    {
+      "name": "UpdateStorageLensGroup",
+      "method": "PUT",
+      "requestUri": "/v20180820/storagelensgroup/{name}",
+      "responseCode": 204
+    }
+  ]
+}

@@ -15,7 +15,7 @@ from urllib.parse import parse_qs
 
 import run as runner
 from handoff import SharedBudget, begin, seal
-from private_diagnostics import FILENAME
+from private_diagnostics import FILENAME, OPERATION_FILENAME
 from run import PRIOR, ROOT, SST, launch, valid_parent
 
 FAKE = {
@@ -427,6 +427,48 @@ for command in [[sys.argv[2]+'/go-client'],['node',sys.argv[2]+'/node-client.mjs
                 80,
                 "request",
             ),
+            (
+                "s3control-read",
+                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/arn%3Aaws%3As3%3A%3A%3Alocal-private-canary?X-Amz-Credential=local-private-canary",
+                "<redacted-host>",
+                443,
+                "request",
+            ),
+            (
+                "s3control-write",
+                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/configuration/publicAccessBlock?secret=local-private-canary",
+                "<redacted-host>",
+                443,
+                "request",
+            ),
+            (
+                "s3control-default-off",
+                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/local-private-canary",
+                "<redacted-host>",
+                443,
+                "request",
+            ),
+            (
+                "s3control-capture-exists",
+                "https://747336059622.s3-control.us-east-2.amazonaws.com/v20180820/tags/local-private-canary",
+                "<redacted-host>",
+                443,
+                "request",
+            ),
+            (
+                "s3control-wrong-account",
+                "https://000000000000.s3-control.us-east-2.amazonaws.com/v20180820/configuration/publicAccessBlock",
+                "<redacted-host>",
+                443,
+                "connect",
+            ),
+            (
+                "s3control-wrong-region",
+                "https://747336059622.s3-control.us-east-1.amazonaws.com/v20180820/configuration/publicAccessBlock",
+                "<redacted-host>",
+                443,
+                "connect",
+            ),
         ]:
             code = """const{spawn}=await import('node:child_process');const fs=await import('node:fs');
 const grand=\"const fs=require('node:fs');setInterval(()=>fs.appendFileSync('/work/grand-pulse','x'),40)\";
@@ -434,8 +476,17 @@ const child=\"const{spawn}=require('node:child_process');const fs=require('node:
 spawn('node',['-e',child],{stdio:'ignore'});setInterval(()=>fs.appendFileSync('/work/root-pulse','x'),40);
 for(let i=0;i<100&&!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse'));i++)await new Promise(r=>setTimeout(r,20));
 if(!['root','child','grand'].every(x=>fs.existsSync('/work/'+x+'-pulse')))throw Error('fixture descendants did not start');
-try{await fetch(TARGET,{method:'POST',headers:{Authorization:'Bearer local-private-canary',Cookie:'session=local-private-canary','X-Private':'local-private-canary'},body:'local-private-canary'})}catch{}
-await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
+try{await fetch(TARGET,{method:METHOD,headers:{Authorization:'Bearer local-private-canary',Cookie:'session=local-private-canary','X-Private':'local-private-canary'},...(METHOD==='GET'?{}:{body:'local-private-canary'})})}catch{}
+await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url)).replace(
+                "METHOD",
+                json.dumps(
+                    "DELETE"
+                    if name == "s3control-write"
+                    else "GET"
+                    if name.startswith("s3control-")
+                    else "POST"
+                ),
+            )
             old_audit = len(AUDIT)
             real_write = runner.write
 
@@ -443,6 +494,10 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                 real_write(path, value)
                 if name == "private-capture-exists" and path.name == "config.json":
                     real_write(path.parent / FILENAME, {"fixtureOriginal": True})
+                if name == "s3control-capture-exists" and path.name == "config.json":
+                    real_write(
+                        path.parent / OPERATION_FILENAME, {"fixtureOriginal": True}
+                    )
 
             with patch.object(runner, "write", configure):
                 rr = launch(
@@ -453,6 +508,12 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                     fixture_origin=origin.server_port,
                     private_denied_connect=name
                     in {"secret-host-label", "private-capture-exists"},
+                    private_s3control_operation=name
+                    in {
+                        "s3control-read",
+                        "s3control-write",
+                        "s3control-capture-exists",
+                    },
                 )
             assert rr["exitCode"] != 0 and len(AUDIT) == old_audit
             assert not any(x["event"] == "attempt" for x in rr["rows"])
@@ -465,9 +526,16 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                 and record["phase"] == expected_phase
             )
             assert record["count"] == PRIOR
+            if name.startswith("s3control-") and expected_phase == "request":
+                assert record["reason"] == "s3control-operation-held"
             if name == "private-capture-exists":
                 assert rr["exitCode"] == 77
                 assert json.loads((d / name / FILENAME).read_text()) == {
+                    "fixtureOriginal": True
+                }
+            elif name == "s3control-capture-exists":
+                assert rr["exitCode"] == 77
+                assert json.loads((d / name / OPERATION_FILENAME).read_text()) == {
                     "fixtureOriginal": True
                 }
             else:
@@ -492,6 +560,33 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                 assert not (d / name / "work" / FILENAME).exists()
             elif name != "private-capture-exists":
                 assert not receipt.exists()
+            operation_receipt = d / name / OPERATION_FILENAME
+            if name in {"s3control-read", "s3control-write"}:
+                captured_operation = json.loads(operation_receipt.read_text())
+                expected_operation = (
+                    "ListTagsForResource"
+                    if name == "s3control-read"
+                    else "DeletePublicAccessBlock"
+                )
+                assert captured_operation["candidateOperations"] == [expected_operation]
+                assert captured_operation["matchStatus"] == "unique"
+                assert captured_operation["count"] == PRIOR
+                assert operation_receipt.stat().st_mode & 0o777 == 0o600
+                assert operation_receipt.stat().st_size <= 1024
+                assert all(
+                    x not in operation_receipt.read_text()
+                    for x in [
+                        "local-private-canary",
+                        "Authorization",
+                        "X-Amz-Credential",
+                        "/v20180820",
+                        "body",
+                        "headers",
+                    ]
+                )
+                assert not (d / name / "work" / OPERATION_FILENAME).exists()
+            elif name != "s3control-capture-exists":
+                assert not operation_receipt.exists()
             raw = (d / name / "attempts.jsonl").read_text()
             assert all(
                 value not in raw
@@ -523,6 +618,11 @@ await new Promise(r=>setTimeout(r,3000));""".replace("TARGET", json.dumps(url))
                     in {"secret-host-label", "private-capture-exists"},
                     "privateCaptureFailureHeld": name == "private-capture-exists",
                     "privateHostnameOmittedFromPublicReceipt": True,
+                    "s3ControlHttpAlwaysHeld": name.startswith("s3control-")
+                    and expected_phase == "request",
+                    "privateOperationCapture": name
+                    in {"s3control-read", "s3control-write"},
+                    "zeroUpstreamRequests": True,
                 }
             )
         # The real production proxy branch consumes a synthetic authentication

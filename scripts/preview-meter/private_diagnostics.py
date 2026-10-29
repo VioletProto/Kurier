@@ -14,6 +14,8 @@ import stat
 FILENAME = "denied-connect.private.json"
 MAX_HOST = 253
 MAX_RECORD = 512
+OPERATION_FILENAME = "s3control-operation.private.json"
+MAX_OPERATION_RECORD = 1024
 
 
 def hostname_status(host):
@@ -64,7 +66,12 @@ def capture(directory, host, port, count):
         )
         + "\n"
     ).encode("ascii")
-    if len(raw) > MAX_RECORD:
+    persist(directory, FILENAME, raw)
+
+
+def persist(directory, filename, raw):
+    limits = {FILENAME: MAX_RECORD, OPERATION_FILENAME: MAX_OPERATION_RECORD}
+    if filename not in limits or len(raw) > limits[filename]:
         raise OSError("private-capture-size-held")
     directory_fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
@@ -72,7 +79,7 @@ def capture(directory, host, port, count):
         if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
             raise OSError("private-capture-directory-held")
         fd = os.open(
-            FILENAME,
+            filename,
             os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
             0o600,
             dir_fd=directory_fd,

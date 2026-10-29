@@ -79,6 +79,8 @@ class Stop(Exception):
 
 def service(host):
     host = host.lower()
+    if host == "747336059622.s3-control.us-east-2.amazonaws.com":
+        return "s3control"
     if host in {"iam.amazonaws.com", "cloudfront.amazonaws.com", "sts.amazonaws.com"}:
         return host.split(".")[0]
     if re.fullmatch(r"(?:[a-z0-9-]+\.)?cloudfront-kvs\.global\.api\.aws", host):
@@ -100,6 +102,8 @@ def service(host):
 
 def classify(method, host, path, headers, body):
     svc = service(host)
+    if svc == "s3control":
+        raise Stop("s3control-operation-held")
     if len(body) > 1024 * 1024:
         raise Stop("request-size")
     if svc == "s3":

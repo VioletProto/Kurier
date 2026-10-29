@@ -1,8 +1,8 @@
 """Local endpoint disclosure and frozen-accounting regressions."""
 
-import hashlib
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -33,12 +33,24 @@ class DiagnosticTests(unittest.TestCase):
                 self.assertEqual(value["phase"], "connect")
                 self.assertEqual(value["port"], 443)
                 self.assertLessEqual(len(json.dumps(value)), 512)
-        # Authorization policy bytes, not just selected outcomes, are unchanged.
+        # Only the accepted exact-host recognition + all-operation hold may differ.
+        original = subprocess.check_output(
+            [
+                "git",
+                "show",
+                "3579f56c9856435dde0733b65b4a74d2fbbe733f:scripts/preview-meter/policy.py",
+            ],
+            cwd=ROOT,
+        ).decode()
+        expected = original.replace(
+            "    host = host.lower()\n",
+            '    host = host.lower()\n    if host == "747336059622.s3-control.us-east-2.amazonaws.com":\n        return "s3control"\n',
+        ).replace(
+            "    svc = service(host)\n",
+            '    svc = service(host)\n    if svc == "s3control":\n        raise Stop("s3control-operation-held")\n',
+        )
         self.assertEqual(
-            hashlib.sha256(
-                (ROOT / "scripts/preview-meter/policy.py").read_bytes()
-            ).hexdigest(),
-            "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+            (ROOT / "scripts/preview-meter/policy.py").read_text(), expected
         )
 
     def test_secret_labels_url_material_and_malformed_hosts_are_redacted(self):

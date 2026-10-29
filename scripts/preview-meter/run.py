@@ -251,6 +251,7 @@ def launch(
     fixture_failure=False,
     handoff=None,
     private_denied_connect=False,
+    private_s3control_operation=False,
 ):
     window = None
     if not fixture_origin:
@@ -280,10 +281,15 @@ def launch(
         "ledger": str(directory / "attempts.jsonl"),
         "budget": {"prior": PRIOR, "maximum": MAXIMUM, "seconds": 3600},
     }
-    if type(private_denied_connect) is not bool:
+    if (
+        type(private_denied_connect) is not bool
+        or type(private_s3control_operation) is not bool
+    ):
         raise ValueError("private-capture-option-held")
     if private_denied_connect:
         config["privateDeniedConnectCapture"] = True
+    if private_s3control_operation:
+        config["privateS3ControlOperationCapture"] = True
     if not fixture_origin:
         del config["budget"]
         config["handoff"] = str(Path(handoff).resolve())
@@ -492,6 +498,11 @@ def main():
         action="store_true",
         help="Opt in to a private bounded denied-host receipt; never publish before review",
     )
+    parser.add_argument(
+        "--private-s3control-operation",
+        action="store_true",
+        help="Private model-matched API names only; all S3 Control requests remain held",
+    )
     a = parser.parse_args()
     m = valid_parent()
     if sha(SST) != SST_SHA:
@@ -549,6 +560,7 @@ def main():
             creds,
             handoff=handoff,
             private_denied_connect=a.private_denied_connect,
+            private_s3control_operation=a.private_s3control_operation,
         )
     finally:
         # Even a failed or interrupted auth/launch retains conservative accounting.

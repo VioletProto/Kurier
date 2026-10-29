@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from diagnostics import endpoint_metadata
 from handoff import SharedBudget, consume
 from mitmproxy import http
+from operation_diagnostics import capture_operation
 from policy import Budget, Stop, classify, service
 from private_diagnostics import capture
 
@@ -21,7 +22,11 @@ class Gate:
         self.origin = config.get("fixtureOrigin")
         self.fixture_failure = config.get("fixtureFailure", False)
         self.private_connect = config.get("privateDeniedConnectCapture", False)
-        if type(self.private_connect) is not bool:
+        self.private_operation = config.get("privateS3ControlOperationCapture", False)
+        if (
+            type(self.private_connect) is not bool
+            or type(self.private_operation) is not bool
+        ):
             raise ValueError("private-capture-option-held")
         self.private_directory = Path(config["ledger"]).parent
         if self.test and not isinstance(self.origin, int):
@@ -71,6 +76,14 @@ class Gate:
                     and reason == "endpoint-held"
                 ):
                     capture(self.private_directory, q.host, q.port, self.budget.count)
+                if (
+                    self.private_operation
+                    and phase == "request"
+                    and reason == "s3control-operation-held"
+                ):
+                    capture_operation(
+                        self.private_directory, q.method, q.path, self.budget.count
+                    )
             self.budget.stop(reason)
         except Stop:
             pass
@@ -99,6 +112,8 @@ class Gate:
             q = flow.request
             if q.scheme != "https" or q.port != 443:
                 raise Stop("tls-required")
+            if service(q.host) == "s3control":
+                raise Stop("s3control-operation-held")
             svc, op = classify(
                 q.method, q.host, q.path, q.headers, q.raw_content or b""
             )
