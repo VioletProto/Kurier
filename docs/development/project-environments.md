@@ -1,5 +1,20 @@
 # Project environments implementation and local verification
 
+## Final readiness review — local prerequisites verified, deployment still blocked
+
+The [readiness packet](project-environments-final-readiness.md) proposes the exact
+review-8 SST ZIPs in a [new manifest](project-environments-sst-release.json), while
+preserving the original manifest and rollback bytes. Structure/bootstrap hashes,
+application JWT/ownership/agent guards and the accepted API-wide invoke pattern
+are locally verified. **88 transition tests with real DynamoDB Local and 10 archive
+tests passed**, plus security integration/race and repository verification.
+Real resource.enc content remains unauthenticated because no local key was found;
+the packet does not certify encrypted credential/binding absence. Candidate
+adoption and closure remain held. The guarded transition core is implemented;
+the CLI is local-only. A metered live adapter and upload-boundary byte gate still
+need review/implementation. **296/500 cumulative; zero new AWS calls**, same $1
+procedural allowance; no deployment/runtime work or automatic continuation.
+
 ## Authorized review-8 completed — cumulative 296, ZIP differences for review
 
 The [review-8 result](project-environments-refresh-preview-review-8.md) records
