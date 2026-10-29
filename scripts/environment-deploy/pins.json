@@ -8,5 +8,6 @@
     "data/cloudfront-keyvaluestore/2022-07-26/service-2.json": "9bc300ee21019a5f77cd91dd0dc01144930107bb2193b3da02d79743dcb4ea36",
     "data/cloudfront/2020-05-31/service-2.json": "4e5f9c9aa1623f473f70ab272ecf7b89ee1d4321b04098447bb82b40e7ac7adf"
   },
-  "stoppedParent": "633471db8b97d2546cac9ed831d25bb37c90c0ac3451267800ba62efb416db14"
+  "stoppedParent": "633471db8b97d2546cac9ed831d25bb37c90c0ac3451267800ba62efb416db14",
+  "stoppedParent303": "52e48bc4a593422241b00c55f885b37cd91ee0e80643a653809e60477a54784d"
 }

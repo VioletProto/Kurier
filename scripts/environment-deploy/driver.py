@@ -34,51 +34,88 @@ SCOPE = ROOT / "docs/development/project-environments-execution-scope.json"
 BASE = ROOT / ".build/project-environments-execution"
 
 
+def campaign_path(path):
+    requested = path if path.is_absolute() else ROOT / path
+    resolved = requested.resolve()
+    if resolved.parent != BASE.resolve() or requested.absolute() != resolved:
+        raise Held("campaign-location-or-alias-held")
+    return resolved
+
+
+def required_path(path, *, file=False):
+    path = Path(path)
+    if not path.is_absolute() or path.absolute() != path.resolve(strict=True):
+        raise Held("required-path-or-alias-held")
+    if file and not path.is_file():
+        raise Held("required-context-file-held")
+    return path
+
+
 def stopped_parent():
-    """Read the retained stopped ledger, never reopen or reset its campaign."""
+    """Read both retained stopped ledgers without writing or replaying them."""
     pins = json.loads((HERE / "pins.json").read_bytes())
-    path = ROOT / "docs/development/project-environments-collection-stop.json"
-    if sha(path) != pins["stoppedParent"]:
-        raise Held("stopped-parent-record-held")
-    record = json.loads(path.read_bytes())
-    directory = ROOT / record["campaign"]
-    auth = directory.parent / "authorization.json"
-    claim = json.loads((directory.parent / "window-from-299.json").read_bytes())
-    wal = directory / "campaign.sqlite-wal"
-    if wal.exists() and wal.stat().st_size:
-        raise Held("stopped-parent-pending-wal-held")
-    with closing(
-        sqlite3.connect(
-            "file:" + str(directory / "campaign.sqlite") + "?mode=ro&immutable=1",
-            uri=True,
+    checkpoint = None
+    for filename, pin, prior, total, auth_name in [
+        (
+            "project-environments-collection-stop.json",
+            "stoppedParent",
+            299,
+            301,
+            "authorization.json",
+        ),
+        (
+            "project-environments-collection-from-301.json",
+            "stoppedParent303",
+            301,
+            PRIOR,
+            "authorization-from-301.json",
+        ),
+    ]:
+        path = ROOT / "docs/development" / filename
+        if sha(path) != pins[pin]:
+            raise Held("stopped-parent-record-held")
+        record = json.loads(path.read_bytes())
+        directory = campaign_path(Path(record["campaign"]))
+        auth = directory.parent / auth_name
+        claim = json.loads(
+            (directory.parent / f"window-from-{prior}.json").read_bytes()
         )
-    ) as db:
-        config = {k: json.loads(v) for k, v in db.execute("SELECT k,v FROM config")}
-        rows = db.execute(
-            "SELECT n,phase,op,write,status,outcome FROM attempts ORDER BY n"
-        ).fetchall()
-    if (
-        not config["stopped"]
-        or config["prior"] != 299
-        or config["count"] != PRIOR
-        or config["nextPhase"] != 0
-        or config["closedDeadline"] is not None
-        or config["reviewCommit"] != record["toolingCommit"]
-        or config["manifestSha256"] != record["manifestSha256"]
-        or config["scopeSha256"] != record["scopeSha256"]
-        or rows
-        != [
-            (300, "collect", "signin/CreateOAuth2Token", 1, 200, 1),
-            (301, "collect", "sts/GetCallerIdentity", 0, 200, 1),
-        ]
-        or sha(auth) != record["authorizationSha256"]
-        or config["authorizationSha256"] != record["authorizationSha256"]
-        or claim["authorizationSha256"] != record["authorizationSha256"]
-        or claim["directory"] != str(directory.resolve())
-        or not config.get("cacheStat")
-    ):
-        raise Held("stopped-parent-accounting-held")
-    return config["cacheStat"]
+        wal = directory / "campaign.sqlite-wal"
+        if wal.exists() and wal.stat().st_size:
+            raise Held("stopped-parent-pending-wal-held")
+        with closing(
+            sqlite3.connect(
+                "file:" + str(directory / "campaign.sqlite") + "?mode=ro&immutable=1",
+                uri=True,
+            )
+        ) as db:
+            config = {k: json.loads(v) for k, v in db.execute("SELECT k,v FROM config")}
+            rows = db.execute(
+                "SELECT n,phase,op,write,status,outcome FROM attempts ORDER BY n"
+            ).fetchall()
+        if (
+            not config["stopped"]
+            or config["prior"] != prior
+            or config["count"] != total
+            or config["nextPhase"] != 0
+            or config["closedDeadline"] is not None
+            or config["reviewCommit"] != record["toolingCommit"]
+            or config["manifestSha256"] != record["manifestSha256"]
+            or config["scopeSha256"] != record["scopeSha256"]
+            or rows
+            != [
+                (prior + 1, "collect", "signin/CreateOAuth2Token", 1, 200, 1),
+                (prior + 2, "collect", "sts/GetCallerIdentity", 0, 200, 1),
+            ]
+            or sha(auth) != record["authorizationSha256"]
+            or config["authorizationSha256"] != record["authorizationSha256"]
+            or claim["authorizationSha256"] != record["authorizationSha256"]
+            or claim["directory"] != str(directory.resolve())
+            or not config.get("cacheStat")
+        ):
+            raise Held("stopped-parent-accounting-held")
+        checkpoint = config["cacheStat"]
+    return checkpoint
 
 
 def check():
@@ -154,7 +191,34 @@ def check():
     return release, scope, pins
 
 
-def mounts(*files):
+CHILD_CONTEXT = Path("/meter/phase-context.json")
+
+
+def phase_command(action, context):
+    if action not in {
+        "collect",
+        "diff",
+        "close",
+        "deploy",
+        "verify",
+        "activate",
+        "final",
+        "plan",
+    }:
+        raise Held("fixed-child-action-held")
+    if action == "plan":
+        required_path(context, file=True)
+    elif context != CHILD_CONTEXT:
+        raise Held("fixed-context-destination-held")
+    return [
+        "node",
+        str(required_path(HERE / "phase.mjs", file=True)),
+        action,
+        str(context),
+    ]
+
+
+def mounts(context=None):
     fixed = [
         HERE,
         ROOT / "scripts/lib/project-environments-activation.mjs",
@@ -166,22 +230,34 @@ def mounts(*files):
         (ROOT / "docs/development/project-environments-release.json").read_text()
     )
     fixed.append(ROOT / original["artifactDirectory"] / "frontend")
-    return [(p, p) for p in [*fixed, *files]]
+    result = [(required_path(p), p) for p in fixed]
+    if context is not None:
+        result.append((required_path(context, file=True), CHILD_CONTEXT))
+    return result
 
 
-def child(c, phase, subphase, context, creds, *, command=None):
+def child(c, phase, subphase, context, creds):
+    if (phase == "collect" and subphase not in {"collect-readers", "collect-diff"}) or (
+        phase != "collect" and subphase != phase
+    ):
+        raise Held("fixed-child-subphase-held")
     directory = c.directory / subphase
     ctx = c.directory / (subphase + "-context.json")
+    required_path(c.directory)
     private_write(ctx, canonical(context))
+    context_mounts = mounts(ctx)
+    command = phase_command(
+        "diff" if subphase == "collect-diff" else phase, CHILD_CONTEXT
+    )
     result = launch(
-        SOURCE_DIR,
+        required_path(SOURCE_DIR),
         directory,
-        command or ["node", str(HERE / "phase.mjs"), phase, str(ctx)],
+        command,
         creds,
         campaign=c,
         phase=phase,
         policy_context=context,
-        extra_ro=mounts(ctx),
+        extra_ro=context_mounts,
     )
     if result["exitCode"] != 0 or c.get("stopped"):
         raise Held("child-phase-held-no-retry")
@@ -286,7 +362,7 @@ def execute_phase(c, phase, approval, scope):
         planfile = c.directory / (phase + "-plan-input.json")
         private_write(planfile, canonical(context))
         r = subprocess.run(
-            ["node", str(HERE / "phase.mjs"), "plan", str(planfile)],
+            phase_command("plan", required_path(planfile, file=True)),
             capture_output=True,
             check=False,
         )
@@ -340,12 +416,6 @@ def start(c, scope):
         "collect-diff",
         {"sst": str(SST)},
         creds,
-        command=[
-            "node",
-            str(HERE / "phase.mjs"),
-            "diff",
-            str(c.directory / "collect-diff-context.json"),
-        ],
     )
     raw = json.loads((directory / "private-output.txt").read_bytes())
     old = json.loads(
@@ -424,6 +494,13 @@ def main():
         "--phase", choices=["close", "deploy", "verify", "activate", "final"]
     )
     a = parser.parse_args()
+    if a.campaign is not None:
+        a.campaign = campaign_path(a.campaign)
+    for name in ("authorization", "approval"):
+        path = getattr(a, name)
+        if path is not None:
+            path = path if path.is_absolute() else ROOT / path
+            setattr(a, name, required_path(path, file=True))
     if a.action == "report":
         if a.campaign is None or a.campaign.resolve().parent != BASE.resolve():
             raise Held("campaign-location-held")
@@ -492,7 +569,7 @@ def main():
                 raise Held("explicit-expanded-execution-authorization-required")
             BASE.mkdir(mode=0o700, exist_ok=True)
             private_write(
-                BASE / "window-from-301.json",
+                BASE / "window-from-303.json",
                 canonical(
                     {
                         "authorizationSha256": sha(a.authorization),

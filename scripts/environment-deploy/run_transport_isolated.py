@@ -1,5 +1,6 @@
 """Run local transport fixtures in a network namespace with explicit cache mounts."""
 
+import argparse
 import os
 import subprocess
 import sys
@@ -12,11 +13,14 @@ PRIVATE = ROOT / ".build/environment-deploy-test-private"
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--context-only", action="store_true")
+    options = parser.parse_args()
     if not (RELEASE / ".git").exists():
         raise SystemExit("pinned-release-worktree-missing")
     PRIVATE.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chmod(PRIVATE, 0o700)
-    private_run = Path(tempfile.mkdtemp(prefix="credential-review-", dir=PRIVATE))
+    private_run = Path(tempfile.mkdtemp(prefix="context-review-", dir=PRIVATE))
     args = [
         "bwrap",
         "--unshare-all",
@@ -63,24 +67,49 @@ def main():
     ]:
         if path.exists():
             args += ["--ro-bind", str(path), str(path)]
-    args += [
-        "--",
-        sys.executable,
-        "-B",
-        str(ROOT / "scripts/environment-deploy/test_transport.py"),
-    ]
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("AWS_", "KURIER_"))}
+    env.update(
+        PYTHONDONTWRITEBYTECODE="1",
+        GOCACHE="/tmp/kurier-fixture-go-cache",
+        GOPROXY="off",
+        GOTOOLCHAIN="local",
+        KURIER_TEST_PRIVATE_DIR=str(private_run),
+        AWS_CONFIG_FILE="/dev/null",
+        AWS_SHARED_CREDENTIALS_FILE="/dev/null",
+        AWS_EC2_METADATA_DISABLED="true",
+    )
+    if not options.context_only:
+        first = subprocess.run(
+            [
+                *args,
+                "--",
+                sys.executable,
+                "-B",
+                str(ROOT / "scripts/environment-deploy/test_transport.py"),
+            ],
+            check=False,
+            cwd=ROOT,
+            env=env,
+        )
+        if first.returncode:
+            return first.returncode
+    fixture_campaigns = private_run / "synthetic-campaigns"
+    fixture_campaigns.mkdir(mode=0o700)
+    (fixture_campaigns / "fixture-only-overlay").write_text("synthetic")
     return subprocess.run(
-        args,
+        [
+            *args,
+            "--bind",
+            str(fixture_campaigns),
+            str(ROOT / ".build/project-environments-execution"),
+            "--",
+            sys.executable,
+            "-B",
+            str(ROOT / "scripts/environment-deploy/test_context_isolated.py"),
+        ],
         check=False,
         cwd=ROOT,
-        env={
-            **os.environ,
-            "PYTHONDONTWRITEBYTECODE": "1",
-            "GOCACHE": "/tmp/kurier-fixture-go-cache",
-            "GOPROXY": "off",
-            "GOTOOLCHAIN": "local",
-            "KURIER_TEST_PRIVATE_DIR": str(private_run),
-        },
+        env=env,
     ).returncode
 
 

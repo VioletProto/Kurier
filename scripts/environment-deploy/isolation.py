@@ -25,7 +25,29 @@ def launch(
     extra_ro=(),
     fixture_origin=None,
 ):
-    directory.mkdir(mode=0o700, parents=True, exist_ok=False)
+    source, directory = Path(source), Path(directory)
+    if (
+        not source.is_absolute()
+        or source != source.resolve(strict=True)
+        or not source.is_dir()
+        or not directory.is_absolute()
+        or directory != directory.resolve()
+        or not directory.parent.is_dir()
+    ):
+        raise Held("child-path-held")
+    validated = []
+    for src, dest in extra_ro:
+        src, dest = Path(src), Path(dest)
+        if (
+            not src.is_absolute()
+            or src != src.resolve(strict=True)
+            or not dest.is_absolute()
+            or ".." in dest.parts
+        ):
+            raise Held("explicit-mount-path-held")
+        validated.append((src, dest))
+    extra_ro = tuple(validated)
+    directory.mkdir(mode=0o700, exist_ok=False)
     work = directory / "work"
     work.mkdir()
     (work / "build").mkdir()

@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PRIOR = 301
+PRIOR = 303
 PHASE_SECONDS = 240
 CREDENTIAL_GUARD_SECONDS = 5
 MAX_REFRESHES = 6
@@ -79,7 +79,10 @@ def private_write(path, data):
 
 class Campaign:
     def __init__(self, directory, *, create=None, clock=time.monotonic, boot_id=boot):
-        self.directory = Path(directory)
+        requested = Path(os.path.abspath(directory))
+        self.directory = requested.resolve()
+        if requested != self.directory:
+            raise Held("campaign-symlink-held")
         self.clock, self.boot_id = clock, boot_id
         path = self.directory / "campaign.sqlite"
         if create is not None:

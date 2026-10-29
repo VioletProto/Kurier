@@ -158,7 +158,7 @@ class CredentialTests(unittest.TestCase):
         result = self.authenticate()
         self.assertEqual(result["AWS_SECRET_ACCESS_KEY"], CANARY)
         self.assertEqual(self.cache.saves, 0)
-        self.assertEqual(self.c.get("count"), 302)
+        self.assertEqual(self.c.get("count"), 304)
         self.assertEqual(self.sends[0][1], "sts/GetCallerIdentity")
 
     def test_pinned_model_has_no_duration_request_and_caps_lifetime_at_900(self):
@@ -217,7 +217,7 @@ class CredentialTests(unittest.TestCase):
         self.setup_case(expiry=-1)
         self.authenticate()
         self.assertEqual(self.cache.saves, 1)
-        self.assertEqual(self.c.get("count"), 303)
+        self.assertEqual(self.c.get("count"), 305)
         self.assertEqual(
             [row[1] for row in self.sends],
             ["signin/CreateOAuth2Token", "sts/GetCallerIdentity"],
@@ -235,7 +235,7 @@ class CredentialTests(unittest.TestCase):
         self.cache.expire_in(300)
         self.authenticate()
         self.assertEqual(self.cache.saves, 1)
-        self.assertEqual(self.c.get("count"), 304)
+        self.assertEqual(self.c.get("count"), 306)
 
     def test_short_renewal_is_rejected_before_any_phase_work(self):
         self.setup_case(expiry=-1)
@@ -251,7 +251,7 @@ class CredentialTests(unittest.TestCase):
         self.status = 403
         with self.assertRaises(Held):
             self.authenticate()
-        self.assertEqual(self.c.get("count"), 302)
+        self.assertEqual(self.c.get("count"), 304)
         self.assertEqual(len(self.sends), 1)
         self.assertEqual(self.cache.saves, 0)
         with self.assertRaises(Held):
@@ -263,7 +263,7 @@ class CredentialTests(unittest.TestCase):
         self.send_error = OSError(CANARY)
         with self.assertRaises(Held):
             self.authenticate()
-        self.assertEqual(self.c.get("count"), 302)
+        self.assertEqual(self.c.get("count"), 304)
         self.assertEqual(
             self.c.db.execute("SELECT status,outcome FROM attempts").fetchone(),
             (None, 1),
@@ -300,10 +300,10 @@ class CredentialTests(unittest.TestCase):
         self.assertFalse(self.sends)
 
     def test_refresh_and_sts_cannot_exceed_shared_budget(self):
-        self.setup_case(expiry=-1, maximum=302)
+        self.setup_case(expiry=-1, maximum=304)
         with self.assertRaises(Held):
             self.authenticate()
-        self.assertEqual(self.c.get("count"), 302)
+        self.assertEqual(self.c.get("count"), 304)
         self.assertEqual(len(self.sends), 1)
         self.assertTrue(self.c.get("stopped"))
 
@@ -325,7 +325,7 @@ class CredentialTests(unittest.TestCase):
             if phase in {"close", "deploy", "verify", "activate"}:
                 self.assertEqual(self.c.get("closedDeadline"), closed)
             self.c.finish(phase, {})
-        self.assertEqual(self.c.get("count"), 313)
+        self.assertEqual(self.c.get("count"), 315)
         self.assertEqual(self.cache.saves, 6)
 
     def test_same_boundary_cannot_authenticate_twice(self):
@@ -340,7 +340,7 @@ class CredentialTests(unittest.TestCase):
         self.authenticate()
         with self.assertRaises(Held):
             AuthBudget(self.c).admit("signin", "CreateOAuth2Token", "HTTP/1.1")
-        self.assertEqual(self.c.get("count"), 303)
+        self.assertEqual(self.c.get("count"), 305)
 
     def test_campaign_renewal_cap_denies_seventh_before_admission(self):
         self.setup_case()
@@ -351,7 +351,7 @@ class CredentialTests(unittest.TestCase):
             )
         with self.assertRaises(Held):
             AuthBudget(self.c).admit("signin", "CreateOAuth2Token", "HTTP/1.1")
-        self.assertEqual(self.c.get("count"), 301)
+        self.assertEqual(self.c.get("count"), 303)
 
     def test_phase_expiry_stops_before_renewal_and_later_forwarding(self):
         self.setup_case(expiry=-1)
