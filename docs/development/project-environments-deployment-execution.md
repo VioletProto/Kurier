@@ -1,9 +1,12 @@
 # Project environments: adopted artifacts and execution review
 
 **Latest execution:** [collection from 303 completed the reader snapshot, then preview was held](project-environments-collection-from-303.md).
-Actual usage is **390/1,799**. All three campaigns remain stopped. The 303-based
-command below was consumed once; do not reuse it. The next decision is a local
-preview-denial review. No new collection, repair or later phase is authorized.
+Actual usage is **390/1,799**. The
+[local denial/frontend review](project-environments-preview-denial-review.md)
+attributes that stop to S3 GetBucketPolicy, corrects frontend phase expectations,
+and proposes three exact read permissions. None is granted. This revision blocks
+new `start` before authentication or claim creation while they remain pending.
+No new campaign, repair, live preview or later phase is authorized.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -13,11 +16,11 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-The proposal below used baseline **303/1,799** with **1,496** attempts available.
-Its authorized execution consumed 87 physical attempts; actual usage is now
-**390/1,799**, with **1,409** remaining. The cumulative **$1 procedural allowance**
-is unchanged; billing remains unmeasured. No stopped campaign can resume. The
-original adopted manifests and historical verification records are preserved.
+Accounting remains **390/1,799**, with **1,409** additional attempts within the
+approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
+billing remains unmeasured. All three stopped campaigns and consumed claims are
+preserved. No AWS call, renewal, preview rerun or live phase occurred in this
+local correction. Historical records and adopted/rollback bytes are unchanged.
 
 ## Artifacts and byte enforcement
 
@@ -54,6 +57,11 @@ routing to the accepted inventory. It scans only projected metadata, checks
 queue/residual quiescence and frontend metadata, and reads the marker before
 and after collection. A fresh SST diff must have the same reviewed projection
 as review-8 (60 entries, 44 unique resources) and the same four generated ZIPs.
+Collection and closure now require the accepted old frontend manifest and bytes;
+verification, activation and final require the adopted release. Both live checks
+and offline stage planning bind the expected frontend target/release ID. Closure
+rechecks the old frontend before its transaction. This exposes the separately
+proposed old-JS object/KVS reads; neither is added to the wire policy here.
 Fresh outputs remain private. Stale or drifting baselines cannot be blessed by
 simply recording them as a new baseline.
 
@@ -75,20 +83,25 @@ loop that automatically advances phases.
 
 ## Proposed future execution and allowances
 
-Proposal only: a separately authorized new campaign starts from **303**, retaining
+Proposal only: a separately authorized new campaign starts from **390**, retaining
 all prior usage and the approved **1,799** cumulative ceiling, with at most
-**1,496 additional physical attempts**. Keep one original **55-minute** monotonic
+**1,409 additional physical attempts**. Keep one original **55-minute** monotonic
 window starting before authentication and at most a **30-minute** closed-stage
 subwindow bounded by that original deadline. The $1 cumulative procedural
 allowance is unchanged; call headroom does not establish cost or capacity. Zero
 runtime requests, new identities, new projects or runtime fixtures are included.
 
-Use clean tooling commit **fb0cd0e7f92751a6991a12a2af6e38827e7645ed** from this PR
+Use clean tooling commit **19de0cc077c0652f61ccf9c70ad4e3744505fc07** from this PR
 and the clean detached release worktree at the unchanged source above. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
-sanitized records, both original authorizations/claims, 300–303 attempt outcomes
+sanitized records, all three original authorizations/claims, 300–390 attempt outcomes
 and latest recorded same-session cache metadata. No install/download/repair is included.
+`check`/`template` additionally report `pendingScopedReads`; a nonempty list
+hard-stops `start` before credentials, claim creation or any network activity.
+The proposed command cannot complete until a separately approved permission
+correction is implemented, verified and pinned. Editing the template cannot
+remove this policy check.
 
 The pinned Sign-In model caps credential lifetime at **900 seconds**, with no
 requested-duration input. The pinned SDK renews at **300 seconds or less**;
@@ -122,7 +135,7 @@ the review branch and do not reset or remove any evidence:
 
 ```sh
 cd /home/king/Neumont/Kurier
-git switch --detach fb0cd0e7f92751a6991a12a2af6e38827e7645ed
+git switch --detach 19de0cc077c0652f61ccf9c70ad4e3744505fc07
 ```
 
 Run `check` there with the existing `.build`, `.sst` and `node_modules` caches.
@@ -140,32 +153,34 @@ no broad campaign-directory mount or generic command override is introduced.
 
 Exact commands below are proposals. Do not run `start` or `phase` until the
 corresponding authorization has been granted. Preserve `release-from-299`,
-`release-from-301`, both original authorization files and their consumed window
-claims. The proposed `release-from-303`, `authorization-from-303.json` and
-`window-from-303.json` must be absent. Never reuse or remove a consumed claim.
+`release-from-301`, `release-from-303`, all three original authorization files and
+their consumed window claims. The proposed `release-from-390`,
+`authorization-from-390.json` and `window-from-390.json` must be absent. Never reuse or remove a consumed claim.
 
 ```sh
 python3 -B scripts/environment-deploy/driver.py check
 umask 077
 set -C
-python3 -B scripts/environment-deploy/driver.py template > .build/project-environments-execution/authorization-from-303.json
+python3 -B scripts/environment-deploy/driver.py template > .build/project-environments-execution/authorization-from-390.json
 ```
 
 The template is deliberately `authorized: false`. Review every field and approve
 it only after explicit authorization of a new initial collection using this
-corrected tooling. The accepted credential policy remains bounded to separately
+corrected tooling after the pending permissions have been separately approved
+and implemented in reviewed tooling. Do not edit `pendingScopedReads` as an
+approval mechanism. The accepted credential policy remains bounded to separately
 approved phases. It binds the current exact clean tooling commit, manifest/scope
-hashes, 303 baseline and bounded credential policy. The ceiling approval remains
+hashes, 390 baseline, pending read-permission proposals and bounded credential policy. The ceiling approval remains
 in effect but does not authorize this new campaign. Then the sole start command:
 
 ```sh
-python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-from-303 --authorization .build/project-environments-execution/authorization-from-303.json
+python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-from-390 --authorization .build/project-environments-execution/authorization-from-390.json
 ```
 
 Stop after initial collection. Review its baseline/quiescence findings,
 configuration/IAM comparisons, complete diff, generated hashes, ledger and remaining
 time before deciding on closure. The later commands below remain proposals. No
-phase approval is granted by the local context correction.
+phase approval is granted by this local correction.
 
 Review the fresh collection, complete diff, generated hashes and ledger before
 closure. For each phase, substitute exactly one of `close`, `deploy`, `verify`,
@@ -174,9 +189,9 @@ obtain separate authorization before changing only `authorized` to true.
 Do not script a phase loop or approve all phases in advance.
 
 ```sh
-python3 -B scripts/environment-deploy/driver.py prepare --campaign .build/project-environments-execution/release-from-303 --phase PHASE > .build/project-environments-execution/PHASE-approval.json
-python3 -B scripts/environment-deploy/driver.py phase --campaign .build/project-environments-execution/release-from-303 --phase PHASE --approval .build/project-environments-execution/PHASE-approval.json
-python3 -B scripts/environment-deploy/driver.py report --campaign .build/project-environments-execution/release-from-303
+python3 -B scripts/environment-deploy/driver.py prepare --campaign .build/project-environments-execution/release-from-390 --phase PHASE > .build/project-environments-execution/PHASE-approval.json
+python3 -B scripts/environment-deploy/driver.py phase --campaign .build/project-environments-execution/release-from-390 --phase PHASE --approval .build/project-environments-execution/PHASE-approval.json
+python3 -B scripts/environment-deploy/driver.py report --campaign .build/project-environments-execution/release-from-390
 ```
 
 Deploy first warms hashed frontend assets and their KVS entries, then runs the
@@ -185,6 +200,22 @@ Verification independently checks deployed code/platform, exact new routing and
 permissions, frontend and closed marker. Activation is a separate guarded CAS;
 final checks the active tuple, platform and accounting projection. Neither
 verification nor final sends API target requests.
+
+## Pending read permissions — not granted
+
+The exact execution wire policy/scope and review-8 S3 Control helper are unchanged.
+The linked denial review proposes only these known missing reads, with no IAM or
+infrastructure mutation:
+
+- S3 `GetBucketPolicy` (`GET /?policy`) for the existing owned frontend bucket.
+- S3 `GetObject` for `assets/index-CD_8s4hz.js` in that same bucket.
+- KVS `GetKey` for `76ef:/assets/index-CD_8s4hz.js` in the existing scoped store.
+
+Exact bucket/ARN values and negative scope limits are in the linked review and
+`pendingScopedReads` template. These are known minimum gaps, not proof that a
+complete provider preview needs no other reads. Unknown operations still stop.
+No broader bucket reads, alternate objects/stores, writes or live continuation
+are approved. Any permission adoption needs reviewed code/pins before execution.
 
 ## Failure and rollback
 
@@ -212,7 +243,11 @@ Python children against loopback responses with synthetic credentials. All 11
 shared attempts reconcile with fixture forwards. Eight cases cover shared
 accounting, call exhaustion, continuous campaign and phase deadlines, mutations, endpoint denial,
 exact upload success and altered upload rejection; descendant pulse files stop.
-17 offline policy/accounting tests, 22 credential regressions and nine path tests pass.
+17 offline policy/accounting tests, 22 credential regressions, nine path tests,
+six policy/diagnostic regressions and 14 frontend checks pass (68 total).
+The ten isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
+GetBucketPolicy denial, still blocked before forwarding. The 90 transition
+tests passed with actual cached DynamoDB Local and zero skipped tests.
 The actual-entrypoint context regression also passes with no credentials or
 network requests: two synthetic collector replies, read-only context and hidden
 campaign/claim/ledger assertions. Its invalid synthetic marker intentionally stops
@@ -232,7 +267,7 @@ is absent from the provider sandbox mounts. Logs are private and not published.
 Local fixtures do not establish current cloud configuration, absence of live
 traffic/drift, actual provider write variants, propagation, or runtime behavior.
 Those remain future observations. Unknown variants are held rather than repaired.
-Fresh baseline, acceptance of the bounded renewal policy, a newly authorized
+Fresh baseline, explicit adoption of the pending scoped reads, a newly authorized
 initial campaign, phase-specific approvals, the closed window and separate
 runtime/rollback allowances remain decisions for review. The expanded ceiling
 itself is approved; no current live continuation is authorized.

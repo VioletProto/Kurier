@@ -1,15 +1,16 @@
 {
-  "toolingCommit": "fb0cd0e7f92751a6991a12a2af6e38827e7645ed",
+  "toolingCommit": "19de0cc077c0652f61ccf9c70ad4e3744505fc07",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 0,
   "accounting": {
-    "cumulative": 303,
+    "cumulative": 390,
     "authorizedCeiling": 1799,
     "billingMeasured": false,
     "proceduralAllowanceUsd": 1,
-    "remainingAttempts": 1496,
+    "remainingAttempts": 1409,
     "newCallsForCredentialCorrection": 0,
-    "newCallsForContextCorrection": 0
+    "newCallsForContextCorrection": 0,
+    "newCallsForDenialReview": 0
   },
   "checks": {
     "unitTestsPassed": 17,
@@ -20,7 +21,11 @@
     "artifactAndEvidencePinsPassed": true,
     "credentialTestsPassed": 22,
     "pathTestsPassed": 9,
-    "isolatedContextCasesPassed": 1
+    "isolatedContextCasesPassed": 1,
+    "policyDiagnosticTestsPassed": 6,
+    "frontendTestsPassed": 14,
+    "isolatedPreviewDenialCasesPassed": 1,
+    "transitionTestsWithActualLocalDbPassed": 90
   },
   "hashes": {
     "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
@@ -38,13 +43,44 @@
   "originalCampaignSeconds": 3300,
   "closedStageMaximumSeconds": 1800,
   "newCampaignAuthorizationRequired": true,
-  "stoppedParentRecord": "docs/development/project-environments-collection-from-301.json",
+  "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
   "credentialReview": "docs/development/project-environments-credential-renewal.md",
-  "verificationLogSha256": "3cdde5f2b4b8b6932035278ac8b1eb48c6dd44cc0cfa080ac9cbf1fa8274d02d",
+  "verificationLogSha256": "248a62607605d9bd3470da6ff8d5077c10e5aa6f08938b9a6b8c50d03081ec91",
   "contextReview": "docs/development/project-environments-context-path-correction.md",
   "contextMapping": {
     "destination": "/meter/phase-context.json",
     "readOnly": true,
     "campaignDirectoryMounted": false
-  }
+  },
+  "denialReview": "docs/development/project-environments-preview-denial-review.md",
+  "permissionApprovalRequiredBeforeStart": true,
+  "executionPolicyWidened": false,
+  "pendingScopedReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketPolicy",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": "assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "cloudfront-keyvaluestore",
+      "operation": "GetKey",
+      "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+      "key": "76ef:/assets/index-CD_8s4hz.js"
+    }
+  ],
+  "frontendExpectations": {
+    "collect": "accepted-old-baseline",
+    "close": "accepted-old-baseline",
+    "verify": "adopted-release",
+    "activate": "adopted-release",
+    "final": "adopted-release"
+  },
+  "localDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235"
 }
