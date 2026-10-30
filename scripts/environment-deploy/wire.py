@@ -675,7 +675,7 @@ class Policy:
         # payloads, deletion keys and the existing generic object/version reads.
         baseline_key = "assets/index-CD_8s4hz.js"
         if bucket == self.s["webBucket"] and (
-            (not key and "policy" in q) or key == baseline_key
+            (not key and ("policy" in q or "acl" in q)) or key == baseline_key
         ):
             selectors_ok = (
                 not body
@@ -706,6 +706,16 @@ class Policy:
                 and self.approved_read("s3", "GetBucketPolicy", bucket=bucket, key="")
             ):
                 return {"operation": "s3/GetBucketPolicy", "write": False}
+            if (
+                method == "GET"
+                and not key
+                and q == {"acl": ""}
+                and query in {"acl", "acl="}
+                and operation_id is None
+                and selectors_ok
+                and self.approved_read("s3", "GetBucketAcl", bucket=bucket, key="")
+            ):
+                return {"operation": "s3/GetBucketAcl", "write": False}
             if (
                 method == "GET"
                 and key == baseline_key

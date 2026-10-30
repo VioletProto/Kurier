@@ -1,12 +1,13 @@
 {
   "manifest": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
-  "scope": "9289a837814f1f27d21d01893a8074ba12844f12647923536134486e6466d5cb",
+  "scope": "36dbb254b8568cb24d1e460988f89414e1c7a3594980fa2244f7cae83b2fbc74",
   "attestation": "ed96309d20baf499fbf6161e531300a6e505db789f39e38e59430abeecd0cf0e",
   "models": {
     "data/lambda/2015-03-31/service-2.json": "affa29b7b2819e2db3fd727df95409293634dc275ab938e3b9abbf78dc24e5df",
     "data/apigatewayv2/2018-11-29/service-2.json": "fdb831dc9be4cb380b42e21525a1a7e6e379958b7d8a3df7fd71c6c7f50df47c",
     "data/cloudfront-keyvaluestore/2022-07-26/service-2.json": "9bc300ee21019a5f77cd91dd0dc01144930107bb2193b3da02d79743dcb4ea36",
-    "data/cloudfront/2020-05-31/service-2.json": "4e5f9c9aa1623f473f70ab272ecf7b89ee1d4321b04098447bb82b40e7ac7adf"
+    "data/cloudfront/2020-05-31/service-2.json": "4e5f9c9aa1623f473f70ab272ecf7b89ee1d4321b04098447bb82b40e7ac7adf",
+    "data/s3/2006-03-01/service-2.json": "84c3a4e6ac1c80ed49cb1ddf1f548ea7f51d8a41acbfa0f198b9ba0028d784e8"
   },
   "stoppedParent": "633471db8b97d2546cac9ed831d25bb37c90c0ac3451267800ba62efb416db14",
   "stoppedParent303": "52e48bc4a593422241b00c55f885b37cd91ee0e80643a653809e60477a54784d",
@@ -15,5 +16,10 @@
     "path": "docs/development/project-environments-preview-denial-review.json",
     "sha256": "83f608905fe7a6950524b389a1ef7a84b6de2f39bae53b09a02b8967f74a4fbc",
     "commit": "8a14fad485a8869cda8262b121e2842f979a66b6"
+  },
+  "aclReadReview": {
+    "path": "docs/development/project-environments-approved-read-correction.json",
+    "sha256": "19982225cca4ba5ac658ef2d91299d1fdca043b0ac40b9612fe61ba21088e9e9",
+    "commit": "dcc24a96cdfe99da94dd44c48fc6807d42427502"
   }
 }

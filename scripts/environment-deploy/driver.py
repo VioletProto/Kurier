@@ -166,10 +166,14 @@ def check():
         raise Held("execution-pins-held")
     read_review = pins["additionalReadReview"]
     approved = ROOT / read_review["path"]
+    acl_review = pins["aclReadReview"]
+    acl_approved = ROOT / acl_review["path"]
     if (
         sha(approved) != read_review["sha256"]
+        or sha(acl_approved) != acl_review["sha256"]
         or scope.get("approvedAdditionalReads")
         != json.loads(approved.read_bytes())["pendingScopedReads"]
+        + json.loads(acl_approved.read_bytes())["pendingScopedReads"]
     ):
         raise Held("additional-read-approval-pins-held")
     a = ROOT / release["adoption"]["attestationPath"]

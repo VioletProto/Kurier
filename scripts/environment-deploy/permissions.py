@@ -7,6 +7,21 @@ from artifacts import load_objects
 from common import ROOT, Held
 from wire import Policy
 
+# Observed in the pinned provider's offline bucket Read continuation. These
+# remain proposal/preflight inputs only; the execution policy grants none.
+BUCKET_READ_GAPS = [
+    ("GetBucketCors", "cors"),
+    ("GetBucketWebsite", "website"),
+    ("GetBucketVersioning", "versioning"),
+    ("GetBucketAccelerateConfiguration", "accelerate"),
+    ("GetBucketRequestPayment", "requestPayment"),
+    ("GetBucketLogging", "logging"),
+    ("GetBucketLifecycleConfiguration", "lifecycle"),
+    ("GetBucketReplication", "replication"),
+    ("GetBucketEncryption", "encryption"),
+    ("GetObjectLockConfiguration", "object-lock"),
+]
+
 
 def pending_reads(scope, release):
     policy = Policy(scope, release, load_objects(scope, release), phase="collect")
@@ -18,8 +33,8 @@ def pending_reads(scope, release):
     # Preflight the required operations against the separately pinned grants.
     for operation, key, target in [
         ("GetBucketPolicy", "", "/?policy"),
-        # Observed next in the pinned provider fixture; never granted here.
         ("GetBucketAcl", "", "/?acl"),
+        *[(operation, "", "/?" + selector) for operation, selector in BUCKET_READ_GAPS],
         *[
             ("GetObject", f["path"], "/" + quote(f["path"], safe="/-_.~"))
             for f in old["files"]

@@ -257,6 +257,12 @@
       "operation": "GetKey",
       "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
       "key": "76ef:/assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAcl",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
     }
   ]
 }
