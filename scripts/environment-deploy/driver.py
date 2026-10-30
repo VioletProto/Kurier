@@ -164,6 +164,14 @@ def check():
         or digest(SCOPE.read_bytes()) != pins["scope"]
     ):
         raise Held("execution-pins-held")
+    read_review = pins["additionalReadReview"]
+    approved = ROOT / read_review["path"]
+    if (
+        sha(approved) != read_review["sha256"]
+        or scope.get("approvedAdditionalReads")
+        != json.loads(approved.read_bytes())["pendingScopedReads"]
+    ):
+        raise Held("additional-read-approval-pins-held")
     a = ROOT / release["adoption"]["attestationPath"]
     if (
         digest(a.read_bytes()) != pins["attestation"]

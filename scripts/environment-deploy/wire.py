@@ -142,6 +142,11 @@ class Policy:
         self.functions = {f["name"] for f in scope["functions"].values()}
         self.api_function = scope["functions"]["UsersProjectsApi"]["name"]
 
+    def approved_read(self, service, operation, **selectors):
+        return {"service": service, "operation": operation, **selectors} in self.s.get(
+            "approvedAdditionalReads", []
+        )
+
     def host(self, host):
         if host in {"iam.amazonaws.com", "cloudfront.amazonaws.com"}:
             return host.split(".")[0]
@@ -253,6 +258,18 @@ class Policy:
             }
             if h.get("x-amz-target") != prefixes.get(service, "") + "." + op:
                 raise Held("json-target-held")
+        if (
+            service == "cloudfront-keyvaluestore"
+            and op == "GetKey"
+            and p.get("Key") == self.s["namespace"] + ":/assets/index-CD_8s4hz.js"
+            and (
+                body
+                or h.get("content-length", "0") != "0"
+                or "transfer-encoding" in h
+                or "content-encoding" in h
+            )
+        ):
+            raise Held("additional-read-body-held")
         if self.read(service, op, p):
             return {
                 "operation": service + "/" + op,
@@ -446,6 +463,17 @@ class Policy:
                     or p["Id"] in self.invalidations
                 )
             )
+        if (
+            s == "cloudfront-keyvaluestore"
+            and op == "GetKey"
+            and p
+            == {
+                "KvsARN": self.s["kvsArn"],
+                "Key": self.s["namespace"] + ":/assets/index-CD_8s4hz.js",
+            }
+            and self.approved_read(s, op, kvsArn=p["KvsARN"], key=p["Key"])
+        ):
+            return True
         if s == "cloudfront-keyvaluestore":
             return (
                 p.get("KvsARN") == self.s["kvsArn"]
@@ -642,6 +670,51 @@ class Policy:
             if operation_id != expected_id:
                 raise Held("s3-operation-id-held")
         query = urlencode(q)
+
+        # Additional grants are read-only and deliberately separate from upload
+        # payloads, deletion keys and the existing generic object/version reads.
+        baseline_key = "assets/index-CD_8s4hz.js"
+        if bucket == self.s["webBucket"] and (
+            (not key and "policy" in q) or key == baseline_key
+        ):
+            selectors_ok = (
+                not body
+                and h.get("content-length", "0") == "0"
+                and "transfer-encoding" not in h
+                and "content-encoding" not in h
+                and h.get("x-amz-expected-bucket-owner", self.s["account"])
+                == self.s["account"]
+                and not any(
+                    k in h
+                    for k in (
+                        "range",
+                        "if-match",
+                        "if-none-match",
+                        "if-modified-since",
+                        "if-unmodified-since",
+                        "x-amz-request-payer",
+                    )
+                )
+            )
+            if (
+                method == "GET"
+                and not key
+                and q == {"policy": ""}
+                and query in {"policy=", "policy"}
+                and operation_id is None
+                and selectors_ok
+                and self.approved_read("s3", "GetBucketPolicy", bucket=bucket, key="")
+            ):
+                return {"operation": "s3/GetBucketPolicy", "write": False}
+            if (
+                method == "GET"
+                and key == baseline_key
+                and not q
+                and selectors_ok
+                and self.approved_read("s3", "GetObject", bucket=bucket, key=key)
+            ):
+                return {"operation": "s3/GetObject", "write": False}
+            raise Held("additional-read-scope-held")
 
         if method in {"GET", "HEAD"}:
             keys = {k for b, k in self.uploads.objects if b == bucket}

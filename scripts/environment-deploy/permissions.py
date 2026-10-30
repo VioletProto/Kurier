@@ -1,4 +1,4 @@
-"""Report known missing exact reads without granting or forwarding them."""
+"""Check required exact reads without forwarding them."""
 
 import json
 from urllib.parse import quote
@@ -15,9 +15,11 @@ def pending_reads(scope, release):
     )["frontendRollback"]["manifest"]
     result = []
     host = scope["webBucket"] + ".s3.us-east-2.amazonaws.com"
-    # These are permission proposals, never additions to the execution policy.
+    # Preflight the required operations against the separately pinned grants.
     for operation, key, target in [
         ("GetBucketPolicy", "", "/?policy"),
+        # Observed next in the pinned provider fixture; never granted here.
+        ("GetBucketAcl", "", "/?acl"),
         *[
             ("GetObject", f["path"], "/" + quote(f["path"], safe="/-_.~"))
             for f in old["files"]

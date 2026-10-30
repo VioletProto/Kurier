@@ -238,5 +238,25 @@
   ],
   "identityArn": "arn:aws:iam::747336059622:user/davian-admin",
   "poolId": "us-east-2_qTDZQT1FE",
-  "clientId": "5jg9sb38i6ae9c0adm5rtdfkno"
+  "clientId": "5jg9sb38i6ae9c0adm5rtdfkno",
+  "approvedAdditionalReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketPolicy",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": "assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "cloudfront-keyvaluestore",
+      "operation": "GetKey",
+      "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+      "key": "76ef:/assets/index-CD_8s4hz.js"
+    }
+  ]
 }
