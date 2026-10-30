@@ -1,5 +1,5 @@
 {
-  "toolingCommit": "515a4ae2100fad952c519b288f0369aeca5b3762",
+  "toolingCommit": "2ad78b89dcf070bc1253c4cab122be4572d826e3",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 0,
   "accounting": {
@@ -11,7 +11,8 @@
     "newCallsForCredentialCorrection": 0,
     "newCallsForContextCorrection": 0,
     "newCallsForDenialReview": 0,
-    "newCallsForApprovedReadCorrection": 0
+    "newCallsForApprovedReadCorrection": 0,
+    "newCallsForAclReadCorrection": 0
   },
   "checks": {
     "unitTestsPassed": 17,
@@ -23,15 +24,16 @@
     "credentialTestsPassed": 22,
     "pathTestsPassed": 9,
     "isolatedContextCasesPassed": 1,
-    "policyDiagnosticTestsPassed": 12,
+    "policyDiagnosticTestsPassed": 15,
     "frontendTestsPassed": 14,
     "isolatedPreviewDenialCasesPassed": 1,
     "isolatedOldFrontendSdkCasesPassed": 1,
-    "transitionTestsWithActualLocalDbPassedInPriorReview": 90
+    "transitionTestsWithActualLocalDbPassedInPriorReview": 90,
+    "isolatedReadGapDiscoveryCasesPassed": 1
   },
   "hashes": {
     "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
-    "docs/development/project-environments-execution-scope.json": "9289a837814f1f27d21d01893a8074ba12844f12647923536134486e6466d5cb",
+    "docs/development/project-environments-execution-scope.json": "36dbb254b8568cb24d1e460988f89414e1c7a3594980fa2244f7cae83b2fbc74",
     "docs/development/project-environments-release.json": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
     "docs/development/project-environments-sst-release.json": "25ef3cd0c8f0c09037607c564bfb8964c1ef8e8e14a3aa0ae8757894918895a9"
   },
@@ -47,7 +49,7 @@
   "newCampaignAuthorizationRequired": true,
   "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
   "credentialReview": "docs/development/project-environments-credential-renewal.md",
-  "verificationLogSha256": "0598215fa0def5b91062fb3d15e56d7166480ed787ddda96d41fb4afb657c2be",
+  "verificationLogSha256": "efed41d71ec30b55871ed18a666da510796459a831bc8f1e7a03752a3d20f8ea",
   "contextReview": "docs/development/project-environments-context-path-correction.md",
   "contextMapping": {
     "destination": "/meter/phase-context.json",
@@ -59,7 +61,61 @@
   "pendingScopedReads": [
     {
       "service": "s3",
-      "operation": "GetBucketAcl",
+      "operation": "GetBucketCors",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketWebsite",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketVersioning",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAccelerateConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketRequestPayment",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLogging",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLifecycleConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketReplication",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketEncryption",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObjectLockConfiguration",
       "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
       "key": ""
     }
@@ -89,9 +145,16 @@
       "operation": "GetKey",
       "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
       "key": "76ef:/assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAcl",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
     }
   ],
   "unapprovedReadsAdded": false,
   "readCorrection": "docs/development/project-environments-approved-read-correction.md",
-  "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235"
+  "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235",
+  "aclReadCorrection": "docs/development/project-environments-acl-read-correction.md"
 }

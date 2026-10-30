@@ -1,11 +1,11 @@
 # Project environments: adopted artifacts and execution review
 
 **Latest execution:** [collection from 303 remains stopped at 390](project-environments-collection-from-303.md).
-The [approved-read correction](project-environments-approved-read-correction.md)
-implements exactly the three reads accepted from review `8a14fad`. Its fixtures
-pass those reads and the old-frontend check, then hold unapproved GetBucketAcl.
-No AWS calls or live start occurred. A new `start` remains locally blocked before
-authentication/claim creation while that observed permission gap is pending.
+The [ACL correction and consolidated proposal](project-environments-acl-read-correction.md)
+implements the exact approved bucket ACL read. The actual preview fixture passes
+policy and ACL reads, then stops at GetBucketCors. A separate isolated continuation
+identifies ten bucket-configuration read gaps, all ungranted. No AWS calls or live
+start occurred. A new `start` remains blocked before authentication/claim creation.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -49,7 +49,7 @@ The exact account/region/resources, eight environment routes, four functions,
 S3 keys, frontend namespace, IAM read scope and expected invocation permissions
 are recorded in `project-environments-execution-scope.json` and pinned by
 `pins.json`. IAM mutations, unrelated resources and unknown wire operations are
-held before forwarding. The prior read-only preview policy is unchanged.
+held before forwarding. Only the four explicitly approved additional reads extend the preview policy.
 
 Fresh collection compares the deployed configuration/code/IAM/generation and
 routing to the accepted inventory. It scans only projected metadata, checks
@@ -90,7 +90,7 @@ subwindow bounded by that original deadline. The $1 cumulative procedural
 allowance is unchanged; call headroom does not establish cost or capacity. Zero
 runtime requests, new identities, new projects or runtime fixtures are included.
 
-Use clean tooling commit **515a4ae2100fad952c519b288f0369aeca5b3762** from this PR
+Use clean tooling commit **2ad78b89dcf070bc1253c4cab122be4572d826e3** from this PR
 and the clean detached release worktree at the unchanged source above. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
@@ -98,10 +98,11 @@ sanitized records, all three original authorizations/claims, 300–390 attempt o
 and latest recorded same-session cache metadata. No install/download/repair is included.
 `check`/`template` additionally report `pendingScopedReads`; a nonempty list
 hard-stops `start` before credentials, claim creation or any network activity.
-The three previously proposed reads are implemented under explicit approval.
-The pinned provider fixture next requests GetBucketAcl; it remains unapproved
-and the proposed command cannot complete until that gap is separately reviewed.
-Any adopted permission correction must be implemented, verified and pinned. Editing the template cannot
+The three previously approved reads and the exact bucket ACL read are implemented.
+Ten further bucket configuration reads observed in the pinned provider fixture
+remain blocked. Their [single resource-scoped proposal](project-environments-acl-read-correction.md)
+requires separate review. Any permission correction must be implemented, verified
+and pinned before a new collection authorization. Editing the template cannot
 remove this policy check.
 
 The pinned Sign-In model caps credential lifetime at **900 seconds**, with no
@@ -136,7 +137,7 @@ the review branch and do not reset or remove any evidence:
 
 ```sh
 cd /home/king/Neumont/Kurier
-git switch --detach 515a4ae2100fad952c519b288f0369aeca5b3762
+git switch --detach 2ad78b89dcf070bc1253c4cab122be4572d826e3
 ```
 
 Run `check` there with the existing `.build`, `.sst` and `node_modules` caches.
@@ -213,12 +214,14 @@ as read-only matches. No upload/deletion target, wildcard, additional operation,
 IAM mutation, framing/signing relaxation or live phase authority was added.
 The approved S3 Control helper remains unchanged.
 
-The actual preview fixture now forwards GetBucketPolicy to its synthetic origin,
-then the provider asks for **GetBucketAcl**, which is held before forwarding.
-`pendingScopedReads` reports only that new gap. It is not granted by this task.
-Any later review must remain limited to the owned frontend bucket and exact
-operation; other requests must still stop. Full release preview capacity,
-complete diff and archive agreement remain unestablished.
+The newly approved GetBucketAcl is now the fourth separately pinned read. It is
+limited to canonical root GET with an empty ACL selector/body on the exact owned
+frontend bucket. The actual preview fixture now forwards policy and ACL reads to
+its synthetic origin and holds GetBucketCors. The separate offline continuation
+returns inline synthetic absent/default responses without admitting or forwarding
+ten unapproved configuration reads. All ten remain in `pendingScopedReads`;
+see the [consolidated proposal](project-environments-acl-read-correction.md).
+Full release preview capacity, complete diff and archive agreement remain unestablished.
 
 ## Failure and rollback
 
@@ -247,9 +250,10 @@ shared attempts reconcile with fixture forwards. Eight cases cover shared
 accounting, call exhaustion, continuous campaign and phase deadlines, mutations, endpoint denial,
 exact upload success and altered upload rejection; descendant pulse files stop.
 17 offline policy/accounting tests, 22 credential regressions, nine path tests,
-12 policy/read/diagnostic regressions and 14 frontend checks pass (74 total).
-The 11 isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
-GetBucketPolicy success followed by an unexpected GetBucketAcl denial, plus an
+15 policy/read/diagnostic regressions and 14 frontend checks pass (77 total).
+The 12 isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
+policy/ACL success followed by an unexpected GetBucketCors denial, a separate
+minimal-bucket continuation identifying ten blocked reads without forwarding them, plus an
 actual old-frontend SDK check that passes before rejecting an unexpected object.
 Historical actual-DynamoDB transition evidence remains in the prior review; the
 transition core was unchanged by this correction.
@@ -272,7 +276,7 @@ is absent from the provider sandbox mounts. Logs are private and not published.
 Local fixtures do not establish current cloud configuration, absence of live
 traffic/drift, actual provider write variants, propagation, or runtime behavior.
 Those remain future observations. Unknown variants are held rather than repaired.
-Fresh baseline, separate review of the pending GetBucketAcl read, a newly authorized
+Fresh baseline, separate review of the ten pending bucket configuration reads, a newly authorized
 initial campaign, phase-specific approvals, the closed window and separate
 runtime/rollback allowances remain decisions for review. The expanded ceiling
 itself is approved; no current live continuation is authorized.

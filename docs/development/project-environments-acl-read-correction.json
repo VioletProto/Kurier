@@ -1,0 +1,161 @@
+{
+  "toolingCommit": "2ad78b89dcf070bc1253c4cab122be4572d826e3",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCalls": 0,
+  "accounting": {
+    "cumulative": 390,
+    "authorizedCeiling": 1799,
+    "remainingAttempts": 1409,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "approvedRead": {
+    "service": "s3",
+    "operation": "GetBucketAcl",
+    "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+    "key": ""
+  },
+  "pendingScopedReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketCors",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketWebsite",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketVersioning",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAccelerateConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketRequestPayment",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLogging",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLifecycleConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketReplication",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketEncryption",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObjectLockConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    }
+  ],
+  "proposedWireReads": [
+    {
+      "operation": "GetBucketCors",
+      "method": "GET",
+      "path": "/?cors",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketWebsite",
+      "method": "GET",
+      "path": "/?website",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketVersioning",
+      "method": "GET",
+      "path": "/?versioning",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketAccelerateConfiguration",
+      "method": "GET",
+      "path": "/?accelerate",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketRequestPayment",
+      "method": "GET",
+      "path": "/?requestPayment",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketLogging",
+      "method": "GET",
+      "path": "/?logging",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketLifecycleConfiguration",
+      "method": "GET",
+      "path": "/?lifecycle",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketReplication",
+      "method": "GET",
+      "path": "/?replication",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetBucketEncryption",
+      "method": "GET",
+      "path": "/?encryption",
+      "bodyBytes": 0
+    },
+    {
+      "operation": "GetObjectLockConfiguration",
+      "method": "GET",
+      "path": "/?object-lock",
+      "bodyBytes": 0
+    }
+  ],
+  "unapprovedReadsGranted": false,
+  "liveStartHeld": true,
+  "checks": {
+    "executionTestsPassed": 77,
+    "isolatedCasesPassed": 12,
+    "repositoryVerifyPassed": true,
+    "ruffPassed": true
+  },
+  "fixture": {
+    "actualEntrypoint": "scripts/environment-deploy/phase.mjs diff",
+    "provider": "7.40.0",
+    "embeddedS3Sdk": "v1.106.0",
+    "minimalExistingBucketPreviewExitCode": 0,
+    "unapprovedReadsForwarded": 0,
+    "unapprovedReadsAdmitted": 0,
+    "syntheticAbsentOrDefaultConfiguration": true,
+    "fullReleasePreviewEstablished": false
+  },
+  "proposedStartCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-from-390 --authorization .build/project-environments-execution/authorization-from-390.json"
+}
