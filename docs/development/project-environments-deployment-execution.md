@@ -1,12 +1,11 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest execution:** [collection from 303 completed the reader snapshot, then preview was held](project-environments-collection-from-303.md).
-Actual usage is **390/1,799**. The
-[local denial/frontend review](project-environments-preview-denial-review.md)
-attributes that stop to S3 GetBucketPolicy, corrects frontend phase expectations,
-and proposes three exact read permissions. None is granted. This revision blocks
-new `start` before authentication or claim creation while they remain pending.
-No new campaign, repair, live preview or later phase is authorized.
+**Latest execution:** [collection from 303 remains stopped at 390](project-environments-collection-from-303.md).
+The [approved-read correction](project-environments-approved-read-correction.md)
+implements exactly the three reads accepted from review `8a14fad`. Its fixtures
+pass those reads and the old-frontend check, then hold unapproved GetBucketAcl.
+No AWS calls or live start occurred. A new `start` remains locally blocked before
+authentication/claim creation while that observed permission gap is pending.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -60,8 +59,8 @@ as review-8 (60 entries, 44 unique resources) and the same four generated ZIPs.
 Collection and closure now require the accepted old frontend manifest and bytes;
 verification, activation and final require the adopted release. Both live checks
 and offline stage planning bind the expected frontend target/release ID. Closure
-rechecks the old frontend before its transaction. This exposes the separately
-proposed old-JS object/KVS reads; neither is added to the wire policy here.
+rechecks the old frontend before its transaction. The exact old-JS object/KVS reads are now granted separately from upload targets;
+other old assets, versions, entries and mutations remain outside that grant.
 Fresh outputs remain private. Stale or drifting baselines cannot be blessed by
 simply recording them as a new baseline.
 
@@ -91,7 +90,7 @@ subwindow bounded by that original deadline. The $1 cumulative procedural
 allowance is unchanged; call headroom does not establish cost or capacity. Zero
 runtime requests, new identities, new projects or runtime fixtures are included.
 
-Use clean tooling commit **19de0cc077c0652f61ccf9c70ad4e3744505fc07** from this PR
+Use clean tooling commit **515a4ae2100fad952c519b288f0369aeca5b3762** from this PR
 and the clean detached release worktree at the unchanged source above. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
@@ -99,8 +98,10 @@ sanitized records, all three original authorizations/claims, 300–390 attempt o
 and latest recorded same-session cache metadata. No install/download/repair is included.
 `check`/`template` additionally report `pendingScopedReads`; a nonempty list
 hard-stops `start` before credentials, claim creation or any network activity.
-The proposed command cannot complete until a separately approved permission
-correction is implemented, verified and pinned. Editing the template cannot
+The three previously proposed reads are implemented under explicit approval.
+The pinned provider fixture next requests GetBucketAcl; it remains unapproved
+and the proposed command cannot complete until that gap is separately reviewed.
+Any adopted permission correction must be implemented, verified and pinned. Editing the template cannot
 remove this policy check.
 
 The pinned Sign-In model caps credential lifetime at **900 seconds**, with no
@@ -135,7 +136,7 @@ the review branch and do not reset or remove any evidence:
 
 ```sh
 cd /home/king/Neumont/Kurier
-git switch --detach 19de0cc077c0652f61ccf9c70ad4e3744505fc07
+git switch --detach 515a4ae2100fad952c519b288f0369aeca5b3762
 ```
 
 Run `check` there with the existing `.build`, `.sst` and `node_modules` caches.
@@ -201,21 +202,23 @@ permissions, frontend and closed marker. Activation is a separate guarded CAS;
 final checks the active tuple, platform and accounting projection. Neither
 verification nor final sends API target requests.
 
-## Pending read permissions — not granted
+## Approved reads and remaining hold
 
-The exact execution wire policy/scope and review-8 S3 Control helper are unchanged.
-The linked denial review proposes only these known missing reads, with no IAM or
-infrastructure mutation:
+The three exact reads proposed in the denial review at
+`8a14fad485a8869cda8262b121e2842f979a66b6` were approved for local implementation:
+GetBucketPolicy for the owned frontend bucket, GetObject for
+`assets/index-CD_8s4hz.js`, and GetKey for its exact existing KVS entry. They are
+now recorded in `approvedAdditionalReads`, pinned to that review, and enforced
+as read-only matches. No upload/deletion target, wildcard, additional operation,
+IAM mutation, framing/signing relaxation or live phase authority was added.
+The approved S3 Control helper remains unchanged.
 
-- S3 `GetBucketPolicy` (`GET /?policy`) for the existing owned frontend bucket.
-- S3 `GetObject` for `assets/index-CD_8s4hz.js` in that same bucket.
-- KVS `GetKey` for `76ef:/assets/index-CD_8s4hz.js` in the existing scoped store.
-
-Exact bucket/ARN values and negative scope limits are in the linked review and
-`pendingScopedReads` template. These are known minimum gaps, not proof that a
-complete provider preview needs no other reads. Unknown operations still stop.
-No broader bucket reads, alternate objects/stores, writes or live continuation
-are approved. Any permission adoption needs reviewed code/pins before execution.
+The actual preview fixture now forwards GetBucketPolicy to its synthetic origin,
+then the provider asks for **GetBucketAcl**, which is held before forwarding.
+`pendingScopedReads` reports only that new gap. It is not granted by this task.
+Any later review must remain limited to the owned frontend bucket and exact
+operation; other requests must still stop. Full release preview capacity,
+complete diff and archive agreement remain unestablished.
 
 ## Failure and rollback
 
@@ -244,10 +247,12 @@ shared attempts reconcile with fixture forwards. Eight cases cover shared
 accounting, call exhaustion, continuous campaign and phase deadlines, mutations, endpoint denial,
 exact upload success and altered upload rejection; descendant pulse files stop.
 17 offline policy/accounting tests, 22 credential regressions, nine path tests,
-six policy/diagnostic regressions and 14 frontend checks pass (68 total).
-The ten isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
-GetBucketPolicy denial, still blocked before forwarding. The 90 transition
-tests passed with actual cached DynamoDB Local and zero skipped tests.
+12 policy/read/diagnostic regressions and 14 frontend checks pass (74 total).
+The 11 isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
+GetBucketPolicy success followed by an unexpected GetBucketAcl denial, plus an
+actual old-frontend SDK check that passes before rejecting an unexpected object.
+Historical actual-DynamoDB transition evidence remains in the prior review; the
+transition core was unchanged by this correction.
 The actual-entrypoint context regression also passes with no credentials or
 network requests: two synthetic collector replies, read-only context and hidden
 campaign/claim/ledger assertions. Its invalid synthetic marker intentionally stops
@@ -267,7 +272,7 @@ is absent from the provider sandbox mounts. Logs are private and not published.
 Local fixtures do not establish current cloud configuration, absence of live
 traffic/drift, actual provider write variants, propagation, or runtime behavior.
 Those remain future observations. Unknown variants are held rather than repaired.
-Fresh baseline, explicit adoption of the pending scoped reads, a newly authorized
+Fresh baseline, separate review of the pending GetBucketAcl read, a newly authorized
 initial campaign, phase-specific approvals, the closed window and separate
 runtime/rollback allowances remain decisions for review. The expanded ceiling
 itself is approved; no current live continuation is authorized.
