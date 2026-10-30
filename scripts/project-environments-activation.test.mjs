@@ -91,7 +91,7 @@ function fixture({ closed = false, deployed = false } = {}) {
       return structuredClone(m);
     },
     platform: async () => structuredClone(platform),
-    frontendReady: async () => deployed,
+    frontendReady: async () => true,
     rows: async () => structuredClone(rows),
     queueDepth: async () => ({ visible: "0", inflight: "0", delayed: "0" }),
     transact: async (actions) => {
@@ -836,5 +836,21 @@ test("deadline exhaustion at the transaction boundary makes zero writes", async 
   let reads = 0;
   o.now = () => (++reads < 4 ? 1000000 : o.closure.deadline);
   await assert.rejects(execute(f.adapter, o), /deadline/);
+  assert.equal(f.calls.writes.length, 0);
+});
+
+test("closure requires accepted baseline frontend before any write", async () => {
+  const f = fixture();
+  const o = await f.approve("close");
+  f.adapter.frontendReady = async () => false;
+  await assert.rejects(execute(f.adapter, o), /baseline frontend/);
+  assert.equal(f.calls.writes.length, 0);
+});
+test("baseline frontend drift on close prewrite reread blocks the transaction", async () => {
+  const f = fixture();
+  const o = await f.approve("close");
+  let calls = 0;
+  f.adapter.frontendReady = async () => ++calls === 1;
+  await assert.rejects(execute(f.adapter, o), /Prewrite.*drift/);
   assert.equal(f.calls.writes.length, 0);
 });

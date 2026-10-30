@@ -537,6 +537,8 @@ export async function execute(
     fail(
       "Fresh original closed-window proof required; never extend or reopen.",
     );
+  if (action === "close" && !frontendReady)
+    fail("Accepted baseline frontend not verified before closure.");
   if (action === "activate" && !readersReady)
     fail("Compatible readers not deployed/verified.");
   if (release.bindingValidation?.authenticated !== true)
@@ -548,7 +550,7 @@ export async function execute(
     hash(await adapter.marker()) !== hash(before) ||
     hash(await adapter.platform()) !== hash(platform) ||
     hash(await adapter.queueDepth()) !== hash(depth) ||
-    (action === "activate" && !(await adapter.frontendReady()))
+    (["close", "activate"].includes(action) && !(await adapter.frontendReady()))
   )
     fail("Prewrite inventory/platform drift.");
   if (rows.accounting.length > 79)

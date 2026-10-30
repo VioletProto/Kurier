@@ -23,6 +23,7 @@ import {
   transition,
   inspectRows,
 } from "../lib/project-environments-activation.mjs";
+import { frontendTarget, frontendManifest } from "./frontend.mjs";
 const [action, contextFile] = process.argv.slice(2);
 const c = JSON.parse(readFileSync(contextFile));
 const now = () => Number(process.hrtime.bigint() / 1000000n);
@@ -37,7 +38,7 @@ const adapter = {
   },
   rows: inventory,
   queueDepth,
-  frontendReady,
+  frontendReady: () => frontendReady(action),
   transact: (TransactItems) =>
     aws("dynamodb", "transact-write-items", {
       TransactItems,
@@ -46,7 +47,9 @@ const adapter = {
 };
 try {
   if (action === "collect" || action === "verify") {
-    const bundle = collect();
+    const bundle = collect(action);
+    if (!bundle.frontendReady)
+      throw Error("Expected phase frontend baseline not ready.");
     if (action === "collect") {
       if (bundle.marker.state.S !== "active")
         throw Error("Existing closed stage requires separate recovery review.");
@@ -62,6 +65,11 @@ try {
   } else if (action === "plan") {
     let m = structuredClone(c.bundle.marker);
     const b = c.bundle;
+    if (
+      b.frontendExpectation !== frontendTarget(c.action) ||
+      b.frontendExpectedReleaseId !== frontendManifest(c.action).releaseId
+    )
+      throw Error("Wrong phase frontend proof.");
     const fake = {
       controlTable: scope.controlTable,
       identity: () => b.identity,
@@ -153,7 +161,7 @@ try {
     verifyRouting(routing(), c.initialRouting);
     if (
       hash(p) !== hash(c.verifiedPlatform) ||
-      !frontendReady() ||
+      !frontendReady("final") ||
       inspectRows(inventory()).accountingSha256 !== c.accountingSha256
     )
       throw Error("Final deployed readers drift.");

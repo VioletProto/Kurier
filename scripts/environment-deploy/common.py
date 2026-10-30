@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PRIOR = 303
+PRIOR = 390
 PHASE_SECONDS = 240
 CREDENTIAL_GUARD_SECONDS = 5
 MAX_REFRESHES = 6

@@ -15,6 +15,7 @@ PRIVATE = ROOT / ".build/environment-deploy-test-private"
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--context-only", action="store_true")
+    parser.add_argument("--denial-only", action="store_true")
     options = parser.parse_args()
     if not (RELEASE / ".git").exists():
         raise SystemExit("pinned-release-worktree-missing")
@@ -78,7 +79,7 @@ def main():
         AWS_SHARED_CREDENTIALS_FILE="/dev/null",
         AWS_EC2_METADATA_DISABLED="true",
     )
-    if not options.context_only:
+    if not options.context_only and not options.denial_only:
         first = subprocess.run(
             [
                 *args,
@@ -93,6 +94,21 @@ def main():
         )
         if first.returncode:
             return first.returncode
+    if not options.context_only:
+        denial = subprocess.run(
+            [
+                *args,
+                "--",
+                sys.executable,
+                "-B",
+                str(ROOT / "scripts/environment-deploy/test_denial_isolated.py"),
+            ],
+            check=False,
+            cwd=ROOT,
+            env=env,
+        )
+        if denial.returncode or options.denial_only:
+            return denial.returncode
     fixture_campaigns = private_run / "synthetic-campaigns"
     fixture_campaigns.mkdir(mode=0o700)
     (fixture_campaigns / "fixture-only-overlay").write_text("synthetic")

@@ -8,6 +8,11 @@ import {
   checkMarker,
 } from "../lib/project-environments-activation.mjs";
 export { hash };
+import {
+  frontendManifest,
+  frontendMatches,
+  frontendTarget,
+} from "./frontend.mjs";
 export const scope = JSON.parse(
   readFileSync(
     new URL(
@@ -340,7 +345,8 @@ export function platform() {
     },
   };
 }
-export function frontendReady() {
+export function frontendReady(phase) {
+  const expected = frontendManifest(phase);
   // Body bytes arrive via a RAM descriptor; no private env/config response files.
   const python = `import base64,boto3,json,sys
 from botocore.config import Config
@@ -350,38 +356,31 @@ r=c.get_object(Bucket=v["bucket"],Key=v["key"])
 b=r["Body"].read(2097153)
 if len(b)>2097152:sys.exit(1)
 print(base64.b64encode(b).decode())`;
-  for (const f of [{ path: "artifact.json" }, ...release.frontend.files]) {
-    const r = spawnSync("python3", ["-c", python], {
-      input: JSON.stringify({ bucket: scope.webBucket, key: f.path }),
-      maxBuffer: 4 * 1024 * 1024,
-    });
-    if (r.status !== 0) return false;
-    const bytes = Buffer.from(r.stdout.toString().trim(), "base64");
-    if (
-      f.path === "artifact.json"
-        ? hash(JSON.parse(bytes)) !== hash(release.frontend)
-        : bytes.length !== f.bytes || importHash(bytes) !== f.sha256
-    )
-      return false;
-    if (
-      f.path.startsWith("assets/") &&
-      aws("cloudfront-keyvaluestore", "get-key", {
+  return frontendMatches(expected, {
+    readObject(key) {
+      const r = spawnSync("python3", ["-c", python], {
+        input: JSON.stringify({ bucket: scope.webBucket, key }),
+        maxBuffer: 4 * 1024 * 1024,
+      });
+      return r.status === 0
+        ? Buffer.from(r.stdout.toString().trim(), "base64")
+        : null;
+    },
+    keyValue(path) {
+      return aws("cloudfront-keyvaluestore", "get-key", {
         KvsARN: scope.kvsArn,
-        Key: scope.namespace + ":/" + f.path,
-      }).Value !== "s3"
-    )
-      return false;
-  }
-  return (
-    aws("cloudfront", "get-distribution", { Id: scope.distribution })
-      .Distribution.Status === "Deployed"
-  );
+        Key: scope.namespace + ":/" + path,
+      }).Value;
+    },
+    distributionDeployed() {
+      return (
+        aws("cloudfront", "get-distribution", { Id: scope.distribution })
+          .Distribution.Status === "Deployed"
+      );
+    },
+  });
 }
-import { createHash } from "node:crypto";
-function importHash(bytes) {
-  return createHash("sha256").update(bytes).digest("hex");
-}
-export function collect() {
+export function collect(phase = "collect") {
   const identity = aws("sts", "get-caller-identity");
   if (identity.Account !== scope.account || identity.Arn !== scope.identityArn)
     throw Error("Inventoried identity required.");
@@ -401,7 +400,9 @@ export function collect() {
     platform: p,
     rows,
     depth,
-    frontendReady: frontendReady(),
+    frontendReady: frontendReady(phase),
+    frontendExpectation: frontendTarget(phase),
+    frontendExpectedReleaseId: frontendManifest(phase).releaseId,
     routing: routing(),
   };
 }

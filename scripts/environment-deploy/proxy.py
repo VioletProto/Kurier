@@ -14,6 +14,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "preview-meter"))
 from artifacts import load_objects
 from common import ROOT, Campaign, Held, canonical, digest, private_write
+from denial_diagnostics import denial_projection
 from mitmproxy import http
 from wire import Policy
 
@@ -49,6 +50,7 @@ class Gate:
         ) != self.c.get("scopeSha256"):
             raise Held("campaign-pins-held")
         ctx = config["context"]
+        self.scope = scope
         self.release = release
         self.policy = Policy(
             scope,
@@ -78,8 +80,21 @@ class Gate:
 
         self.watcher = asyncio.create_task(watch())
 
-    def held(self, flow, reason):
+    def held(self, flow, reason, condition=None):
         try:
+            diagnostic = self.directory / "denial.json"
+            if condition is not None and not diagnostic.exists():
+                private_write(
+                    diagnostic,
+                    canonical(
+                        denial_projection(
+                            flow.request,
+                            self.scope,
+                            condition,
+                            admitted=bool(flow.metadata.get("executionAttempt")),
+                        )
+                    ),
+                )
             try:
                 self.c.stop(reason)
             except Held:
@@ -162,8 +177,8 @@ class Gate:
             flow.metadata.update(executionAttempt=n, executionMeta=meta)
             if self.fixture:
                 q.scheme, q.host, q.port = "http", "127.0.0.1", self.fixture
-        except Held:
-            self.held(flow, "operation-resource-byte-or-budget-held")
+        except Held as error:
+            self.held(flow, "operation-resource-byte-or-budget-held", str(error))
         except Exception:  # noqa: BLE001 - redact private request/response material
             self.held(flow, "wire-or-meter-held")
 

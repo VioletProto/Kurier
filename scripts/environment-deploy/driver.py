@@ -25,6 +25,7 @@ from common import (
     private_write,
 )
 from isolation import launch
+from permissions import pending_reads
 from phase_credentials import credentials
 from run import PROVIDER, PROVIDER_SHA, SOURCE, SST, SST_SHA, git, sha, valid_parent
 
@@ -52,7 +53,7 @@ def required_path(path, *, file=False):
 
 
 def stopped_parent():
-    """Read both retained stopped ledgers without writing or replaying them."""
+    """Read retained stopped ledgers without writing or replaying them."""
     pins = json.loads((HERE / "pins.json").read_bytes())
     checkpoint = None
     for filename, pin, prior, total, auth_name in [
@@ -67,8 +68,15 @@ def stopped_parent():
             "project-environments-collection-from-301.json",
             "stoppedParent303",
             301,
-            PRIOR,
+            303,
             "authorization-from-301.json",
+        ),
+        (
+            "project-environments-collection-from-303.json",
+            "stoppedParent390",
+            303,
+            PRIOR,
+            "authorization-from-303.json",
         ),
     ]:
         path = ROOT / "docs/development" / filename
@@ -102,11 +110,34 @@ def stopped_parent():
             or config["reviewCommit"] != record["toolingCommit"]
             or config["manifestSha256"] != record["manifestSha256"]
             or config["scopeSha256"] != record["scopeSha256"]
-            or rows
-            != [
-                (prior + 1, "collect", "signin/CreateOAuth2Token", 1, 200, 1),
-                (prior + 2, "collect", "sts/GetCallerIdentity", 0, 200, 1),
-            ]
+            or (
+                prior != 303
+                and rows
+                != [
+                    (prior + 1, "collect", "signin/CreateOAuth2Token", 1, 200, 1),
+                    (prior + 2, "collect", "sts/GetCallerIdentity", 0, 200, 1),
+                ]
+            )
+            or (
+                prior == 303
+                and rows
+                != [
+                    (
+                        x["ordinal"],
+                        x["phase"],
+                        x["operation"],
+                        int(x["write"]),
+                        x["status"],
+                        int(x["outcomeRecorded"]),
+                    )
+                    for x in (
+                        json.loads(line)
+                        for line in (ROOT / record["attemptProjection"]["path"])
+                        .read_text()
+                        .splitlines()
+                    )
+                ]
+            )
             or sha(auth) != record["authorizationSha256"]
             or config["authorizationSha256"] != record["authorizationSha256"]
             or claim["authorizationSha256"] != record["authorizationSha256"]
@@ -114,6 +145,12 @@ def stopped_parent():
             or not config.get("cacheStat")
         ):
             raise Held("stopped-parent-accounting-held")
+        if (
+            prior == 303
+            and sha(ROOT / record["attemptProjection"]["path"])
+            != record["attemptProjection"]["sha256"]
+        ):
+            raise Held("stopped-parent-projection-held")
         checkpoint = config["cacheStat"]
     return checkpoint
 
@@ -511,6 +548,9 @@ def main():
             c.close()
         return
     _release, scope, pins = check()
+    pending = pending_reads(scope, _release)
+    if a.action == "start" and pending:
+        raise Held("scoped-read-approval-required-before-new-campaign")
     if a.action == "check":
         print(
             json.dumps(
@@ -521,6 +561,7 @@ def main():
                     "prior": PRIOR,
                     "authorizedCumulativeCeiling": 1799,
                     "credentialPolicy": CREDENTIAL_POLICY,
+                    "pendingScopedReads": pending,
                     "executionRequiresSeparateAuthorization": True,
                 }
             )
@@ -539,6 +580,7 @@ def main():
                     "scopeSha256": pins["scope"],
                     "proceduralAllowanceUsd": 1,
                     "credentialPolicy": CREDENTIAL_POLICY,
+                    "pendingScopedReads": pending,
                 },
                 indent=2,
             )
@@ -564,12 +606,13 @@ def main():
                 "scopeSha256": pins["scope"],
                 "proceduralAllowanceUsd": 1,
                 "credentialPolicy": CREDENTIAL_POLICY,
+                "pendingScopedReads": pending,
             }
             if auth != expected:
                 raise Held("explicit-expanded-execution-authorization-required")
             BASE.mkdir(mode=0o700, exist_ok=True)
             private_write(
-                BASE / "window-from-303.json",
+                BASE / "window-from-390.json",
                 canonical(
                     {
                         "authorizationSha256": sha(a.authorization),

@@ -154,11 +154,11 @@ def source(path):
     return path
 
 
-def campaign(path, phase, maximum=329, seconds=3300):
+def campaign(path, phase, maximum=416, seconds=3300):
     c = Campaign(
         path,
         create={
-            "prior": 303,
+            "prior": 390,
             "maximum": maximum,
             "seconds": seconds,
             "manifestSha256": P["manifest"],
@@ -266,7 +266,7 @@ if len(sys.argv)>1:
                 c = campaign(
                     d / name,
                     phase,
-                    maximum=307 if name == "call-limit" else 329,
+                    maximum=394 if name == "call-limit" else 416,
                     seconds=5 if name == "deadline" else 3300,
                 )
                 if name == "phase-deadline":
@@ -326,7 +326,7 @@ if len(sys.argv)>1:
                 if name in {"mutation", "endpoint", "deadline", "phase-deadline"}:
                     assert len(AUDIT) == old, (name, AUDIT[old:])
                 if name == "call-limit":
-                    assert c.get("count") == 307 and len(AUDIT) - old == 4
+                    assert c.get("count") == 394 and len(AUDIT) - old == 4
                 pulses = [
                     d / (name + "-child") / "work" / x
                     for x in ["root", "child", "grand"]
@@ -337,7 +337,7 @@ if len(sys.argv)>1:
                 results.append(
                     {
                         "case": name,
-                        "attempts": c.get("count") - 303,
+                        "attempts": c.get("count") - 390,
                         "allDescendantsStopped": True,
                         "upstreamWrites": len(writes),
                         "actualUploadHashVerified": name == "upload-good",
@@ -351,7 +351,7 @@ if len(sys.argv)>1:
                 {
                     "fixtureOnly": True,
                     "awsCalls": 0,
-                    "priorUsageUnchanged": 303,
+                    "priorUsageUnchanged": 390,
                     "cases": results,
                 }
             )
