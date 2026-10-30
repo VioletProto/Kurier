@@ -1,9 +1,9 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest execution:** [collection from 301 stopped during reader-child startup](project-environments-collection-from-301.md).
-Actual usage is **303/1,799**. Both prior campaigns remain stopped. The
-[local context-path correction](project-environments-context-path-correction.md)
-is verified and proposed below; no new collection or later phase is authorized.
+**Latest execution:** [collection from 303 completed the reader snapshot, then preview was held](project-environments-collection-from-303.md).
+Actual usage is **390/1,799**. All three campaigns remain stopped. The 303-based
+command below was consumed once; do not reuse it. The next decision is a local
+preview-denial review. No new collection, repair or later phase is authorized.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -13,12 +13,11 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting remains **303/1,799**, including both attempts from each stopped
-campaign. The expanded cumulative ceiling remains approved; **1,496** attempts
-remain. The cumulative **$1 procedural allowance** is unchanged; billing remains
-unmeasured. Neither stopped campaign can resume. No AWS call, renewal, restart,
-authentication-setting change or live phase occurred during this local correction.
-The original adopted manifests and historical verification records are preserved.
+The proposal below used baseline **303/1,799** with **1,496** attempts available.
+Its authorized execution consumed 87 physical attempts; actual usage is now
+**390/1,799**, with **1,409** remaining. The cumulative **$1 procedural allowance**
+is unchanged; billing remains unmeasured. No stopped campaign can resume. The
+original adopted manifests and historical verification records are preserved.
 
 ## Artifacts and byte enforcement
 
