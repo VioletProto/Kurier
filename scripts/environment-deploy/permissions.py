@@ -5,22 +5,7 @@ from urllib.parse import quote
 
 from artifacts import load_objects
 from common import ROOT, Held
-from wire import Policy
-
-# Observed in the pinned provider's offline bucket Read continuation. These
-# remain proposal/preflight inputs only; the execution policy grants none.
-BUCKET_READ_GAPS = [
-    ("GetBucketCors", "cors"),
-    ("GetBucketWebsite", "website"),
-    ("GetBucketVersioning", "versioning"),
-    ("GetBucketAccelerateConfiguration", "accelerate"),
-    ("GetBucketRequestPayment", "requestPayment"),
-    ("GetBucketLogging", "logging"),
-    ("GetBucketLifecycleConfiguration", "lifecycle"),
-    ("GetBucketReplication", "replication"),
-    ("GetBucketEncryption", "encryption"),
-    ("GetObjectLockConfiguration", "object-lock"),
-]
+from wire import BUCKET_CONFIGURATION_READS, Policy
 
 
 def pending_reads(scope, release):
@@ -34,7 +19,10 @@ def pending_reads(scope, release):
     for operation, key, target in [
         ("GetBucketPolicy", "", "/?policy"),
         ("GetBucketAcl", "", "/?acl"),
-        *[(operation, "", "/?" + selector) for operation, selector in BUCKET_READ_GAPS],
+        *[
+            (operation, "", "/?" + selector)
+            for operation, selector in BUCKET_CONFIGURATION_READS
+        ],
         *[
             ("GetObject", f["path"], "/" + quote(f["path"], safe="/-_.~"))
             for f in old["files"]

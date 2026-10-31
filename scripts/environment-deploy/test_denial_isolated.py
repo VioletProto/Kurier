@@ -4,18 +4,17 @@ import http.server
 import importlib.util
 import json
 import os
-import re
 import tempfile
 import threading
 from pathlib import Path
-from unittest.mock import patch
+from types import SimpleNamespace
 from urllib.parse import parse_qs, unquote, urlsplit
 
-import isolation
 from common import PRIOR, ROOT, canonical, private_write
 from driver import CHILD_CONTEXT, HERE, SST, mounts, phase_command
+from fixture_bucket_reads import fixture_response, validate_model
 from isolation import launch
-from permissions import BUCKET_READ_GAPS
+from wire import BUCKET_CONFIGURATION_READS
 
 spec = importlib.util.spec_from_file_location(
     "environment_transport_fixture", Path(__file__).with_name("test_transport.py")
@@ -53,6 +52,19 @@ class ReadOrigin(Origin):
                 + "</ID><DisplayName>fixture</DisplayName></Owner><AccessControlList/></AccessControlPolicy>",
                 "application/xml",
             )
+        response = fixture_response(
+            SimpleNamespace(
+                method="GET",
+                host=S["webBucket"] + ".s3.us-east-2.amazonaws.com",
+                path=self.path,
+                raw_content=b"",
+            ),
+            S,
+        )
+        if response is not None:
+            operation, _selector, status, body = response
+            AUDIT.append(("GET", operation))
+            return self.reply(status, body.decode(), "application/xml")
         from s3control_tags import PATH
 
         if parsed.path == PATH:
@@ -106,6 +118,7 @@ class ReadOrigin(Origin):
 
 
 def main():
+    validate_model()
     origin = http.server.ThreadingHTTPServer(("127.0.0.1", 0), ReadOrigin)
     threading.Thread(target=origin.serve_forever, daemon=True).start()
     try:
@@ -142,157 +155,95 @@ def main():
                     fixture_origin=origin.server_port,
                     extra_ro=mounts(context),
                 )
-                assert result["exitCode"] != 0 and c.get("stopped")
-                assert AUDIT.count(("GET", "GetBucketPolicy")) == 1
-                assert AUDIT.count(("GET", "GetBucketAcl")) == 1
-                assert any(
-                    op == "s3/GetBucketPolicy"
-                    for (op,) in c.db.execute("SELECT op FROM attempts")
-                )
-                diagnostic = json.loads((output / "denial.json").read_bytes())
-                assert diagnostic["beforeForward"] and not diagnostic["admitted"]
-                assert diagnostic["condition"] in {
-                    "s3-read-scope-held",
-                    "s3-operation-id-held",
+                assert result["exitCode"] == 0 and not c.get("stopped")
+                assert not (output / "denial.json").exists()
+                assert not list(output.glob("observed-read-*.json"))
+                required = {
+                    "GetBucketPolicy",
+                    "GetBucketAcl",
+                    *[op for op, _ in BUCKET_CONFIGURATION_READS],
                 }
-                assert not any(method in {"PUT", "DELETE"} for method, _ in AUDIT)
+                assert all(
+                    AUDIT.count(("GET", operation)) == 1 for operation in required
+                )
+                admitted = {op for (op,) in c.db.execute("SELECT op FROM attempts")}
+                assert {"s3/" + op for op in required} <= admitted
                 assert not c.db.execute(
                     "SELECT COUNT(*) FROM attempts WHERE write=1 OR outcome=0"
                 ).fetchone()[0]
                 assert c.db.execute("SELECT COUNT(*) FROM attempts").fetchone()[
                     0
                 ] == len(AUDIT)
-                # The next provider read remains unapproved. Publish its SDK
-                # operation label only, never raw diagnostics/resource state.
-                raw = (output / "work/sst/log/pulumi.log").read_text()
-                operations = re.findall(r"operation error S3: (Get[A-Za-z]+)", raw)
-                assert operations and all(
-                    x not in {"GetBucketPolicy", "GetBucketAcl"} for x in operations
+                record = {
+                    "case": "actual-preview-production-policy-approved-bucket-reads",
+                    "fixtureOnly": True,
+                    "awsCalls": 0,
+                    "priorUsageUnchanged": PRIOR,
+                    "previewExitCode": result["exitCode"],
+                    "productionProxy": True,
+                    "approvedReadsForwarded": sorted(required),
+                    "pendingObservedReads": [],
+                    "allForwardedAttemptsReconciled": True,
+                    "fixtureAttempts": len(AUDIT),
+                }
+                private_write(
+                    Path(os.environ["KURIER_TEST_PRIVATE_DIR"])
+                    / "production-preview-result.json",
+                    canonical(record),
                 )
+                print(json.dumps(record))
+            finally:
+                c.close()
+        AUDIT.clear()
+        with tempfile.TemporaryDirectory(
+            prefix="kurier-unapproved-bucket-read-"
+        ) as directory:
+            root = Path(directory)
+            src = source(root / "source")
+            c = campaign(root / "campaign", "collect", maximum=450)
+            try:
+                output = root / "unexpected-bucket-read"
+                result = launch(
+                    src,
+                    output,
+                    [
+                        "python3",
+                        "-c",
+                        "import boto3;boto3.client('sts',region_name='us-east-2').get_caller_identity();boto3.client('s3',region_name='us-east-2').get_bucket_tagging(Bucket="
+                        + repr(S["webBucket"])
+                        + ")",
+                    ],
+                    {
+                        "AWS_ACCESS_KEY_ID": "ASIA0000000000000000",
+                        "AWS_SECRET_ACCESS_KEY": "synthetic",
+                        "AWS_SESSION_TOKEN": "synthetic",
+                    },
+                    campaign=c,
+                    phase="collect",
+                    policy_context={"fixtureOnly": True},
+                    fixture_origin=origin.server_port,
+                    extra_ro=mounts(),
+                )
+                assert result["exitCode"] != 0 and c.get("stopped")
+                diagnostic = json.loads((output / "denial.json").read_bytes())
+                assert diagnostic["beforeForward"] and not diagnostic["admitted"]
+                assert AUDIT == [("POST", "GetCallerIdentity")]
+                assert not c.db.execute(
+                    "SELECT COUNT(*) FROM attempts WHERE write=1 OR outcome=0"
+                ).fetchone()[0]
+                assert c.db.execute("SELECT COUNT(*) FROM attempts").fetchone()[
+                    0
+                ] == len(AUDIT)
                 print(
                     json.dumps(
                         {
-                            "case": "actual-preview-approved-policy-then-unexpected-read-held",
-                            "fixtureOnly": True,
+                            "case": "production-policy-unapproved-bucket-read-held",
                             "awsCalls": 0,
-                            "priorUsageUnchanged": PRIOR,
-                            "approvedPolicyReadForwarded": True,
-                            "unexpectedOperations": sorted(set(operations)),
                             "unexpectedReadDeniedBeforeForward": True,
                             "fixtureAttempts": len(AUDIT),
                         }
                     )
                 )
-            finally:
-                c.close()
-        AUDIT.clear()
-        with tempfile.TemporaryDirectory(
-            prefix="kurier-read-gap-observer-"
-        ) as directory:
-            root = Path(directory)
-            src = source(root / "source")
-            (src / "sst.config.ts").write_text(
-                '/// <reference path="./.sst/platform/config.d.ts" />\nexport default $config({app(){return {name:"kurier",home:"aws",providers:{aws:{package:"@pulumi/aws",version:"7.40.0",region:"us-east-2"}}}},async run(){const bucket=aws.s3.Bucket.get("DevelopmentFrontendBucket",'
-                + json.dumps(S["webBucket"])
-                + ");return {bucket:bucket.id}}});"
-            )
-            c = campaign(root / "campaign", "collect", maximum=450)
-            try:
-                context = c.directory / "context.json"
-                context.write_text(json.dumps({"sst": str(SST)}))
-                context.chmod(0o600)
-                real_popen = isolation.subprocess.Popen
-
-                def fixture_popen(args, **kwargs):
-                    args = list(args)
-                    if args[0] == str(isolation.MITM):
-                        assert args[-1] == str(HERE / "proxy.py")
-                        args[-1] = str(HERE / "fixture_read_observer.py")
-                    return real_popen(args, **kwargs)
-
-                output = root / "observed-preview"
-                with patch("isolation.subprocess.Popen", side_effect=fixture_popen):
-                    result = launch(
-                        src,
-                        output,
-                        phase_command("diff", CHILD_CONTEXT),
-                        {
-                            "AWS_ACCESS_KEY_ID": "ASIA0000000000000000",
-                            "AWS_SECRET_ACCESS_KEY": "synthetic",
-                            "AWS_SESSION_TOKEN": "synthetic",
-                        },
-                        campaign=c,
-                        phase="collect",
-                        policy_context={"fixtureOnly": True},
-                        fixture_origin=origin.server_port,
-                        extra_ro=mounts(context),
-                    )
-                observed = [
-                    json.loads(p.read_bytes())
-                    for p in sorted(
-                        output.glob("observed-read-*.json"),
-                        key=lambda p: int(p.stem.rsplit("-", 1)[1]),
-                    )
-                ]
-                if not observed:
-                    print(
-                        json.dumps(
-                            {
-                                "observerStartup": True,
-                                "exitCode": result["exitCode"],
-                                "stopped": c.get("stopped"),
-                                "attempts": len(AUDIT),
-                                "events": [
-                                    json.loads(row[0])
-                                    for row in c.db.execute(
-                                        "SELECT data FROM events WHERE json_extract(data,'$.event')='stop'"
-                                    )
-                                ],
-                            }
-                        )
-                    )
-                assert observed and all(
-                    not x["forwarded"] and not x["admitted"] and x["syntheticResponse"]
-                    for x in observed
-                )
-                assert {(x["operation"], x["selector"]) for x in observed} == set(
-                    BUCKET_READ_GAPS
-                )
-                assert not c.db.execute(
-                    "SELECT COUNT(*) FROM attempts WHERE write=1 OR outcome=0"
-                ).fetchone()[0]
-                assert c.db.execute("SELECT COUNT(*) FROM attempts").fetchone()[
-                    0
-                ] == len(AUDIT)
-                # Persist the redacted discovery result in the fresh private run.
-                retained = (
-                    Path(os.environ["KURIER_TEST_PRIVATE_DIR"])
-                    / "read-gap-discovery.json"
-                )
-                private_write(
-                    retained,
-                    canonical(
-                        {
-                            "fixtureOnly": True,
-                            "previewExitCode": result["exitCode"],
-                            "observed": observed,
-                            "forwardedAttempts": len(AUDIT),
-                        }
-                    ),
-                )
-                print(
-                    json.dumps(
-                        {
-                            "case": "offline-preview-read-gap-discovery",
-                            "awsCalls": 0,
-                            "previewExitCode": result["exitCode"],
-                            "operations": sorted({x["operation"] for x in observed}),
-                            "unapprovedReadsForwarded": 0,
-                            "fixtureAttempts": len(AUDIT),
-                        }
-                    )
-                )
-                assert result["exitCode"] == 0 and not c.get("stopped")
             finally:
                 c.close()
         AUDIT.clear()

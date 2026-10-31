@@ -1,6 +1,6 @@
 {
   "manifest": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
-  "scope": "36dbb254b8568cb24d1e460988f89414e1c7a3594980fa2244f7cae83b2fbc74",
+  "scope": "760c1c25db84fedab09a440d5399a67f6e7a2c749d8fb5ec1e0d934b17411f72",
   "attestation": "ed96309d20baf499fbf6161e531300a6e505db789f39e38e59430abeecd0cf0e",
   "models": {
     "data/lambda/2015-03-31/service-2.json": "affa29b7b2819e2db3fd727df95409293634dc275ab938e3b9abbf78dc24e5df",
@@ -21,5 +21,10 @@
     "path": "docs/development/project-environments-approved-read-correction.json",
     "sha256": "19982225cca4ba5ac658ef2d91299d1fdca043b0ac40b9612fe61ba21088e9e9",
     "commit": "dcc24a96cdfe99da94dd44c48fc6807d42427502"
+  },
+  "bucketConfigurationReadReview": {
+    "path": "docs/development/project-environments-acl-read-correction.json",
+    "sha256": "1097a9a431ec3373597e77f34080f0b429d1e374d8dbdaed156928fb0b1bc649",
+    "commit": "69f31efcfe42097353d24c33b54d93c5dabd1c17"
   }
 }

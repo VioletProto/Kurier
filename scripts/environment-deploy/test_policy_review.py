@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 import driver
 from common import Held
 from denial_diagnostics import denial_projection
-from permissions import BUCKET_READ_GAPS, pending_reads
+from permissions import BUCKET_CONFIGURATION_READS, pending_reads
 from policy import Stop
 from policy import classify as old_classify
 from s3control_tags import ARN
@@ -82,24 +82,22 @@ class PolicyReviewTests(unittest.TestCase):
                     "GET", u.hostname, target, request.headers, body
                 )
 
-    def test_only_the_four_approved_reads_are_removed_from_preflight_gaps(self):
-        gaps = pending_reads(S, R)
-        self.assertEqual(
-            [x["operation"] for x in gaps], [name for name, _ in BUCKET_READ_GAPS]
-        )
-        self.assertEqual(len(gaps), 10)
+    def test_all_fourteen_approved_reads_clear_preflight(self):
+        self.assertEqual(pending_reads(S, R), [])
         stripped = copy.deepcopy(S)
         stripped.pop("approvedAdditionalReads")
         self.assertEqual(len(pending_reads(stripped, R)), 14)
-        no_acl = copy.deepcopy(S)
-        no_acl["approvedAdditionalReads"] = [
-            x
-            for x in no_acl["approvedAdditionalReads"]
-            if x["operation"] != "GetBucketAcl"
-        ]
-        self.assertIn(
-            "GetBucketAcl", [x["operation"] for x in pending_reads(no_acl, R)]
-        )
+        for operation, _ in BUCKET_CONFIGURATION_READS:
+            scoped = copy.deepcopy(S)
+            scoped["approvedAdditionalReads"] = [
+                x
+                for x in scoped["approvedAdditionalReads"]
+                if x["operation"] != operation
+            ]
+            with self.subTest(operation=operation):
+                self.assertEqual(
+                    [x["operation"] for x in pending_reads(scoped, R)], [operation]
+                )
 
     def test_start_still_refuses_missing_permissions_before_claim_or_authentication(
         self,
@@ -201,7 +199,7 @@ class PolicyReviewTests(unittest.TestCase):
         ]:
             with self.subTest(params=params, extras=extras), self.assertRaises(Held):
                 self.request("s3", "get_bucket_policy", params, **extras)
-        for operation in ["get_bucket_cors", "get_bucket_tagging"]:
+        for operation in ["get_bucket_ownership_controls", "get_bucket_tagging"]:
             with self.subTest(operation=operation), self.assertRaises(Held):
                 self.request("s3", operation, {"Bucket": S["webBucket"]})
 
@@ -338,19 +336,150 @@ class PolicyReviewTests(unittest.TestCase):
             with self.subTest(operation=operation), self.assertRaises(Held):
                 self.request("s3", operation, params, phase="deploy")
 
-    def test_all_observed_config_reads_still_fail_actual_sdk_gate(self):
-        for operation, selector in BUCKET_READ_GAPS:
-            snake = "".join(
-                ("_" + c.lower() if c.isupper() else c) for c in operation
-            ).lstrip("_")
+    @staticmethod
+    def sdk_name(operation):
+        return "".join(
+            ("_" + c.lower() if c.isupper() else c) for c in operation
+        ).lstrip("_")
+
+    def test_ten_configuration_reads_use_actual_sdk_serialization(self):
+        for operation, selector in BUCKET_CONFIGURATION_READS:
+            for params in [
+                {"Bucket": S["webBucket"]},
+                {"Bucket": S["webBucket"], "ExpectedBucketOwner": S["account"]},
+            ]:
+                with self.subTest(
+                    operation=operation, owner="ExpectedBucketOwner" in params
+                ):
+                    self.assertEqual(
+                        self.request("s3", self.sdk_name(operation), params),
+                        {"operation": "s3/" + operation, "write": False},
+                    )
+            for target in ["/?" + selector, "/?" + selector + "="]:
+                self.assertEqual(
+                    Policy(S, R, {}, phase="collect").request(
+                        "GET",
+                        S["webBucket"] + ".s3.us-east-2.amazonaws.com",
+                        target,
+                        {},
+                        b"",
+                    )["operation"],
+                    "s3/" + operation,
+                )
+
+    def test_ten_configuration_reads_reject_changed_sdk_requests(self):
+        for operation, selector in BUCKET_CONFIGURATION_READS:
+            base = {"Bucket": S["webBucket"]}
+            for params, extras in [
+                ({"Bucket": S["assetBucket"]}, {}),
+                ({"Bucket": "unapproved-bucket"}, {}),
+                ({**base, "ExpectedBucketOwner": "000000000000"}, {}),
+                (base, {"body": b"{}"}),
+                *[
+                    (base, {"method": method, "phase": "deploy"})
+                    for method in ["PUT", "DELETE", "POST", "HEAD"]
+                ],
+                (base, {"target_suffix": "&" + selector + "="}),
+                (base, {"target_suffix": "&other="}),
+                (base, {"target_suffix": "&versionId=other"}),
+                (base, {"target_suffix": "&x-id=" + operation}),
+                *[
+                    (base, {"headers": h})
+                    for h in [
+                        {"Content-Length": "1"},
+                        {"Transfer-Encoding": "chunked"},
+                        {"Content-Encoding": "gzip"},
+                        {"Range": "bytes=0-1"},
+                        {"If-Match": "fixture"},
+                        {"x-amz-request-payer": "requester"},
+                    ]
+                ],
+            ]:
+                with (
+                    self.subTest(operation=operation, params=params, extras=extras),
+                    self.assertRaises(Held),
+                ):
+                    self.request("s3", self.sdk_name(operation), params, **extras)
+
+    def test_ten_configuration_reads_reject_noncanonical_targets_and_scope(self):
+        for operation, selector in BUCKET_CONFIGURATION_READS:
+            for target in [
+                "/other?" + selector,
+                "//?" + selector,
+                "/%2F?" + selector,
+                "/?" + selector + "=value",
+                "/?" + selector + "=&",
+                "/?&" + selector,
+                "/?" + selector + "==",
+                "/?%" + format(ord(selector[0]), "02x") + selector[1:],
+                "/?" + selector.upper(),
+                " /?" + selector,
+                "/?" + selector[:1] + "\n" + selector[1:],
+                "/?" + selector + "\t",
+            ]:
+                with (
+                    self.subTest(operation=operation, target=target),
+                    self.assertRaises(Held),
+                ):
+                    Policy(S, R, {}, phase="collect").request(
+                        "GET",
+                        S["webBucket"] + ".s3.us-east-2.amazonaws.com",
+                        target,
+                        {},
+                        b"",
+                    )
+            for field, value in [("bucket", "*"), ("key", "*"), ("operation", "*")]:
+                scoped = copy.deepcopy(S)
+                next(
+                    x
+                    for x in scoped["approvedAdditionalReads"]
+                    if x["operation"] == operation
+                )[field] = value
+                with (
+                    self.subTest(operation=operation, field=field),
+                    self.assertRaises(Held),
+                ):
+                    Policy(scoped, R, {}, phase="collect").request(
+                        "GET",
+                        S["webBucket"] + ".s3.us-east-2.amazonaws.com",
+                        "/?" + selector,
+                        {},
+                        b"",
+                    )
+            for host in [
+                S["webBucket"] + ".s3.us-east-1.amazonaws.com",
+                S["webBucket"] + ".s3.amazonaws.com",
+            ]:
+                with (
+                    self.subTest(operation=operation, host=host),
+                    self.assertRaises(Held),
+                ):
+                    Policy(S, R, {}, phase="collect").request(
+                        "GET", host, "/?" + selector, {}, b""
+                    )
+
+    def test_unreviewed_bucket_operations_still_block_actual_sdk(self):
+        for operation, extra in [
+            ("get_bucket_tagging", {}),
+            ("get_bucket_ownership_controls", {}),
+            ("get_public_access_block", {}),
+            ("get_bucket_notification_configuration", {}),
+            (
+                "put_bucket_versioning",
+                {"VersioningConfiguration": {"Status": "Enabled"}},
+            ),
+            ("delete_bucket_cors", {}),
+        ]:
             with self.subTest(operation=operation), self.assertRaises(Held):
-                self.request("s3", snake, {"Bucket": S["webBucket"]})
+                self.request(
+                    "s3", operation, {"Bucket": S["webBucket"], **extra}, phase="deploy"
+                )
 
     def test_offline_response_oracle_is_model_exact_and_never_handles_writes(self):
         from fixture_bucket_reads import fixture_response, validate_model
 
         validate_model()
-        for operation, selector in BUCKET_READ_GAPS:
+        for operation, selector in BUCKET_CONFIGURATION_READS:
             request = SimpleNamespace(
                 method="GET",
                 host=S["webBucket"] + ".s3.us-east-2.amazonaws.com",

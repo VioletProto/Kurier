@@ -7,6 +7,20 @@ from botocore.session import Session
 from common import Held, canonical, digest, strict_json
 from uploads import Uploads, payload, xml
 
+# Exact reviewed frontend-bucket configuration selectors; each requires a pinned grant.
+BUCKET_CONFIGURATION_READS = [
+    ("GetBucketCors", "cors"),
+    ("GetBucketWebsite", "website"),
+    ("GetBucketVersioning", "versioning"),
+    ("GetBucketAccelerateConfiguration", "accelerate"),
+    ("GetBucketRequestPayment", "requestPayment"),
+    ("GetBucketLogging", "logging"),
+    ("GetBucketLifecycleConfiguration", "lifecycle"),
+    ("GetBucketReplication", "replication"),
+    ("GetBucketEncryption", "encryption"),
+    ("GetObjectLockConfiguration", "object-lock"),
+]
+
 
 class Models:
     def __init__(self):
@@ -219,7 +233,7 @@ class Policy:
             raise Held("upload-metadata-held")
         if service == "s3":
             return self.write_headers(
-                self.s3(method, host, u.path, u.query, h, body), h
+                self.s3(method, host, u.path, u.query, h, body, target), h
             )
         if service == "s3control":
             from s3control_tags import allowed
@@ -631,7 +645,7 @@ class Policy:
             )
         raise Held("unreviewed-mutation")
 
-    def s3(self, method, host, path, query, h, body):
+    def s3(self, method, host, path, query, h, body, target):
         bucket = host.removesuffix(".s3.us-east-2.amazonaws.com")
         key = unquote(path.lstrip("/"), errors="strict")
         if (
@@ -675,7 +689,18 @@ class Policy:
         # payloads, deletion keys and the existing generic object/version reads.
         baseline_key = "assets/index-CD_8s4hz.js"
         if bucket == self.s["webBucket"] and (
-            (not key and ("policy" in q or "acl" in q)) or key == baseline_key
+            (
+                not key
+                and any(
+                    selector in q
+                    for selector in [
+                        "policy",
+                        "acl",
+                        *[s for _, s in BUCKET_CONFIGURATION_READS],
+                    ]
+                )
+            )
+            or key == baseline_key
         ):
             selectors_ok = (
                 not body
@@ -716,6 +741,17 @@ class Policy:
                 and self.approved_read("s3", "GetBucketAcl", bucket=bucket, key="")
             ):
                 return {"operation": "s3/GetBucketAcl", "write": False}
+            for operation, selector in BUCKET_CONFIGURATION_READS:
+                if (
+                    method == "GET"
+                    and not key
+                    and q == {selector: ""}
+                    and target in {"/?" + selector, "/?" + selector + "="}
+                    and operation_id is None
+                    and selectors_ok
+                    and self.approved_read("s3", operation, bucket=bucket, key="")
+                ):
+                    return {"operation": "s3/" + operation, "write": False}
             if (
                 method == "GET"
                 and key == baseline_key
