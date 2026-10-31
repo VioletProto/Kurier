@@ -14,6 +14,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "preview-meter"))
 from artifacts import load_objects
 from authentication import sdk_pins
+from checkpoints import CAMPAIGN_ID, CLAIM_NAME
+from checkpoints import capture as capture_checkpoint
+from checkpoints import load as load_checkpoint
 from common import (
     CREDENTIAL_POLICY,
     PRIOR,
@@ -79,6 +82,13 @@ def stopped_parent():
             PRIOR,
             "authorization-from-303.json",
         ),
+        (
+            "project-environments-collection-from-390.json",
+            "stoppedZeroCall390",
+            390,
+            390,
+            "authorization-from-390.json",
+        ),
     ]:
         path = ROOT / "docs/development" / filename
         if sha(path) != pins[pin]:
@@ -112,7 +122,7 @@ def stopped_parent():
             or config["manifestSha256"] != record["manifestSha256"]
             or config["scopeSha256"] != record["scopeSha256"]
             or (
-                prior != 303
+                prior in {299, 301}
                 and rows
                 != [
                     (prior + 1, "collect", "signin/CreateOAuth2Token", 1, 200, 1),
@@ -139,6 +149,7 @@ def stopped_parent():
                     )
                 ]
             )
+            or (prior == 390 and rows != [])
             or sha(auth) != record["authorizationSha256"]
             or config["authorizationSha256"] != record["authorizationSha256"]
             or claim["authorizationSha256"] != record["authorizationSha256"]
@@ -461,8 +472,9 @@ def execute_phase(c, phase, approval, scope):
     c.finish(phase, {"sha256": sha(file)})
 
 
-def start(c, scope):
-    c.put("cacheStat", stopped_parent())
+def start(c, scope, checkpoint):
+    c.put("cacheStat", checkpoint["cacheStat"])
+    c.put("cacheMetadata", checkpoint["cacheMetadata"])
     c.begin("collect")
     creds = credentials(c, scope)
     directory, _summary = child(c, "collect", "collect-readers", {}, creds)
@@ -543,13 +555,22 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "action",
-        choices=["check", "template", "start", "prepare", "phase", "report"],
+        choices=[
+            "check",
+            "capture-checkpoint",
+            "template",
+            "start",
+            "prepare",
+            "phase",
+            "report",
+        ],
         nargs="?",
         default="check",
     )
     parser.add_argument("--campaign", type=Path)
     parser.add_argument("--authorization", type=Path)
     parser.add_argument("--approval", type=Path)
+    parser.add_argument("--checkpoint", type=Path)
     parser.add_argument(
         "--phase", choices=["close", "deploy", "verify", "activate", "final"]
     )
@@ -561,6 +582,15 @@ def main():
         if path is not None:
             path = path if path.is_absolute() else ROOT / path
             setattr(a, name, required_path(path, file=True))
+    if a.checkpoint is not None:
+        requested = a.checkpoint if a.checkpoint.is_absolute() else ROOT / a.checkpoint
+        directory = BASE / "checkpoints"
+        if (
+            requested.absolute() != requested.resolve()
+            or requested.parent.resolve() != directory.resolve()
+        ):
+            raise Held("checkpoint-location-or-alias-held")
+        a.checkpoint = requested
     if a.action == "report":
         if a.campaign is None or a.campaign.resolve().parent != BASE.resolve():
             raise Held("campaign-location-held")
@@ -590,11 +620,39 @@ def main():
             )
         )
         return
+    if a.action == "capture-checkpoint":
+        if git("status", "--porcelain", "--untracked-files=all"):
+            raise Held("clean-tooling-required")
+        if a.checkpoint is None or a.approval is None:
+            raise Held("checkpoint-and-explicit-approval-required")
+        capture_checkpoint(
+            scope, pins, git("rev-parse", "HEAD"), a.approval, a.checkpoint
+        )
+        print(
+            json.dumps(
+                {
+                    "checkpointCaptured": True,
+                    "historicalGrantContinuityEstablished": False,
+                    "awsCalls": 0,
+                }
+            )
+        )
+        return
+    checkpoint = None
+    checkpoint_sha = None
+    if a.action in {"template", "start"}:
+        if a.checkpoint is None:
+            raise Held("adopted-checkpoint-required")
+        checkpoint, checkpoint_sha = load_checkpoint(
+            a.checkpoint, scope, pins, git("rev-parse", "HEAD")
+        )
     if a.action == "template":
         print(
             json.dumps(
                 {
                     "authorized": False,
+                    "campaignId": CAMPAIGN_ID,
+                    "checkpointSha256": checkpoint_sha,
                     "prior": PRIOR,
                     "maximum": 1799,
                     "seconds": 3300,
@@ -618,9 +676,13 @@ def main():
     c = None
     try:
         if a.action == "start":
+            if a.campaign.name != CAMPAIGN_ID:
+                raise Held("fresh-bound-campaign-identity-required")
             auth = json.loads(a.authorization.read_bytes())
             expected = {
                 "authorized": True,
+                "campaignId": CAMPAIGN_ID,
+                "checkpointSha256": checkpoint_sha,
                 "prior": PRIOR,
                 "maximum": 1799,
                 "seconds": 3300,
@@ -633,13 +695,17 @@ def main():
             }
             if auth != expected:
                 raise Held("explicit-expanded-execution-authorization-required")
+            if (BASE / CLAIM_NAME).exists() or a.campaign.exists():
+                raise Held("single-use-campaign-claim-already-consumed")
             BASE.mkdir(mode=0o700, exist_ok=True)
             private_write(
-                BASE / "window-from-390.json",
+                BASE / CLAIM_NAME,
                 canonical(
                     {
                         "authorizationSha256": sha(a.authorization),
                         "directory": str(a.campaign.resolve()),
+                        "checkpointSha256": checkpoint_sha,
+                        "campaignId": CAMPAIGN_ID,
                     }
                 ),
             )
@@ -658,7 +724,9 @@ def main():
                 }
                 | {"authorizationSha256": sha(a.authorization)},
             )
-            start(c, scope)
+            c.put("campaignId", CAMPAIGN_ID)
+            c.put("checkpointSha256", checkpoint_sha)
+            start(c, scope, checkpoint)
         else:
             c = Campaign(a.campaign)
             if (

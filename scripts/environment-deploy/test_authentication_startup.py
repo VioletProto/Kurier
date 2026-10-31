@@ -18,12 +18,13 @@ from unittest.mock import patch
 import driver
 from auth_diagnostics import DeadlineExpired
 from botocore.awsrequest import AWSResponse
+from checkpoints import CAMPAIGN_ID, CLAIM_NAME, approval, capture, load
 from common import CREDENTIAL_POLICY, PRIOR, Campaign, Held
 from credential_diagnostics import diagnostic, projection
 from test_credentials import CANARY, SCOPE, Cache, Raw
 
 
-class StartupTests(unittest.TestCase):
+class StartupFixture(unittest.TestCase):
     def case(self, expiry=900):
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.home = root / "home"
@@ -45,13 +46,32 @@ class StartupTests(unittest.TestCase):
         self.checkpoint = [stat.st_ino, stat.st_size, stat.st_mtime_ns]
         self.base = root / "campaigns"
         self.base.mkdir()
-        self.path = self.base / "release-from-390"
+        self.path = self.base / CAMPAIGN_ID
         self.auth = self.base / "authorization-from-390.json"
-        self.pins = {"manifest": "a" * 64, "scope": "b" * 64}
+        self.pins = {
+            "manifest": "a" * 64,
+            "scope": "b" * 64,
+            "stoppedZeroCall390": "e" * 64,
+        }
+        folder = self.base / "checkpoints"
+        folder.mkdir(mode=0o700)
+        self.checkpoint_path = folder / "current.json"
+        self.approval_path = folder / "approval.json"
+        self.approval_path.write_text(
+            json.dumps(approval(SCOPE, self.pins, "c" * 40, self.checkpoint_path))
+        )
+        self.approval_path.chmod(0o600)
+        with patch("checkpoints.Path.home", return_value=self.home):
+            capture(
+                SCOPE, self.pins, "c" * 40, self.approval_path, self.checkpoint_path
+            )
+        _, checkpoint_sha = load(self.checkpoint_path, SCOPE, self.pins, "c" * 40)
         self.auth.write_text(
             json.dumps(
                 {
                     "authorized": True,
+                    "campaignId": CAMPAIGN_ID,
+                    "checkpointSha256": checkpoint_sha,
                     "prior": PRIOR,
                     "maximum": 1799,
                     "seconds": 3300,
@@ -113,7 +133,8 @@ class StartupTests(unittest.TestCase):
         self.assertEqual(c.get("credentialPhase"), "collect")
         raise Held("synthetic-stop-before-collector")
 
-    def run_driver(self, *extra):
+    @contextlib.contextmanager
+    def driver_context(self, *extra):
         with contextlib.ExitStack() as stack:
             for item in [
                 patch.object(driver, "BASE", self.base),
@@ -142,13 +163,18 @@ class StartupTests(unittest.TestCase):
                         str(self.path),
                         "--authorization",
                         str(self.auth),
+                        "--checkpoint",
+                        str(self.checkpoint_path),
                     ],
                 ),
                 *extra,
             ]:
                 stack.enter_context(item)
-            with self.assertRaises(Held):
-                driver.main()
+            yield
+
+    def run_driver(self, *extra):
+        with self.driver_context(*extra), self.assertRaises(Held):
+            driver.main()
         with contextlib.closing(Campaign(self.path)) as c:
             report = driver.report(c)
             self.config_after = {
@@ -162,7 +188,7 @@ class StartupTests(unittest.TestCase):
             self.assertIsNone(c.get("closedDeadline"))
             self.assertTrue(c.get("stopped"))
             self.assertEqual(report["unmatchedAttempts"], 0)
-            self.assertTrue((self.base / "window-from-390.json").is_file())
+            self.assertTrue((self.base / CLAIM_NAME).is_file())
             return report
 
     def held(self, report, code, stage):
@@ -174,6 +200,8 @@ class StartupTests(unittest.TestCase):
         self.assertFalse(self.child_reached)
         self.assertEqual(self.config_after["cacheStat"], self.checkpoint)
 
+
+class StartupTests(StartupFixture):
     def test_changed_size_and_mtime_stop_through_actual_start_without_adoption(self):
         self.case()
         self.token["refreshToken"] += "-outside-change"

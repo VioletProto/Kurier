@@ -27,6 +27,8 @@ GUARDS = frozenset(
         "authentication-boundary-required-no-replay",
         "inventoried-session-required",
         "session-changed-no-unmetered-refresh",
+        "campaign-cache-metadata-changed",
+        "credential-cache-response-mismatch",
         "authentication-service-held",
         "authentication-identity-held",
         "credential-phase-window-too-short",

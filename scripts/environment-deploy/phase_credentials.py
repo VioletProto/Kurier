@@ -16,6 +16,7 @@ from botocore.config import Config
 from botocore.credentials import LoginCredentialFetcher
 from botocore.httpsession import URLLib3Session
 from botocore.session import Session
+from checkpoints import stable_metadata
 from common import CREDENTIAL_GUARD_SECONDS, MAX_REFRESHES, Held
 from credential_diagnostics import diagnostic
 from policy import Stop
@@ -97,6 +98,8 @@ def credentials(c, scope):
         stage = "checkpoint-check"
         if c.get("cacheStat") != cache_stat(cache):
             raise Held("session-changed-no-unmetered-refresh")
+        if c.get("cacheMetadata") is not None:
+            stable_metadata(cache.fd, cache.path, c.get("cacheMetadata"))
         stage = "sdk-session"
         transport = Transport(AuthBudget(c), cache.original, URLLib3Session.send)
         session = Session(
@@ -160,6 +163,15 @@ def credentials(c, scope):
         stage = "validity-check"
         c.check()
         token = cache.load_token(cache.identity)["accessToken"]
+        if c.get("cacheMetadata") is not None and any(
+            token[key] != values[name]
+            for key, name in [
+                ("accessKeyId", "access_key"),
+                ("secretAccessKey", "secret_key"),
+                ("sessionToken", "token"),
+            ]
+        ):
+            raise Held("credential-cache-response-mismatch")
         validity = (
             datetime.datetime.fromisoformat(token["expiresAt"])
             - datetime.datetime.now(datetime.UTC)
@@ -170,6 +182,8 @@ def credentials(c, scope):
         ):
             raise Held("credential-phase-window-too-short")
         stage = "checkpoint-save"
+        if c.get("cacheMetadata") is not None:
+            c.put("cacheMetadata", stable_metadata(cache.fd, cache.path))
         c.put("cacheStat", cache_stat(cache))
         c.put("credentialPhase", phase)
         c.event("phase-authenticated", phase=phase, identityVerified=True)

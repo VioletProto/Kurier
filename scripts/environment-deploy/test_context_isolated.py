@@ -12,7 +12,7 @@ from isolation import launch
 def main():
     # The runner overlays BASE with a fresh private fixture directory. The real
     # stopped campaigns/claims never become writable or get opened by this test.
-    relative = Path(".build/project-environments-execution/release-from-390")
+    relative = Path(".build/project-environments-execution/release-390-cp1")
     directory = campaign_path(relative)
     assert Path.cwd() == ROOT
     assert (directory.parent / "fixture-only-overlay").read_text() == "synthetic"
@@ -33,9 +33,19 @@ def main():
         assert c.directory == directory and c.directory.is_absolute()
         c.begin("collect")
         (directory / "private-canary").write_text("must stay outside child")
-        (directory.parent / "window-from-390.json").write_text("synthetic-claim")
-        (directory.parent / "authorization-from-390.json").write_text(
+        (directory.parent / "window-from-390.json").write_text(
+            "historical-synthetic-claim"
+        )
+        (directory.parent / "window-from-390-checkpoint-1.json").write_text(
+            "synthetic-claim"
+        )
+        (directory.parent / "authorization-from-390-checkpoint-1.json").write_text(
             "synthetic-approval"
+        )
+        checkpoint_dir = directory.parent / "checkpoints"
+        checkpoint_dir.mkdir(mode=0o700)
+        (checkpoint_dir / "adopted-current.json").write_text(
+            "private-synthetic-checkpoint"
         )
         scope = json.loads(
             (
@@ -61,7 +71,7 @@ def main():
             "assert data=={'fixtureOnly':True,'canary':'context-read-proof'}\n"
             "try:\n ctx.open('a').close()\n raise AssertionError('context must be read only')\n"
             "except OSError as e:\n assert e.errno in [errno.EROFS,errno.EACCES]\n"
-            f"hidden={[str(directory / name) for name in ['campaign.sqlite', 'private-canary', 'collect-readers-context.json']] + [str(directory.parent / name) for name in ['window-from-390.json', 'authorization-from-390.json']]!r}\n"
+            f"hidden={[str(directory / name) for name in ['campaign.sqlite', 'private-canary', 'collect-readers-context.json']] + [str(directory.parent / name) for name in ['window-from-390.json', 'window-from-390-checkpoint-1.json', 'authorization-from-390-checkpoint-1.json', 'checkpoints/adopted-current.json']]!r}\n"
             "assert all(not Path(x).exists() for x in hidden)\n"
             "assert not (Path.home()/'.aws').exists()\n"
             "op=sys.argv[1:3]\n"
