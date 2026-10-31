@@ -1,5 +1,5 @@
 {
-  "toolingCommit": "42915e66301e272d28f5d9a3aac253239ca51e9e",
+  "toolingCommit": "83863b02132cbd3c70ace136261bde4ee30dd192",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 109,
   "accounting": {
@@ -14,7 +14,8 @@
     "newCallsForApprovedReadCorrection": 0,
     "newCallsForAclReadCorrection": 0,
     "newCallsForBucketReadCorrection": 0,
-    "newCallsForCp1Collection": 109
+    "newCallsForCp1Collection": 109,
+    "newCallsForPackagingReview": 0
   },
   "checks": {
     "unitTestsPassed": 17,
@@ -33,7 +34,8 @@
     "isolatedProductionPreviewCasesPassed": 1,
     "isolatedUnexpectedBucketReadCasesPassed": 1,
     "startupTestsThroughDriverMain": 19,
-    "checkpointCaptureAndClaimTests": 19
+    "checkpointCaptureAndClaimTests": 21,
+    "isolatedPackagingParentUmaskCasesPassed": 4
   },
   "hashes": {
     "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
@@ -53,7 +55,7 @@
   "newCampaignAuthorizationRequired": true,
   "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
   "credentialReview": "docs/development/project-environments-credential-renewal.md",
-  "verificationLogSha256": "41a0d153021e2585eb1d0ae790cacffd132044231d6773e5114c096588e558bd",
+  "verificationLogSha256": "2e62b0192783e545d18dbafb69293ddedb347d29dbed6a022de13997b4bdc64f",
   "contextReview": "docs/development/project-environments-context-path-correction.md",
   "contextMapping": {
     "destination": "/meter/phase-context.json",
@@ -167,11 +169,15 @@
   "historicalStartCommandConsumed": true,
   "credentialBoundaryReview": "docs/development/project-environments-credential-boundary-review.md",
   "currentCheckpointAdopted": true,
-  "checkpointApprovalRequiredBeforeFutureLiveWork": true,
+  "checkpointApprovalRequiredBeforeFutureLiveWork": false,
   "checkpointAdoptionReview": "docs/development/project-environments-checkpoint-adoption.md",
   "freshInitialCollectionAuthorizationRequired": true,
   "historicalGrantContinuityEstablished": false,
-  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-390-cp1 --authorization .build/project-environments-execution/authorization-from-390-checkpoint-1.json --checkpoint .build/project-environments-execution/checkpoints/adopted-current-1.json",
-  "reviewedAccountingFrom499Required": true,
-  "proposedCollectionCommandIsConsumedHistoricalCommand": true
+  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-499-p1 --authorization .build/project-environments-execution/authorization-from-499-packaging-1.json --checkpoint .build/project-environments-execution/checkpoints/carried-current-499-p1.json",
+  "reviewedAccountingFrom499Required": false,
+  "proposedCollectionCommandIsConsumedHistoricalCommand": false,
+  "packagingReview": "docs/development/project-environments-packaging-reproducibility.md",
+  "packagingChildUmask": "0077",
+  "carriedCheckpointPrepared": true,
+  "historicalCp1CommandConsumed": true
 }
