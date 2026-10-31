@@ -1,5 +1,5 @@
 {
-  "toolingCommit": "9eafa58928b5a2486f30bd7531f18c324d4fe534",
+  "toolingCommit": "fb6be7701289464ef1a7946986ceb26085d4c133",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 0,
   "accounting": {
@@ -30,7 +30,8 @@
     "isolatedOldFrontendSdkCasesPassed": 1,
     "transitionTestsWithActualLocalDbPassedInPriorReview": 90,
     "isolatedProductionPreviewCasesPassed": 1,
-    "isolatedUnexpectedBucketReadCasesPassed": 1
+    "isolatedUnexpectedBucketReadCasesPassed": 1,
+    "startupTestsThroughDriverMain": 19
   },
   "hashes": {
     "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
@@ -50,7 +51,7 @@
   "newCampaignAuthorizationRequired": true,
   "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
   "credentialReview": "docs/development/project-environments-credential-renewal.md",
-  "verificationLogSha256": "c201cf45247fa7884f68b500144126385029aa6577b2181af28bd430e78eff80",
+  "verificationLogSha256": "48ef6a2324c0084c3799c11bc7fb04e61eaf6fa14a38e4c1b276d61edb1a80fe",
   "contextReview": "docs/development/project-environments-context-path-correction.md",
   "contextMapping": {
     "destination": "/meter/phase-context.json",
@@ -161,5 +162,8 @@
   "latestExecutionRecord": "docs/development/project-environments-collection-from-390.json",
   "latestExecutionStatus": "authentication-boundary-held-before-first-physical-attempt",
   "stoppedCampaigns": 4,
-  "historicalStartCommandConsumed": true
+  "historicalStartCommandConsumed": true,
+  "credentialBoundaryReview": "docs/development/project-environments-credential-boundary-review.md",
+  "currentCheckpointAdopted": false,
+  "checkpointApprovalRequiredBeforeFutureLiveWork": true
 }

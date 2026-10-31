@@ -10,6 +10,12 @@ credential-boundary cause was not retained. No retry or later phase occurred.
 The [approved read-policy correction](project-environments-bucket-read-correction.md)
 remains implemented; its successful offline fixture is separate from live evidence.
 
+The [local credential-boundary review](project-environments-credential-boundary-review.md)
+adds safe diagnostic codes and fixes the demonstrated campaign/transport exception
+adapter. Current cache size/mtime differ from the retained checkpoint; no changed
+checkpoint is adopted. Historical zero-call causation remains unestablished.
+No live command is proposed until explicit checkpoint and consumed-claim review.
+
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
 [binding attestation cb74c992](project-environments-key-observation.md).
@@ -99,8 +105,9 @@ subwindow bounded by that original deadline. The $1 cumulative procedural
 allowance is unchanged; call headroom does not establish cost or capacity. Zero
 runtime requests, new identities, new projects or runtime fixtures are included.
 
-Use clean tooling commit **9eafa58928b5a2486f30bd7531f18c324d4fe534** from this PR
-and the clean detached release worktree at the unchanged source above. Required
+The historical run used clean tooling commit **9eafa58928b5a2486f30bd7531f18c324d4fe534** from this PR
+and the clean detached release worktree at the unchanged source above. Current
+local diagnostic tooling is **fb6be7701289464ef1a7946986ceb26085d4c133**. No live continuation is proposed. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
 sanitized records, all three original authorizations/claims, 300–390 attempt outcomes
@@ -262,7 +269,8 @@ shared attempts reconcile with fixture forwards. Eight cases cover shared
 accounting, call exhaustion, continuous campaign and phase deadlines, mutations, endpoint denial,
 exact upload success and altered upload rejection; descendant pulse files stop.
 17 offline policy/accounting tests, 22 credential regressions, nine path tests,
-18 policy/read/diagnostic regressions and 14 frontend checks pass (80 total).
+18 policy/read/diagnostic regressions, 19 driver/authentication-startup regressions
+and 14 frontend checks pass (99 total).
 The 12 isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
 successful bucket preview under the production policy (no observer), a separate
 unapproved GetBucketTagging denial before forwarding, plus an
