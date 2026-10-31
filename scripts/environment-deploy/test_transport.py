@@ -15,7 +15,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "preview-meter"))
-from common import ROOT, Campaign
+from common import PRIOR, ROOT, Campaign
 from driver import check, mounts
 from isolation import launch
 from uploads import payload
@@ -154,11 +154,11 @@ def source(path):
     return path
 
 
-def campaign(path, phase, maximum=416, seconds=3300):
+def campaign(path, phase, maximum=PRIOR + 26, seconds=3300):
     c = Campaign(
         path,
         create={
-            "prior": 390,
+            "prior": PRIOR,
             "maximum": maximum,
             "seconds": seconds,
             "manifestSha256": P["manifest"],
@@ -266,7 +266,7 @@ if len(sys.argv)>1:
                 c = campaign(
                     d / name,
                     phase,
-                    maximum=394 if name == "call-limit" else 416,
+                    maximum=PRIOR + (4 if name == "call-limit" else 26),
                     seconds=5 if name == "deadline" else 3300,
                 )
                 if name == "phase-deadline":
@@ -326,7 +326,7 @@ if len(sys.argv)>1:
                 if name in {"mutation", "endpoint", "deadline", "phase-deadline"}:
                     assert len(AUDIT) == old, (name, AUDIT[old:])
                 if name == "call-limit":
-                    assert c.get("count") == 394 and len(AUDIT) - old == 4
+                    assert c.get("count") == PRIOR + 4 and len(AUDIT) - old == 4
                 pulses = [
                     d / (name + "-child") / "work" / x
                     for x in ["root", "child", "grand"]
@@ -337,7 +337,7 @@ if len(sys.argv)>1:
                 results.append(
                     {
                         "case": name,
-                        "attempts": c.get("count") - 390,
+                        "attempts": c.get("count") - PRIOR,
                         "allDescendantsStopped": True,
                         "upstreamWrites": len(writes),
                         "actualUploadHashVerified": name == "upload-good",
@@ -351,7 +351,7 @@ if len(sys.argv)>1:
                 {
                     "fixtureOnly": True,
                     "awsCalls": 0,
-                    "priorUsageUnchanged": 390,
+                    "priorUsageUnchanged": PRIOR,
                     "cases": results,
                 }
             )

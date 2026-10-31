@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "preview-meter"))
 from common import Held
 from run import MITM, ROOT, port, sandbox, write
 
+PACKAGING_UMASK = 0o077
+
 
 def launch(
     source,
@@ -224,6 +226,7 @@ def launch(
         fd = os.open(raw, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         child = subprocess.Popen(
             sandbox(source, directory, command, env, extra_ro),
+            umask=PACKAGING_UMASK,
             env=env,
             stdout=fd,
             stderr=fd,

@@ -134,7 +134,7 @@ def main():
                 + json.dumps(S["webBucket"])
                 + ");return {bucket:bucket.id}}});"
             )
-            c = campaign(root / "campaign", "collect", maximum=450)
+            c = campaign(root / "campaign", "collect", maximum=PRIOR + 60)
             try:
                 context = c.directory / "collect-diff-context.json"
                 context.write_text(json.dumps({"sst": str(SST)}))
@@ -200,7 +200,7 @@ def main():
         ) as directory:
             root = Path(directory)
             src = source(root / "source")
-            c = campaign(root / "campaign", "collect", maximum=450)
+            c = campaign(root / "campaign", "collect", maximum=PRIOR + 60)
             try:
                 output = root / "unexpected-bucket-read"
                 result = launch(
@@ -250,7 +250,7 @@ def main():
         with tempfile.TemporaryDirectory(prefix="kurier-baseline-reads-") as directory:
             root = Path(directory)
             src = source(root / "source")
-            c = campaign(root / "campaign", "collect", maximum=450)
+            c = campaign(root / "campaign", "collect", maximum=PRIOR + 60)
             try:
                 code = (
                     """const fs=await import('node:fs');const{spawnSync}=await import('node:child_process');const{aws,frontendReady}=await import('"""

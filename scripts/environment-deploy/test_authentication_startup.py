@@ -18,7 +18,15 @@ from unittest.mock import patch
 import driver
 from auth_diagnostics import DeadlineExpired
 from botocore.awsrequest import AWSResponse
-from checkpoints import CAMPAIGN_ID, CLAIM_NAME, approval, capture, load
+from checkpoints import (
+    AUTHORIZATION_NAME,
+    CAMPAIGN_ID,
+    CLAIM_NAME,
+    approval,
+    capture,
+    load,
+    metadata,
+)
 from common import CREDENTIAL_POLICY, PRIOR, Campaign, Held
 from credential_diagnostics import diagnostic, projection
 from test_credentials import CANARY, SCOPE, Cache, Raw
@@ -44,14 +52,15 @@ class StartupFixture(unittest.TestCase):
         self.write_cache()
         stat = self.cache.stat()
         self.checkpoint = [stat.st_ino, stat.st_size, stat.st_mtime_ns]
+        self.parent_metadata = metadata(stat)
         self.base = root / "campaigns"
         self.base.mkdir()
         self.path = self.base / CAMPAIGN_ID
-        self.auth = self.base / "authorization-from-390.json"
+        self.auth = self.base / AUTHORIZATION_NAME
         self.pins = {
             "manifest": "a" * 64,
             "scope": "b" * 64,
-            "stoppedZeroCall390": "e" * 64,
+            "stoppedParent499": "e" * 64,
         }
         folder = self.base / "checkpoints"
         folder.mkdir(mode=0o700)
@@ -63,7 +72,12 @@ class StartupFixture(unittest.TestCase):
         self.approval_path.chmod(0o600)
         with patch("checkpoints.Path.home", return_value=self.home):
             capture(
-                SCOPE, self.pins, "c" * 40, self.approval_path, self.checkpoint_path
+                SCOPE,
+                self.pins,
+                "c" * 40,
+                self.approval_path,
+                self.checkpoint_path,
+                metadata(self.cache.stat()),
             )
         _, checkpoint_sha = load(self.checkpoint_path, SCOPE, self.pins, "c" * 40)
         self.auth.write_text(
@@ -140,7 +154,14 @@ class StartupFixture(unittest.TestCase):
                 patch.object(driver, "BASE", self.base),
                 patch.object(driver, "check", return_value=({}, SCOPE, self.pins)),
                 patch.object(driver, "pending_reads", return_value=[]),
-                patch.object(driver, "stopped_parent", return_value=self.checkpoint),
+                patch.object(
+                    driver,
+                    "stopped_parent",
+                    return_value={
+                        "cacheMetadata": self.parent_metadata,
+                        "cacheStat": self.checkpoint,
+                    },
+                ),
                 patch.object(
                     driver,
                     "git",
@@ -278,7 +299,7 @@ class StartupTests(StartupFixture):
         self.assertTrue(self.child_reached)
         self.assertIsNone(report["authenticationFailure"])
         self.assertEqual(self.sends, ["sts/GetCallerIdentity"])
-        self.assertEqual(report["cumulative"], 391)
+        self.assertEqual(report["cumulative"], (PRIOR + 1))
 
     def test_real_renewal_path_is_metered_and_preserves_original_deadlines(self):
         self.case(expiry=-1)
@@ -287,7 +308,7 @@ class StartupTests(StartupFixture):
         self.assertEqual(
             self.sends, ["signin/CreateOAuth2Token", "sts/GetCallerIdentity"]
         )
-        self.assertEqual(report["cumulative"], 392)
+        self.assertEqual(report["cumulative"], (PRIOR + 2))
         self.assertIsNone(report["authenticationFailure"])
         self.assertEqual(self.config_after["credentialPhase"], "collect")
         self.assertNotEqual(self.config_after["cacheStat"], self.checkpoint)
@@ -301,7 +322,7 @@ class StartupTests(StartupFixture):
             report["authenticationFailure"],
             {"code": "authentication-identity-held", "stage": "sts"},
         )
-        self.assertEqual(report["cumulative"], 391)
+        self.assertEqual(report["cumulative"], (PRIOR + 1))
 
     def test_failed_renewal_is_metered_once_without_cache_adoption(self):
         self.case(expiry=-1)
@@ -309,7 +330,7 @@ class StartupTests(StartupFixture):
         report = self.run_driver()
         self.assertFalse(self.child_reached)
         self.assertEqual(self.sends, ["signin/CreateOAuth2Token"])
-        self.assertEqual(report["cumulative"], 391)
+        self.assertEqual(report["cumulative"], (PRIOR + 1))
         self.assertEqual(
             report["authenticationFailure"],
             {

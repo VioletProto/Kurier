@@ -21,7 +21,7 @@ from isolation import launch
 
 class PathTests(unittest.TestCase):
     def test_documented_relative_campaign_resolves_from_repository(self):
-        relative = Path(".build/project-environments-execution/release-390-cp1")
+        relative = Path(".build/project-environments-execution/release-499-p1")
         self.assertEqual(campaign_path(relative), ROOT / relative)
 
     def test_outside_and_parent_traversal_campaign_paths_hold(self):

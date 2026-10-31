@@ -16,6 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--context-only", action="store_true")
     parser.add_argument("--denial-only", action="store_true")
+    parser.add_argument("--packaging-only", action="store_true")
     options = parser.parse_args()
     if not (RELEASE / ".git").exists():
         raise SystemExit("pinned-release-worktree-missing")
@@ -79,6 +80,21 @@ def main():
         AWS_SHARED_CREDENTIALS_FILE="/dev/null",
         AWS_EC2_METADATA_DISABLED="true",
     )
+    if options.packaging_only or not (options.context_only or options.denial_only):
+        packaging = subprocess.run(
+            [
+                *args,
+                "--",
+                sys.executable,
+                "-B",
+                str(ROOT / "scripts/environment-deploy/test_packaging_isolated.py"),
+            ],
+            check=False,
+            cwd=ROOT,
+            env=env,
+        )
+        if packaging.returncode or options.packaging_only:
+            return packaging.returncode
     if not options.context_only and not options.denial_only:
         first = subprocess.run(
             [

@@ -14,7 +14,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "preview-meter"))
 from artifacts import load_objects
 from authentication import sdk_pins
-from checkpoints import CAMPAIGN_ID, CLAIM_NAME
+from checkpoints import CAMPAIGN_ID, CLAIM_NAME, private_json
 from checkpoints import capture as capture_checkpoint
 from checkpoints import load as load_checkpoint
 from common import (
@@ -79,7 +79,7 @@ def stopped_parent():
             "project-environments-collection-from-303.json",
             "stoppedParent390",
             303,
-            PRIOR,
+            390,
             "authorization-from-303.json",
         ),
         (
@@ -89,6 +89,13 @@ def stopped_parent():
             390,
             "authorization-from-390.json",
         ),
+        (
+            "project-environments-collection-390-cp1.json",
+            "stoppedParent499",
+            390,
+            499,
+            "authorization-from-390-checkpoint-1.json",
+        ),
     ]:
         path = ROOT / "docs/development" / filename
         if sha(path) != pins[pin]:
@@ -97,7 +104,14 @@ def stopped_parent():
         directory = campaign_path(Path(record["campaign"]))
         auth = directory.parent / auth_name
         claim = json.loads(
-            (directory.parent / f"window-from-{prior}.json").read_bytes()
+            (
+                directory.parent
+                / (
+                    "window-from-390-checkpoint-1.json"
+                    if total == 499
+                    else f"window-from-{prior}.json"
+                )
+            ).read_bytes()
         )
         wal = directory / "campaign.sqlite-wal"
         if wal.exists() and wal.stat().st_size:
@@ -130,7 +144,8 @@ def stopped_parent():
                 ]
             )
             or (
-                prior == 303
+                prior in {303, 390}
+                and total != 390
                 and rows
                 != [
                     (
@@ -149,7 +164,7 @@ def stopped_parent():
                     )
                 ]
             )
-            or (prior == 390 and rows != [])
+            or (prior == 390 and total == 390 and rows != [])
             or sha(auth) != record["authorizationSha256"]
             or config["authorizationSha256"] != record["authorizationSha256"]
             or claim["authorizationSha256"] != record["authorizationSha256"]
@@ -158,12 +173,33 @@ def stopped_parent():
         ):
             raise Held("stopped-parent-accounting-held")
         if (
-            prior == 303
+            prior in {303, 390}
+            and total != 390
             and sha(ROOT / record["attemptProjection"]["path"])
             != record["attemptProjection"]["sha256"]
         ):
             raise Held("stopped-parent-projection-held")
-        checkpoint = config["cacheStat"]
+        checkpoint = {
+            "cacheStat": config["cacheStat"],
+            "cacheMetadata": config.get("cacheMetadata"),
+        }
+        if total == 499:
+            checkpoint_path = BASE / "checkpoints/adopted-current-1.json"
+            _old_checkpoint, old_sha = private_json(checkpoint_path)
+            old_auth = json.loads(auth.read_bytes())
+            if (
+                old_sha != config.get("checkpointSha256")
+                or old_auth.get("checkpointSha256") != old_sha
+                or claim.get("checkpointSha256") != old_sha
+                or not checkpoint["cacheMetadata"]
+                or config.get("credentialPhase") != "collect"
+                or config.get("authenticationFailure") is not None
+                or checkpoint["cacheStat"]
+                != [
+                    checkpoint["cacheMetadata"][k] for k in ("inode", "size", "mtimeNs")
+                ]
+            ):
+                raise Held("stopped-parent-checkpoint-held")
     return checkpoint
 
 
@@ -246,6 +282,9 @@ def check():
         raise Held("authentication-sdk-pins-held") from None
     import botocore
 
+    for rel, expected in pins["packager"].items():
+        if sha(ROOT / rel) != expected:
+            raise Held("pinned-packager-held")
     for rel, h in pins["models"].items():
         if sha(Path(botocore.__file__).parent / rel) != h:
             raise Held("execution-model-held")
@@ -557,7 +596,7 @@ def main():
         "action",
         choices=[
             "check",
-            "capture-checkpoint",
+            "prepare-checkpoint",
             "template",
             "start",
             "prepare",
@@ -620,13 +659,18 @@ def main():
             )
         )
         return
-    if a.action == "capture-checkpoint":
+    if a.action == "prepare-checkpoint":
         if git("status", "--porcelain", "--untracked-files=all"):
             raise Held("clean-tooling-required")
         if a.checkpoint is None or a.approval is None:
             raise Held("checkpoint-and-explicit-approval-required")
         capture_checkpoint(
-            scope, pins, git("rev-parse", "HEAD"), a.approval, a.checkpoint
+            scope,
+            pins,
+            git("rev-parse", "HEAD"),
+            a.approval,
+            a.checkpoint,
+            stopped_parent()["cacheMetadata"],
         )
         print(
             json.dumps(

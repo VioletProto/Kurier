@@ -27,5 +27,13 @@
     "sha256": "1097a9a431ec3373597e77f34080f0b429d1e374d8dbdaed156928fb0b1bc649",
     "commit": "69f31efcfe42097353d24c33b54d93c5dabd1c17"
   },
-  "stoppedZeroCall390": "ddae1ac820ef5e8c7629c6334f17f53f7512220ecfd42fed189e8267f84540b4"
+  "stoppedZeroCall390": "ddae1ac820ef5e8c7629c6334f17f53f7512220ecfd42fed189e8267f84540b4",
+  "packager": {
+    ".sst/platform/src/components/aws/function.ts": "38dba7dec5ed34abc9593f352d5ae91079644a935366f9e04425453612f10c7c",
+    ".sst/platform/node_modules/archiver/lib/core.js": "a8b28e116fef412d7503f7cc4a64b01d3d2f747a493b3d83dd97bd732ffc8b92",
+    ".sst/platform/node_modules/archiver/lib/plugins/zip.js": "3bbf3d7ae284820ab28ff2ae105f75fa4436f4edb2778f664abb7b56ad4a7090",
+    ".sst/platform/node_modules/zip-stream/index.js": "29ea55ff9cf0007853d4ac51936278547299a601a00980bb373c002f21a85186",
+    ".sst/platform/node_modules/compress-commons/lib/archivers/zip/zip-archive-output-stream.js": "88004d1128647ab0fd8da675ccd68c4ac1bf95fc593120d467d1ce89aa5e3733"
+  },
+  "stoppedParent499": "f7978c0bb8dbe388a0fc0a0514f2b60d27402171d3606d81fc380c2926c96c96"
 }

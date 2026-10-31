@@ -12,9 +12,9 @@ from common import PRIOR, Held, canonical, digest, private_write, strict_json
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-CAMPAIGN_ID = "release-390-cp1"
-CLAIM_NAME = "window-from-390-checkpoint-1.json"
-AUTHORIZATION_NAME = "authorization-from-390-checkpoint-1.json"
+CAMPAIGN_ID = "release-499-p1"
+CLAIM_NAME = "window-from-499-packaging-1.json"
+AUTHORIZATION_NAME = "authorization-from-499-packaging-1.json"
 SOURCE = "44f1fb79d943501c95e06fcc1a6114111a7c1ea4"
 
 
@@ -68,14 +68,14 @@ def private_json(path):
 def approval(scope, pins, commit, checkpoint_path):
     return {
         "authorized": True,
-        "action": "capture-fresh-current-cache-checkpoint",
+        "action": "carry-forward-metered-cache-checkpoint",
         "toolingCommit": commit,
         "releaseSourceCommit": SOURCE,
         "identityArn": scope["identityArn"],
         "account": scope["account"],
         "manifestSha256": pins["manifest"],
         "scopeSha256": pins["scope"],
-        "zeroCallParentSha256": pins["stoppedZeroCall390"],
+        "stoppedParentSha256": pins["stoppedParent499"],
         "campaignId": CAMPAIGN_ID,
         "checkpointPath": str(checkpoint_path),
         "prior": PRIOR,
@@ -83,6 +83,8 @@ def approval(scope, pins, commit, checkpoint_path):
         "proceduralAllowanceUsd": 1,
         "historicalInspectionTupleAvailable": False,
         "historicalGrantContinuityEstablished": False,
+        "parentCheckpointMatchRequired": True,
+        "cacheDriftAdoptionAuthorized": False,
     }
 
 
@@ -117,7 +119,7 @@ def validate_cache(raw, scope):
         raise Held("checkpoint-cache-key-held")
 
 
-def capture(scope, pins, commit, approval_path, destination):
+def capture(scope, pins, commit, approval_path, destination, expected_metadata):
     authorized, approval_sha = private_json(approval_path)
     if authorized.get("authorized") is not True or authorized != approval(
         scope, pins, commit, destination
@@ -162,7 +164,9 @@ def capture(scope, pins, commit, approval_path, destination):
             or metadata(config_path.stat()) != config_before
         ):
             raise Held("checkpoint-changed-during-capture")
-        before = stable_metadata(fd, path)
+        if expected_metadata is None:
+            raise Held("verified-parent-checkpoint-required")
+        before = stable_metadata(fd, path, expected_metadata)
         raw = os.pread(fd, before["size"] + 1, 0)
         validate_cache(raw, scope)
         stable_metadata(fd, path, before)
