@@ -1,12 +1,14 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest execution:** [collection from 303 remains stopped at 390](project-environments-collection-from-303.md).
-The [approved bucket-read correction](project-environments-bucket-read-correction.md)
-implements exactly the ten configuration reads approved at review `69f31ef`.
-The actual preview-entrypoint fixture succeeds under the amended production proxy;
-all 22 synthetic forwards reconcile. No further gap was observed in the minimal
-bucket fixture; `pendingScopedReads` is empty. Live initial collection still needs
-separate authorization. No AWS calls or live start occurred.
+**Latest execution:** [initial collection from 390 stopped at the authentication boundary](project-environments-collection-from-390.md).
+The authorized command ran once from clean tooling `9eafa58928b5a2486f30bd7531f18c324d4fe534`;
+no physical attempt was admitted. Cumulative usage remains **390/1,799**.
+The consumed `window-from-390.json`, bound authorization and stopped campaign are
+retained. Reader collection, old-frontend readiness and preview did not start;
+no fresh baseline, diff or generated-artifact agreement is available. The exact
+credential-boundary cause was not retained. No retry or later phase occurred.
+The [approved read-policy correction](project-environments-bucket-read-correction.md)
+remains implemented; its successful offline fixture is separate from live evidence.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -18,7 +20,7 @@ and target/runtime execution require further authorization.
 
 Accounting remains **390/1,799**, with **1,409** additional attempts within the
 approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
-billing remains unmeasured. All three stopped campaigns and consumed claims are
+billing remains unmeasured. All four stopped campaigns and consumed claims are
 preserved. No AWS call, renewal, preview rerun or live phase occurred in this
 local correction. Historical records and adopted/rollback bytes are unchanged.
 
@@ -81,7 +83,13 @@ activate also bind engine approval hashes. Sequence is collect → close →
 deploy → verify → activate → final. Every phase stops for review. There is no
 loop that automatically advances phases.
 
-## Proposed future execution and allowances
+## Historical execution proposal and allowances
+
+The initial command below was authorized and ran once, then stopped before the
+first physical request. It is retained as execution history, not a rerunnable
+proposal. All four stopped campaigns and consumed claims must remain intact.
+No future live continuation is proposed; review the credential boundary locally
+before considering separately authorized work.
 
 Proposal only: a separately authorized new campaign starts from **390**, retaining
 all prior usage and the approved **1,799** cumulative ceiling, with at most
@@ -157,8 +165,10 @@ no broad campaign-directory mount or generic command override is introduced.
 Exact commands below are proposals. Do not run `start` or `phase` until the
 corresponding authorization has been granted. Preserve `release-from-299`,
 `release-from-301`, `release-from-303`, all three original authorization files and
-their consumed window claims. The proposed `release-from-390`,
-`authorization-from-390.json` and `window-from-390.json` must be absent. Never reuse or remove a consumed claim.
+their consumed window claims. The `release-from-390` campaign,
+`authorization-from-390.json` and consumed `window-from-390.json` now exist and
+must be preserved. Never reuse or remove a consumed claim. The template/start
+commands below are historical; do not rerun them or overwrite these files.
 
 ```sh
 python3 -B scripts/environment-deploy/driver.py check

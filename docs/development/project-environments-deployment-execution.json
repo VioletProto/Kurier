@@ -157,5 +157,9 @@
   "readCorrection": "docs/development/project-environments-approved-read-correction.md",
   "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235",
   "aclReadCorrection": "docs/development/project-environments-acl-read-correction.md",
-  "bucketReadCorrection": "docs/development/project-environments-bucket-read-correction.md"
+  "bucketReadCorrection": "docs/development/project-environments-bucket-read-correction.md",
+  "latestExecutionRecord": "docs/development/project-environments-collection-from-390.json",
+  "latestExecutionStatus": "authentication-boundary-held-before-first-physical-attempt",
+  "stoppedCampaigns": 4,
+  "historicalStartCommandConsumed": true
 }

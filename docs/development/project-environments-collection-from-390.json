@@ -1,0 +1,76 @@
+{
+  "status": "authentication-boundary-held-before-first-physical-attempt",
+  "toolingCommit": "9eafa58928b5a2486f30bd7531f18c324d4fe534",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "campaign": ".build/project-environments-execution/release-from-390",
+  "authorizationSha256": "69724fbe24b0fca27d0b52431a6099effec667694344272c52ec177a6be402c1",
+  "manifestSha256": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+  "scopeSha256": "760c1c25db84fedab09a440d5399a67f6e7a2c749d8fb5ec1e0d934b17411f72",
+  "accounting": {
+    "prior": 390,
+    "newPhysicalAttempts": 0,
+    "cumulative": 390,
+    "authorizedCeiling": 1799,
+    "remainingAttemptHeadroom": 1409,
+    "unmatchedAttempts": 0,
+    "httpStatuses": {},
+    "failedTransports": 0,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "window": {
+    "originalSeconds": 3300,
+    "phaseMaximumSeconds": 240,
+    "elapsedSecondsAtStop": 0.014133884,
+    "campaignRemainingSecondsAtStop": 3299.985866116,
+    "phaseRemainingSecondsAtStop": 239.997215306,
+    "closedWindowStarted": false,
+    "remainingTimeIsContinuationAuthority": false
+  },
+  "authentication": {
+    "refreshAttempts": 0,
+    "stsAttempts": 0,
+    "credentialBoundaryCompleted": false,
+    "backgroundOrMidPhaseRenewals": 0,
+    "exactRootCauseEstablished": false,
+    "retainedStopReasons": [
+      "phase-authentication-held-no-retry",
+      "phase-failed-or-uncertain-no-restart"
+    ]
+  },
+  "readerSnapshot": {
+    "started": false,
+    "completed": false,
+    "baselineEstablished": false,
+    "quiescenceEstablished": false,
+    "oldFrontendReadinessEstablished": false,
+    "configurationIamComparisonsAvailable": false
+  },
+  "preview": {
+    "started": false,
+    "complete": false,
+    "completeResourceDiffAvailable": false,
+    "review8ProjectionAgreementEstablished": false,
+    "generatedArchiveCount": 0,
+    "allFourArchiveAgreementEstablished": false,
+    "generatedFrontendAgreementEstablished": false,
+    "collectionProofProduced": false
+  },
+  "operationCounts": [],
+  "localChecksPassed": true,
+  "boundAuthorizationAndConsumedClaimAgree": true,
+  "campaignStopped": true,
+  "collectionCompleted": false,
+  "laterPhasesRun": [],
+  "infrastructureOrStateWrites": 0,
+  "runtimeRequests": 0,
+  "automaticRestart": false,
+  "rawDiagnosticsOrCredentialMaterialPublished": false,
+  "preservation": {
+    "historicalCampaignsAndClaimsRetained": true,
+    "newConsumedClaimRetained": true,
+    "adoptedAndRollbackBytesVerified": true,
+    "toolingAndSourceUnchanged": true
+  },
+  "nextDecision": "Review the credential boundary locally using retained metadata and pinned source. Exact root cause is not retained. Do not replay this campaign, reuse its consumed claim or treat time/call headroom as continuation authority. Any further live attempt requires separate review and authorization."
+}
