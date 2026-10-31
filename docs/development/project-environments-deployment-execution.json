@@ -1,19 +1,20 @@
 {
   "toolingCommit": "42915e66301e272d28f5d9a3aac253239ca51e9e",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
-  "awsCalls": 0,
+  "awsCalls": 109,
   "accounting": {
-    "cumulative": 390,
+    "cumulative": 499,
     "authorizedCeiling": 1799,
     "billingMeasured": false,
     "proceduralAllowanceUsd": 1,
-    "remainingAttempts": 1409,
+    "remainingAttempts": 1300,
     "newCallsForCredentialCorrection": 0,
     "newCallsForContextCorrection": 0,
     "newCallsForDenialReview": 0,
     "newCallsForApprovedReadCorrection": 0,
     "newCallsForAclReadCorrection": 0,
-    "newCallsForBucketReadCorrection": 0
+    "newCallsForBucketReadCorrection": 0,
+    "newCallsForCp1Collection": 109
   },
   "checks": {
     "unitTestsPassed": 17,
@@ -160,15 +161,17 @@
   "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235",
   "aclReadCorrection": "docs/development/project-environments-acl-read-correction.md",
   "bucketReadCorrection": "docs/development/project-environments-bucket-read-correction.md",
-  "latestExecutionRecord": "docs/development/project-environments-collection-from-390.json",
-  "latestExecutionStatus": "authentication-boundary-held-before-first-physical-attempt",
-  "stoppedCampaigns": 4,
+  "latestExecutionRecord": "docs/development/project-environments-collection-390-cp1.json",
+  "latestExecutionStatus": "reader-and-preview-complete-archive-byte-agreement-held",
+  "stoppedCampaigns": 5,
   "historicalStartCommandConsumed": true,
   "credentialBoundaryReview": "docs/development/project-environments-credential-boundary-review.md",
   "currentCheckpointAdopted": true,
-  "checkpointApprovalRequiredBeforeFutureLiveWork": false,
+  "checkpointApprovalRequiredBeforeFutureLiveWork": true,
   "checkpointAdoptionReview": "docs/development/project-environments-checkpoint-adoption.md",
   "freshInitialCollectionAuthorizationRequired": true,
   "historicalGrantContinuityEstablished": false,
-  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-390-cp1 --authorization .build/project-environments-execution/authorization-from-390-checkpoint-1.json --checkpoint .build/project-environments-execution/checkpoints/adopted-current-1.json"
+  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-390-cp1 --authorization .build/project-environments-execution/authorization-from-390-checkpoint-1.json --checkpoint .build/project-environments-execution/checkpoints/adopted-current-1.json",
+  "reviewedAccountingFrom499Required": true,
+  "proposedCollectionCommandIsConsumedHistoricalCommand": true
 }

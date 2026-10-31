@@ -1,23 +1,21 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest execution:** [initial collection from 390 stopped at the authentication boundary](project-environments-collection-from-390.md).
-The authorized command ran once from clean tooling `9eafa58928b5a2486f30bd7531f18c324d4fe534`;
-no physical attempt was admitted. Cumulative usage remains **390/1,799**.
-The consumed `window-from-390.json`, bound authorization and stopped campaign are
-retained. Reader collection, old-frontend readiness and preview did not start;
-no fresh baseline, diff or generated-artifact agreement is available. The exact
-credential-boundary cause was not retained. No retry or later phase occurred.
-The [approved read-policy correction](project-environments-bucket-read-correction.md)
-remains implemented; its successful offline fixture is separate from live evidence.
+**Latest execution:** [release-390-cp1 stopped on whole-archive byte mismatch](project-environments-collection-390-cp1.md).
+The authorized command ran once from clean tooling `42915e66301e272d28f5d9a3aac253239ca51e9e`
+and the adopted checkpoint. Authentication, old-frontend readiness, reader snapshot
+and complete guarded preview passed. The fresh change list has 60 entries / 44
+resources and matches review 8's projection. All four ZIP hashes differ from adoption;
+all uncompressed members match, with raw differences confined to ZIP external
+attributes. No archive was repaired or substituted; no collection proof or later
+phase followed. **390 + 109 = 499/1,799**. All five campaigns/claims and original
+checkpoints remain preserved. No future live command is proposed.
 
-The [fresh private checkpoint](project-environments-checkpoint-adoption.md) has now
-been captured under the user's explicit fresh-capture authorization. The unavailable
-historical inspection tuple and historical grant continuity remain unestablished.
-Current tooling **42915e66301e272d28f5d9a3aac253239ca51e9e** binds the private checkpoint to the single new campaign
-`release-390-cp1` and claim `window-from-390-checkpoint-1.json`, carrying 390/1,799.
-Only local capture is complete; no live collection is authorized or started.
-Use the linked checkpoint packet for the exact new proposed command. The old
-`release-from-390` start below is consumed historical evidence and must not rerun.
+The [fresh checkpoint packet](project-environments-checkpoint-adoption.md) and its
+proposed start command are now historical: `release-390-cp1` and
+`window-from-390-checkpoint-1.json` are consumed and cannot be reused. Frozen tooling
+still describes prior 390; terminal receipts establish 499. Future work needs a local
+ZIP-attribute review, accounting from 499, separately reviewed checkpoint/claim
+handling and explicit authorization. Historical grant continuity remains unknown.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -27,11 +25,11 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting remains **390/1,799**, with **1,409** additional attempts within the
+Accounting is now **499/1,799**, with **1,300** arithmetic attempt headroom within the
 approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
-billing remains unmeasured. All four stopped campaigns and consumed claims are
-preserved. No AWS call, renewal, preview rerun or live phase occurred in this
-local correction. Historical records and adopted/rollback bytes are unchanged.
+billing remains unmeasured. All five stopped campaigns and consumed claims are
+preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
+No later phase or infrastructure/state write occurred. Historical records and adopted/rollback bytes are unchanged.
 
 ## Artifacts and byte enforcement
 
@@ -40,8 +38,10 @@ SHA/commit. API/cleanup ZIP SHA256 is
 `58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373`;
 worker/controlled endpoint ZIP SHA256 is
 `82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098`.
-No ZIP was regenerated or modified during this task. Historical rollback bytes
-and evidence are checked by the existing preparation proof verifier.
+No adopted or rollback ZIP was modified. The cp1 preview generated four separate
+ZIPs whose hashes differ only because of external-attribute bytes; they remain
+private evidence and are not adopted. Historical rollback bytes and evidence
+are checked by the existing preparation proof verifier.
 
 The host loads these exact bytes independently of the child. PutObject and
 multipart bodies must match the reviewed payload, including complete ordered
