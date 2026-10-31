@@ -1,0 +1,72 @@
+{
+  "status": "three-approved-read-grants-implemented-next-read-held",
+  "toolingCommit": "515a4ae2100fad952c519b288f0369aeca5b3762",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "approvalReferenceCommit": "8a14fad485a8869cda8262b121e2842f979a66b6",
+  "scopeSha256": "9289a837814f1f27d21d01893a8074ba12844f12647923536134486e6466d5cb",
+  "approvedAdditionalReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketPolicy",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": "assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "cloudfront-keyvaluestore",
+      "operation": "GetKey",
+      "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+      "key": "76ef:/assets/index-CD_8s4hz.js"
+    }
+  ],
+  "approvalReviewPin": {
+    "path": "docs/development/project-environments-preview-denial-review.json",
+    "sha256": "83f608905fe7a6950524b389a1ef7a84b6de2f39bae53b09a02b8967f74a4fbc",
+    "commit": "8a14fad485a8869cda8262b121e2842f979a66b6"
+  },
+  "awsCalls": 0,
+  "accounting": {
+    "cumulative": 390,
+    "authorizedCeiling": 1799,
+    "remainingAttempts": 1409,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "checks": {
+    "executionFrontendTestsPassed": 74,
+    "isolatedCasesPassed": 11,
+    "repositoryVerifyPassed": true,
+    "ruffPassed": true,
+    "sdkSerializationPositiveAndNegativePassed": true
+  },
+  "fixtures": {
+    "actualPreviewEntrypoint": true,
+    "approvedBucketPolicyReadPassed": true,
+    "nextUnapprovedRead": "s3/GetBucketAcl",
+    "nextReadDeniedBeforeForward": true,
+    "actualOldFrontendSdkCheckPassed": true,
+    "unexpectedObjectDeniedBeforeForward": true,
+    "liveCredentialsUsed": false
+  },
+  "pendingScopedReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketAcl",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    }
+  ],
+  "additionalUnapprovedReadsGranted": false,
+  "uploadOrDeletionTargetsExpanded": false,
+  "startBlockedBeforeAuthenticationAndClaim": true,
+  "liveStartRun": false,
+  "allLaterPhasesHeld": true,
+  "allStoppedCampaignsAndClaimsPreserved": true,
+  "adoptedAndRollbackBytesPreserved": true,
+  "proposedCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-from-390 --authorization .build/project-environments-execution/authorization-from-390.json"
+}

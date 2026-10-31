@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "historicalStopAttribution": "unestablished",
+  "liveAwsCallsThisTask": 0,
+  "previewRerun": false,
+  "policyAmendmentProposed": false,
+  "policySha256": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+  "originalEventLogSha256": "659f0582ac75156867c3f1acd65e33fa3ea78e3b4b5645c1fed1c76a35ff9258",
+  "originalPrivateLedgerSha256": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+  "publishedStoppedLedgerSha256": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+  "originalInventoryLedgerSha256": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+  "cumulativeUsage": {
+    "inventory": 135,
+    "stoppedPreview": 30,
+    "total": 165,
+    "ceiling": 500,
+    "arithmeticHeadroom": 335,
+    "newWindowAuthorized": false
+  },
+  "recordedFacts": [
+    "endpoint-held at count165",
+    "hostname and hook phase were not recorded",
+    "raw stdout and proxy stderr were empty",
+    "no rejected-request identifier links provider logs to the denial"
+  ],
+  "sourceDerivedFacts": [
+    {
+      "fact": "port443 was required before either endpoint-held path",
+      "classification": "deduction from the exact reviewed guard flow, not retained packet metadata"
+    },
+    {
+      "fact": "lambda.amazonaws.com is used as an IAM role service principal",
+      "classification": "local installed source; not evidence of an outbound request"
+    },
+    {
+      "fact": "installed platform can construct a us-east-1 provider for conditional certificate/WAF/edge paths",
+      "classification": "possible source path only; retained provider declaration is default us-east-2"
+    }
+  ],
+  "hypothesesNotEstablished": [
+    "a regional/global endpoint alias mismatch",
+    "a credential/SDK/provider default endpoint difference",
+    "a source/configuration hostname being mistaken for the rejected destination"
+  ],
+  "localSourceInspection": [
+    {
+      "path": ".sst/platform/src/components/aws/function.ts",
+      "sha256": "38dba7dec5ed34abc9593f352d5ae91079644a935366f9e04425453612f10c7c",
+      "versionLimit": "installed platform4.17.1"
+    },
+    {
+      "path": ".sst/platform/src/components/aws/helpers/provider.ts",
+      "sha256": "daeec50ee71db4babcdc927695f1ddac3ba172d2c276072a4e91e8d733664cde",
+      "versionLimit": "installed platform4.17.1"
+    },
+    {
+      "path": ".sst/platform/src/components/aws/cdn.ts",
+      "sha256": "e2bbf9435cf694a58d90cd1c1c7713b353b827d11335fd4a9fe0e04f0a5b2322",
+      "versionLimit": "installed platform4.17.1"
+    },
+    {
+      "path": "/home/king/go/pkg/mod/github.com/sst/sst/v3@v3.19.3/pkg/server/resource/aws-kv-keys.go",
+      "sha256": "6512c7a46f6274e5985d1ff048e4d45bef54358293cbaeeeead38a488a2caa5b",
+      "versionLimit": "adjacent cached SST3.19.3 source; not asserted identical to reviewed binary"
+    }
+  ],
+  "providerBinary": {
+    "sha256": "741bfe58a4f6100dfa839beb98d53e0f27c9b63998d53a293cbbfb7a6b23a797",
+    "vcsRevision": "3e93f04499df83649dedf0dd366129fcf680211f",
+    "cloudfrontSdk": "v1.67.0",
+    "cloudfrontKvSdk": "v1.15.0",
+    "exactProviderGoSourceLocatedInInspectedCaches": false
+  },
+  "privateDiagnosticsReviewed": true,
+  "rawDiagnosticsPublished": false,
+  "publishedTestDiagnosticsReviewed": true,
+  "releaseAndRollbackBytesPreserved": true,
+  "preparedManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+  "cumulativeProceduralAllowanceUsd": "1.00",
+  "billingMeasured": false
+}

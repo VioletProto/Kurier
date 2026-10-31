@@ -1,0 +1,300 @@
+{
+  "localOnly": true,
+  "toolingCommit": "4a0faafc673e97d9faae3f26906a327a8bd06e71",
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "authentication": {
+    "region": "us-east-2",
+    "tokenEndpoint": "https://us-east-2.signin.aws.amazon.com/v1/token",
+    "endpointOverrideRemoved": true,
+    "preparedUrlCheckedBeforeAdmissionAndForward": true,
+    "oldEndpointDenied": true,
+    "dpopHtuMatchesActualPreparedUrlOffline": true,
+    "tlsVerificationRequired": true,
+    "explicitNoProxyPreserved": true,
+    "totalMaxAttempts": 1,
+    "existingSessionOnly": true,
+    "stsIdentityGatePreserved": true
+  },
+  "accounting": {
+    "prior": 168,
+    "newPhysicalAttempts": 0,
+    "cumulative": 168,
+    "maximum": 500,
+    "remaining": 332,
+    "proposedSeconds": 3600,
+    "deadlineResetAllowed": false,
+    "newLiveClaimExists": false,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false,
+    "bothFailedRefreshOutcomesRemainUncertain": true
+  },
+  "verification": {
+    "unitSuiteCounts": [4, 4, 23, 7, 3, 22],
+    "unitTestsPassed": 63,
+    "offlineTransportScenariosPassed": 15,
+    "repositoryVerifyPassed": true,
+    "ruffCheckAndFormatPassed": true,
+    "externalNetworkDisabled": true,
+    "syntheticAuthenticationOnly": true,
+    "testEvidence": {
+      "/tmp/kurier-auth-alignment-meter-tests-final.log": {
+        "sha256": "8f3cfbf8805808cc1e70d6e8c9c5c75beaa228f5bbe900d8aaad021efef6bc2e",
+        "bytes": 5612
+      },
+      "/tmp/kurier-auth-alignment-repository.log": {
+        "sha256": "3b3953528d08ca754bc4abbcdc0add94c2ec2659a657d4c09f4fbac7eae04906",
+        "bytes": 15673
+      }
+    },
+    "localLauncherCheck": {
+      "localChecksPassed": true,
+      "priorCalls": 168,
+      "remainingCalls": 332,
+      "source": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "awsCalls": 0
+    }
+  },
+  "comparison": {
+    "localOnly": true,
+    "networkRequests": 0,
+    "credentialValuesPublished": false,
+    "metadata": {
+      "profileRegion": "us-east-2",
+      "loginSessionConfigured": true,
+      "loginSessionArnRegionPresent": false,
+      "cacheRegionMetadata": [],
+      "requiredCacheFieldsPresent": true,
+      "profileEndpointOverridePresent": false,
+      "serviceSectionCount": 0,
+      "environmentOverrideNamesPresent": [],
+      "cacheUnchangedDuringMetadataRead": true
+    },
+    "paths": [
+      {
+        "mode": "sdk-default",
+        "botocoreVersion": "1.43.108",
+        "cliVersion": null,
+        "clientBaseHostname": "signin.us-east-2.amazonaws.com",
+        "region": "us-east-2",
+        "helperSourceSha256": null,
+        "modelSha256": {
+          "credentials.py": "38f95561c553c7e76d9da6d23d30a779dcfb0403a254cb98562e92e12cc0b0e8",
+          "utils.py": "e9d9182eacf6881499284a357fa1759796d7f57bc32930b691a92ad9915f2530",
+          "httpsession.py": "14b2961314c711499da785ec30f00d9b04ead55a4403b2aba5c5e822ffd93b7b",
+          "data/signin/2023-01-01/service-2.json": "06c2ba0d3c74b024aba1ffecdff7bb81cf8a31d7841ae1af1574f726ccc839f6",
+          "data/signin/2023-01-01/endpoint-rule-set-1.json": "854b1b7cb1694ead3648d61813902ae6b58b09486edd0e61cafbbccffee9d118"
+        },
+        "connectTimeoutSeconds": 60,
+        "readTimeoutSeconds": 60,
+        "retryMode": "legacy",
+        "totalMaxAttemptsConfigured": null,
+        "maxAttemptsConfigured": null,
+        "useFipsEndpoint": false,
+        "useDualStackEndpoint": false,
+        "urllib3Version": "2.8.0",
+        "proxyConfigInheritance": true,
+        "effectiveProxyConfigured": false,
+        "tlsVerifyRequested": true,
+        "operationHostname": "us-east-2.signin.aws.amazon.com",
+        "expectedTlsServerHostname": "us-east-2.signin.aws.amazon.com",
+        "tlsCertRequired": true,
+        "caAnchorsSha256": "9a9c1b798f6ae057ecb84545704e38c89e10f3db5519b24cd4647a1bb2dbf299",
+        "clientCertificateConfigured": false,
+        "urllib3HostnameAssertionDisabled": false,
+        "tlsContext": {
+          "minimumVersion": "TLSv1_2",
+          "maximumVersion": "MAXIMUM_SUPPORTED",
+          "options": 2186428496,
+          "checkHostnameProperty": false,
+          "cipherConfigurationSha256": "6e8f48a319c14749bfb07c07be3dc9f4097606a9728f6c06d23bef83dbdb656d"
+        },
+        "beforeCallCaptured": true,
+        "networkRequests": 0,
+        "credentialProviderInvoked": false,
+        "cacheWritten": false
+      },
+      {
+        "mode": "custom",
+        "botocoreVersion": "1.43.108",
+        "cliVersion": null,
+        "clientBaseHostname": "signin.us-east-2.amazonaws.com",
+        "region": "us-east-2",
+        "helperSourceSha256": "5abf92df10c60209bd764bb76f8d149f2d6b4cc7918aa62640504503201043a9",
+        "modelSha256": {
+          "credentials.py": "38f95561c553c7e76d9da6d23d30a779dcfb0403a254cb98562e92e12cc0b0e8",
+          "utils.py": "e9d9182eacf6881499284a357fa1759796d7f57bc32930b691a92ad9915f2530",
+          "httpsession.py": "14b2961314c711499da785ec30f00d9b04ead55a4403b2aba5c5e822ffd93b7b",
+          "data/signin/2023-01-01/service-2.json": "06c2ba0d3c74b024aba1ffecdff7bb81cf8a31d7841ae1af1574f726ccc839f6",
+          "data/signin/2023-01-01/endpoint-rule-set-1.json": "854b1b7cb1694ead3648d61813902ae6b58b09486edd0e61cafbbccffee9d118"
+        },
+        "connectTimeoutSeconds": 10,
+        "readTimeoutSeconds": 30,
+        "retryMode": "legacy",
+        "totalMaxAttemptsConfigured": 1,
+        "maxAttemptsConfigured": null,
+        "useFipsEndpoint": false,
+        "useDualStackEndpoint": false,
+        "urllib3Version": "2.8.0",
+        "proxyConfigInheritance": false,
+        "effectiveProxyConfigured": false,
+        "tlsVerifyRequested": true,
+        "operationHostname": "us-east-2.signin.aws.amazon.com",
+        "expectedTlsServerHostname": "us-east-2.signin.aws.amazon.com",
+        "tlsCertRequired": true,
+        "caAnchorsSha256": "9a9c1b798f6ae057ecb84545704e38c89e10f3db5519b24cd4647a1bb2dbf299",
+        "clientCertificateConfigured": false,
+        "urllib3HostnameAssertionDisabled": false,
+        "tlsContext": {
+          "minimumVersion": "TLSv1_2",
+          "maximumVersion": "MAXIMUM_SUPPORTED",
+          "options": 2186428496,
+          "checkHostnameProperty": false,
+          "cipherConfigurationSha256": "6e8f48a319c14749bfb07c07be3dc9f4097606a9728f6c06d23bef83dbdb656d"
+        },
+        "beforeCallCaptured": true,
+        "networkRequests": 0,
+        "credentialProviderInvoked": false,
+        "cacheWritten": false
+      },
+      {
+        "mode": "cli-default",
+        "botocoreVersion": "2.0.0dev155",
+        "cliVersion": "2.37.9",
+        "clientBaseHostname": "signin.us-east-2.amazonaws.com",
+        "region": "us-east-2",
+        "helperSourceSha256": null,
+        "modelSha256": {
+          "credentials.py": "33b506efb42894bd11eae8a0b88b7d888c86dccb205222a194f890e0c06a9dc7",
+          "utils.py": "0034c5d6603353bb0e296f0e681afa3e1f6d6359d647dd2c7122f5a4eef30cce",
+          "httpsession.py": "19bb87f1073a571b32e1d51331db19d8a71021134bf76f2250b109941169f55d",
+          "data/signin/2023-01-01/service-2.json": "06c2ba0d3c74b024aba1ffecdff7bb81cf8a31d7841ae1af1574f726ccc839f6",
+          "data/signin/2023-01-01/endpoint-rule-set-1.json": "854b1b7cb1694ead3648d61813902ae6b58b09486edd0e61cafbbccffee9d118"
+        },
+        "connectTimeoutSeconds": 60,
+        "readTimeoutSeconds": 60,
+        "retryMode": "standard",
+        "totalMaxAttemptsConfigured": null,
+        "maxAttemptsConfigured": 3,
+        "useFipsEndpoint": false,
+        "useDualStackEndpoint": false,
+        "urllib3Version": "2.8.0",
+        "proxyConfigInheritance": true,
+        "effectiveProxyConfigured": false,
+        "tlsVerifyRequested": true,
+        "operationHostname": "us-east-2.signin.aws.amazon.com",
+        "expectedTlsServerHostname": "us-east-2.signin.aws.amazon.com",
+        "tlsCertRequired": true,
+        "caAnchorsSha256": "9a9c1b798f6ae057ecb84545704e38c89e10f3db5519b24cd4647a1bb2dbf299",
+        "clientCertificateConfigured": false,
+        "urllib3HostnameAssertionDisabled": false,
+        "tlsContext": {
+          "minimumVersion": "TLSv1_2",
+          "maximumVersion": "MAXIMUM_SUPPORTED",
+          "options": 2186428496,
+          "checkHostnameProperty": false,
+          "cipherConfigurationSha256": "6e8f48a319c14749bfb07c07be3dc9f4097606a9728f6c06d23bef83dbdb656d"
+        },
+        "beforeCallCaptured": true,
+        "networkRequests": 0,
+        "credentialProviderInvoked": false,
+        "cacheWritten": false
+      }
+    ]
+  },
+  "preservation": {
+    "historicalParentProofsAndCurrentBaseline": {
+      "prior": 168,
+      "maximum": 500,
+      "inventoryLedgerSha256": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+      "stoppedPreviewLedgerSha256": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+      "failedAuthenticationLedgerSha256": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+      "failedCampaignClaimSha256": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+      "failedAuthenticationProjectionSha256": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+      "secondFailedAuthenticationLedgerSha256": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+      "secondFailedCampaignClaimSha256": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a",
+      "secondFailedAuthenticationProjectionSha256": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1",
+      "diagnosticLedgerSha256": "ad009e85a025ebbbd6b8b9398b56e4ea799d3d705e3b85d393ba0f55db9da9e9",
+      "diagnosticCampaignClaimSha256": "9e27595362462d7c24741b98dcc2274c152af3cbec2093b5c1b9d822e276181b"
+    },
+    "frozenFileSha256": {
+      "docs/development/project-environments-inventory-attempts.jsonl": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+      "docs/development/project-environments-preview-attempts.jsonl": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+      "docs/development/project-environments-refresh-preview-auth-projection.jsonl": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+      ".build/project-environments-preview/review-3/authentication.jsonl": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+      ".build/project-environments-preview/review-3/window.json": "19c362f32d5ce9e0ea4c8ad67c9f76e8ee03130f58c3e257aadbcdf1aa4c8f39",
+      ".build/project-environments-preview/review-3/cumulative-usage.json": "346fa66374bac7ac87fd48ef250e4eb438d8d3ad725ca23876f9a7cacf684671",
+      ".build/project-environments-preview/window-from-165.json": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+      "docs/development/project-environments-refresh-preview-review-4-auth-projection.jsonl": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1",
+      ".build/project-environments-preview/review-4/authentication.jsonl": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+      ".build/project-environments-preview/review-4/window.json": "538921f5c442ae7b2f3492267c62c8fe55bf1cd3f060e34d486923cde60b911e",
+      ".build/project-environments-preview/review-4/cumulative-usage.json": "1cca6aaeef18233ab7db538f4560684375167c731a8182b04756c7e2c5595765",
+      ".build/project-environments-preview/window-from-166.json": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a",
+      ".build/project-environments-network-diagnostics/review-1/attempts.jsonl": "ad009e85a025ebbbd6b8b9398b56e4ea799d3d705e3b85d393ba0f55db9da9e9",
+      ".build/project-environments-network-diagnostics/review-1/result.json": "d0bd6f4c37cb92dbe18b33a995e4975688a24a04505b2d34881ac42cc3699432",
+      ".build/project-environments-network-diagnostics/review-1/context.json": "5b442af2a0ea0a552e93b476c6a22e6234ba2cce8e1ce5b032e13fe55d50f4fe",
+      ".build/project-environments-network-diagnostics/review-1/addresses.json": "b45ee55d1ba9a6781ff8a557dfb541fb388c7a3165bad4745f58c89cb6ed5874",
+      ".build/project-environments-network-diagnostics/review-1/route-4.json": "f7b7e49d6681f43ef44abebc61aa8930d7e112d95d4d2a0b04eaf9397f91e9a0",
+      ".build/project-environments-preview/window-from-167.json": "9e27595362462d7c24741b98dcc2274c152af3cbec2093b5c1b9d822e276181b",
+      ".build/project-environments-network-probe-offline/gate.json": "47eb5efd7a343640c49f69865487e7becc961b64195929719b92a637bfadf922",
+      "docs/development/project-environments-network-probe-ledger.jsonl": "2e3beb072185a8636635181f10a6efcb0733961369df0b23205fe1e9a5a470aa",
+      "docs/development/project-environments-network-probe-result.json": "80294d852d9c4d02dde6edf23854e14cdda4c2bcc6534bbbd325ddf1f580c262"
+    },
+    "releaseAndRollbackIntegrityPassed": true,
+    "releaseManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "previewPolicySha256": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "releasePackagingChanged": false,
+    "artifactHashDifferences": []
+  },
+  "toolingHashChangesFrom1853502": {
+    "scripts/preview-meter/accounting.py": {
+      "beforeSha256": "c16296ed98737f23995d13dd1f0ee2635bd9fa995e433b72c0643689983df856",
+      "afterSha256": "4c80f584c9f6a8d83f542edf0ad24dbe15e7fb1e52da8ac04b57a2ed03d740b8"
+    },
+    "scripts/preview-meter/authentication-sdk.json": {
+      "beforeSha256": "06eff930ef27e618b7e93a41ebec995449f90350b055f58215124a1f31fdb6d2",
+      "afterSha256": "fa2dfa655003c93e72b6f418251895f4a0562777667446b0f3bc480c9e23c89e"
+    },
+    "scripts/preview-meter/authentication.py": {
+      "beforeSha256": "c9565d8902a8720d5ac0cdb0818f76ef2f66429f1e772ccf8a9cd7cc64c71286",
+      "afterSha256": "5abf92df10c60209bd764bb76f8d149f2d6b4cc7918aa62640504503201043a9"
+    },
+    "scripts/preview-meter/compare_auth_paths.py": {
+      "beforeSha256": "bd5f2469b7dfdfef130c070242df8a0e3e5b07c15ec46f471d6a9dde920e8f39",
+      "afterSha256": "bdaceb4e400c3d5b1e3ef967d1fabce3d39f4643e952922c025304e23e122bd5"
+    },
+    "scripts/preview-meter/handoff.py": {
+      "beforeSha256": "f4db450215daa185e2295f6d85987114ecb4e5a1140d768b8b35d748c8c88059",
+      "afterSha256": "2ff4f549183f02661b713e7164df0d0ac71506535cfdbda48e4380a3f23999da"
+    },
+    "scripts/preview-meter/run.py": {
+      "beforeSha256": "6f8f9af56a2c1bb5100ed16cdf8ae86899df71c948b0ebced6f74a0ad3cf5a06",
+      "afterSha256": "0fe4e42a1c6423cd2a09d2cc07416a36c0930842a620aa03d36ceb27910cfba3"
+    },
+    "scripts/preview-meter/test.sh": {
+      "beforeSha256": "02f21082087ddd2a2942cdf09f56c8d64b6a5cf2f52fcd0733be7ccdecc3d26b",
+      "afterSha256": "61f37ed038d4dd4bdf521c7ac2820d80019241c498c09abc6c7d0b93743ec76d"
+    },
+    "scripts/preview-meter/test_auth_transport_diagnostics.py": {
+      "beforeSha256": "6806c5a527696330e87240f8b8347893b99667dba64f272d01fb3d2ac7398ee1",
+      "afterSha256": "593d0065ac21215f5a162d30684df60ae1997605a9fe51bfaf434294c0a774c9"
+    },
+    "scripts/preview-meter/test_compare_auth_paths.py": {
+      "beforeSha256": "f0ce8414c25d22bd9ef3debb4c31ba70f14dce47def6319cea2db5abd17a907d",
+      "afterSha256": "fdd8f2232ce13b3f6e8c48fbc3d44764f3631b69c9d55aeda79ec990b07bbc20"
+    },
+    "scripts/preview-meter/test_handoff.py": {
+      "beforeSha256": "74c008c81350b896749163f214ba2aa6f4e95767da1cdcff64ac6d690e8f1f28",
+      "afterSha256": "6c5e014509d4be7c4b0b28ef0fa26a233b0e5a3554e8ce9b2dc872b68414ab06"
+    },
+    "scripts/preview-meter/test_transport.py": {
+      "beforeSha256": "e273a6d649a878eed4e34bdd1696701e238aab210b439c9d39755695d0911f93",
+      "afterSha256": "a400ffa6a4c31de13764b21d7f950c98fe068a0aaa1faf4f59d47a77b329829c"
+    }
+  },
+  "holds": {
+    "noRefreshProbeOrPreview": true,
+    "noDeploymentOrRuntimeWork": true,
+    "noAutomaticContinuation": true,
+    "liveConnectivityAndRecoveryUnverified": true
+  }
+}

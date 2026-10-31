@@ -1,0 +1,917 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped-before-complete-preview",
+  "reviewedToolingCommit": "843428a3875e6d5ac3544420c392731d6a3991ee",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "exactCommand": "python3 -B scripts/preview-meter/run.py preview --review-commit 843428a3875e6d5ac3544420c392731d6a3991ee --source /tmp/kurier-environments-release-source --output /home/king/Neumont/Kurier/.build/project-environments-preview/review-1",
+  "launcherExitCode": 1,
+  "sandboxExitCode": -15,
+  "stop": {
+    "reason": "endpoint-held",
+    "hostnameRetained": false,
+    "operationRetained": false,
+    "attribution": "unestablished; no policy change or restart"
+  },
+  "window": {
+    "startedAt": "2026-10-28T02:47:34.091105+00:00",
+    "stoppedAt": "2026-10-28T02:47:55.955451+00:00",
+    "elapsedSeconds": 21.864346027374268,
+    "maximumSeconds": 3600,
+    "maximumNewAttempts": 365,
+    "priorAttempts": 135,
+    "newAttempts": 30,
+    "cumulativeAttempts": 165,
+    "cumulativeCeiling": 500,
+    "unusedCallsArithmetic": 335,
+    "continuationAuthorized": false
+  },
+  "meter": {
+    "ledgerSha256": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+    "outcomesRetained": 30,
+    "statusCounts": {
+      "200": 23,
+      "404": 7
+    },
+    "operations": {
+      "ssm:GetParameter": 2,
+      "s3:GET": 15,
+      "sts:GetCallerIdentity": 7,
+      "cognito-idp:DescribeUserPool": 1,
+      "cognito-idp:DescribeUserPoolClient": 1,
+      "dynamodb:DescribeTable": 2,
+      "s3:HEAD": 2
+    },
+    "transportFailures": 0,
+    "unmatchedAttempts": 0,
+    "forwardedMutations": 0,
+    "refreshAttempts": 0
+  },
+  "partialDiff": {
+    "complete": false,
+    "summaryEvents": 0,
+    "eventLogRows": 1101,
+    "resourcePreEventCount": 109,
+    "resourcePreOperations": {
+      "same": 100,
+      "create": 8,
+      "read": 1
+    },
+    "resourceOutputEventCount": 175,
+    "resourceOutputOperations": {
+      "same": 159,
+      "create": 16
+    },
+    "resources": [
+      {
+        "name": "kurier-dev-api",
+        "type": "pulumi:pulumi:Stack",
+        "operation": "same",
+        "category": "provider-or-engine",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "default_7_40_0",
+        "type": "pulumi:providers:aws",
+        "operation": "same",
+        "category": "provider-or-engine",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "Protected",
+        "type": "sst:aws:Dynamo",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteRdfcms",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "DELETE /api/v1/projects/{projectId}/environments/{environmentId}"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKsftzu",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteRuxrfx",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteFnhuom",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteCvaxrf",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "UsersProjectsApi",
+        "type": "sst:aws:Function",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcbmuz",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKotabw",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "OPTIONS /api/v1/projects/{projectId}/environments"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbazzh",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteEhmvvt",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteUkncus",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbvrka",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApi",
+        "type": "sst:aws:ApiGatewayV2",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKbebwh",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "POST /api/v1/local-agent/capabilities"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteHweutc",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteFuuwaa",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcrbna",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbrzwo",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "GET /api/v1/projects/{projectId}/environments/{environmentId}"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteMxtbob",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBateco",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "POST /api/v1/projects/{projectId}/environments"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteXfnubb",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteCfodtu",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteSndcdb",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "OPTIONS /api/v1/projects/{projectId}/environments/{environmentId}"
+      },
+      {
+        "name": "Control",
+        "type": "sst:aws:Dynamo",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteNfrnhu",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteEwdheh",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteFhfkra",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcwuox",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteStnoub",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteOsbwhw",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteFwrbut",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVtabvh",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcuohn",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "GET /api/v1/projects/{projectId}/environments"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteXcbarf",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteKzenzu",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVxffaw",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "create",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event",
+        "routeFromPinnedSource": "PATCH /api/v1/projects/{projectId}/environments/{environmentId}"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcdbon",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbtvrd",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteEddhrt",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteFkefkt",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteDxbfwu",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteMhtctf",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteSsdarw",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVssoae",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "EmptyProjectCleanup",
+        "type": "sst:aws:Function",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBfsdes",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteFvxwbw",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteTmnsoh",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBcrbme",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "default_4_16_6",
+        "type": "pulumi:providers:random",
+        "operation": "same",
+        "category": "provider-or-engine",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteCodfar",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteCokcoc",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteVtkscu",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteXmuebo",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteXhddab",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBeadtz",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteBbwkkc",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "CloudExecutionWorker",
+        "type": "sst:aws:Function",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionControlledEndpoint",
+        "type": "sst:aws:Function",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiRouteDnhoku",
+        "type": "sst:aws:ApiGatewayV2LambdaRoute",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "EmptyProjectSchedule",
+        "type": "sst:aws:Cron",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ProtectedStageKey",
+        "type": "aws:kms/key:Key",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "LambdaEncryptionKey",
+        "type": "random:index/randomBytes:RandomBytes",
+        "operation": "same",
+        "category": "provider-or-engine",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionDeadLetter",
+        "type": "aws:sqs/queue:Queue",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionEvidence",
+        "type": "aws:s3/bucketV2:BucketV2",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "UsersProjectsApiLogGroup",
+        "type": "aws:cloudwatch/logGroup:LogGroup",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiAccessLog",
+        "type": "aws:cloudwatch/logGroup:LogGroup",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiApi",
+        "type": "aws:apigatewayv2/api:Api",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ProtectedTable",
+        "type": "aws:dynamodb/table:Table",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ControlTable",
+        "type": "aws:dynamodb/table:Table",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "EmptyProjectCleanupLogGroup",
+        "type": "aws:cloudwatch/logGroup:LogGroup",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionControlledEndpointLogGroup",
+        "type": "aws:cloudwatch/logGroup:LogGroup",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "CloudExecutionWorkerLogGroup",
+        "type": "aws:cloudwatch/logGroup:LogGroup",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "EmptyProjectScheduleRule",
+        "type": "aws:cloudwatch/eventRule:EventRule",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionQueue",
+        "type": "aws:sqs/queue:Queue",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ProtectedStageKeyAlias",
+        "type": "aws:kms/alias:Alias",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionEvidenceOwnership",
+        "type": "aws:s3/bucketOwnershipControls:BucketOwnershipControls",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionEvidenceTls",
+        "type": "aws:s3/bucketPolicy:BucketPolicy",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionEvidencePublicAccess",
+        "type": "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionEvidenceEncryption",
+        "type": "aws:s3/bucketServerSideEncryptionConfigurationV2:BucketServerSideEncryptionConfigurationV2",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiLinkRef",
+        "type": "sst:sst:LinkRef",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebAssets",
+        "type": "aws:s3/bucketV2:BucketV2",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebCache",
+        "type": "aws:cloudfront/cachePolicy:CachePolicy",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentHttpApiStage",
+        "type": "aws:apigatewayv2/stage:Stage",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebHeaders",
+        "type": "aws:cloudfront/responseHeadersPolicy:ResponseHeadersPolicy",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ProtectedLinkRef",
+        "type": "sst:sst:LinkRef",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ControlLinkRef",
+        "type": "sst:sst:LinkRef",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "DevelopmentStage",
+        "type": "aws:dynamodb/tableItem:TableItem",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionDeadLetterAllow",
+        "type": "aws:sqs/redriveAllowPolicy:RedriveAllowPolicy",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebOwnership",
+        "type": "aws:s3/bucketOwnershipControls:BucketOwnershipControls",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebPublicAccess",
+        "type": "aws:s3/bucketPublicAccessBlock:BucketPublicAccessBlock",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebEncryption",
+        "type": "aws:s3/bucketServerSideEncryptionConfigurationV2:BucketServerSideEncryptionConfigurationV2",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "ExecutionControlledEndpointRole",
+        "type": "aws:iam/role:Role",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "EmptyProjectCleanupRole",
+        "type": "aws:iam/role:Role",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "UsersProjectsApiRole",
+        "type": "aws:iam/role:Role",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWeb",
+        "type": "sst:aws:StaticSite",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "CloudExecutionWorkerRole",
+        "type": "aws:iam/role:Role",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebCdn",
+        "type": "sst:aws:CDN",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebKvStore",
+        "type": "aws:cloudfront/keyValueStore:KeyValueStore",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebAssets",
+        "type": "aws:s3/bucket:Bucket",
+        "operation": "read",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebCloudfrontFunctionRequest",
+        "type": "aws:cloudfront/function:Function",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebCdnDistribution",
+        "type": "aws:cloudfront/distribution:Distribution",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebLinkRef",
+        "type": "sst:sst:LinkRef",
+        "operation": "same",
+        "category": "sst-component",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "default",
+        "type": "pulumi:providers:pulumi-nodejs",
+        "operation": "same",
+        "category": "provider-or-engine",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebPolicy",
+        "type": "aws:s3/bucketPolicy:BucketPolicy",
+        "operation": "same",
+        "category": "aws-resource",
+        "phase": "partial-preview-pre-event"
+      },
+      {
+        "name": "FrontendWebCdnWaiter.sst.aws.DistributionDeploymentWaiter",
+        "type": "pulumi-nodejs:dynamic:Resource",
+        "operation": "same",
+        "category": "provider-or-engine",
+        "phase": "partial-preview-pre-event"
+      }
+    ],
+    "completeAwsAddUpdateDeletePlanAvailable": false,
+    "iamDiffComplete": false,
+    "sourceExpectedChangesNotVerifiedByThisAttempt": [
+      "four code-object replacements",
+      "four Lambda code updates",
+      "three frontend upload/KV/invalidation updates",
+      "eight route/integration/permission sets"
+    ]
+  },
+  "packaging": {
+    "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+    "packages": [],
+    "frontend": {
+      "schemaVersion": 1,
+      "publicConfig": {
+        "VITE_API_URL": "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+        "VITE_COGNITO_USER_POOL_ID": "us-east-2_qTDZQT1FE",
+        "VITE_COGNITO_CLIENT_ID": "5jg9sb38i6ae9c0adm5rtdfkno",
+        "VITE_KURIER_STAGE": "dev-api"
+      },
+      "files": [
+        {
+          "path": "404.html",
+          "bytes": 344,
+          "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+          "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+        },
+        {
+          "path": "assets/index-CAjex_6u.css",
+          "bytes": 2955,
+          "sha256": "89dd6331058a55d3bb75930baa3d6554ceaf73abaaff99b5913f904b07661ec9",
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "path": "assets/index-DXEG7-ST.js",
+          "bytes": 422230,
+          "sha256": "8b55e24fce2358c86d2a2feb385485888d2dc3b221c0a6ac4a25035cac74db3e",
+          "cacheControl": "public, max-age=31536000, immutable"
+        },
+        {
+          "path": "index.html",
+          "bytes": 666,
+          "sha256": "4cf85fd302be5fd09da94fb60c74ccf44a26124c206a872a6c5e86b12aa81127",
+          "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+        },
+        {
+          "path": "startup.js",
+          "bytes": 1030,
+          "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+          "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+        }
+      ],
+      "releaseId": "38325083b003b3f320752dbfa0357c377d57d2b66c1175e06c88ba3638210236"
+    },
+    "matchesPreparedFrontend": true,
+    "deploymentPerformed": false,
+    "activationPerformed": false,
+    "requiresSeparateReview": true
+  },
+  "preparedAndRollbackIntegrityRechecked": true,
+  "preparedManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+  "privateEvidence": {
+    "directory": ".build/project-environments-preview/review-1",
+    "eventLogSha256": "659f0582ac75156867c3f1acd65e33fa3ea78e3b4b5645c1fed1c76a35ff9258",
+    "sstLogSha256": "d46b28f1115819ef83c744cae6a469314a9fc61c617898ec10a9f1ba96da652c",
+    "packagingReviewSha256": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+    "stdoutBytes": 0,
+    "meterStderrBytes": 0
+  },
+  "policyChanged": false,
+  "restartAttempted": false,
+  "postStopAwsReadbacksPerformed": false,
+  "deploymentPerformed": false,
+  "closurePerformed": false,
+  "migrationPerformed": false,
+  "activationPerformed": false,
+  "identityOrProjectCreated": false,
+  "targetRequestsPerformed": false,
+  "cumulativeProceduralAllowanceUsd": "1.00",
+  "billingMeasured": false
+}

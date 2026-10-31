@@ -1,0 +1,141 @@
+{
+  "status": "authenticated-empty-bindings-adoption-pending",
+  "toolingCommit": "7b77598082529a678bf8962b6371c43673ac25af",
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "launcherExitCode": 0,
+  "command": "python3 -B scripts/observe-environment-bindings.py observe --review-commit 7b77598082529a678bf8962b6371c43673ac25af --output /home/king/Neumont/Kurier/.build/project-environments-key-observation/review-1",
+  "window": {
+    "seconds": 600,
+    "additionalAttemptLimit": 3,
+    "startedUTC": "2026-10-29T19:38:12.007784+00:00",
+    "validatedUTC": "2026-10-29T19:38:13.280835+00:00",
+    "elapsedSeconds": 1.2731047400011448,
+    "originalDeadlineShared": true
+  },
+  "accounting": {
+    "allFourAuthenticatedEmptyBindings": true,
+    "automaticContinuation": false,
+    "billingMeasured": false,
+    "campaignMaximum": 299,
+    "candidateAdoptionPerformed": false,
+    "cumulativeCalls": 299,
+    "cumulativeCeiling": 500,
+    "deadline": 87454.144053046,
+    "keyPresent": true,
+    "ledgerIntegrity": true,
+    "newCalls": 3,
+    "priorCalls": 296,
+    "proceduralAllowanceUsd": 1,
+    "seconds": 600,
+    "started": 86854.144053046,
+    "remainingArithmeticHeadroom": 201
+  },
+  "attemptSummary": [
+    {
+      "ordinal": 297,
+      "service": "signin",
+      "operation": "CreateOAuth2Token",
+      "status": 200
+    },
+    {
+      "ordinal": 298,
+      "service": "sts",
+      "operation": "GetCallerIdentity",
+      "status": 200
+    },
+    {
+      "ordinal": 299,
+      "service": "lambda",
+      "operation": "GetFunctionConfiguration",
+      "status": 200
+    }
+  ],
+  "validation": {
+    "allFourRetainedReview8BlobsAuthenticated": true,
+    "allMatchedRequiredEmptyBindings": true,
+    "credentialOrUnrelatedBindingContentAbsent": true,
+    "functionName": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+    "sameInventoriedAccountAndIdentityVerified": true,
+    "onlySstKeyExtractedForValidation": true,
+    "keyPlaintextEnvironmentOrKeyDigestRetained": false,
+    "coreDumpsAndSdkLoggingDisabled": true,
+    "memoryZeroizationGuaranteeClaimed": false,
+    "packages": [
+      {
+        "name": "UsersProjectsApi",
+        "zipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+        "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+        "bindingAuthenticatedExpectedEmpty": true
+      },
+      {
+        "name": "EmptyProjectCleanup",
+        "zipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+        "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+        "bindingAuthenticatedExpectedEmpty": true
+      },
+      {
+        "name": "CloudExecutionWorker",
+        "zipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+        "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+        "bindingAuthenticatedExpectedEmpty": true
+      },
+      {
+        "name": "ExecutionControlledEndpoint",
+        "zipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+        "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+        "bindingAuthenticatedExpectedEmpty": true
+      }
+    ]
+  },
+  "verification": {
+    "observerOfflineTestsPassed": 17,
+    "externalNetworkDisabledForTests": true,
+    "repositoryVerifyPassedOffline": true,
+    "ruffPassed": true,
+    "offlineTestsLogSha256": "b4ec911d9cd36f9233290bfa87c7ffce8c76058f20bf6fd7ca423e63547b9bbf",
+    "repositoryVerifyLogSha256": "34ff53b4d56720b4eacef72982a8b9d4771fe8ae7900751dd25b9258e6099f73",
+    "originalProofFilesReverified": 74,
+    "review8EvidenceReverified": true,
+    "noPostObservationAwsCalls": true
+  },
+  "preservation": {
+    "originalManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "candidateManifestSha256": "25ef3cd0c8f0c09037607c564bfb8964c1ef8e8e14a3aa0ae8757894918895a9",
+    "bothManifestsUnchanged": true,
+    "candidateAdopted": false,
+    "releaseAndRollbackBytesUnchanged": true,
+    "allOriginalClaimsLedgersAndUncertainRefreshOutcomesPreserved": true,
+    "newCampaignClaimRetained": true,
+    "observerSourceSha256": "eb2ee688cfc8a7b2047965c303f99bfa08aa8091102809f16529dc846f60dc09",
+    "observerTestsSha256": "b414d1bbb23cd6dfc11cad263cbfe3c0deaabb1954950e448cc066be95651461",
+    "nonSensitivePrivateEvidence": {
+      ".build/project-environments-key-observation/window-from-296.json": {
+        "bytes": 283,
+        "sha256": "f3fa15b25905fc5db7e6d1974240e525741c67a8cf74410e319798232788a0a6"
+      },
+      ".build/project-environments-key-observation/review-1/attempts.jsonl": {
+        "bytes": 1247,
+        "sha256": "279376e3445a3e6acf0ff5b1d78b48b9003c855f630d98dfc6110055788ed605"
+      },
+      ".build/project-environments-key-observation/review-1/result.json": {
+        "bytes": 393,
+        "sha256": "892448574f4a0880ce4f73e25d428c573933c870d685867d7e64f4f6ca46d30a"
+      },
+      ".build/key-observation-launch.private.txt": {
+        "bytes": 394,
+        "sha256": "d2a1b927ac488b97f54ca8754150f8030af80ee76e04526554d7d7fb6e797ceb"
+      }
+    }
+  },
+  "denials": [],
+  "holds": {
+    "deploymentPerformed": false,
+    "closurePerformed": false,
+    "activationPerformed": false,
+    "migrationPerformed": false,
+    "identityOrProjectCreated": false,
+    "runtimeRequestsPerformed": false,
+    "automaticContinuation": false
+  },
+  "nextDecision": "Review candidate adoption using this external attestation; metered live adapter/upload gate and separate release authorization remain required"
+}

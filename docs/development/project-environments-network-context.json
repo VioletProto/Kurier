@@ -1,0 +1,459 @@
+{
+  "localOnly": true,
+  "awsCalls": 0,
+  "externalProbesExecuted": false,
+  "authenticationOrPreviewRepeated": false,
+  "settingsChangedOrProtectionsDisabled": false,
+  "causeEstablished": false,
+  "bothRemoteRefreshOutcomes": "uncertain",
+  "executionComparison": {
+    "successfulRefresh": {
+      "submittedUtc": "2026-10-27T19:20:20.631Z",
+      "returnedUtc": "2026-10-27T19:20:24.455Z",
+      "toolWallSeconds": 0.372756481,
+      "hostExecutionRequested": true,
+      "actualNetworkNamespaceRecorded": false,
+      "sourceMethod": "boto3.Session(region_name=us-east-2).get_credentials().get_frozen_credentials()",
+      "usesDefaultCredentialChainAndConfig": true,
+      "httpStatusRetained": false,
+      "effectiveEndpointOrProxySnapshotRetained": false
+    },
+    "review3": {
+      "submittedUtc": "2026-10-28T19:53:29.258Z",
+      "hostExecutionRequested": true,
+      "actualNetworkNamespaceRecorded": false,
+      "providerSandboxStarted": false,
+      "remoteOutcome": "uncertain"
+    },
+    "review4": {
+      "submittedUtc": "2026-10-28T20:17:17.153Z",
+      "hostExecutionRequested": true,
+      "actualNetworkNamespaceRecorded": false,
+      "providerSandboxStarted": false,
+      "diagnostic": "connect-timeout",
+      "remoteOutcome": "uncertain"
+    },
+    "providerSandboxAsAuthFailurePointExcludedByControlFlow": true,
+    "historicalIdenticalNetworkStateProven": false
+  },
+  "currentLocalInspection": {
+    "sandboxNetNamespace": "net:[4026533510]",
+    "sandboxIpv4Routes": 0,
+    "host": {
+      "context": "host-read-only",
+      "netNamespace": "net:[4026531833]",
+      "pid1NetNamespace": "unavailable-permission-denied",
+      "uid": 1000,
+      "capNetAdmin": false,
+      "routes": {
+        "count": 46,
+        "defaultRoutes": 1,
+        "tables": ["52", "local", "main"],
+        "vpnDeviceRoutes": 11
+      },
+      "routingPolicy": {
+        "count": 7,
+        "tables": ["", "52", "default", "local", "main"],
+        "fwmarkRules": 3
+      },
+      "firewallRead": {
+        "available": true,
+        "exitCode": 1,
+        "permissionDenied": true
+      },
+      "iptablesRead": {
+        "available": true,
+        "exitCode": 4,
+        "permissionDenied": true
+      },
+      "configuration": {
+        "/etc/nftables.conf": {
+          "readable": true,
+          "activeLines": 18,
+          "includeDirectives": 0,
+          "dropOrRejectMentioned": true,
+          "vpnTermsPresent": false
+        },
+        "/etc/iptables/iptables.rules": {
+          "readable": true,
+          "activeLines": 5,
+          "includeDirectives": 0,
+          "dropOrRejectMentioned": false,
+          "vpnTermsPresent": false
+        },
+        "/etc/ufw/ufw.conf": {
+          "readable": true,
+          "activeLines": 2,
+          "includeDirectives": 0,
+          "dropOrRejectMentioned": false,
+          "vpnTermsPresent": false
+        },
+        "/etc/systemd/resolved.conf": {
+          "readable": true,
+          "activeLines": 1,
+          "includeDirectives": 0,
+          "dropOrRejectMentioned": false,
+          "vpnTermsPresent": false
+        },
+        "/etc/NetworkManager/NetworkManager.conf": {
+          "readable": true,
+          "activeLines": 0,
+          "includeDirectives": 0,
+          "dropOrRejectMentioned": false,
+          "vpnTermsPresent": false
+        }
+      },
+      "vpnInterfaces": [
+        {
+          "kind": "tailscale",
+          "state": "unknown"
+        }
+      ],
+      "vpnConfigurationFileCounts": {
+        "/etc/wireguard": 0,
+        "/etc/openvpn": 0
+      },
+      "resolver": {
+        "servers": [
+          {
+            "family": 4,
+            "loopback": true,
+            "private": true
+          }
+        ],
+        "searchDirectivePresent": true,
+        "symlink": false
+      },
+      "proxyEnvironmentPresent": [],
+      "awsDefaultConfiguration": {
+        "optionNames": ["login_session", "region"],
+        "serviceSectionCount": 0,
+        "explicitSigninEndpointConfigured": false
+      },
+      "networkProbePerformed": false
+    },
+    "hostFollowup": {
+      "defaultRoutes": [
+        {
+          "table": "main",
+          "deviceKind": "wifi",
+          "gatewayPresent": true
+        }
+      ],
+      "table52DefaultRoutes": 0,
+      "systemJournal": {
+        "exitCode": 0,
+        "records": 865,
+        "permissionWarning": false
+      },
+      "networkProbesPerformed": false
+    },
+    "staticNftConfigInputAndForwardDrop": true,
+    "staticNftConfigEstablishedRelatedAccept": true,
+    "staticNftConfigOutputChain": false,
+    "liveRulesAvailable": false,
+    "noSudoOrCapabilityChanges": true,
+    "bootMetadata": {
+      "hostBootUtc": "2026-10-26T03:51:53Z",
+      "failedReview3And4BootIdsMatchCurrent": true,
+      "successfulInventoryBootIdRetained": false
+    },
+    "additionalStaticFirewallConfiguration": {
+      "ufwConfiguredEnabled": true,
+      "ufwDefaultInputPolicy": "DROP",
+      "ufwDefaultOutputPolicy": "ACCEPT",
+      "ufwDefaultForwardPolicy": "DROP",
+      "ufwIpv6Enabled": true,
+      "ipv4UserRuleCount": 7,
+      "ipv6UserRuleCount": 7,
+      "directUserOutputDropRejectRules": 0,
+      "staticIptablesInputForwardOutputPolicies": "ACCEPT",
+      "kernelEnforcementVerified": false
+    }
+  },
+  "journalEvidence": {
+    "records": 865,
+    "coverageFirstUtc": "2026-10-28T03:47:47.916054Z",
+    "coverageLastUtc": "2026-10-28T20:15:05.537520Z",
+    "coversSuccessfulInventory": false,
+    "precedingWifiDhcpActivityUtc": "2026-10-28T20:15:05Z",
+    "supplicantReturnedCompleted": true,
+    "newDhcpLeaseRecorded": true,
+    "failedSendIntervalEventsInSelectedUnits": 0,
+    "causalLinkEstablished": false,
+    "rawMessagesPublished": false
+  },
+  "currentAccounting": {
+    "prior": 167,
+    "maximum": 500,
+    "inventoryLedgerSha256": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+    "stoppedPreviewLedgerSha256": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+    "failedAuthenticationLedgerSha256": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+    "failedCampaignClaimSha256": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+    "failedAuthenticationProjectionSha256": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+    "secondFailedAuthenticationLedgerSha256": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+    "secondFailedCampaignClaimSha256": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a",
+    "secondFailedAuthenticationProjectionSha256": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1"
+  },
+  "frozenProofHashes": {
+    "docs/development/project-environments-inventory-attempts.jsonl": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+    "docs/development/project-environments-preview-attempts.jsonl": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+    "docs/development/project-environments-refresh-preview-auth-projection.jsonl": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+    ".build/project-environments-preview/review-3/authentication.jsonl": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+    ".build/project-environments-preview/review-3/window.json": "19c362f32d5ce9e0ea4c8ad67c9f76e8ee03130f58c3e257aadbcdf1aa4c8f39",
+    ".build/project-environments-preview/review-3/cumulative-usage.json": "346fa66374bac7ac87fd48ef250e4eb438d8d3ad725ca23876f9a7cacf684671",
+    ".build/project-environments-preview/window-from-165.json": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+    "docs/development/project-environments-refresh-preview-review-4-auth-projection.jsonl": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1",
+    ".build/project-environments-preview/review-4/authentication.jsonl": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+    ".build/project-environments-preview/review-4/window.json": "538921f5c442ae7b2f3492267c62c8fe55bf1cd3f060e34d486923cde60b911e",
+    ".build/project-environments-preview/review-4/cumulative-usage.json": "1cca6aaeef18233ab7db538f4560684375167c731a8182b04756c7e2c5595765",
+    ".build/project-environments-preview/window-from-166.json": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a"
+  },
+  "remainingArithmeticHeadroom": 333,
+  "proceduralAllowanceUsd": 1,
+  "billingMeasured": false,
+  "proposedProbePlan": {
+    "status": "proposal-only-not-implemented-not-executed",
+    "hostname": "signin.us-east-2.amazonaws.com",
+    "dnsDestination": {
+      "address": "127.0.0.53",
+      "port": 53,
+      "transport": "UDP",
+      "absoluteName": true,
+      "types": ["A", "AAAA"],
+      "maximumClientSends": 2,
+      "secondsPerQuery": 2,
+      "retrySearchAlternateResolverOrTcpFallback": false
+    },
+    "tcp": {
+      "destinations": "at most one public IPv4 and one public IPv6 from exact-name answers",
+      "port": 443,
+      "maximumConnectAttempts": 2,
+      "secondsPerConnect": 10,
+      "ipv6OnlyAfterIpv4ConnectFailsOrIpv4Absent": true,
+      "noAlternateIpOrHappyEyeballs": true
+    },
+    "tls": {
+      "serverName": "signin.us-east-2.amazonaws.com",
+      "maximumHandshakes": 1,
+      "onFirstSuccessfulTcpSocketOnly": true,
+      "seconds": 5,
+      "verifyUsingPinnedSdkCaAnchors": true,
+      "httpRequests": 0,
+      "credentialsOrCacheUsed": false
+    },
+    "totalSecondsIncludingLocalPreparation": 45,
+    "separateDurableDnsAndConnectAndTlsCounters": true,
+    "conservativeAwsChargesPerConnectAttempt": 1,
+    "maximumAdditionalAwsConnectionCharges": 2,
+    "proposedAwsOrdinals": [168, 169],
+    "currentCumulativeUnchanged": 167,
+    "dnsUpstreamRecursionOrBackgroundPacketBoundClaimed": false,
+    "dnsMeteringLimitationNeedsExplicitReview": true,
+    "automaticAuthenticationOrPreviewContinuation": false
+  },
+  "verification": {
+    "unitTestsPassed": 37,
+    "transportScenariosPassed": 15,
+    "repositoryVerifyPassed": true,
+    "dependencyDownloadsDisabled": true,
+    "pythonLintAndFormatPassed": true,
+    "retainedReleaseAndRollbackChecksPassed": true,
+    "testSuitesAndRepositoryVerifyNetworkIsolated": true
+  },
+  "transportSuite": {
+    "tooling": {
+      "sstSha256": "539659fa60f00e8b9610b7dfd967928d382b4800ca25452d9697e31a4eb521fd",
+      "pulumiAwsProviderSha256": "741bfe58a4f6100dfa839beb98d53e0f27c9b63998d53a293cbbfb7a6b23a797",
+      "node": "v26.12.1",
+      "go": "go version go1.27.3-X:nodwarf5 linux/amd64",
+      "bwrap": "bubblewrap 0.13.1"
+    },
+    "codeSha256": {
+      "test_diagnostics.py": "6c102277668a72adf4aacaa9eda43440b2f17ff62a1360d4f56880204b4fd3aa",
+      "auth_diagnostics.py": "e29e30c1e7d73ac6f352b147fc2840f28dc1be2b2fed16a1b9f7c8d2757b95fd",
+      "test_auth_transport_diagnostics.py": "6806c5a527696330e87240f8b8347893b99667dba64f272d01fb3d2ac7398ee1",
+      "policy.py": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+      "handoff.py": "f4db450215daa185e2295f6d85987114ecb4e5a1140d768b8b35d748c8c88059",
+      "test_transport.py": "e273a6d649a878eed4e34bdd1696701e238aab210b439c9d39755695d0911f93",
+      "test_unit.py": "6f77bfc13af9a0bac06af081637b4efcc7e6e98d53934e4f4d488b72f610fc28",
+      "proxy.py": "efb37c1800295e1b8151ac2dd810ed85e08f28c81a3a37c3547bb23cca5f73d0",
+      "authentication.py": "c9565d8902a8720d5ac0cdb0818f76ef2f66429f1e772ccf8a9cd7cc64c71286",
+      "diagnostics.py": "e145bed68d269065352ce428c28dbfbc4cfa80edf3f7de77d6ffe72e0fad0006",
+      "test_handoff.py": "74c008c81350b896749163f214ba2aa6f4e95767da1cdcff64ac6d690e8f1f28",
+      "accounting.py": "c16296ed98737f23995d13dd1f0ee2635bd9fa995e433b72c0643689983df856",
+      "run.py": "6f8f9af56a2c1bb5100ed16cdf8ae86899df71c948b0ebced6f74a0ad3cf5a06"
+    },
+    "fixtureOnly": true,
+    "realCumulativeUsagePreserved": 167,
+    "awsCalls": 0,
+    "releaseAndRollbackVerifiedUnchanged": true,
+    "results": [
+      {
+        "case": "shared-real-SST-Pulumi-Go-Node",
+        "attempts": 14,
+        "goRetryPages": 3,
+        "nodeRetryPages": 3,
+        "exitCode": 0,
+        "namespaceBypassHeld": true,
+        "httpVersions": ["HTTP/1.1", "HTTP/2.0"],
+        "realSST": true,
+        "realPulumiAWSProvider": true,
+        "attemptCounts": {
+          "dynamodb:ListTables": 3,
+          "s3:GET": 6,
+          "ssm:GetParameter": 2,
+          "sts:GetCallerIdentity": 3
+        }
+      },
+      {
+        "case": "write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "state-write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "transaction-write",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "limit",
+        "attempts": 333,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "deadline",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": true
+      },
+      {
+        "case": "concurrent",
+        "attempts": 4,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "redirect",
+        "attempts": 1,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "disconnect",
+        "attempts": 1,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "persistence",
+        "attempts": 0,
+        "stopped": true,
+        "descendantShutdownVerified": false
+      },
+      {
+        "case": "denied-host",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793219728.4993646,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "endpoint-held",
+          "hostname": "sts.us-east-1.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "secret-host-label",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793219729.5030153,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "endpoint-held",
+          "hostname": "<redacted-host>",
+          "hostnameStatus": "redacted",
+          "trailingDot": false,
+          "port": 443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "denied-port",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793219730.4994357,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "port-held",
+          "hostname": "sts.us-east-2.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 8443,
+          "scheme": "unspecified",
+          "httpVersion": "HTTP/1.1",
+          "method": "CONNECT",
+          "phase": "connect"
+        }
+      },
+      {
+        "case": "denied-http",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "sanitizedDiagnostic": {
+          "at": 1793219731.485731,
+          "event": "denied-endpoint",
+          "count": 167,
+          "reason": "tls-required",
+          "hostname": "sts.us-east-2.amazonaws.com",
+          "hostnameStatus": "known-static",
+          "trailingDot": false,
+          "port": 80,
+          "scheme": "http",
+          "httpVersion": "HTTP/1.1",
+          "method": "POST",
+          "phase": "request"
+        }
+      },
+      {
+        "case": "production-branch-shared-handoff-denial",
+        "attempts": 0,
+        "syntheticAuthenticationAttempts": 2,
+        "providerPrior": 169,
+        "originalDeadlinePreserved": true,
+        "singleUseClaim": true,
+        "allDescendantsStopped": true
+      }
+    ]
+  },
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "releasePackagingChanged": false,
+  "liveWindowFrom167Created": false,
+  "executionAuthorizationGranted": false,
+  "holdsRemain": true
+}

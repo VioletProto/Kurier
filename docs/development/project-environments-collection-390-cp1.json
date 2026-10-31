@@ -1,0 +1,475 @@
+{
+  "status": "reader-and-preview-complete-archive-byte-agreement-held",
+  "toolingCommit": "42915e66301e272d28f5d9a3aac253239ca51e9e",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "campaign": ".build/project-environments-execution/release-390-cp1",
+  "authorizationSha256": "596f4475cd949307606e26a8ca3b90452358e8119453023dd430f3f472d30ff2",
+  "manifestSha256": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+  "scopeSha256": "760c1c25db84fedab09a440d5399a67f6e7a2c749d8fb5ec1e0d934b17411f72",
+  "accounting": {
+    "prior": 390,
+    "newPhysicalAttempts": 109,
+    "cumulative": 499,
+    "authorizedCeiling": 1799,
+    "remainingAttemptHeadroom": 1300,
+    "unmatchedAttempts": 0,
+    "httpStatuses": {
+      "200": 101,
+      "404": 8
+    },
+    "failedTransports": 0,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "window": {
+    "originalSeconds": 3300,
+    "phaseMaximumSeconds": 240,
+    "elapsedSecondsAtStop": 61.891350706,
+    "campaignRemainingSecondsAtStop": 3238.108649294,
+    "phaseRemainingSecondsAtStop": 178.122144,
+    "closedWindowStarted": false,
+    "remainingTimeIsContinuationAuthority": false
+  },
+  "authentication": {
+    "adoptedCheckpointMatchedBeforeRequests": true,
+    "checkpointRecaptured": false,
+    "refreshAttempts": 1,
+    "refreshOrdinal": 391,
+    "refreshHttpStatus": 200,
+    "hostStsOrdinal": 392,
+    "hostStsHttpStatus": 200,
+    "hostIdentityAndCredentialValidityVerified": true,
+    "allStsAttempts": 9,
+    "backgroundOrMidPhaseRenewals": 0,
+    "historicalGrantContinuityEstablished": false
+  },
+  "readerSnapshot": {
+    "completed": true,
+    "record": "docs/development/project-environments-collection-390-cp1-readers.json",
+    "recordSha256": "11188567dfcb158787e7fbcf7dc50e68259698408de681eafdab0a8b33541c0b",
+    "oldFrontendReady": true
+  },
+  "preview": {
+    "started": true,
+    "complete": true,
+    "completeResourceDiffAvailable": true,
+    "rawEntries": 60,
+    "uniqueResources": 44,
+    "review8ProjectionAgreementEstablished": true,
+    "record": "docs/development/project-environments-collection-390-cp1-diff.json",
+    "recordSha256": "6c5bb41c91d316cc25e242d515020d649d0e4298a1a618ba3608b3d401e1e785",
+    "generatedArchiveCount": 4,
+    "allFourWholeArchivesMatched": false,
+    "allFourUncompressedMemberSetsMatched": true,
+    "allRawArchiveDifferencesLimitedToExternalAttributes": true,
+    "generatedFrontendMarkerMatchesAdopted": true,
+    "confirmedUploads": 0,
+    "collectionProofProduced": false
+  },
+  "artifacts": [
+    {
+      "logical": "UsersProjectsApi",
+      "freshArchiveGenerated": true,
+      "wholeArchiveMatchesAdopted": false,
+      "allUncompressedMembersMatchAdopted": true,
+      "bootstrapMatchesAdopted": true,
+      "encryptedBindingBytesMatchAdopted": true,
+      "sameArchiveLength": true,
+      "rawDifferencesLimitedToCentralDirectoryExternalAttributes": true,
+      "memberModes": {
+        "./": {
+          "adopted": "0o40700",
+          "fresh": "0o40755"
+        },
+        "bootstrap": {
+          "adopted": "0o100700",
+          "fresh": "0o100755"
+        },
+        "resource.enc": {
+          "adopted": "0o100600",
+          "fresh": "0o100644"
+        }
+      }
+    },
+    {
+      "logical": "EmptyProjectCleanup",
+      "freshArchiveGenerated": true,
+      "wholeArchiveMatchesAdopted": false,
+      "allUncompressedMembersMatchAdopted": true,
+      "bootstrapMatchesAdopted": true,
+      "encryptedBindingBytesMatchAdopted": true,
+      "sameArchiveLength": true,
+      "rawDifferencesLimitedToCentralDirectoryExternalAttributes": true,
+      "memberModes": {
+        "./": {
+          "adopted": "0o40700",
+          "fresh": "0o40755"
+        },
+        "bootstrap": {
+          "adopted": "0o100700",
+          "fresh": "0o100755"
+        },
+        "resource.enc": {
+          "adopted": "0o100600",
+          "fresh": "0o100644"
+        }
+      }
+    },
+    {
+      "logical": "CloudExecutionWorker",
+      "freshArchiveGenerated": true,
+      "wholeArchiveMatchesAdopted": false,
+      "allUncompressedMembersMatchAdopted": true,
+      "bootstrapMatchesAdopted": true,
+      "encryptedBindingBytesMatchAdopted": true,
+      "sameArchiveLength": true,
+      "rawDifferencesLimitedToCentralDirectoryExternalAttributes": true,
+      "memberModes": {
+        "./": {
+          "adopted": "0o40700",
+          "fresh": "0o40755"
+        },
+        "bootstrap": {
+          "adopted": "0o100700",
+          "fresh": "0o100755"
+        },
+        "resource.enc": {
+          "adopted": "0o100600",
+          "fresh": "0o100644"
+        }
+      }
+    },
+    {
+      "logical": "ExecutionControlledEndpoint",
+      "freshArchiveGenerated": true,
+      "wholeArchiveMatchesAdopted": false,
+      "allUncompressedMembersMatchAdopted": true,
+      "bootstrapMatchesAdopted": true,
+      "encryptedBindingBytesMatchAdopted": true,
+      "sameArchiveLength": true,
+      "rawDifferencesLimitedToCentralDirectoryExternalAttributes": true,
+      "memberModes": {
+        "./": {
+          "adopted": "0o40700",
+          "fresh": "0o40755"
+        },
+        "bootstrap": {
+          "adopted": "0o100700",
+          "fresh": "0o100755"
+        },
+        "resource.enc": {
+          "adopted": "0o100600",
+          "fresh": "0o100644"
+        }
+      }
+    }
+  ],
+  "hold": {
+    "inferredGuardFromRetainedEvidenceAndPinnedControlFlow": "fresh-package-drift-held",
+    "retainedStopReasons": ["phase-failed-or-uncertain-no-restart"],
+    "archiveBytesNotReplacedOrAdopted": true
+  },
+  "operationCounts": [
+    {
+      "operation": "apigateway/GetIntegrations",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "apigateway/GetRoutes",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "apigateway/GetStage",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "cloudfront-keyvaluestore/GetKey",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "cloudfront/GetDistribution",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "cognito-idp/DescribeUserPool",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "cognito-idp/DescribeUserPoolClient",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "dynamodb/DescribeTable",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "dynamodb/GetItem",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "dynamodb/Scan",
+      "status": 200,
+      "write": false,
+      "attempts": 3
+    },
+    {
+      "operation": "events/DescribeRule",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "events/ListTargetsByRule",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "freetier/GetAccountPlanState",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "iam/GetPolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/GetPolicyVersion",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/GetRole",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/GetRolePolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 3
+    },
+    {
+      "operation": "iam/ListAttachedRolePolicies",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/ListRolePolicies",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "lambda/GetAccountSettings",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "lambda/GetFunctionConcurrency",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "lambda/GetFunctionConfiguration",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "lambda/GetPolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 3
+    },
+    {
+      "operation": "lambda/GetPolicy",
+      "status": 404,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "lambda/ListEventSourceMappings",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "lambda/ListProvisionedConcurrencyConfigs",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "s3/GET",
+      "status": 200,
+      "write": false,
+      "attempts": 6
+    },
+    {
+      "operation": "s3/GET",
+      "status": 404,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "s3/GetBucketAccelerateConfiguration",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketAcl",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketCors",
+      "status": 404,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketEncryption",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketLifecycleConfiguration",
+      "status": 404,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketLogging",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketPolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketReplication",
+      "status": 404,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketRequestPayment",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketVersioning",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetBucketWebsite",
+      "status": 404,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetObject",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/GetObjectLockConfiguration",
+      "status": 404,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/HEAD",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "s3/ListObjectsV2",
+      "status": 200,
+      "write": false,
+      "attempts": 11
+    },
+    {
+      "operation": "s3control/ListTagsForResource",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "signin/CreateOAuth2Token",
+      "status": 200,
+      "write": true,
+      "attempts": 1
+    },
+    {
+      "operation": "sqs/GetQueueAttributes",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "ssm/GetParameter",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "sts/GetCallerIdentity",
+      "status": 200,
+      "write": false,
+      "attempts": 9
+    }
+  ],
+  "attemptProjection": {
+    "path": "docs/development/project-environments-collection-390-cp1-attempts.jsonl",
+    "sha256": "0747dc561511c1eea0611cc376ea25918552d6329af381d7b29d531040c465d1"
+  },
+  "localChecksPassed": true,
+  "campaignStopped": true,
+  "collectionCompleted": false,
+  "laterPhasesRun": [],
+  "infrastructureOrStateWrites": 0,
+  "runtimeRequests": 0,
+  "automaticRestart": false,
+  "rawDiagnosticsOrCredentialMaterialPublished": false,
+  "nextDecision": "Review ZIP external-attribute reproducibility locally against the adopted bytes. Do not normalize, replace or adopt archives automatically. Future live work requires reviewed accounting from 499, fresh unique claims/checkpoint handling and explicit authorization; do not replay this stopped campaign."
+}

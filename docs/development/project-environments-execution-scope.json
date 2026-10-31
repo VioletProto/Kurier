@@ -1,0 +1,328 @@
+{
+  "account": "747336059622",
+  "region": "us-east-2",
+  "stage": "dev-api",
+  "apiId": "8dnymkcoa0",
+  "controlTable": "kurier-dev-api-ControlTable-bdxbaoxb",
+  "protectedTable": "kurier-dev-api-ProtectedTable-szbvcchc",
+  "stateBucket": "sst-state-moshrdrrbeba",
+  "assetBucket": "sst-asset-moshrdrrbeba",
+  "webBucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+  "evidenceBucket": "executionevidence-71a0f7a",
+  "distribution": "EMNTWD8Q14ZLM",
+  "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+  "kvsHost": "747336059622.cloudfront-kvs.global.api.aws",
+  "namespace": "76ef",
+  "functions": {
+    "UsersProjectsApi": {
+      "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+      "arn": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-UsersProjectsApiFunction-werhekow",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-UsersProjectsApiRole-obmwtcha",
+      "inlinePolicyNames": ["inline"],
+      "managedPolicyArns": [
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      ]
+    },
+    "EmptyProjectCleanup": {
+      "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+      "arn": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-EmptyProjectCleanupRole-bcbvfhbb",
+      "inlinePolicyNames": ["inline"],
+      "managedPolicyArns": [
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      ]
+    },
+    "CloudExecutionWorker": {
+      "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+      "arn": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-CloudExecutionWorkerRole-rcuddfur",
+      "inlinePolicyNames": ["inline"],
+      "managedPolicyArns": [
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      ]
+    },
+    "ExecutionControlledEndpoint": {
+      "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+      "arn": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+      "role": "arn:aws:iam::747336059622:role/kurier-dev-api-ExecutionControlledEndpointRole-ofvrxhon",
+      "inlinePolicyNames": [],
+      "managedPolicyArns": [
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      ]
+    }
+  },
+  "routes": [
+    "DELETE /api/v1/projects/{projectId}/environments/{environmentId}",
+    "GET /api/v1/projects/{projectId}/environments",
+    "GET /api/v1/projects/{projectId}/environments/{environmentId}",
+    "OPTIONS /api/v1/projects/{projectId}/environments",
+    "OPTIONS /api/v1/projects/{projectId}/environments/{environmentId}",
+    "PATCH /api/v1/projects/{projectId}/environments/{environmentId}",
+    "POST /api/v1/local-agent/capabilities",
+    "POST /api/v1/projects/{projectId}/environments"
+  ],
+  "permissions": [
+    {
+      "statementId": "DevelopmentHttpApiRouteBcuohnPermissions-686dd66",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    },
+    {
+      "statementId": "DevelopmentHttpApiRouteBatecoPermissions-04df868",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    },
+    {
+      "statementId": "DevelopmentHttpApiRouteVxffawPermissions-0f20278",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    },
+    {
+      "statementId": "DevelopmentHttpApiRouteRdfcmsPermissions-6eb9cbe",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    },
+    {
+      "statementId": "DevelopmentHttpApiRouteBbrzwoPermissions-b13efb0",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    },
+    {
+      "statementId": "DevelopmentHttpApiRouteKotabwPermissions-074e6fa",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    },
+    {
+      "statementId": "DevelopmentHttpApiRouteSndcdbPermissions-ff4eb7d",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    },
+    {
+      "statementId": "DevelopmentHttpApiRouteKbebwhPermissions-d70f9b5",
+      "action": "lambda:InvokeFunction",
+      "principal": "apigateway.amazonaws.com",
+      "sourceArn": "arn:aws:execute-api:us-east-2:747336059622:8dnymkcoa0/*"
+    }
+  ],
+  "oldCodeObjects": [
+    {
+      "key": "assets/EmptyProjectCleanup-code-f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32.zip",
+      "versionId": null
+    },
+    {
+      "key": "assets/UsersProjectsApi-code-f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32.zip",
+      "versionId": null
+    },
+    {
+      "key": "assets/ExecutionControlledEndpoint-code-15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379.zip",
+      "versionId": null
+    },
+    {
+      "key": "assets/CloudExecutionWorker-code-15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379.zip",
+      "versionId": null
+    }
+  ],
+  "frontendObjects": [
+    {
+      "key": "assets/index-DXEG7-ST.js",
+      "contentType": "text/javascript;charset=UTF-8",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "key": "assets/index-CAjex_6u.css",
+      "contentType": "text/css;charset=UTF-8",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "key": "startup.js",
+      "contentType": "text/javascript;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "key": "index.html",
+      "contentType": "text/html;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "key": "artifact.json",
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "key": "404.html",
+      "contentType": "text/html;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "key": "_releases/38325083b003b3f320752dbfa0357c377d57d2b66c1175e06c88ba3638210236/startup.js",
+      "contentType": "text/javascript;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "key": "_releases/38325083b003b3f320752dbfa0357c377d57d2b66c1175e06c88ba3638210236/index.html",
+      "contentType": "text/html;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "key": "_releases/38325083b003b3f320752dbfa0357c377d57d2b66c1175e06c88ba3638210236/artifact.json",
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "key": "_releases/38325083b003b3f320752dbfa0357c377d57d2b66c1175e06c88ba3638210236/404.html",
+      "contentType": "text/html;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    }
+  ],
+  "kvEntries": {
+    "/404.html": "s3",
+    "/artifact.json": "s3",
+    "/assets/index-CAjex_6u.css": "s3",
+    "/assets/index-DXEG7-ST.js": "s3",
+    "/index.html": "s3",
+    "/startup.js": "s3",
+    "metadata": "{\"custom404\":\"/index.html\",\"s3\":{\"domain\":\"kurier-dev-api-web-fc2927a49a0b246240e5a17774.s3.us-east-2.amazonaws.com\",\"dir\":\"\",\"routes\":[\"/_releases\",\"/assets\"]}}"
+  },
+  "parameters": ["/sst/bootstrap", "/sst/passphrase/kurier/dev-api"],
+  "outputs": {
+    "stage": "dev-api",
+    "region": "us-east-2",
+    "apiUrl": "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+    "controlTable": "kurier-dev-api-ControlTable-bdxbaoxb",
+    "protectedTable": "kurier-dev-api-ProtectedTable-szbvcchc",
+    "evidenceBucket": "executionevidence-71a0f7a",
+    "executionQueueUrl": "https://sqs.us-east-2.amazonaws.com/747336059622/ExecutionQueue-180d2f5",
+    "executionQueueArn": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+    "apiFunction": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+    "cleanupFunction": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+    "workerFunction": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+    "controlledEndpointFunction": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+    "cleanupSchedule": "kurier-dev-api-EmptyProjectScheduleRule-drmfctzc"
+  },
+  "projectionFields": [
+    "PK",
+    "SK",
+    "kind",
+    "schemaVersion",
+    "state",
+    "version",
+    "pinnedCount",
+    "pinnedBytes",
+    "inflightCount",
+    "storageReservedBytes",
+    "count",
+    "month",
+    "projectId",
+    "ownerId",
+    "jobId",
+    "executionId",
+    "runId",
+    "position",
+    "writeSettled",
+    "objectKey",
+    "checksum",
+    "bytes",
+    "recoveryGeneration",
+    "assertionSemanticsVersion",
+    "activeJob",
+    "templateSemanticsVersion",
+    "environmentId",
+    "scalarType"
+  ],
+  "identityArn": "arn:aws:iam::747336059622:user/davian-admin",
+  "poolId": "us-east-2_qTDZQT1FE",
+  "clientId": "5jg9sb38i6ae9c0adm5rtdfkno",
+  "approvedAdditionalReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketPolicy",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": "assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "cloudfront-keyvaluestore",
+      "operation": "GetKey",
+      "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+      "key": "76ef:/assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAcl",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketCors",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketWebsite",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketVersioning",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAccelerateConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketRequestPayment",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLogging",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLifecycleConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketReplication",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketEncryption",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObjectLockConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    }
+  ]
+}

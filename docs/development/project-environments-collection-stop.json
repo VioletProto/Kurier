@@ -1,0 +1,70 @@
+{
+  "status": "stopped-before-reader-collection-no-restart",
+  "toolingCommit": "c5d794b4e3c3afacab7c478fd4fdeab84ff4a886",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "authorizationSha256": "3b82cf2953da5769a3538e9c4531858d762fd50dc4edd8b48857f27b75fb84b9",
+  "manifestSha256": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+  "scopeSha256": "3f559dfb51f1ad9dc11e7fd2c81b9d809e5709696aa6bf6070068e07b2b269dc",
+  "campaign": ".build/project-environments-execution/release-from-299",
+  "accounting": {
+    "prior": 299,
+    "newPhysicalAttempts": 2,
+    "cumulative": 301,
+    "authorizedCeiling": 1799,
+    "remainingAttemptHeadroom": 1498,
+    "unmatchedAttempts": 0,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "window": {
+    "originalSeconds": 3300,
+    "elapsedSecondsAtStop": 0.54908,
+    "remainingSecondsAtStop": 3299.45092,
+    "remainingTimeIsContinuationAuthority": false,
+    "closedWindowStarted": false
+  },
+  "authentication": {
+    "refreshAttempts": 1,
+    "refreshHttpStatus": 200,
+    "stsAttempts": 1,
+    "stsHttpStatus": 200,
+    "identityCheckpointRecorded": true,
+    "credentialCoversOriginalDeadlineWithGuard": false,
+    "diagnosis": "Refreshed credentials had approximately 900 seconds of lifetime; original shared window required 3300 seconds plus guard."
+  },
+  "attempts": [
+    {
+      "ordinal": 300,
+      "phase": "collect",
+      "operation": "signin/CreateOAuth2Token",
+      "write": true,
+      "status": 200,
+      "outcomeRecorded": true
+    },
+    {
+      "ordinal": 301,
+      "phase": "collect",
+      "operation": "sts/GetCallerIdentity",
+      "write": false,
+      "status": 200,
+      "outcomeRecorded": true
+    }
+  ],
+  "observations": {
+    "baseline": "not-observed",
+    "quiescence": "not-observed",
+    "configurationComparison": "not-observed",
+    "iamComparison": "not-observed",
+    "resourceDiff": "not-observed",
+    "generatedArchiveAgreement": "not-observed",
+    "frontendAgreement": "not-observed"
+  },
+  "localChecksPassed": true,
+  "campaignStopped": true,
+  "collectionCompleted": false,
+  "laterPhasesRun": [],
+  "infrastructureOrStateWrites": 0,
+  "runtimeRequests": 0,
+  "automaticRestart": false,
+  "nextDecision": "Review credential lifetime and an execution window that can be covered by the same session; any new campaign requires separate authorization carrying forward 301 attempts. Preserve the consumed window-from-299 claim."
+}

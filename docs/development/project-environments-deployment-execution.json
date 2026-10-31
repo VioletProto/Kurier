@@ -1,0 +1,183 @@
+{
+  "toolingCommit": "83863b02132cbd3c70ace136261bde4ee30dd192",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCalls": 109,
+  "accounting": {
+    "cumulative": 499,
+    "authorizedCeiling": 1799,
+    "billingMeasured": false,
+    "proceduralAllowanceUsd": 1,
+    "remainingAttempts": 1300,
+    "newCallsForCredentialCorrection": 0,
+    "newCallsForContextCorrection": 0,
+    "newCallsForDenialReview": 0,
+    "newCallsForApprovedReadCorrection": 0,
+    "newCallsForAclReadCorrection": 0,
+    "newCallsForBucketReadCorrection": 0,
+    "newCallsForCp1Collection": 109,
+    "newCallsForPackagingReview": 0
+  },
+  "checks": {
+    "unitTestsPassed": 17,
+    "isolatedTransportCasesPassed": 8,
+    "sharedFixturePhysicalAttempts": 11,
+    "repositoryVerifyPassed": true,
+    "ruffPassed": true,
+    "artifactAndEvidencePinsPassed": true,
+    "credentialTestsPassed": 22,
+    "pathTestsPassed": 9,
+    "isolatedContextCasesPassed": 1,
+    "policyDiagnosticTestsPassed": 18,
+    "frontendTestsPassed": 14,
+    "isolatedOldFrontendSdkCasesPassed": 1,
+    "transitionTestsWithActualLocalDbPassedInPriorReview": 90,
+    "isolatedProductionPreviewCasesPassed": 1,
+    "isolatedUnexpectedBucketReadCasesPassed": 1,
+    "startupTestsThroughDriverMain": 19,
+    "checkpointCaptureAndClaimTests": 21,
+    "isolatedPackagingParentUmaskCasesPassed": 4
+  },
+  "hashes": {
+    "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+    "docs/development/project-environments-execution-scope.json": "760c1c25db84fedab09a440d5399a67f6e7a2c749d8fb5ec1e0d934b17411f72",
+    "docs/development/project-environments-release.json": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "docs/development/project-environments-sst-release.json": "25ef3cd0c8f0c09037607c564bfb8964c1ef8e8e14a3aa0ae8757894918895a9"
+  },
+  "liveExecutionAuthorized": false,
+  "credentialPolicy": {
+    "renewal": "approved-phase-boundaries-only",
+    "phaseSeconds": 240,
+    "expiryGuardSeconds": 5,
+    "maximumRefreshes": 6
+  },
+  "originalCampaignSeconds": 3300,
+  "closedStageMaximumSeconds": 1800,
+  "newCampaignAuthorizationRequired": true,
+  "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
+  "credentialReview": "docs/development/project-environments-credential-renewal.md",
+  "verificationLogSha256": "2e62b0192783e545d18dbafb69293ddedb347d29dbed6a022de13997b4bdc64f",
+  "contextReview": "docs/development/project-environments-context-path-correction.md",
+  "contextMapping": {
+    "destination": "/meter/phase-context.json",
+    "readOnly": true,
+    "campaignDirectoryMounted": false
+  },
+  "denialReview": "docs/development/project-environments-preview-denial-review.md",
+  "permissionApprovalRequiredBeforeStart": false,
+  "pendingScopedReads": [],
+  "frontendExpectations": {
+    "collect": "accepted-old-baseline",
+    "close": "accepted-old-baseline",
+    "verify": "adopted-release",
+    "activate": "adopted-release",
+    "final": "adopted-release"
+  },
+  "approvedAdditionalReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketPolicy",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": "assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "cloudfront-keyvaluestore",
+      "operation": "GetKey",
+      "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+      "key": "76ef:/assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAcl",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketCors",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketWebsite",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketVersioning",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAccelerateConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketRequestPayment",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLogging",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLifecycleConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketReplication",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketEncryption",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObjectLockConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    }
+  ],
+  "unapprovedReadsAdded": false,
+  "readCorrection": "docs/development/project-environments-approved-read-correction.md",
+  "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235",
+  "aclReadCorrection": "docs/development/project-environments-acl-read-correction.md",
+  "bucketReadCorrection": "docs/development/project-environments-bucket-read-correction.md",
+  "latestExecutionRecord": "docs/development/project-environments-collection-390-cp1.json",
+  "latestExecutionStatus": "reader-and-preview-complete-archive-byte-agreement-held",
+  "stoppedCampaigns": 5,
+  "historicalStartCommandConsumed": true,
+  "credentialBoundaryReview": "docs/development/project-environments-credential-boundary-review.md",
+  "currentCheckpointAdopted": true,
+  "checkpointApprovalRequiredBeforeFutureLiveWork": false,
+  "checkpointAdoptionReview": "docs/development/project-environments-checkpoint-adoption.md",
+  "freshInitialCollectionAuthorizationRequired": true,
+  "historicalGrantContinuityEstablished": false,
+  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-499-p1 --authorization .build/project-environments-execution/authorization-from-499-packaging-1.json --checkpoint .build/project-environments-execution/checkpoints/carried-current-499-p1.json",
+  "reviewedAccountingFrom499Required": false,
+  "proposedCollectionCommandIsConsumedHistoricalCommand": false,
+  "packagingReview": "docs/development/project-environments-packaging-reproducibility.md",
+  "packagingChildUmask": "0077",
+  "carriedCheckpointPrepared": true,
+  "historicalCp1CommandConsumed": true
+}

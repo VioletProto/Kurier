@@ -1,10 +1,322 @@
 # Project environments implementation and local verification
 
+## Artifacts adopted; metered deployment tooling prepared locally
+
+The [consolidated execution packet](project-environments-deployment-execution.md)
+records explicit adoption of the review-8 ZIPs in the new adopted manifest,
+linked to binding attestation cb74c992. Historical manifests and rollback bytes
+remain intact. The collector, guarded stage adapter and actual upload-byte gate
+are implemented and locally verified. Current accounting remains **299/500**;
+zero new AWS calls. A proposed expanded deployment window and separate phase
+approvals require review. All live-work holds remain.
+
+## Authorized key observation succeeded — cumulative 299; adoption still pending
+
+The [key-observation result](project-environments-key-observation.md) records
+one bounded existing-session refresh, required STS and exact UsersProjectsApi
+configuration read, all HTTP 200. **299/500 cumulative**. All four retained
+resource.enc blobs authenticated and matched the required empty bindings; no
+credential or unrelated binding occurs in them. No key/plaintext/full environment
+was retained or published. This resolves the earlier content-validation gap;
+both manifests and all original/rollback evidence remain unchanged. Candidate
+adoption remains pending review. Live metered adapter/upload-boundary and other
+release gates remain unresolved; no deployment, closure, activation or runtime
+continuation occurred. Same cumulative $1 procedural allowance, billing unmeasured.
+
+## Final readiness review — local prerequisites verified, deployment still blocked
+
+The [readiness packet](project-environments-final-readiness.md) proposes the exact
+review-8 SST ZIPs in a [new manifest](project-environments-sst-release.json), while
+preserving the original manifest and rollback bytes. Structure/bootstrap hashes,
+application JWT/ownership/agent guards and the accepted API-wide invoke pattern
+are locally verified. **88 transition tests with real DynamoDB Local and 10 archive
+tests passed**, plus security integration/race and repository verification.
+Real resource.enc content remains unauthenticated because no local key was found;
+the packet does not certify encrypted credential/binding absence. Candidate
+adoption and closure remain held. The guarded transition core is implemented;
+the CLI is local-only. A metered live adapter and upload-boundary byte gate still
+need review/implementation. **296/500 cumulative; zero new AWS calls**, same $1
+procedural allowance; no deployment/runtime work or automatic continuation.
+
+## Authorized review-8 completed — cumulative 296, ZIP differences for review
+
+The [review-8 result](project-environments-refresh-preview-review-8.md) records
+one successful clean `1fd9812` execution: refresh + mandatory STS + 31 provider
+reads, including the exact bucket ListTagsForResource (HTTP 200), with no denial.
+**296/500 cumulative**; no restart or continuation. The completed SST change list
+covers eight routes/integrations/invoke permissions, four Lambda code changes,
+frontend changes and an existing bucket read. Four new ZIP hashes differ because
+SST adds `resource.enc` and a directory entry; all bootstrap bytes and frontend
+metadata match prepared bytes. New ZIPs/bindings require review and are not adopted
+as release artifacts. All 74 original proof files, claims and release/rollback
+bytes remain intact. All deployment/runtime holds remain; no further live work
+is authorized. Historical packets below retain their original status/accounting.
+
+## Resource-scoped ListTagsForResource amendment — local review only, cumulative 263
+
+The [new packet](project-environments-listtags-resource-review.md) establishes
+one ARN from the diagnosed FrontendWebAssets bucket, retained inventory/state
+and the pinned provider's bucket-ARN construction. The dedicated gate permits
+only its canonical empty-body GET on the exact account/region endpoint, with
+strict query/header/signing constraints. Other resources, mutations and generic
+S3 Control allowances remain held. **90 unit tests and 26 offline transport/
+process scenarios passed**, as did repository verification. No AWS calls ran;
+**263/500**, 74 frozen proof files and all release/rollback bytes are preserved.
+Proposed exact tooling `1fd9812f8b974d527ba77e71ac78f7db63db276e` and a fresh
+60-minute/237-attempt command are published for review, not execution. All live
+work and deployment/runtime holds remain; historical results below are unchanged.
+
+## Authorized review-7 stopped — GET ListTagsForResource, cumulative 263
+
+The [review-7 result](project-environments-refresh-preview-review-7.md) records
+one clean `987b894` execution. Refresh and mandatory STS verification returned
+HTTP 200, followed by 30 provider reads. **263/500 cumulative**. Private review
+identified a unique GET ListTagsForResource match; it was blocked before any
+S3 Control AWS request. Raw receipt/hash and resource values remain private.
+Resource ARN scope is unestablished by the name-only receipt; any read allowance
+needs separate review. An error-time preview summary reports 8 create/97 same,
+with three error diagnostics, not a completed diff. Frontend matches; no new ZIP
+completed; original evidence and release/rollback bytes remain intact. No policy
+change/restart/repair or deployment/runtime continuation occurred.
+
+## S3 Control exact-host amendment — all HTTP operations held, cumulative 231
+
+The [implemented amendment](project-environments-s3control-operation-review.md)
+recognizes only the accepted account/region hostname and blocks every S3 Control
+HTTP request before admission/forwarding. Local source inspection still cannot
+establish the historical API. Default-off private diagnostics emit only bounded,
+model-derived operation names/status; no paths, query keys/values, headers,
+credentials or bodies are retained. **80 unit tests and 22 offline process/
+transport scenarios** passed, including zero upstream requests and descendant
+shutdown. Accounting verifies **231/500** and 56 protected original files; release/
+rollback bytes and all prior claims remain intact. Exact proposed execution at
+`987b89422c4da2d06a75ce9bd49988de0790cd86` is for review only. No live execution,
+S3 Control API operation, deployment or runtime continuation is authorized.
+
+## Authorized review-6 stopped — reviewed S3 Control host, cumulative 231
+
+The [review-6 result](project-environments-refresh-preview-review-6.md) records
+one clean `3109170` execution with private CONNECT capture. Cached credentials
+were valid: no refresh; required STS verification succeeded, followed by 30
+provider attempts. Actual usage is **231/500**. Private review approved disclosure
+of the same-account regional S3 Control hostname; raw receipt/hash remain private
+and excluded from public evidence. CONNECT establishes no HTTP operation.
+The [separate proposal](project-environments-s3control-connect-proposal.md) is
+exact-host recognition with all S3 Control HTTP requests still held, not an
+applied read allowance. No policy change/restart/repair occurred. Diff remains
+partial; frontend matches, no new ZIP completed, release/rollback bytes and all
+original proofs/claims remain intact. All deployment/runtime holds remain.
+
+## Local CONNECT investigation — private capture proposed, cumulative 200
+
+The [review-5 investigation](project-environments-denied-connect-review-5.md)
+cannot attribute the exact denied destination from retained private logs,
+generated configuration or installed source. No hostname is guessed or allowed.
+A default-off private host-only receipt is implemented for review: 253-character
+host/512-byte file cap, exclusive 0600 file in the ignored private ledger
+directory, no paths/queries/headers/bodies, unchanged public redaction and
+stop-before-forward. Any captured hostname requires private review before
+publication. Accounting verifies the preserved terminal campaign at **200/500**;
+no new claim/window or live call occurred. All deployment/runtime holds remain.
+
+## Authorized review-5 stopped — authentication succeeded, cumulative 200
+
+The [review-5 result](project-environments-refresh-preview-review-5.md) records
+one execution of clean `4a0faaf` against unchanged release source. Existing-session
+refresh and same-identity STS verification returned HTTP 200; 30 read-only provider
+attempts followed. The meter then held an unattributed CONNECT endpoint on port
+443; hostname is redacted by the reviewed sanitizer. **200/500 cumulative**:
+168 prior + 2 authentication/verification + 30 provider attempts. No restart,
+repair or widening followed. Partial component evidence has no final summary;
+frontend bytes match, no new ZIP completed, release/rollback bytes and all prior
+proofs remain unchanged. New campaign/provider claims and original ledgers are
+preserved. All deployment/runtime holds remain; future work needs reviewed
+200-based accounting and explicit authorization.
+
+## Authentication endpoint alignment — offline verified, live work held
+
+The [amendment](project-environments-auth-endpoint-alignment.md) lets the pinned
+SDK resolve CreateOAuth2Token and accepts only the prepared token URL at
+https://us-east-2.signin.aws.amazon.com/v1/token before admission/forwarding.
+Offline tests confirm DPoP URI alignment and rejection of the old/wrong hosts.
+The current authentication/preview baseline verifies **168/500**; historical
+ledgers/claims, release/rollback bytes and the byte-identical preview policy
+remain preserved. **63 unit tests and 15 process/transport scenarios**, local
+preflight and repository verification passed without external networking.
+Implementation `4a0faafc673e97d9faae3f26906a327a8bd06e71` and an exact proposed
+execution command are published for review. No refresh, probe or preview ran;
+recovery and historical causation remain unverified. All live-work holds remain.
+
+## Offline operation-endpoint comparison — no live work
+
+The [comparison](project-environments-auth-path-comparison.md) confirms that
+installed default SDK/CLI CreateOAuth2Token selects
+us-east-2.signin.aws.amazon.com, while the unchanged helper forces
+signin.us-east-2.amazonaws.com. Identical client base hostnames had masked this
+operation-level divergence. Region/current proxy/TLS settings match; timeout and
+retry configuration differ. This is not proof of historical causation. No
+endpoints, cache, policy or networking changed; no network requests/probes/refresh ran.
+Usage 168/500 and every historical proof/claim and release/rollback byte remain
+preserved. The smallest next action is review of an authentication-only
+operation-endpoint alignment proposal; no live continuation is authorized.
+
+## Authorized DNS/TCP diagnostic stopped — cumulative168
+
+The [once-only diagnostic result](project-environments-network-probe-result.md)
+records two configured-resolver queries, one returned public IPv4 address, no
+AAAA address, and one IPv4 TCP connect timeout. TLS0, HTTP/API/authentication0;
+no refresh or preview. Actual context was measured; underlying cause and both
+prior remote refresh outcomes remain uncertain. One charged connection brings
+cumulative usage to168/500. New/old claims and every ledger remain preserved.
+Offline59 unit/15 transport checks passed before execution. No repair, settings
+change, retry or continuation; release/rollback bytes and all holds remain.
+
+## Local network-context comparison and167 accounting — review only
+
+The [context comparison and probe proposal](project-environments-network-context.md)
+compare retained successful/failed invocation history with local namespaces,
+routes, resolver/proxy, firewall/VPN configuration and journal evidence. Earlier
+Wi-Fi/DHCP events do not establish the connect-timeout cause; historical actual
+network snapshots and live firewall visibility are incomplete. Both refresh
+outcomes remain uncertain. Accounting verifies167/500 and preserves all original
+proofs/claims. No authentication, preview, external probe or repair ran. The
+bounded DNS/TCP/TLS plan is proposed only; release bytes and all holds remain.
+
+## Authorized review-4 stopped — typed connect-timeout
+
+The [review-4 result](project-environments-refresh-preview-review-4.md) records
+one execution of7e6e504 with a fresh166-based window. One refresh attempt at167
+recorded connect-timeout/connect, no numeric code or HTTP status. No identity
+verification or provider work followed; no diff or new packaging. Cumulative
+167/500, authentication1/provider0. Underlying cause and remote refresh outcome
+remain unverified; prior uncertainty is preserved. Both failed runs/claims, all
+ledgers, tooling/policy, release and rollback bytes remain intact. No repeat,
+repair, widening or restart. Same cumulative $1 allowance,333 arithmetic calls
+remaining; all live-work holds remain.
+
+## Local authentication diagnostics and166 accounting — review only
+
+The [local investigation](project-environments-auth-transport-investigation.md)
+finds no retained subtype establishing the historical transport cause; remote
+refresh outcome remains uncertain. Typed, bounded category/phase/numeric-code
+diagnostics and offline regressions are added without messages or request data.
+Accounting now verifies166/500 against all frozen proofs, preserving the failed
+165 campaign claim. No network probe, AWS request, live refresh/preview or repair
+ran. Source, policy and release/rollback bytes remain unchanged. Proposed recovery
+requires separate review and authorization; all live-work holds remain.
+
+## Authorized refresh-preview stopped — 2026-10-28 MDT
+
+The [live refresh-preview result](project-environments-refresh-preview-result.md)
+records the one authorized9cf8d74 invocation. One refresh attempt ended in
+transport-failure with no HTTP status; remote outcome and cause are uncertain.
+No identity verification or provider startup followed. New authentication1,
+provider0; cumulative166/500. No diff or regenerated packaging. Original ledgers,
+new private receipts, reviewed policy/tooling, release and rollback bytes remain
+intact. No repeated refresh, repair, widening or restart. The same cumulative $1
+allowance and all live-work holds remain;334 calls are arithmetic headroom only.
+
+## Shared-budget handoff implemented — local review only
+
+The [amended tooling packet](project-environments-shared-budget.md) implements
+a single-use authentication ledger and original-deadline handoff to the provider
+meter. The read-only policy is byte-identical. Offline ledger, exhaustion,
+deadline, failed-authentication and reuse/reset tests passed; no AWS calls,
+refresh or live preview occurred. Prior165/ceiling500 and the cumulative $1
+allowance remain. Source, original ledgers, release and rollback bytes are
+preserved. Execution awaits review of the amended commit and exact PR #18
+command; all live-work holds remain.
+
+## Refresh authorization preflight — shared-budget gap
+
+The [local handoff preflight](project-environments-refresh-handoff-preflight.md)
+confirmed unchanged reviewed0d1defa tooling cannot carry refresh calls and the
+original deadline into the provider meter. Its non-fixture launcher hardcodes165
+prior calls and a new3,600-second clock. The offline probe made zero AWS calls;
+no refresh or preview started. Cumulative165/500, original ledgers, policy,
+release and rollback bytes remain unchanged. A concrete handoff amendment is
+proposed for review, not implemented; executing it requires resolving the
+identical-tooling/no-repairs constraint. The cumulative $1 allowance and all
+live-work holds remain.
+
+## Authorized preview invocation refused — 2026-10-27 MDT
+
+The [credential-stop result](project-environments-preview-credential-stop.md)
+records one invocation of reviewed tooling0d1defa with a fresh review-2 output
+path. Expired cached credentials caused the reviewed local guard to refuse
+before proxy/SST startup. Zero new AWS attempts; cumulative165/500, original
+ledgers and artifact/rollback bytes unchanged. No diff or new packaging exists.
+No refresh, repair, policy change or restart. The same cumulative $1 allowance
+and all deployment/closure/migration/activation/identity/project/runtime holds
+remain; unused335 calls do not authorize another invocation.
+
+## Local endpoint diagnostics follow-up — 2026-10-27 MDT
+
+The [local investigation and diagnostic packet](project-environments-endpoint-investigation.md)
+keeps historical stop attribution unestablished, distinguishes source deductions
+from evidence, and adds bounded private hostname/protocol/port receipts. Eight
+unit tests and14 offline transport scenarios verify denial, redaction and
+parent/child/grandchild termination. The endpoint policy bytes are unchanged;
+no policy amendment is proposed. Launcher accounting now verifies both frozen
+ledgers and carries165/500 usage forward. Original ledgers, release and rollback
+bytes are preserved. No AWS calls, preview rerun or live work; all holds remain.
+
+## Authorized preview stopped — 2026-10-27 MDT
+
+The [actual preview result](project-environments-preview-result.md) records the
+single invocation authorized at tooling `843428a3875e6d5ac3544420c392731d6a3991ee`:
+the unchanged meter stopped on `endpoint-held` after30 new AWS reads, retaining
+135 prior attempts for165 cumulative. The rejected hostname/operation was not
+retained, so attribution is unestablished. The partial event log has eight new
+route-component registrations but no completed AWS diff/summary. Frontend hashes
+match; no new Lambda ZIPs were produced; prepared and rollback bytes remain
+intact. No policy widening, refresh, repair or restart. The window is stopped;
+335 unused calls are arithmetic, not authority to continue. Deployment, closure,
+migration, activation, identity/project creation and runtime holds remain.
+
+## Provider-process meter preparation — 2026-10-27
+
+The [preview meter packet](project-environments-preview-meter.md) implements and
+locally verifies shared counting/time limits across isolated SST/Pulumi/Go/Node
+processes. Four unit tests and ten transport scenarios cover retries/pages,
+HTTP/2, concurrent limits, bypass denial, unexpected writes, redirects, failed
+transports, persistence failure and descendant shutdown. The proposed new window
+uses only the remaining365 calls, retaining135 prior calls and the cumulative
+$1 allowance. No AWS calls or live preview ran. Release source, package/static
+hashes and rollback bytes are unchanged. Preview and all deployment/runtime
+holds remain; this is tooling preparation for review.
+
+## Release preparation — 2026-10-27
+
+Subsequent [authorized inventory and artifact preparation](project-environments-inventory.md)
+completed with 135/500 physical attempts, preserved source pins, current
+capability/accounting/IAM/resource readbacks and verified rollback retrieval.
+Prepared release ZIPs/static manifest are retained locally. Stopped before SST
+preview because provider-process metering is not established. Only Davian's
+separately authorized existing-session refresh wrote authentication state;
+no application/infrastructure changes or live target requests occurred.
+All deployment/closure/migration/activation/identity/project/runtime holds remain.
+
+PRs #15 and #16 are merged. The proposed
+[deployment review packet](project-environments-deployment-review.md) pins release
+source `44f1fb79d943501c95e06fcc1a6114111a7c1ea4` (PR #16 merge, including
+implementation head `82fa7d760a485934bde3259f7652ab1c434ea85f`). It records
+source-derived deployment/IAM expectations, compatibility, closed-stage activation,
+no required backfill, post-data rollback limits and a bounded runtime/cleanup plan.
+Fresh repository verification, uncached runtime/agent race tests and clean ARM64
+builds passed locally. This preparation did not repeat browser/database integration
+or establish live AWS state. AWS inventory/preview, deployment, migration,
+activation, identity creation and live target requests remain held. The packet is
+for review; the environment tracking card remains open. OpenAPI production scope
+remains separate.
+
+## Implementation record
+
 Davian accepted the [review packet](../architecture/drafts/project-environments-review.md)
 and [compatibility amendment](../architecture/drafts/project-environments-compatibility.md)
-at `d8be596a2306f2e888ef34e81dfa836bc4b84447` on 2026-10-24. This feature branch
-implements that scope for review. Acceptance recording does not merge PR #15,
-activate a stage or establish deployed runtime evidence.
+at `d8be596a2306f2e888ef34e81dfa836bc4b84447` on 2026-10-24. The implementation
+below was verified on the feature branch and subsequently merged in PR #16.
+Merge does not activate a stage or establish deployed runtime evidence.
 
 AWS inventory/preview, deployment, migration and activation remain held for
 separate review. No AWS calls, accounts, identities or resources were used for

@@ -1,0 +1,92 @@
+{
+  "tooling": {
+    "sstSha256": "539659fa60f00e8b9610b7dfd967928d382b4800ca25452d9697e31a4eb521fd",
+    "pulumiAwsProviderSha256": "741bfe58a4f6100dfa839beb98d53e0f27c9b63998d53a293cbbfb7a6b23a797",
+    "node": "v26.12.1",
+    "go": "go version go1.27.3-X:nodwarf5 linux/amd64",
+    "bwrap": "bubblewrap 0.13.1"
+  },
+  "codeSha256": {
+    "policy.py": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "test_transport.py": "a45afe67331fbe55eec3f6a179051bce42f74a9a633487314c8ed60a039488f3",
+    "test_unit.py": "6f77bfc13af9a0bac06af081637b4efcc7e6e98d53934e4f4d488b72f610fc28",
+    "proxy.py": "4333f21ab97b52aa5e2f94033a5966dffb8b8ab0ebb78e1da4596c0e97095790",
+    "run.py": "cd7b86bb69fb2314147573ceea03a841cd41f3012d381b06bceb99200493f504"
+  },
+  "fixtureOnly": true,
+  "awsCalls": 0,
+  "releaseAndRollbackVerifiedUnchanged": true,
+  "results": [
+    {
+      "case": "shared-real-SST-Pulumi-Go-Node",
+      "attempts": 14,
+      "goRetryPages": 3,
+      "nodeRetryPages": 3,
+      "exitCode": 0,
+      "namespaceBypassHeld": true,
+      "httpVersions": ["HTTP/1.1", "HTTP/2.0"],
+      "realSST": true,
+      "realPulumiAWSProvider": true,
+      "attemptCounts": {
+        "dynamodb:ListTables": 3,
+        "s3:GET": 6,
+        "ssm:GetParameter": 2,
+        "sts:GetCallerIdentity": 3
+      }
+    },
+    {
+      "case": "write",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "state-write",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "transaction-write",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "limit",
+      "attempts": 365,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "deadline",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": true
+    },
+    {
+      "case": "concurrent",
+      "attempts": 4,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "redirect",
+      "attempts": 1,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "disconnect",
+      "attempts": 1,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "persistence",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    }
+  ]
+}

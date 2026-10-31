@@ -10,6 +10,9 @@ projection are accepted for scoped implementation and local/CI validation.
 AWS inventory/preview, deployment, migration and activation remain held for
 separate review. OpenAPI production import/validation remains unaccepted.
 [Implementation and local verification](../development/project-environments.md).
+[Release preparation review](../development/project-environments-deployment-review.md)
+pins the merged source and proposes deployment/activation and bounded runtime
+gates; all existing live-work holds remain in place.
 
 ## Accepted OpenAPI library selection only
 

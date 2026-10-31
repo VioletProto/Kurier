@@ -1,0 +1,82 @@
+{
+  "status": "local-correction-complete-read-permissions-pending",
+  "toolingCommit": "19de0cc077c0652f61ccf9c70ad4e3744505fc07",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCalls": 0,
+  "accounting": {
+    "prior": 390,
+    "cumulative": 390,
+    "authorizedCeiling": 1799,
+    "remainingAttempts": 1409,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "attribution": {
+    "operation": "s3/GetBucketPolicy",
+    "resource": "owned-frontend-bucket",
+    "condition": "s3-read-scope-held",
+    "retainedProviderDiagnosticEstablished": true,
+    "retainedGateStatus": 599,
+    "actualPreviewEntrypointReproducedOffline": true,
+    "deniedBeforeForward": true,
+    "s3controlIdentifiedAsCause": false
+  },
+  "unchangedPolicyHashes": {
+    "scripts/environment-deploy/wire.py": "efda8362887740ce685127ddba22f63201920e320fc7a4ead88cba91900fb16d",
+    "docs/development/project-environments-execution-scope.json": "3f559dfb51f1ad9dc11e7fd2c81b9d809e5709696aa6bf6070068e07b2b269dc",
+    "scripts/preview-meter/policy.py": "7592b876c4a81315dc4cd1b51f9406d6e6689d42e74594f209c95096cf4eaa75",
+    "scripts/preview-meter/s3control_tags.py": "792275c26a10e49dc39504b0972ac971e068a0f530c1b00f4e67d580cae13f14"
+  },
+  "approvedS3controlHelperMatchesReview8": true,
+  "frontendExpectations": {
+    "collect": "accepted-old-baseline",
+    "close": "accepted-old-baseline",
+    "verify": "adopted-release",
+    "activate": "adopted-release",
+    "final": "adopted-release"
+  },
+  "pendingScopedReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketPolicy",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": "assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "cloudfront-keyvaluestore",
+      "operation": "GetKey",
+      "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+      "key": "76ef:/assets/index-CD_8s4hz.js"
+    }
+  ],
+  "readPermissionGranted": false,
+  "startBlockedBeforeAuthenticationOrClaim": true,
+  "privateDenialDiagnostic": {
+    "fileName": "denial.json",
+    "mode": "0600",
+    "firstOnly": true,
+    "fields": ["operation", "condition", "admitted", "beforeForward"],
+    "rawValuesRecorded": false
+  },
+  "checks": {
+    "executionFrontendTestsPassed": 68,
+    "isolatedCasesPassed": 10,
+    "transitionTestsWithActualDynamoDbLocalPassed": 90,
+    "transitionTestsSkipped": 0,
+    "archiveTestsPassed": 10,
+    "repositoryVerifyPassed": true,
+    "ruffPassed": true
+  },
+  "liveExecutionAuthorized": false,
+  "proposedCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-from-390 --authorization .build/project-environments-execution/authorization-from-390.json",
+  "proposedCommandBlockedUntilPermissionImplementationReviewed": true,
+  "allStoppedCampaignsAndClaimsRetained": true,
+  "adoptedAndRollbackBytesPreserved": true,
+  "privateDiagnosticMaterialPublished": false
+}

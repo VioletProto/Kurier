@@ -1,0 +1,31 @@
+{
+  "fixtureOnly": true,
+  "awsCalls": 0,
+  "subprocessesStarted": 0,
+  "realCumulativeUsage": 165,
+  "reviewedToolingCommit": "0d1defa8460d0e12c592be7b6d79ce1d7ab4758e",
+  "sourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "simulatedRefreshCalls": 1,
+  "simulatedRefreshElapsedSeconds": 10,
+  "requestedProviderBudget": {
+    "prior": 166,
+    "maximum": 500,
+    "seconds": 3590
+  },
+  "actualReviewedLauncherConfig": {
+    "prior": 165,
+    "maximum": 500,
+    "seconds": 3600
+  },
+  "providedBudgetIgnoredInNonFixtureMode": true,
+  "simulatedFirstProviderCount": 166,
+  "correctFirstProviderCountAfterRefresh": 167,
+  "providerClockStillOpenAtOriginalDeadline": true,
+  "conclusion": "Cannot satisfy combined refresh/preview call and time bounds through unchanged reviewed launcher",
+  "reviewedSourceSha256": {
+    "scripts/preview-meter/run.py": "1c535099469f238d33a6138ebe518a778b27ee88abfc1f473d0cdccca41a9e94",
+    "scripts/preview-meter/proxy.py": "281f7244d4dd712f59d6d5474e0a397867e25f9216e98d72913cf76cd84d1703",
+    "scripts/preview-meter/policy.py": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "scripts/environment-inventory-meter.py": "042dfe7668ac49d302acde768098febabebd50b7257daefe0702b80f38bf302b"
+  }
+}
