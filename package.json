@@ -41,7 +41,7 @@
     "test:aws:integration": "node scripts/aws-integration.mjs",
     "test:assertions-tooling": "node --test scripts/workflow-assertions-activation.test.mjs scripts/workflow-assertions-release.test.mjs && python3 -m unittest discover -s scripts/attempt-meter -p 'test_*.py'",
     "test:environment-release": "node scripts/project-environments-activation.test.mjs && python3 -B scripts/environment-release-check.test.py",
-    "test:environment-execution": "python3 -B scripts/environment-deploy/test_unit.py && python3 -B scripts/environment-deploy/test_credentials.py && python3 -B scripts/environment-deploy/test_paths.py && python3 -B scripts/environment-deploy/test_policy_review.py && node scripts/environment-deploy/frontend.test.mjs",
+    "test:environment-execution": "python3 -B scripts/environment-deploy/test_unit.py && python3 -B scripts/environment-deploy/test_credentials.py && python3 -B scripts/environment-deploy/test_authentication_startup.py && python3 -B scripts/environment-deploy/test_paths.py && python3 -B scripts/environment-deploy/test_policy_review.py && node scripts/environment-deploy/frontend.test.mjs",
     "test:environment-execution:integration": "python3 -B scripts/environment-deploy/run_transport_isolated.py"
   },
   "devDependencies": {

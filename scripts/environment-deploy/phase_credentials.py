@@ -9,6 +9,7 @@ import logging
 import os
 from unittest.mock import patch
 
+from auth_diagnostics import DeadlineExpired
 from authentication import ACCOUNT, STS, ExistingCache, Transport, deadline_alarm
 from botocore import UNSIGNED
 from botocore.config import Config
@@ -16,6 +17,8 @@ from botocore.credentials import LoginCredentialFetcher
 from botocore.httpsession import URLLib3Session
 from botocore.session import Session
 from common import CREDENTIAL_GUARD_SECONDS, MAX_REFRESHES, Held
+from credential_diagnostics import diagnostic
+from policy import Stop
 
 
 def cache_stat(cache):
@@ -35,11 +38,21 @@ class AuthBudget:
     def stopped(self):
         return self.c.get("stopped")
 
+    def campaign_call(self, function, *args):
+        # The pinned authentication transport expects policy.Stop; campaign
+        # guards use common.Held. Preserve the first stop instead of having the
+        # transport recategorize it as an unexpected exception and stop again.
+        try:
+            return function(*args)
+        except Held as error:
+            raise Stop(diagnostic(error, "boundary")["code"]) from None
+
     def check(self):
-        return self.c.check()
+        return self.campaign_call(self.c.check)
 
     def stop(self, reason):
-        return self.c.stop(reason)
+        code = diagnostic(Held(reason), "boundary")["code"]
+        return self.campaign_call(self.c.stop, code)
 
     def admit(self, service, operation, _protocol):
         if service == "signin":
@@ -48,20 +61,23 @@ class AuthBudget:
                 (self.c.get("activePhase"), "signin/CreateOAuth2Token"),
             ).fetchone()
             if total >= MAX_REFRESHES or this_phase:
-                self.c.stop("phase-or-campaign-renewal-limit")
-        return self.c.admit(service + "/" + operation, service == "signin")
+                self.stop("phase-or-campaign-renewal-limit")
+        return self.campaign_call(
+            self.c.admit, service + "/" + operation, service == "signin"
+        )
 
     def record(self, **values):
         return self.c.event(values.pop("event"), **values)
 
     def outcome(self, n, status=None, error=False):
-        return self.c.outcome(n, None if error else status)
+        return self.campaign_call(self.c.outcome, n, None if error else status)
 
 
 def credentials(c, scope):
     """Called only after approval validation and single-use phase begin."""
     cache = None
     clients = []
+    stage = "boundary"
     try:
         c.check()
         phase = c.get("activePhase")
@@ -71,13 +87,17 @@ def credentials(c, scope):
             or c.get("phaseDeadline") is None
         ):
             raise Held("authentication-boundary-required-no-replay")
+        stage = "cache-open"
         cache = ExistingCache()
+        stage = "session-check"
         if cache.identity != scope["identityArn"]:
             raise Held("inventoried-session-required")
         # The first boundary is seeded from the stopped parent; subsequent ones
         # must match our last successful renewal. External replacement stops.
+        stage = "checkpoint-check"
         if c.get("cacheStat") != cache_stat(cache):
             raise Held("session-changed-no-unmetered-refresh")
+        stage = "sdk-session"
         transport = Transport(AuthBudget(c), cache.original, URLLib3Session.send)
         session = Session(
             session_vars={
@@ -124,9 +144,11 @@ def credentials(c, scope):
             ):
                 # The pinned SDK reuses credentials above 300 seconds; otherwise
                 # it makes at most one real renewal and rotates the same cache.
+                stage = "sdk-credentials"
                 values = LoginCredentialFetcher(
                     cache.identity, cache, client
                 ).refresh_credentials()
+                stage = "sts"
                 identity = client("sts", credentials=values).get_caller_identity()
                 if (
                     identity.get("Account") != ACCOUNT
@@ -135,6 +157,7 @@ def credentials(c, scope):
                     raise Held("authentication-identity-held")
         finally:
             logging.disable(old)
+        stage = "validity-check"
         c.check()
         token = cache.load_token(cache.identity)["accessToken"]
         validity = (
@@ -146,6 +169,7 @@ def credentials(c, scope):
             or validity < c.get("phaseDeadline") - c.clock() + CREDENTIAL_GUARD_SECONDS
         ):
             raise Held("credential-phase-window-too-short")
+        stage = "checkpoint-save"
         c.put("cacheStat", cache_stat(cache))
         c.put("credentialPhase", phase)
         c.event("phase-authenticated", phase=phase, identityVerified=True)
@@ -154,7 +178,11 @@ def credentials(c, scope):
             "AWS_SECRET_ACCESS_KEY": token["secretAccessKey"],
             "AWS_SESSION_TOKEN": token["sessionToken"],
         }
-    except Exception:  # noqa: BLE001 - never expose SDK/cache/request material
+    except (Exception, DeadlineExpired) as error:  # noqa: BLE001 - closed codes only
+        if c.get("authenticationFailure") is None:
+            failure = diagnostic(error, stage)
+            c.put("authenticationFailure", failure)
+            c.event("authentication-held", **failure)
         if not c.get("stopped"):
             c.stop("phase-authentication-held-no-retry")
         raise Held("phase-authentication-held-no-retry") from None

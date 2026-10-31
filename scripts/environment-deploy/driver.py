@@ -24,6 +24,7 @@ from common import (
     digest,
     private_write,
 )
+from credential_diagnostics import projection as authentication_projection
 from isolation import launch
 from permissions import pending_reads
 from phase_credentials import credentials
@@ -228,7 +229,10 @@ def check():
     stopped_parent()
     load_objects(scope, release)
     valid_parent()
-    sdk_pins()
+    try:
+        sdk_pins()
+    except Exception:  # noqa: BLE001 - fixed code; no SDK paths/messages
+        raise Held("authentication-sdk-pins-held") from None
     import botocore
 
     for rel, h in pins["models"].items():
@@ -519,6 +523,9 @@ def report(c):
         "proceduralAllowanceUsd": 1,
         "billingMeasured": False,
         "automaticContinuation": False,
+        "authenticationFailure": authentication_projection(
+            c.get("authenticationFailure")
+        ),
         "attempts": [
             {
                 "count": r[0],
@@ -681,7 +688,13 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception:  # noqa: BLE001 - redact private request/response material
+    except Exception as error:  # noqa: BLE001 - redact private request/response material
+        code = (
+            " Authentication code: authentication-sdk-pins-held."
+            if type(error) is Held and error.args == ("authentication-sdk-pins-held",)
+            else ""
+        )
         raise SystemExit(
             "Execution held; no retry, repair, reopen or automatic continuation. Inspect sanitized campaign report."
+            + code
         ) from None

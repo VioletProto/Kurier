@@ -20,6 +20,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from driver import credentials, execute_phase
 from phase_credentials import AuthBudget, cache_stat
+from policy import Stop
 
 SCOPE = json.loads(
     (ROOT / "docs/development/project-environments-execution-scope.json").read_bytes()
@@ -338,7 +339,7 @@ class CredentialTests(unittest.TestCase):
     def test_transport_renewal_cap_cannot_be_bypassed_with_another_transport(self):
         self.setup_case(expiry=-1)
         self.authenticate()
-        with self.assertRaises(Held):
+        with self.assertRaises(Stop):
             AuthBudget(self.c).admit("signin", "CreateOAuth2Token", "HTTP/1.1")
         self.assertEqual(self.c.get("count"), 392)
 
@@ -349,7 +350,7 @@ class CredentialTests(unittest.TestCase):
                 "INSERT INTO attempts VALUES(?,?,?,1,200,1)",
                 (i + 1, "old-fixture-phase", "signin/CreateOAuth2Token"),
             )
-        with self.assertRaises(Held):
+        with self.assertRaises(Stop):
             AuthBudget(self.c).admit("signin", "CreateOAuth2Token", "HTTP/1.1")
         self.assertEqual(self.c.get("count"), 390)
 
