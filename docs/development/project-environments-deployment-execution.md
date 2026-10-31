@@ -10,11 +10,14 @@ credential-boundary cause was not retained. No retry or later phase occurred.
 The [approved read-policy correction](project-environments-bucket-read-correction.md)
 remains implemented; its successful offline fixture is separate from live evidence.
 
-The [local credential-boundary review](project-environments-credential-boundary-review.md)
-adds safe diagnostic codes and fixes the demonstrated campaign/transport exception
-adapter. Current cache size/mtime differ from the retained checkpoint; no changed
-checkpoint is adopted. Historical zero-call causation remains unestablished.
-No live command is proposed until explicit checkpoint and consumed-claim review.
+The [fresh private checkpoint](project-environments-checkpoint-adoption.md) has now
+been captured under the user's explicit fresh-capture authorization. The unavailable
+historical inspection tuple and historical grant continuity remain unestablished.
+Current tooling **42915e66301e272d28f5d9a3aac253239ca51e9e** binds the private checkpoint to the single new campaign
+`release-390-cp1` and claim `window-from-390-checkpoint-1.json`, carrying 390/1,799.
+Only local capture is complete; no live collection is authorized or started.
+Use the linked checkpoint packet for the exact new proposed command. The old
+`release-from-390` start below is consumed historical evidence and must not rerun.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -95,7 +98,9 @@ The initial command below was authorized and ran once, then stopped before the
 first physical request. It is retained as execution history, not a rerunnable
 proposal. All four stopped campaigns and consumed claims must remain intact.
 No future live continuation is proposed; review the credential boundary locally
-before considering separately authorized work.
+before considering separately authorized work. The later fresh-capture review is
+now complete locally; only the linked new campaign is proposed for separate
+initial-collection authorization.
 
 Proposal only: a separately authorized new campaign starts from **390**, retaining
 all prior usage and the approved **1,799** cumulative ceiling, with at most
@@ -107,7 +112,7 @@ runtime requests, new identities, new projects or runtime fixtures are included.
 
 The historical run used clean tooling commit **9eafa58928b5a2486f30bd7531f18c324d4fe534** from this PR
 and the clean detached release worktree at the unchanged source above. Current
-local diagnostic tooling is **fb6be7701289464ef1a7946986ceb26085d4c133**. No live continuation is proposed. Required
+local checkpoint tooling is **42915e66301e272d28f5d9a3aac253239ca51e9e**. The linked fresh campaign remains a proposal only. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
 sanitized records, all three original authorizations/claims, 300–390 attempt outcomes
@@ -270,7 +275,7 @@ accounting, call exhaustion, continuous campaign and phase deadlines, mutations,
 exact upload success and altered upload rejection; descendant pulse files stop.
 17 offline policy/accounting tests, 22 credential regressions, nine path tests,
 18 policy/read/diagnostic regressions, 19 driver/authentication-startup regressions
-and 14 frontend checks pass (99 total).
+19 checkpoint-adoption regressions and 14 frontend checks pass (118 total).
 The 12 isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
 successful bucket preview under the production policy (no observer), a separate
 unapproved GetBucketTagging denial before forwarding, plus an
