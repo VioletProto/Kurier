@@ -13,8 +13,15 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "preview-meter"))
 from artifacts import load_objects
-from authentication import sdk_pins
-from checkpoints import CAMPAIGN_ID, CLAIM_NAME, private_json
+from auth_diagnostics import DeadlineExpired
+from authentication import deadline_alarm, sdk_pins
+from checkpoints import (
+    CAMPAIGN_ID,
+    CLAIM_NAME,
+    capture_at_start,
+    fresh_policy,
+    private_json,
+)
 from checkpoints import capture as capture_checkpoint
 from checkpoints import load as load_checkpoint
 from common import (
@@ -27,6 +34,7 @@ from common import (
     digest,
     private_write,
 )
+from credential_diagnostics import diagnostic as authentication_diagnostic
 from credential_diagnostics import projection as authentication_projection
 from isolation import launch
 from permissions import pending_reads
@@ -96,6 +104,13 @@ def stopped_parent():
             499,
             "authorization-from-390-checkpoint-1.json",
         ),
+        (
+            "project-environments-collection-499-p1.json",
+            "stoppedZeroCall499",
+            499,
+            499,
+            "authorization-from-499-packaging-1.json",
+        ),
     ]:
         path = ROOT / "docs/development" / filename
         if sha(path) != pins[pin]:
@@ -107,7 +122,9 @@ def stopped_parent():
             (
                 directory.parent
                 / (
-                    "window-from-390-checkpoint-1.json"
+                    "window-from-499-packaging-1.json"
+                    if prior == 499
+                    else "window-from-390-checkpoint-1.json"
                     if total == 499
                     else f"window-from-{prior}.json"
                 )
@@ -164,7 +181,7 @@ def stopped_parent():
                     )
                 ]
             )
-            or (prior == 390 and total == 390 and rows != [])
+            or (prior == total and rows != [])
             or sha(auth) != record["authorizationSha256"]
             or config["authorizationSha256"] != record["authorizationSha256"]
             or claim["authorizationSha256"] != record["authorizationSha256"]
@@ -179,11 +196,19 @@ def stopped_parent():
             != record["attemptProjection"]["sha256"]
         ):
             raise Held("stopped-parent-projection-held")
+        preceding_checkpoint = checkpoint
         checkpoint = {
             "cacheStat": config["cacheStat"],
             "cacheMetadata": config.get("cacheMetadata"),
         }
-        if total == 499:
+        if prior == 499 and (
+            checkpoint != preceding_checkpoint
+            or config.get("credentialPhase") is not None
+            or config.get("authenticationFailure")
+            != record["authentication"]["failure"]
+        ):
+            raise Held("stopped-parent-checkpoint-held")
+        if prior == 390 and total == 499:
             checkpoint_path = BASE / "checkpoints/adopted-current-1.json"
             _old_checkpoint, old_sha = private_json(checkpoint_path)
             old_auth = json.loads(auth.read_bytes())
@@ -512,9 +537,18 @@ def execute_phase(c, phase, approval, scope):
 
 
 def start(c, scope, checkpoint):
+    c.begin("collect")
+    if checkpoint is None:
+        try:
+            with deadline_alarm(c.get("phaseDeadline")):
+                checkpoint = capture_at_start(c, scope)
+        except (Exception, DeadlineExpired) as error:  # noqa: BLE001 - closed diagnostic codes only
+            failure = authentication_diagnostic(error, "cache-open")
+            c.put("checkpointCaptureFailure", failure)
+            c.event("fresh-checkpoint-held", **failure)
+            raise Held("fresh-checkpoint-capture-held") from None
     c.put("cacheStat", checkpoint["cacheStat"])
     c.put("cacheMetadata", checkpoint["cacheMetadata"])
-    c.begin("collect")
     creds = credentials(c, scope)
     directory, _summary = child(c, "collect", "collect-readers", {}, creds)
     bundle = json.loads((directory / "private-output.txt").read_bytes())
@@ -574,6 +608,10 @@ def report(c):
         "proceduralAllowanceUsd": 1,
         "billingMeasured": False,
         "automaticContinuation": False,
+        "checkpointCaptureFailure": authentication_projection(
+            c.get("checkpointCaptureFailure")
+        ),
+        "freshCheckpointCaptured": bool(c.get("freshCaptureCompleted")),
         "authenticationFailure": authentication_projection(
             c.get("authenticationFailure")
         ),
@@ -610,10 +648,15 @@ def main():
     parser.add_argument("--authorization", type=Path)
     parser.add_argument("--approval", type=Path)
     parser.add_argument("--checkpoint", type=Path)
+    parser.add_argument("--fresh-checkpoint", action="store_true")
     parser.add_argument(
         "--phase", choices=["close", "deploy", "verify", "activate", "final"]
     )
     a = parser.parse_args()
+    if a.fresh_checkpoint and (
+        a.checkpoint is not None or a.action not in {"template", "start"}
+    ):
+        raise Held("exclusive-fresh-checkpoint-mode-required")
     if a.campaign is not None:
         a.campaign = campaign_path(a.campaign)
     for name in ("authorization", "approval"):
@@ -684,7 +727,7 @@ def main():
         return
     checkpoint = None
     checkpoint_sha = None
-    if a.action in {"template", "start"}:
+    if a.action in {"template", "start"} and not a.fresh_checkpoint:
         if a.checkpoint is None:
             raise Held("adopted-checkpoint-required")
         checkpoint, checkpoint_sha = load_checkpoint(
@@ -697,6 +740,11 @@ def main():
                     "authorized": False,
                     "campaignId": CAMPAIGN_ID,
                     "checkpointSha256": checkpoint_sha,
+                    **(
+                        {"checkpointPolicy": fresh_policy(scope)}
+                        if a.fresh_checkpoint
+                        else {}
+                    ),
                     "prior": PRIOR,
                     "maximum": 1799,
                     "seconds": 3300,
@@ -722,11 +770,16 @@ def main():
         if a.action == "start":
             if a.campaign.name != CAMPAIGN_ID:
                 raise Held("fresh-bound-campaign-identity-required")
-            auth = json.loads(a.authorization.read_bytes())
+            auth, authorization_sha = private_json(a.authorization)
             expected = {
                 "authorized": True,
                 "campaignId": CAMPAIGN_ID,
                 "checkpointSha256": checkpoint_sha,
+                **(
+                    {"checkpointPolicy": fresh_policy(scope)}
+                    if a.fresh_checkpoint
+                    else {}
+                ),
                 "prior": PRIOR,
                 "maximum": 1799,
                 "seconds": 3300,
@@ -737,7 +790,14 @@ def main():
                 "credentialPolicy": CREDENTIAL_POLICY,
                 "pendingScopedReads": pending,
             }
-            if auth != expected:
+            if (
+                auth.get("authorized") is not True
+                or auth != expected
+                or (
+                    a.fresh_checkpoint
+                    and auth["checkpointPolicy"].get("allowFreshCapture") is not True
+                )
+            ):
                 raise Held("explicit-expanded-execution-authorization-required")
             if (BASE / CLAIM_NAME).exists() or a.campaign.exists():
                 raise Held("single-use-campaign-claim-already-consumed")
@@ -746,10 +806,15 @@ def main():
                 BASE / CLAIM_NAME,
                 canonical(
                     {
-                        "authorizationSha256": sha(a.authorization),
+                        "authorizationSha256": authorization_sha,
                         "directory": str(a.campaign.resolve()),
                         "checkpointSha256": checkpoint_sha,
                         "campaignId": CAMPAIGN_ID,
+                        **(
+                            {"checkpointPolicy": fresh_policy(scope)}
+                            if a.fresh_checkpoint
+                            else {}
+                        ),
                     }
                 ),
             )
@@ -766,10 +831,12 @@ def main():
                         "reviewCommit",
                     ]
                 }
-                | {"authorizationSha256": sha(a.authorization)},
+                | {"authorizationSha256": authorization_sha},
             )
             c.put("campaignId", CAMPAIGN_ID)
             c.put("checkpointSha256", checkpoint_sha)
+            if a.fresh_checkpoint:
+                c.put("checkpointPolicy", fresh_policy(scope))
             start(c, scope, checkpoint)
         else:
             c = Campaign(a.campaign)

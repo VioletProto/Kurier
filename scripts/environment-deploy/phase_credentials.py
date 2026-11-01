@@ -185,6 +185,7 @@ def credentials(c, scope):
         if c.get("cacheMetadata") is not None:
             c.put("cacheMetadata", stable_metadata(cache.fd, cache.path))
         c.put("cacheStat", cache_stat(cache))
+        c.put("cacheIdentityArn", scope["identityArn"])
         c.put("credentialPhase", phase)
         c.event("phase-authenticated", phase=phase, identityVerified=True)
         return {

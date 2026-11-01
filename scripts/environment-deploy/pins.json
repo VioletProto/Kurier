@@ -35,5 +35,6 @@
     ".sst/platform/node_modules/zip-stream/index.js": "29ea55ff9cf0007853d4ac51936278547299a601a00980bb373c002f21a85186",
     ".sst/platform/node_modules/compress-commons/lib/archivers/zip/zip-archive-output-stream.js": "88004d1128647ab0fd8da675ccd68c4ac1bf95fc593120d467d1ce89aa5e3733"
   },
-  "stoppedParent499": "f7978c0bb8dbe388a0fc0a0514f2b60d27402171d3606d81fc380c2926c96c96"
+  "stoppedParent499": "f7978c0bb8dbe388a0fc0a0514f2b60d27402171d3606d81fc380c2926c96c96",
+  "stoppedZeroCall499": "ae31118081636f778b72084812608d281093cc875eb4038531da28609a7a95b3"
 }

@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--context-only", action="store_true")
     parser.add_argument("--denial-only", action="store_true")
     parser.add_argument("--packaging-only", action="store_true")
+    parser.add_argument("--fresh-only", action="store_true")
     options = parser.parse_args()
     if not (RELEASE / ".git").exists():
         raise SystemExit("pinned-release-worktree-missing")
@@ -80,6 +81,23 @@ def main():
         AWS_SHARED_CREDENTIALS_FILE="/dev/null",
         AWS_EC2_METADATA_DISABLED="true",
     )
+    if options.fresh_only or not (
+        options.context_only or options.denial_only or options.packaging_only
+    ):
+        fresh = subprocess.run(
+            [
+                *args,
+                "--",
+                sys.executable,
+                "-B",
+                str(ROOT / "scripts/environment-deploy/test_fresh_isolated.py"),
+            ],
+            check=False,
+            cwd=ROOT,
+            env=env,
+        )
+        if fresh.returncode or options.fresh_only:
+            return fresh.returncode
     if options.packaging_only or not (options.context_only or options.denial_only):
         packaging = subprocess.run(
             [

@@ -98,6 +98,7 @@ class StartupFixture(unittest.TestCase):
                 }
             )
         )
+        self.auth.chmod(0o600)
         self.sends = []
         self.child_reached = False
         self.status = 200

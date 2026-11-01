@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "preview-meter"))
+from checkpoints import require_active_continuity
 from common import Held
 from run import MITM, ROOT, port, sandbox, write
 
@@ -223,6 +224,7 @@ def launch(
             KURIER_FRONTEND_ORIGIN="http://localhost:5173",
         )
         raw = directory / "private-output.txt"
+        require_active_continuity(campaign)
         fd = os.open(raw, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         child = subprocess.Popen(
             sandbox(source, directory, command, env, extra_ro),
@@ -237,6 +239,7 @@ def launch(
         while child.poll() is None:
             try:
                 campaign.check()
+                require_active_continuity(campaign)
             except Held:
                 break
             if (
@@ -266,6 +269,11 @@ def launch(
             time.sleep(0.05)
         else:
             result = 78
+        try:
+            campaign.check()
+            require_active_continuity(campaign)
+        except Held:
+            result = result or 1
         return {"exitCode": result, "directory": str(directory)}
     finally:
         if policy_context.get("fixtureOnly") and os.environ.get(
