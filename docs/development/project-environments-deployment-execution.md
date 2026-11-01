@@ -1,23 +1,19 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest execution:** [release-390-cp1 stopped on whole-archive byte mismatch](project-environments-collection-390-cp1.md).
-The authorized command ran once from clean tooling `42915e66301e272d28f5d9a3aac253239ca51e9e`
-and the adopted checkpoint. Authentication, old-frontend readiness, reader snapshot
-and complete guarded preview passed. The fresh change list has 60 entries / 44
-resources and matches review 8's projection. All four ZIP hashes differ from adoption;
-all uncompressed members match, with raw differences confined to ZIP external
-attributes. No archive was repaired or substituted; no collection proof or later
-phase followed. **390 + 109 = 499/1,799**. All five campaigns/claims and original
-checkpoints remain preserved. No further live execution is authorized.
+**Latest execution:** [release-499-p1 stopped on checkpoint drift](project-environments-collection-499-p1.md).
+The authorized command ran once from clean tooling `83863b02132cbd3c70ace136261bde4ee30dd192`
+and the original carried checkpoint. The first credential boundary reported
+`session-changed-no-unmetered-refresh` at `checkpoint-check`, before any physical
+attempt. Usage remains **499/1,799**. No renewal, STS, reader collection, preview
+or later phase ran. No fresh baseline, old-frontend readiness, diff or generated
+archive agreement is available. All six campaigns/claims and checkpoints remain
+preserved. The carried checkpoint was not recaptured or substituted.
 
-The [local ZIP reproducibility correction](project-environments-packaging-reproducibility.md)
-confirms inherited umask as the reproducible packaging cause. Current tooling
-**83863b02132cbd3c70ace136261bde4ee30dd192** sets child umask 0077 before staging and reproduces all adopted ZIP hashes
-offline, without changing completed ZIPs, hashes or source. Accounting is carried
-from 499. A strict carry-forward checkpoint has been prepared; no cache drift is
-adopted. Only `release-499-p1` with a new bound claim is proposed for separate
-initial-collection authorization. See that packet for the exact command. The old
-cp1 campaign/claim are consumed; historical grant continuity remains unknown.
+The [ZIP packaging correction](project-environments-packaging-reproducibility.md)
+remains implemented and verified offline. Its proposed `release-499-p1` start is
+now consumed historical evidence and cannot rerun. Any future live work needs
+explicit checkpoint/claim review and separate authorization. No new current-cache
+adoption or future live command is proposed.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -29,7 +25,7 @@ and target/runtime execution require further authorization.
 
 Accounting is now **499/1,799**, with **1,300** arithmetic attempt headroom within the
 approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
-billing remains unmeasured. All five stopped campaigns and consumed claims are
+billing remains unmeasured. All six stopped campaigns and consumed claims are
 preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
 No later phase or infrastructure/state write occurred. Historical records and adopted/rollback bytes are unchanged.
 
