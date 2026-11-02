@@ -1,22 +1,21 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest execution:** [release-499-p1 stopped on checkpoint drift](project-environments-collection-499-p1.md).
-The authorized command ran once from clean tooling `83863b02132cbd3c70ace136261bde4ee30dd192`
-and the original carried checkpoint. The first credential boundary reported
-`session-changed-no-unmetered-refresh` at `checkpoint-check`, before any physical
-attempt. Usage remains **499/1,799**. No renewal, STS, reader collection, preview
-or later phase ran. No fresh baseline, old-frontend readiness, diff or generated
-archive agreement is available. All six campaigns/claims and checkpoints remain
-preserved. The carried checkpoint was not recaptured or substituted.
+**Latest execution:** [release-499-f1 completed initial collection](project-environments-collection-499-f1.md)
+from clean tooling **bf1effb2835ae6be00bdbd753a802dc0b9bf6741** and unchanged
+release source. Explicit fresh-at-start capture, one metered renewal, fresh STS,
+read-only collection and guarded preview passed. Usage is **608/1,799**.
+All four generated ZIPs match adoption exactly and frontend agreement passed.
+Collection ended after **90.598714 seconds**; no later phase ran. All seven
+campaigns/claims, old checkpoints and artifacts remain preserved. Historical
+grant continuity remains unproved. The previous zero-call
+[release-499-p1 drift stop](project-environments-collection-499-p1.md) remains intact.
 
-The [explicit fresh-start policy](project-environments-fresh-start-policy.md) now
-supports separately approved current-cache capture immediately before initial
-authentication. Current tooling **bf1effb2835ae6be00bdbd753a802dc0b9bf6741** requires the exact identity/account,
-acknowledges unproved historical continuity, and preserves strict continuity after
-capture. The new single-use identity is `release-499-f1`; accounting remains
-499/1,799. No real capture or live campaign ran during this local implementation.
-See that packet for the exact new workflow and proposed command. Every old claim,
-including `window-from-499-packaging-1.json`, remains consumed and preserved.
+The [fresh-start policy](project-environments-fresh-start-policy.md) is now exercised
+by this separately authorized campaign. Its `release-499-f1` claim is consumed;
+**do not rerun its historical start command**. Strict continuity and metered renewal
+apply within this campaign. Any close or later phase needs separate explicit
+approval under the same original deadline; neither call headroom nor this packet
+authorizes continuation, fresh recapture or restart.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -26,11 +25,10 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting is now **499/1,799**, with **1,300** arithmetic attempt headroom within the
+Accounting is now **608/1,799**, with **1,191** arithmetic attempt headroom within the
 approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
-billing remains unmeasured. All six stopped campaigns and consumed claims are
-preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
-No later phase or infrastructure/state write occurred. Historical records and adopted/rollback bytes are unchanged.
+billing remains unmeasured. All six historical stopped campaigns and the completed collection campaign, with their consumed claims, are preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
+The fresh f1 collection added another 109 attempts. No later phase or infrastructure/state write occurred. Historical records and adopted/rollback bytes are unchanged.
 
 ## Artifacts and byte enforcement
 
@@ -113,7 +111,7 @@ runtime requests, new identities, new projects or runtime fixtures are included.
 
 The historical run used clean tooling commit **9eafa58928b5a2486f30bd7531f18c324d4fe534** from this PR
 and the clean detached release worktree at the unchanged source above. Current
-local fresh-start tooling is **bf1effb2835ae6be00bdbd753a802dc0b9bf6741**. The linked fresh campaign remains a proposal only. Required
+local fresh-start tooling is **bf1effb2835ae6be00bdbd753a802dc0b9bf6741**. The linked fresh campaign completed collection; its start command is consumed. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
 sanitized records, all three original authorizations/claims, 300–390 attempt outcomes

@@ -1,13 +1,13 @@
 {
   "toolingCommit": "bf1effb2835ae6be00bdbd753a802dc0b9bf6741",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
-  "awsCalls": 0,
+  "awsCalls": 109,
   "accounting": {
-    "cumulative": 499,
+    "cumulative": 608,
     "authorizedCeiling": 1799,
     "billingMeasured": false,
     "proceduralAllowanceUsd": 1,
-    "remainingAttempts": 1300,
+    "remainingAttempts": 1191,
     "newCallsForCredentialCorrection": 0,
     "newCallsForContextCorrection": 0,
     "newCallsForDenialReview": 0,
@@ -16,7 +16,8 @@
     "newCallsForBucketReadCorrection": 0,
     "newCallsForCp1Collection": 109,
     "newCallsForPackagingReview": 0,
-    "newCallsFor499P1Collection": 0
+    "newCallsFor499P1Collection": 0,
+    "newCallsFor499F1Collection": 109
   },
   "checks": {
     "unitTestsPassed": 17,
@@ -37,7 +38,7 @@
     "startupTestsThroughDriverMain": 19,
     "checkpointCaptureAndClaimTests": 21,
     "isolatedPackagingParentUmaskCasesPassed": 4,
-    "freshActualEntrypointRegressions": 15,
+    "freshActualEntrypointRegressions": 18,
     "isolatedFreshMidphaseDriftCasePassed": true
   },
   "hashes": {
@@ -166,19 +167,19 @@
   "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235",
   "aclReadCorrection": "docs/development/project-environments-acl-read-correction.md",
   "bucketReadCorrection": "docs/development/project-environments-bucket-read-correction.md",
-  "latestExecutionRecord": "docs/development/project-environments-collection-499-p1.json",
-  "latestExecutionStatus": "checkpoint-drift-held-before-first-physical-attempt",
+  "latestExecutionRecord": "docs/development/project-environments-collection-499-f1.json",
+  "latestExecutionStatus": "initial-collection-complete-awaiting-separate-phase-approval",
   "stoppedCampaigns": 6,
   "historicalStartCommandConsumed": true,
   "credentialBoundaryReview": "docs/development/project-environments-credential-boundary-review.md",
   "currentCheckpointAdopted": true,
   "checkpointApprovalRequiredBeforeFutureLiveWork": true,
   "checkpointAdoptionReview": "docs/development/project-environments-checkpoint-adoption.md",
-  "freshInitialCollectionAuthorizationRequired": true,
+  "freshInitialCollectionAuthorizationRequired": false,
   "historicalGrantContinuityEstablished": false,
   "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-499-f1 --authorization .build/project-environments-execution/authorization-from-499-fresh-1.json --fresh-checkpoint",
   "reviewedAccountingFrom499Required": false,
-  "proposedCollectionCommandIsConsumedHistoricalCommand": false,
+  "proposedCollectionCommandIsConsumedHistoricalCommand": true,
   "packagingReview": "docs/development/project-environments-packaging-reproducibility.md",
   "packagingChildUmask": "0077",
   "carriedCheckpointPrepared": true,
@@ -186,6 +187,12 @@
   "historical499P1CommandConsumed": true,
   "freshStartPolicyReview": "docs/development/project-environments-fresh-start-policy.md",
   "explicitFreshCaptureSupported": true,
-  "freshRealCacheCaptured": false,
-  "freshCaptureApprovalRequiredBeforeLiveWork": true
+  "freshRealCacheCaptured": true,
+  "freshCaptureApprovalRequiredBeforeLiveWork": true,
+  "latestCollectionRecord": "docs/development/project-environments-collection-499-f1.json",
+  "latestCollectionCompleted": true,
+  "campaignContinuationRequiresSeparatePhaseApproval": true,
+  "completedCampaigns": 1,
+  "totalCampaignsAndConsumedClaims": 7,
+  "freshInitialCollectionAuthorizationConsumed": true
 }
