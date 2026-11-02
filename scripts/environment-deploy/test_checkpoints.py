@@ -200,7 +200,7 @@ class CheckpointTests(StartupFixture):
         with self.assertRaises(FileNotFoundError):
             load(self.checkpoint_path, SCOPE, self.pins, "c" * 40)
 
-    def test_old_consumed_claims_survive_new_campaign_and_usage_starts_at_499(self):
+    def test_old_consumed_claims_survive_new_campaign_and_usage_starts_at_608(self):
         self.case()
         old = self.base / "window-from-390.json"
         recent = self.base / "window-from-390-checkpoint-1.json"

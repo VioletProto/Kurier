@@ -60,7 +60,7 @@ class StartupFixture(unittest.TestCase):
         self.pins = {
             "manifest": "a" * 64,
             "scope": "b" * 64,
-            "stoppedParent499": "e" * 64,
+            "completedParent608": "e" * 64,
         }
         folder = self.base / "checkpoints"
         folder.mkdir(mode=0o700)
@@ -92,6 +92,7 @@ class StartupFixture(unittest.TestCase):
                     "reviewCommit": "c" * 40,
                     "manifestSha256": self.pins["manifest"],
                     "scopeSha256": self.pins["scope"],
+                    "completedParentSha256": self.pins["completedParent608"],
                     "proceduralAllowanceUsd": 1,
                     "credentialPolicy": CREDENTIAL_POLICY,
                     "pendingScopedReads": [],
@@ -124,7 +125,7 @@ class StartupFixture(unittest.TestCase):
                         "secretAccessKey": CANARY,
                         "sessionToken": CANARY,
                     },
-                    "expiresIn": 900,
+                    "expiresIn": getattr(self, "issued_seconds", 900),
                     "refreshToken": CANARY + "-rotated",
                 }
             ).encode()
@@ -158,6 +159,14 @@ class StartupFixture(unittest.TestCase):
                 patch.object(
                     driver,
                     "stopped_parent",
+                    return_value={
+                        "cacheMetadata": self.parent_metadata,
+                        "cacheStat": self.checkpoint,
+                    },
+                ),
+                patch.object(
+                    driver,
+                    "verify_completed_parent",
                     return_value={
                         "cacheMetadata": self.parent_metadata,
                         "cacheStat": self.checkpoint,

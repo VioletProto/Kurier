@@ -189,12 +189,15 @@ def credentials(c, scope):
                     forward,
                 ),
             ):
-                # The pinned SDK reuses credentials above 300 seconds; otherwise
-                # it makes at most one real renewal and rotates the same cache.
+                # Only this pinned fetcher instance changes its reuse threshold.
+                # Never alter SDK time, cache expiry or another phase's clocks.
                 stage = "sdk-credentials"
-                values = LoginCredentialFetcher(
-                    cache.identity, cache, client
-                ).refresh_credentials()
+                fetcher = LoginCredentialFetcher(cache.identity, cache, client)
+                fetcher._REFRESH_THRESHOLD = max(
+                    LoginCredentialFetcher._REFRESH_THRESHOLD,
+                    c.get("phaseDeadline") - c.clock() + CREDENTIAL_GUARD_SECONDS,
+                )
+                values = fetcher.refresh_credentials()
                 continuity()
                 stage = "sts"
                 identity = client("sts", credentials=values).get_caller_identity()

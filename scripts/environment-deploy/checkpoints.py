@@ -13,9 +13,9 @@ from common import PRIOR, Held, canonical, digest, private_write, strict_json
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-CAMPAIGN_ID = "release-499-f1"
-CLAIM_NAME = "window-from-499-fresh-1.json"
-AUTHORIZATION_NAME = "authorization-from-499-fresh-1.json"
+CAMPAIGN_ID = "release-608-t1"
+CLAIM_NAME = "window-from-608-timing-1.json"
+AUTHORIZATION_NAME = "authorization-from-608-timing-1.json"
 SOURCE = "44f1fb79d943501c95e06fcc1a6114111a7c1ea4"
 
 
@@ -76,7 +76,7 @@ def approval(scope, pins, commit, checkpoint_path):
         "account": scope["account"],
         "manifestSha256": pins["manifest"],
         "scopeSha256": pins["scope"],
-        "stoppedParentSha256": pins["stoppedParent499"],
+        "completedParentSha256": pins["completedParent608"],
         "campaignId": CAMPAIGN_ID,
         "checkpointPath": str(checkpoint_path),
         "prior": PRIOR,

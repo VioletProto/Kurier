@@ -20,6 +20,7 @@ def main():
     approved = json.loads(fixture.auth.read_bytes())
     approved["manifestSha256"] = fixture.pins["manifest"]
     approved["scopeSha256"] = fixture.pins["scope"]
+    approved["completedParentSha256"] = fixture.pins["completedParent608"]
     fixture.auth.write_text(json.dumps(approved))
     pulse = fixture.path / "collect-readers/work/pulse"
     done = threading.Event()

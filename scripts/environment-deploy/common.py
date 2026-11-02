@@ -8,13 +8,18 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PRIOR = 499
+PRIOR = 608
 PHASE_SECONDS = 240
+PHASE_LIMITS = {
+    phase: 840 if phase == "deploy" else PHASE_SECONDS
+    for phase in ("collect", "close", "deploy", "verify", "activate", "final")
+}
 CREDENTIAL_GUARD_SECONDS = 5
 MAX_REFRESHES = 6
 CREDENTIAL_POLICY = {
     "renewal": "approved-phase-boundaries-only",
-    "phaseSeconds": PHASE_SECONDS,
+    "phaseSeconds": PHASE_LIMITS,
+    "reuseThreshold": "max(300,remaining-phase-seconds+5)-per-fetcher-instance",
     "expiryGuardSeconds": CREDENTIAL_GUARD_SECONDS,
     "maximumRefreshes": MAX_REFRESHES,
 }
@@ -198,7 +203,7 @@ class Campaign:
                 min(
                     self.get("deadline"),
                     self.get("closedDeadline") or self.get("deadline"),
-                    self.clock() + PHASE_SECONDS,
+                    self.clock() + PHASE_LIMITS[phase],
                 ),
             )
             self.event("phase-start", phase=phase)

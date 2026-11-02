@@ -34,6 +34,7 @@ from common import (
     digest,
     private_write,
 )
+from completed_parent import verify as verify_completed_parent
 from credential_diagnostics import diagnostic as authentication_diagnostic
 from credential_diagnostics import projection as authentication_projection
 from isolation import launch
@@ -299,6 +300,7 @@ def check():
         ):
             raise Held("adopted-bytes-held")
     stopped_parent()
+    verify_completed_parent(ROOT, BASE, pins, scope)
     load_objects(scope, release)
     valid_parent()
     try:
@@ -713,7 +715,7 @@ def main():
             git("rev-parse", "HEAD"),
             a.approval,
             a.checkpoint,
-            stopped_parent()["cacheMetadata"],
+            verify_completed_parent(ROOT, BASE, pins, scope)["cacheMetadata"],
         )
         print(
             json.dumps(
@@ -751,6 +753,7 @@ def main():
                     "reviewCommit": git("rev-parse", "HEAD"),
                     "manifestSha256": pins["manifest"],
                     "scopeSha256": pins["scope"],
+                    "completedParentSha256": pins["completedParent608"],
                     "proceduralAllowanceUsd": 1,
                     "credentialPolicy": CREDENTIAL_POLICY,
                     "pendingScopedReads": pending,
@@ -786,6 +789,7 @@ def main():
                 "reviewCommit": git("rev-parse", "HEAD"),
                 "manifestSha256": pins["manifest"],
                 "scopeSha256": pins["scope"],
+                "completedParentSha256": pins["completedParent608"],
                 "proceduralAllowanceUsd": 1,
                 "credentialPolicy": CREDENTIAL_POLICY,
                 "pendingScopedReads": pending,
@@ -833,6 +837,7 @@ def main():
                 }
                 | {"authorizationSha256": authorization_sha},
             )
+            c.put("completedParentSha256", auth["completedParentSha256"])
             c.put("campaignId", CAMPAIGN_ID)
             c.put("checkpointSha256", checkpoint_sha)
             if a.fresh_checkpoint:
