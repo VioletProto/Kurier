@@ -1,12 +1,14 @@
 # Project environments: adopted artifacts and execution review
 
-**Closure/deployment: NO-GO pending the [timing and credential review](project-environments-closure-deployment-go-no-go.md).**
-The successful collection proves baseline/artifact agreement, not four-minute deploy
-capacity. Pinned CloudFront/Lambda waits reach 600 seconds; deploy needs a reviewed
-phase/credential amendment before closure. The original campaign was unexpired at
-the timestamped local check, but must not be resumed with a different tooling pin
-or reset after expiry. Proposed new accounting is **608/1,799**, at most **1,191**
-additional attempts. No new live authorization or timing change is implemented.
+**Timing amendment implemented locally:** [verified workflow and commands](project-environments-timing-amendment.md),
+clean tooling **4de31ab9a9c791a1fc224bbce8a7fe79220519ba**. Deploy is bounded to
+840 seconds; other phases remain 240. Renewal uses the actual clipped remaining
+phase plus five seconds on one pinned fetcher instance. Original 55-minute
+campaign and fixed 30-minute closed maximum remain unchanged. Usage **608/1,799**.
+No live work is approved or performed by this amendment. Next decision: separately
+authorize one new `release-608-t1` initial collection including explicit fresh
+capture. Closure/deployment remain held pending fresh evidence and separate phase
+approvals; 840 seconds is not proven AWS completion capacity.
 
 **Latest execution:** [release-499-f1 completed initial collection](project-environments-collection-499-f1.md)
 from clean tooling **bf1effb2835ae6be00bdbd753a802dc0b9bf6741** and unchanged
@@ -118,8 +120,8 @@ allowance is unchanged; call headroom does not establish cost or capacity. Zero
 runtime requests, new identities, new projects or runtime fixtures are included.
 
 The historical run used clean tooling commit **9eafa58928b5a2486f30bd7531f18c324d4fe534** from this PR
-and the clean detached release worktree at the unchanged source above. Current
-local fresh-start tooling is **bf1effb2835ae6be00bdbd753a802dc0b9bf6741**. The linked fresh campaign completed collection; its start command is consumed. Required
+and the clean detached release worktree at the unchanged source above. Historical f1
+fresh-start tooling was **bf1effb2835ae6be00bdbd753a802dc0b9bf6741**; current timing tooling is **4de31ab9a9c791a1fc224bbce8a7fe79220519ba**. The linked fresh campaign completed collection; its start command is consumed. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
 sanitized records, all three original authorizations/claims, 300–390 attempt outcomes
@@ -134,9 +136,9 @@ of the exact tooling/source and a fresh bound authorization; the local correctio
 provides no live execution authority.
 
 The pinned Sign-In model caps credential lifetime at **900 seconds**, with no
-requested-duration input. The pinned SDK renews at **300 seconds or less**;
-renewal rotates the same locked cache. Credentials need to cover the bounded
-phase, rather than the entire campaign. Every phase has a **240-second** ceiling,
+requested-duration input. The pinned SDK defaults to renewal at **300 seconds or less**;
+the current amendment raises only the individual fetcher threshold to cover actual remaining phase time plus five seconds. Renewal rotates the same locked cache. Credentials need to cover the bounded
+phase, rather than the entire campaign. The historical policy gave every phase a **240-second** ceiling; the current timing amendment gives deploy 840 seconds and others 240,
 including authentication, bounded by both original campaign and closed-stage
 deadlines. Before its work, require credential validity through that phase's
 remaining time plus **five seconds**. Collection's reader inventory and SST diff

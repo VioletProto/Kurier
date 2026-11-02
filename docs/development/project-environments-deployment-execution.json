@@ -1,5 +1,5 @@
 {
-  "toolingCommit": "bf1effb2835ae6be00bdbd753a802dc0b9bf6741",
+  "toolingCommit": "4de31ab9a9c791a1fc224bbce8a7fe79220519ba",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 109,
   "accounting": {
@@ -39,7 +39,10 @@
     "checkpointCaptureAndClaimTests": 21,
     "isolatedPackagingParentUmaskCasesPassed": 4,
     "freshActualEntrypointRegressions": 18,
-    "isolatedFreshMidphaseDriftCasePassed": true
+    "isolatedFreshMidphaseDriftCasePassed": true,
+    "executionAndFrontendTestsPassed": 151,
+    "actualDriverTimingTests": 9,
+    "completedParentTests": 4
   },
   "hashes": {
     "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
@@ -50,7 +53,15 @@
   "liveExecutionAuthorized": false,
   "credentialPolicy": {
     "renewal": "approved-phase-boundaries-only",
-    "phaseSeconds": 240,
+    "phaseSeconds": {
+      "collect": 240,
+      "close": 240,
+      "deploy": 840,
+      "verify": 240,
+      "activate": 240,
+      "final": 240
+    },
+    "reuseThreshold": "max(300,remaining-phase-seconds+5)-per-fetcher-instance",
     "expiryGuardSeconds": 5,
     "maximumRefreshes": 6
   },
@@ -59,7 +70,7 @@
   "newCampaignAuthorizationRequired": true,
   "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
   "credentialReview": "docs/development/project-environments-credential-renewal.md",
-  "verificationLogSha256": "b2d8401655d66266abd9d0ad657809ec4c18f9f288b56a54ed055059ac6bcbca",
+  "verificationLogSha256": "76c90ddba2eca64c70fc1222aa7aff797d6fe962a6a280704e105649459d3007",
   "contextReview": "docs/development/project-environments-context-path-correction.md",
   "contextMapping": {
     "destination": "/meter/phase-context.json",
@@ -175,11 +186,11 @@
   "currentCheckpointAdopted": true,
   "checkpointApprovalRequiredBeforeFutureLiveWork": true,
   "checkpointAdoptionReview": "docs/development/project-environments-checkpoint-adoption.md",
-  "freshInitialCollectionAuthorizationRequired": false,
+  "freshInitialCollectionAuthorizationRequired": true,
   "historicalGrantContinuityEstablished": false,
-  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-499-f1 --authorization .build/project-environments-execution/authorization-from-499-fresh-1.json --fresh-checkpoint",
+  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-608-t1 --authorization .build/project-environments-execution/authorization-from-608-timing-1.json --fresh-checkpoint",
   "reviewedAccountingFrom499Required": false,
-  "proposedCollectionCommandIsConsumedHistoricalCommand": true,
+  "proposedCollectionCommandIsConsumedHistoricalCommand": false,
   "packagingReview": "docs/development/project-environments-packaging-reproducibility.md",
   "packagingChildUmask": "0077",
   "carriedCheckpointPrepared": true,
@@ -195,8 +206,9 @@
   "completedCampaigns": 1,
   "totalCampaignsAndConsumedClaims": 7,
   "freshInitialCollectionAuthorizationConsumed": true,
-  "closureDeploymentReadiness": "no-go-pending-timing-and-credential-amendment",
+  "closureDeploymentReadiness": "held-pending-new-608-collection-and-separate-phase-approvals",
   "closureDeploymentGoNoGoReview": "docs/development/project-environments-closure-deployment-go-no-go.json",
-  "timingAmendmentImplemented": false,
-  "newTimingCampaignAuthorized": false
+  "timingAmendmentImplemented": true,
+  "newTimingCampaignAuthorized": false,
+  "timingAmendmentReview": "docs/development/project-environments-timing-amendment.json"
 }
