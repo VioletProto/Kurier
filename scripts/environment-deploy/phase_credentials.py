@@ -27,6 +27,44 @@ def cache_stat(cache):
     return [stat.st_ino, stat.st_size, stat.st_mtime_ns]
 
 
+def guard_cache(c, cache, phase):
+    """Only a successful metered renewal may change the locked SDK cache."""
+    expected = c.get("cacheMetadata")
+    saved = False
+
+    def check():
+        c.check()
+        if expected is not None:
+            return stable_metadata(cache.fd, cache.path, expected)
+        return None
+
+    if expected is not None:
+        load, save = cache.load_token, cache.save_token
+
+        def guarded_load(session):
+            check()
+            token = load(session)
+            check()
+            return token
+
+        def guarded_save(session, token):
+            nonlocal expected, saved
+            check()
+            success = c.db.execute(
+                "SELECT COUNT(*) FROM attempts WHERE phase=? AND op=? "
+                "AND status=200 AND outcome=1",
+                (phase, "signin/CreateOAuth2Token"),
+            ).fetchone()[0]
+            if saved or success != 1:
+                raise Held("unmetered-cache-save-held")
+            save(session, token)
+            expected = stable_metadata(cache.fd, cache.path)
+            saved = True
+
+        cache.load_token, cache.save_token = guarded_load, guarded_save
+    return check
+
+
 class AuthBudget:
     def __init__(self, campaign):
         self.c = campaign
@@ -100,6 +138,7 @@ def credentials(c, scope):
             raise Held("session-changed-no-unmetered-refresh")
         if c.get("cacheMetadata") is not None:
             stable_metadata(cache.fd, cache.path, c.get("cacheMetadata"))
+        continuity = guard_cache(c, cache, phase)
         stage = "sdk-session"
         transport = Transport(AuthBudget(c), cache.original, URLLib3Session.send)
         session = Session(
@@ -137,12 +176,17 @@ def credentials(c, scope):
         old = logging.root.manager.disable
         logging.disable(logging.CRITICAL)
         try:
+
+            def forward(physical, request):
+                continuity()
+                return transport.forward(physical, request)
+
             with (
                 deadline_alarm(c.get("phaseDeadline")),
                 patch.object(
                     URLLib3Session,
                     "send",
-                    lambda physical, request: transport.forward(physical, request),
+                    forward,
                 ),
             ):
                 # The pinned SDK reuses credentials above 300 seconds; otherwise
@@ -151,8 +195,10 @@ def credentials(c, scope):
                 values = LoginCredentialFetcher(
                     cache.identity, cache, client
                 ).refresh_credentials()
+                continuity()
                 stage = "sts"
                 identity = client("sts", credentials=values).get_caller_identity()
+                continuity()
                 if (
                     identity.get("Account") != ACCOUNT
                     or identity.get("Arn") != scope["identityArn"]
@@ -182,8 +228,9 @@ def credentials(c, scope):
         ):
             raise Held("credential-phase-window-too-short")
         stage = "checkpoint-save"
+        authenticated_metadata = continuity()
         if c.get("cacheMetadata") is not None:
-            c.put("cacheMetadata", stable_metadata(cache.fd, cache.path))
+            c.put("cacheMetadata", authenticated_metadata)
         c.put("cacheStat", cache_stat(cache))
         c.put("cacheIdentityArn", scope["identityArn"])
         c.put("credentialPhase", phase)

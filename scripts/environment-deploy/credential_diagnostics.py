@@ -29,6 +29,7 @@ GUARDS = frozenset(
         "session-changed-no-unmetered-refresh",
         "campaign-cache-metadata-changed",
         "credential-cache-response-mismatch",
+        "unmetered-cache-save-held",
         "checkpoint-cache-structure-held",
         "checkpoint-cache-key-held",
         "checkpoint-changed-during-capture",

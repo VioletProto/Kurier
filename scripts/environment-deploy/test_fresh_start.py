@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import checkpoints
 import driver
+from botocore.credentials import LoginCredentialFetcher
 from checkpoints import (
     CLAIM_NAME,
     capture_at_start,
@@ -245,6 +246,78 @@ class FreshStartTests(StartupFixture):
         self.assertEqual(
             self.config_after["cacheMetadata"], metadata(self.cache.stat())
         )
+
+    def test_sdk_load_rejects_external_change_before_any_send(self):
+        self.fresh_case()
+        original = LoginCredentialFetcher.refresh_credentials
+
+        def race(fetcher):
+            self.token["refreshToken"] += "-external-during-sdk"
+            self.write_cache()
+            return original(fetcher)
+
+        result = self.run_driver(
+            patch.object(
+                LoginCredentialFetcher,
+                "refresh_credentials",
+                autospec=True,
+                side_effect=race,
+            )
+        )
+        self.assertEqual(
+            result["authenticationFailure"]["code"], "campaign-cache-metadata-changed"
+        )
+        self.assertFalse(self.child_reached)
+        self.assertFalse(self.sends)
+
+    def test_inflight_authentication_drift_never_advances_checkpoint(self):
+        for expiry in [900, -1]:
+            with self.subTest(expiry=expiry):
+                self.fresh_case(expiry=expiry)
+                original = self.sender
+
+                def race(physical, request, original=original):
+                    response = original(physical, request)
+                    self.token["refreshToken"] += "-external-inflight"
+                    self.write_cache()
+                    return response
+
+                result = self.run_driver(
+                    patch("phase_credentials.URLLib3Session.send", race)
+                )
+                self.assertFalse(self.child_reached)
+                self.assertEqual(len(self.sends), 1)
+                self.assertEqual(result["cumulative"], PRIOR + 1)
+                self.assertEqual(
+                    result["authenticationFailure"]["code"],
+                    "campaign-cache-metadata-changed",
+                )
+                self.assertEqual(
+                    self.config_after["cacheMetadata"], self.snapshot()["cacheMetadata"]
+                )
+
+    def test_sdk_cannot_save_without_successful_metered_renewal(self):
+        self.fresh_case()
+        before = self.cache.read_bytes()
+
+        def unmetered(fetcher):
+            # The real fetcher exposes its SDK cache through _token_loader.
+            fetcher._token_loader.save_token(SCOPE["identityArn"], self.token)
+
+        result = self.run_driver(
+            patch.object(
+                LoginCredentialFetcher,
+                "refresh_credentials",
+                autospec=True,
+                side_effect=unmetered,
+            )
+        )
+        self.assertEqual(
+            result["authenticationFailure"]["code"], "unmetered-cache-save-held"
+        )
+        self.assertFalse(self.child_reached)
+        self.assertFalse(self.sends)
+        self.assertEqual(self.cache.read_bytes(), before)
 
     def test_mid_campaign_drift_cannot_reenter_fresh_capture_or_send(self):
         self.fresh_case()
