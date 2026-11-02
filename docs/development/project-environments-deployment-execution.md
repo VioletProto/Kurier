@@ -11,7 +11,7 @@ preserved. The carried checkpoint was not recaptured or substituted.
 
 The [explicit fresh-start policy](project-environments-fresh-start-policy.md) now
 supports separately approved current-cache capture immediately before initial
-authentication. Current tooling **1f034680b6b9db798f54f61ba7c6e60a62b5ac2a** requires the exact identity/account,
+authentication. Current tooling **bf1effb2835ae6be00bdbd753a802dc0b9bf6741** requires the exact identity/account,
 acknowledges unproved historical continuity, and preserves strict continuity after
 capture. The new single-use identity is `release-499-f1`; accounting remains
 499/1,799. No real capture or live campaign ran during this local implementation.
@@ -113,7 +113,7 @@ runtime requests, new identities, new projects or runtime fixtures are included.
 
 The historical run used clean tooling commit **9eafa58928b5a2486f30bd7531f18c324d4fe534** from this PR
 and the clean detached release worktree at the unchanged source above. Current
-local fresh-start tooling is **1f034680b6b9db798f54f61ba7c6e60a62b5ac2a**. The linked fresh campaign remains a proposal only. Required
+local fresh-start tooling is **bf1effb2835ae6be00bdbd753a802dc0b9bf6741**. The linked fresh campaign remains a proposal only. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
 sanitized records, all three original authorizations/claims, 300–390 attempt outcomes
@@ -276,7 +276,7 @@ accounting, call exhaustion, continuous campaign and phase deadlines, mutations,
 exact upload success and altered upload rejection; descendant pulse files stop.
 17 offline policy/accounting tests, 22 credential regressions, nine path tests,
 18 policy/read/diagnostic regressions, 19 driver/authentication-startup regressions
-21 checkpoint/claim regressions, 15 fresh-start regressions and 14 frontend checks pass (135 total).
+21 checkpoint/claim regressions, 18 fresh-start regressions and 14 frontend checks pass (138 total).
 The 12 isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
 successful bucket preview under the production policy (no observer), a separate
 unapproved GetBucketTagging denial before forwarding, plus an

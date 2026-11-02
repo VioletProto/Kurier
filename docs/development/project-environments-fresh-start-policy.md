@@ -1,6 +1,6 @@
 # Explicit fresh checkpoint at new campaign startup
 
-Tooling: **1f034680b6b9db798f54f61ba7c6e60a62b5ac2a**. Release source remains
+Tooling: **bf1effb2835ae6be00bdbd753a802dc0b9bf6741**. Release source remains
 **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**.
 [Machine verification](project-environments-fresh-start-policy.json).
 This task implements and tests the policy locally. **No real-cache capture,
@@ -65,6 +65,12 @@ hashes of metadata records, not token hashes.
 
 ## Continuity during work and failure behavior
 
+Authentication checks the locked checkpoint before and after SDK cache loads,
+before each physical send, after renewal/STS responses, and before accepting the
+authenticated checkpoint. A cache save requires exactly one successful metered
+renewal in the active phase and cannot repeat. External drift during either
+renewal or STS stops without adopting it or launching work.
+
 A host-only metadata check runs immediately before child launch, on the existing
 child-supervision loop (about every 50 ms), and after child exit. It checks the
 configured identity and the last authenticated full cache metadata. It does not
@@ -81,11 +87,12 @@ required; fresh capture is valid only before initial authentication and requests
 
 ## Offline verification
 
-**135 execution/frontend tests pass**, including **15 actual-driver fresh-start
+**138 execution/frontend tests pass**, including **18 actual-driver fresh-start
 regressions**. They cover changed pre-campaign cache under explicit approval,
 unauthorized/mismatched scope, wrong local identity/account/ownership/permissions,
 cache mutation/replacement races, capture-to-auth drift, rejected STS identity,
-bounded metered renewal, active-campaign drift, deadline failure, old-mode
+bounded metered renewal, SDK-load drift, in-flight renewal/STS drift, unmetered
+cache-save rejection, active-campaign drift, deadline failure, old-mode
 non-fallback and claim/capture replay rejection. Private canaries do not appear
 in events or reports. Ordinary templates and checks do not capture the cache.
 
@@ -116,7 +123,7 @@ After that approval, select the exact tooling commit clean in the original works
 
 ```sh
 cd /home/king/Neumont/Kurier
-git switch --detach 1f034680b6b9db798f54f61ba7c6e60a62b5ac2a
+git switch --detach bf1effb2835ae6be00bdbd753a802dc0b9bf6741
 python3 -B scripts/environment-deploy/driver.py check
 umask 077
 set -C
