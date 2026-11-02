@@ -1,5 +1,5 @@
 {
-  "toolingCommit": "83863b02132cbd3c70ace136261bde4ee30dd192",
+  "toolingCommit": "1f034680b6b9db798f54f61ba7c6e60a62b5ac2a",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 0,
   "accounting": {
@@ -36,7 +36,9 @@
     "isolatedUnexpectedBucketReadCasesPassed": 1,
     "startupTestsThroughDriverMain": 19,
     "checkpointCaptureAndClaimTests": 21,
-    "isolatedPackagingParentUmaskCasesPassed": 4
+    "isolatedPackagingParentUmaskCasesPassed": 4,
+    "freshActualEntrypointRegressions": 15,
+    "isolatedFreshMidphaseDriftCasePassed": true
   },
   "hashes": {
     "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
@@ -56,7 +58,7 @@
   "newCampaignAuthorizationRequired": true,
   "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
   "credentialReview": "docs/development/project-environments-credential-renewal.md",
-  "verificationLogSha256": "2e62b0192783e545d18dbafb69293ddedb347d29dbed6a022de13997b4bdc64f",
+  "verificationLogSha256": "673da57ac7234e63cc9b1928db07d14c421e75fe1b018c5a546b599f960a7642",
   "contextReview": "docs/development/project-environments-context-path-correction.md",
   "contextMapping": {
     "destination": "/meter/phase-context.json",
@@ -174,12 +176,16 @@
   "checkpointAdoptionReview": "docs/development/project-environments-checkpoint-adoption.md",
   "freshInitialCollectionAuthorizationRequired": true,
   "historicalGrantContinuityEstablished": false,
-  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-499-p1 --authorization .build/project-environments-execution/authorization-from-499-packaging-1.json --checkpoint .build/project-environments-execution/checkpoints/carried-current-499-p1.json",
+  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-499-f1 --authorization .build/project-environments-execution/authorization-from-499-fresh-1.json --fresh-checkpoint",
   "reviewedAccountingFrom499Required": false,
-  "proposedCollectionCommandIsConsumedHistoricalCommand": true,
+  "proposedCollectionCommandIsConsumedHistoricalCommand": false,
   "packagingReview": "docs/development/project-environments-packaging-reproducibility.md",
   "packagingChildUmask": "0077",
   "carriedCheckpointPrepared": true,
   "historicalCp1CommandConsumed": true,
-  "historical499P1CommandConsumed": true
+  "historical499P1CommandConsumed": true,
+  "freshStartPolicyReview": "docs/development/project-environments-fresh-start-policy.md",
+  "explicitFreshCaptureSupported": true,
+  "freshRealCacheCaptured": false,
+  "freshCaptureApprovalRequiredBeforeLiveWork": true
 }

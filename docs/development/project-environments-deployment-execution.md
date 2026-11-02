@@ -9,11 +9,14 @@ or later phase ran. No fresh baseline, old-frontend readiness, diff or generated
 archive agreement is available. All six campaigns/claims and checkpoints remain
 preserved. The carried checkpoint was not recaptured or substituted.
 
-The [ZIP packaging correction](project-environments-packaging-reproducibility.md)
-remains implemented and verified offline. Its proposed `release-499-p1` start is
-now consumed historical evidence and cannot rerun. Any future live work needs
-explicit checkpoint/claim review and separate authorization. No new current-cache
-adoption or future live command is proposed.
+The [explicit fresh-start policy](project-environments-fresh-start-policy.md) now
+supports separately approved current-cache capture immediately before initial
+authentication. Current tooling **1f034680b6b9db798f54f61ba7c6e60a62b5ac2a** requires the exact identity/account,
+acknowledges unproved historical continuity, and preserves strict continuity after
+capture. The new single-use identity is `release-499-f1`; accounting remains
+499/1,799. No real capture or live campaign ran during this local implementation.
+See that packet for the exact new workflow and proposed command. Every old claim,
+including `window-from-499-packaging-1.json`, remains consumed and preserved.
 
 This packet adopts the exact review-8 ZIP candidates in
 [the adopted manifest](project-environments-adopted-release.json), supported by
@@ -110,7 +113,7 @@ runtime requests, new identities, new projects or runtime fixtures are included.
 
 The historical run used clean tooling commit **9eafa58928b5a2486f30bd7531f18c324d4fe534** from this PR
 and the clean detached release worktree at the unchanged source above. Current
-local packaging tooling is **83863b02132cbd3c70ace136261bde4ee30dd192**. The linked fresh campaign remains a proposal only. Required
+local fresh-start tooling is **1f034680b6b9db798f54f61ba7c6e60a62b5ac2a**. The linked fresh campaign remains a proposal only. Required
 caches remain SST 4.17.1, Pulumi AWS provider 7.40.0, reviewed SDK/models and
 existing dependencies. `driver.py check` also validates the stopped parent's
 sanitized records, all three original authorizations/claims, 300–390 attempt outcomes
@@ -273,7 +276,7 @@ accounting, call exhaustion, continuous campaign and phase deadlines, mutations,
 exact upload success and altered upload rejection; descendant pulse files stop.
 17 offline policy/accounting tests, 22 credential regressions, nine path tests,
 18 policy/read/diagnostic regressions, 19 driver/authentication-startup regressions
-21 checkpoint/claim regressions and 14 frontend checks pass (120 total).
+21 checkpoint/claim regressions, 15 fresh-start regressions and 14 frontend checks pass (135 total).
 The 12 isolated cases include an actual `phase.mjs diff` + pinned SST/Pulumi
 successful bucket preview under the production policy (no observer), a separate
 unapproved GetBucketTagging denial before forwarding, plus an
