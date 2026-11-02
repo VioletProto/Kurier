@@ -194,5 +194,9 @@
   "campaignContinuationRequiresSeparatePhaseApproval": true,
   "completedCampaigns": 1,
   "totalCampaignsAndConsumedClaims": 7,
-  "freshInitialCollectionAuthorizationConsumed": true
+  "freshInitialCollectionAuthorizationConsumed": true,
+  "closureDeploymentReadiness": "no-go-pending-timing-and-credential-amendment",
+  "closureDeploymentGoNoGoReview": "docs/development/project-environments-closure-deployment-go-no-go.json",
+  "timingAmendmentImplemented": false,
+  "newTimingCampaignAuthorized": false
 }

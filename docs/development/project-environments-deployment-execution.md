@@ -1,5 +1,13 @@
 # Project environments: adopted artifacts and execution review
 
+**Closure/deployment: NO-GO pending the [timing and credential review](project-environments-closure-deployment-go-no-go.md).**
+The successful collection proves baseline/artifact agreement, not four-minute deploy
+capacity. Pinned CloudFront/Lambda waits reach 600 seconds; deploy needs a reviewed
+phase/credential amendment before closure. The original campaign was unexpired at
+the timestamped local check, but must not be resumed with a different tooling pin
+or reset after expiry. Proposed new accounting is **608/1,799**, at most **1,191**
+additional attempts. No new live authorization or timing change is implemented.
+
 **Latest execution:** [release-499-f1 completed initial collection](project-environments-collection-499-f1.md)
 from clean tooling **bf1effb2835ae6be00bdbd753a802dc0b9bf6741** and unchanged
 release source. Explicit fresh-at-start capture, one metered renewal, fresh STS,
