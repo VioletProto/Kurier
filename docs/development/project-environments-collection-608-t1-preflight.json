@@ -1,0 +1,65 @@
+{
+  "status": "local-preflight-held-before-authorization-or-start",
+  "checkedUtc": "2026-11-03T18:37:59.534373+00:00",
+  "toolingCommit": "4de31ab9a9c791a1fc224bbce8a7fe79220519ba",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "requestedCampaign": "release-608-t1",
+  "startCommandExecuted": false,
+  "startCommandInvocations": 0,
+  "authorizationPrepared": false,
+  "campaignCreated": false,
+  "claimConsumed": false,
+  "freshCheckpointCaptured": false,
+  "newCampaignWindowStarted": false,
+  "campaignElapsedSeconds": null,
+  "awsCalls": 0,
+  "renewalAttempts": 0,
+  "stsAttempts": 0,
+  "accounting": {
+    "prior": 608,
+    "newPhysicalAttempts": 0,
+    "cumulative": 608,
+    "ceiling": 1799,
+    "maximumRemainingAttempts": 1191,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "localFailure": {
+    "type": "FileNotFoundError",
+    "errno": 2,
+    "check": "git rev-parse HEAD with pinned release-source working directory",
+    "path": "/tmp/kurier-environments-release-source",
+    "sourceDirectoryMissing": true,
+    "worktreeRegistrationRetained": true,
+    "toolingFilesChanged": false,
+    "repairsAttempted": false
+  },
+  "localChecks": {
+    "retainedSevenCampaignBindingsAndAccountingPassed": true,
+    "adoptedAndRollbackArtifactsPassed": true,
+    "sdkPackagerModelAndToolPinsPassedBeforeSourceCheck": true,
+    "completePreflightPassed": false,
+    "cleanToolingPinSelected": true,
+    "originalPrBranchRestored": true
+  },
+  "freshFindings": {
+    "baselineQuiescence": null,
+    "oldFrontendReadiness": null,
+    "configurationIamComparisons": null,
+    "completeResourceDiff": null,
+    "generatedZipFrontendAgreement": null,
+    "reason": "Neither collector nor preview was launched; prior collection remains historical evidence only."
+  },
+  "laterPhasesRun": [],
+  "infrastructureOrStateWrites": 0,
+  "runtimeRequests": 0,
+  "automaticRestart": false,
+  "preservation": {
+    "sevenHistoricalCampaignsAndConsumedClaimsRetained": true,
+    "checkpointsLedgersAndPrivateEvidenceRetained": true,
+    "adoptedAndRollbackBytesUnchanged": true,
+    "worktreeRegistrationsNotPruned": true,
+    "buildDirectoryNotDeleted": true
+  },
+  "nextDecision": "Review and separately authorize local restoration of the missing exact release-source worktree while preserving its registration and all retained evidence. Recheck complete local prerequisites and review any subsequent once-only collection authorization before live execution; no repair or automatic continuation is granted by this hold."
+}

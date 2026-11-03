@@ -210,5 +210,8 @@
   "closureDeploymentGoNoGoReview": "docs/development/project-environments-closure-deployment-go-no-go.json",
   "timingAmendmentImplemented": true,
   "newTimingCampaignAuthorized": false,
-  "timingAmendmentReview": "docs/development/project-environments-timing-amendment.json"
+  "timingAmendmentReview": "docs/development/project-environments-timing-amendment.json",
+  "latestPreflightRecord": "docs/development/project-environments-collection-608-t1-preflight.json",
+  "latestRequestedCollectionStatus": "local-preflight-held-before-authorization-or-start",
+  "missingReleaseSourceBlocksCollection": true
 }

@@ -1,5 +1,14 @@
 # Project environments: adopted artifacts and execution review
 
+**Latest request: [release-608-t1 held in local preflight](project-environments-collection-608-t1-preflight.md).**
+The approved clean tooling was selected, but the pinned release-source directory
+`/tmp/kurier-environments-release-source` is missing. Its worktree registration is
+preserved. No authorization, claim, campaign, capture, renewal or AWS attempt was
+created; the start command was not invoked. Usage remains **608/1,799**. No repair
+or restart was attempted. Fresh requested findings are unavailable; the successful
+f1 snapshot below remains historical. Separate local restoration review is needed
+before reconsidering live execution.
+
 **Timing amendment implemented locally:** [verified workflow and commands](project-environments-timing-amendment.md),
 clean tooling **4de31ab9a9c791a1fc224bbce8a7fe79220519ba**. Deploy is bounded to
 840 seconds; other phases remain 240. Renewal uses the actual clipped remaining
