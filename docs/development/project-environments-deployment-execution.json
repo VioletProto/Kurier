@@ -208,7 +208,7 @@
   "completedCampaigns": 2,
   "totalCampaignsAndConsumedClaims": 8,
   "freshInitialCollectionAuthorizationConsumed": true,
-  "closureDeploymentReadiness": "closed-verified-deployment-held-for-separate-approval",
+  "closureDeploymentReadiness": "closed-deployment-held-by-insufficient-original-closed-time",
   "closureDeploymentGoNoGoReview": "docs/development/project-environments-closure-deployment-go-no-go.json",
   "timingAmendmentImplemented": true,
   "newTimingCampaignAuthorized": false,
@@ -219,5 +219,7 @@
   "stageState": "workflow-migration",
   "stageVersion": 16,
   "closePhaseCompleted": true,
-  "deploymentAuthorized": false
+  "deploymentAuthorized": false,
+  "latestDeploymentRequestRecord": "docs/development/project-environments-deploy-608-t1-time-hold.json",
+  "latestDeploymentRequestStatus": "deployment-held-by-local-minimum-time-guard"
 }

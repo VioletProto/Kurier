@@ -1,0 +1,52 @@
+{
+  "status": "deployment-held-by-local-minimum-time-guard",
+  "campaign": ".build/project-environments-execution/release-608-t1",
+  "requestedToolingCommit": "4de31ab9a9c791a1fc224bbce8a7fe79220519ba",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "deadlineCheck": {
+    "checkedUtc": "2026-11-03T19:08:17.244619+00:00",
+    "sameBoot": true,
+    "originalRemainingSeconds": 1858.79409,
+    "fixedClosedRemainingSeconds": 1167.040547,
+    "earlierRemainingSeconds": 1167.040547,
+    "requiredSeconds": 1320,
+    "shortfallSeconds": 152.959453,
+    "guardPassed": false
+  },
+  "entryCheckBeforeAllOtherDeployWork": true,
+  "boundDeployApprovalPrepared": false,
+  "approvedToolingCheckoutNeededOrPerformed": false,
+  "deployPhaseInvocations": 0,
+  "deployPhaseTimerStarted": false,
+  "credentialCacheReadOrChanged": false,
+  "renewalAttempts": 0,
+  "stsAttempts": 0,
+  "awsCalls": 0,
+  "accounting": {
+    "prior": 868,
+    "newPhysicalAttempts": 0,
+    "cumulative": 868,
+    "ceiling": 1799,
+    "remainingAttemptHeadroom": 931,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "appliedDeploymentChanges": [],
+  "uploadOrGeneratedArtifactChecksPerformed": false,
+  "artifactsRegeneratedOrSubstituted": false,
+  "newUncertainOutcomes": [],
+  "stageLastVerifiedState": "workflow-migration",
+  "stageLastVerifiedVersion": 16,
+  "stageFreshlyReadFromAws": false,
+  "campaignNextPhase": "deploy",
+  "activePhase": null,
+  "failureLatchSetByReview": false,
+  "originalCampaignOrClosedDeadlineResetExtendedOrPaused": false,
+  "ledgerWritten": false,
+  "automaticReopenRollbackRepairOrWriteRetry": false,
+  "verifyActivateFinalOrRuntimeRequests": false,
+  "preservation": {
+    "allExistingEvidenceClaimsCheckpointsLedgersAndArtifactsPreserved": true
+  },
+  "nextDecision": "Deployment is ineligible under the approved minimum-time guard; time only decreases within these original windows. Leave the stage closed and preserve all receipts. Any later inspection or recovery requires separate explicit review/approval; this hold grants no reduced threshold, new window, restart, reopen, rollback or repair."
+}

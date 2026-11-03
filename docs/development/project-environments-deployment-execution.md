@@ -1,5 +1,12 @@
 # Project environments: adopted artifacts and execution review
 
+**Latest deployment request: [held by the local minimum-time guard](project-environments-deploy-608-t1-time-hold.md).**
+At 2026-11-03 19:08:17 UTC, the fixed closed-stage window had **1,167.041 seconds**
+remaining, below the required **1,320 seconds**. No approval, authentication, AWS
+call or deploy invocation occurred. Usage remains **868/1,799**. The stage remains
+closed at its last verified version16; neither original deadline was reset.
+No reopen, rollback, repair or later phase is authorized by this hold.
+
 **Current stage: [closed and verified, version16](project-environments-close-608-t1.md).**
 The separately authorized close ran once; one exact guarded transaction changed
 only state/version to `workflow-migration`/16. Capabilities, generation and accounting
