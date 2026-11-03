@@ -241,14 +241,17 @@ def capture_at_start(c, scope):
     # A single explicit authorization, claimed campaign and original deadlines
     # precede capture. Nothing can reenter this path within an active campaign.
     c.check()
+    inspection = c.get("inspectionOnly") is True
+    campaign_id = "recovery-inspect-868-r1" if inspection else CAMPAIGN_ID
+    prior = 868 if inspection else PRIOR
     if (
         c.get("checkpointPolicy") != fresh_policy(scope)
-        or c.get("campaignId") != CAMPAIGN_ID
+        or c.get("campaignId") != campaign_id
         or c.get("activePhase") != "collect"
         or c.get("nextPhase") != 0
         or c.get("credentialPhase") is not None
         or c.get("freshCaptureStarted")
-        or c.get("count") != PRIOR
+        or c.get("count") != prior
         or c.db.execute("SELECT COUNT(*) FROM attempts").fetchone()[0]
     ):
         raise Held("fresh-checkpoint-approval-or-replay-held")
@@ -258,7 +261,7 @@ def capture_at_start(c, scope):
         with locked_snapshot(scope, fresh=True) as (before, unchanged):
             record = {
                 "schema": 2,
-                "campaignId": CAMPAIGN_ID,
+                "campaignId": campaign_id,
                 "authorizationSha256": c.get("authorizationSha256"),
                 "toolingCommit": c.get("reviewCommit"),
                 "manifestSha256": c.get("manifestSha256"),

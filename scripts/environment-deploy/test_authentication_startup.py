@@ -214,7 +214,7 @@ class StartupFixture(unittest.TestCase):
             event_data = json.dumps(list(c.db.execute("SELECT data FROM events")))
             self.assertNotIn(CANARY, event_data)
             self.assertNotIn(CANARY, json.dumps(report))
-            self.assertEqual(c.get("deadline") - c.get("started"), 3300)
+            self.assertEqual(c.get("deadline"), c.get("started") + 3300)
             self.assertLessEqual(c.get("phaseDeadline"), c.get("deadline"))
             self.assertIsNone(c.get("closedDeadline"))
             self.assertTrue(c.get("stopped"))

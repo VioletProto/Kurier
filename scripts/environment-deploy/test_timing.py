@@ -105,7 +105,7 @@ class TimingTests(StartupFixture):
     def child(self, c, phase, subphase, _context, values):
         self.child_reached = True
         self.assertEqual((phase, subphase), ("deploy", "deploy"))
-        self.assertEqual(c.get("phaseDeadline") - self.now[0], 840)
+        self.assertEqual(c.get("phaseDeadline"), self.now[0] + 840)
         self.assertEqual(
             (c.get("deadline"), c.get("closedDeadline")), self.original_deadlines
         )

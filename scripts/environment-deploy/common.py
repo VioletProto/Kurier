@@ -83,7 +83,15 @@ def private_write(path, data):
 
 
 class Campaign:
-    def __init__(self, directory, *, create=None, clock=time.monotonic, boot_id=boot):
+    def __init__(
+        self,
+        directory,
+        *,
+        create=None,
+        clock=time.monotonic,
+        boot_id=boot,
+        inspection=False,
+    ):
         requested = Path(os.path.abspath(directory))
         self.directory = requested.resolve()
         if requested != self.directory:
@@ -91,6 +99,7 @@ class Campaign:
         self.clock, self.boot_id = clock, boot_id
         path = self.directory / "campaign.sqlite"
         if create is not None:
+            prior = 868 if inspection else PRIOR
             self.directory.mkdir(mode=0o700, parents=False, exist_ok=False)
         elif not path.is_file() or path.is_symlink():
             raise Held("original-campaign-required")
@@ -114,16 +123,21 @@ class Campaign:
                     "reviewCommit",
                     "authorizationSha256",
                 }
-                or create["prior"] != PRIOR
+                or create["prior"] != prior
                 or type(create["maximum"]) is not int
-                or not PRIOR < create["maximum"] <= 1799
+                or not prior < create["maximum"] <= 1799
                 or type(create["seconds"]) is not int
                 or not 0 < create["seconds"] <= 3300
+                or (
+                    inspection
+                    and (create["maximum"] != 1068 or create["seconds"] != 600)
+                )
             ):
                 raise Held("authorization-budget-held")
             for k, v in {
                 **create,
-                "count": PRIOR,
+                "count": prior,
+                **({"inspectionOnly": True} if inspection else {}),
                 "started": now,
                 "deadline": now + create["seconds"],
                 "boot": boot_id(),
@@ -136,7 +150,7 @@ class Campaign:
                 self.put(k, v)
             self.event(
                 "created",
-                prior=PRIOR,
+                prior=prior,
                 maximum=create["maximum"],
                 deadline=now + create["seconds"],
             )
@@ -187,6 +201,8 @@ class Campaign:
         self.db.execute("BEGIN IMMEDIATE")
         try:
             self.check()
+            if self.get("inspectionOnly") and phase != "collect":
+                self.stop("inspection-only-phase-held")
             if (
                 self.get("activePhase") is not None
                 or self.get("nextPhase") >= len(PHASES)
@@ -203,7 +219,8 @@ class Campaign:
                 min(
                     self.get("deadline"),
                     self.get("closedDeadline") or self.get("deadline"),
-                    self.clock() + PHASE_LIMITS[phase],
+                    self.clock()
+                    + (600 if self.get("inspectionOnly") else PHASE_LIMITS[phase]),
                 ),
             )
             self.event("phase-start", phase=phase)
@@ -214,6 +231,12 @@ class Campaign:
         self.db.execute("BEGIN IMMEDIATE")
         try:
             self.check()
+            if (
+                self.get("inspectionOnly")
+                and write
+                and operation != "signin/CreateOAuth2Token"
+            ):
+                self.stop("inspection-write-held")
             phase = self.get("activePhase")
             if phase is None or self.get("count") >= self.get("maximum"):
                 self.stop("phase-or-call-limit")

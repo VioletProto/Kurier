@@ -422,7 +422,7 @@ export function transition(m, action) {
     },
   };
 }
-function counterGuard({ table, item: r }) {
+export function counterGuard({ table, item: r }) {
   const names = {},
     values = {},
     conditions = [];
