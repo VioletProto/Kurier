@@ -1,25 +1,25 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest request: [release-608-t1 held in local preflight](project-environments-collection-608-t1-preflight.md).**
-The approved clean tooling was selected, but the pinned release-source directory
-`/tmp/kurier-environments-release-source` is missing. Its worktree registration is
-preserved. No authorization, claim, campaign, capture, renewal or AWS attempt was
-created; the start command was not invoked. Usage remains **608/1,799**. No repair
-or restart was attempted. Fresh requested findings are unavailable; the successful
-f1 snapshot below remains historical. Separate local restoration review is needed
-before reconsidering live execution.
+**Latest execution: [release-608-t1 completed initial collection](project-environments-collection-608-t1.md).**
+The missing source worktree was restored using Git's supported scoped mechanism;
+clean source and pinned local caches/preflight passed with no downloads. The
+approved start ran once from clean tooling **4de31ab9a9c791a1fc224bbce8a7fe79220519ba**.
+Fresh capture, STS, readers and guarded preview passed without renewal. All four
+ZIPs and frontend match adoption; the complete diff matches review 8.
+Usage is **716/1,799**, leaving **1,083** arithmetic attempt headroom; cumulative
+$1 allowance unchanged. Collection completed in **68.575541 seconds**. No later
+phase ran. All eight campaign claims and historical evidence are preserved.
+The preceding zero-call [preflight hold](project-environments-collection-608-t1-preflight.md)
+remains intact; that failed local check had consumed no campaign or claim.
 
 **Timing amendment implemented locally:** [verified workflow and commands](project-environments-timing-amendment.md),
 clean tooling **4de31ab9a9c791a1fc224bbce8a7fe79220519ba**. Deploy is bounded to
 840 seconds; other phases remain 240. Renewal uses the actual clipped remaining
 phase plus five seconds on one pinned fetcher instance. Original 55-minute
-campaign and fixed 30-minute closed maximum remain unchanged. Usage **608/1,799**.
-No live work is approved or performed by this amendment. Next decision: separately
-authorize one new `release-608-t1` initial collection including explicit fresh
-capture. Closure/deployment remain held pending fresh evidence and separate phase
-approvals; 840 seconds is not proven AWS completion capacity.
+campaign and fixed 30-minute closed maximum remain unchanged. Usage **716/1,799**.
+No live work is approved or performed by this amendment. The `release-608-t1` start claim is now consumed; do not rerun it. Closure/deployment remain held pending review of the completed fresh evidence and separate phase approvals; 840 seconds is not proven AWS completion capacity.
 
-**Latest execution:** [release-499-f1 completed initial collection](project-environments-collection-499-f1.md)
+**Historical successful collection:** [release-499-f1 completed initial collection](project-environments-collection-499-f1.md)
 from clean tooling **bf1effb2835ae6be00bdbd753a802dc0b9bf6741** and unchanged
 release source. Explicit fresh-at-start capture, one metered renewal, fresh STS,
 read-only collection and guarded preview passed. Usage is **608/1,799**.
@@ -44,9 +44,9 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting is now **608/1,799**, with **1,191** arithmetic attempt headroom within the
+Accounting is now **716/1,799**, with **1,083** arithmetic attempt headroom within the
 approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
-billing remains unmeasured. All six historical stopped campaigns and the completed collection campaign, with their consumed claims, are preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
+billing remains unmeasured. All six historical stopped campaigns and both completed collection campaigns, with their consumed claims, are preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
 The fresh f1 collection added another 109 attempts. No later phase or infrastructure/state write occurred. Historical records and adopted/rollback bytes are unchanged.
 
 ## Artifacts and byte enforcement
