@@ -1,13 +1,13 @@
 {
   "toolingCommit": "4de31ab9a9c791a1fc224bbce8a7fe79220519ba",
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
-  "awsCalls": 108,
+  "awsCalls": 152,
   "accounting": {
-    "cumulative": 716,
+    "cumulative": 868,
     "authorizedCeiling": 1799,
     "billingMeasured": false,
     "proceduralAllowanceUsd": 1,
-    "remainingAttempts": 1083,
+    "remainingAttempts": 931,
     "newCallsForCredentialCorrection": 0,
     "newCallsForContextCorrection": 0,
     "newCallsForDenialReview": 0,
@@ -18,7 +18,8 @@
     "newCallsForPackagingReview": 0,
     "newCallsFor499P1Collection": 0,
     "newCallsFor499F1Collection": 109,
-    "newCallsFor608T1Collection": 108
+    "newCallsFor608T1Collection": 108,
+    "newCallsFor608T1Close": 152
   },
   "checks": {
     "unitTestsPassed": 17,
@@ -179,8 +180,8 @@
   "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235",
   "aclReadCorrection": "docs/development/project-environments-acl-read-correction.md",
   "bucketReadCorrection": "docs/development/project-environments-bucket-read-correction.md",
-  "latestExecutionRecord": "docs/development/project-environments-collection-608-t1.json",
-  "latestExecutionStatus": "initial-collection-complete-awaiting-separate-phase-approval",
+  "latestExecutionRecord": "docs/development/project-environments-close-608-t1.json",
+  "latestExecutionStatus": "stage-closed-verified-awaiting-separate-deployment-approval",
   "stoppedCampaigns": 6,
   "historicalStartCommandConsumed": true,
   "credentialBoundaryReview": "docs/development/project-environments-credential-boundary-review.md",
@@ -207,12 +208,16 @@
   "completedCampaigns": 2,
   "totalCampaignsAndConsumedClaims": 8,
   "freshInitialCollectionAuthorizationConsumed": true,
-  "closureDeploymentReadiness": "held-pending-completed-608-collection-review-and-separate-phase-approvals",
+  "closureDeploymentReadiness": "closed-verified-deployment-held-for-separate-approval",
   "closureDeploymentGoNoGoReview": "docs/development/project-environments-closure-deployment-go-no-go.json",
   "timingAmendmentImplemented": true,
   "newTimingCampaignAuthorized": false,
   "timingAmendmentReview": "docs/development/project-environments-timing-amendment.json",
   "latestPreflightRecord": "docs/development/project-environments-collection-608-t1-preflight.json",
   "latestRequestedCollectionStatus": "initial-collection-complete-awaiting-separate-phase-approval",
-  "missingReleaseSourceBlocksCollection": false
+  "missingReleaseSourceBlocksCollection": false,
+  "stageState": "workflow-migration",
+  "stageVersion": 16,
+  "closePhaseCompleted": true,
+  "deploymentAuthorized": false
 }

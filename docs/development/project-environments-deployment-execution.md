@@ -1,6 +1,14 @@
 # Project environments: adopted artifacts and execution review
 
-**Latest execution: [release-608-t1 completed initial collection](project-environments-collection-608-t1.md).**
+**Current stage: [closed and verified, version16](project-environments-close-608-t1.md).**
+The separately authorized close ran once; one exact guarded transaction changed
+only state/version to `workflow-migration`/16. Capabilities, generation and accounting
+are preserved. Usage is **868/1,799**, with **931** arithmetic attempt headroom and
+the unchanged cumulative $1 allowance. The original campaign and fixed closed-stage
+deadlines continue without reset; deployment and all later phases remain held.
+See the receipt for timestamped remaining-time observations.
+
+**Latest collection: [release-608-t1 completed initial collection](project-environments-collection-608-t1.md).**
 The missing source worktree was restored using Git's supported scoped mechanism;
 clean source and pinned local caches/preflight passed with no downloads. The
 approved start ran once from clean tooling **4de31ab9a9c791a1fc224bbce8a7fe79220519ba**.
@@ -44,7 +52,7 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting is now **716/1,799**, with **1,083** arithmetic attempt headroom within the
+Accounting is now **868/1,799**, with **931** arithmetic attempt headroom within the
 approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
 billing remains unmeasured. All six historical stopped campaigns and both completed collection campaigns, with their consumed claims, are preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
 The fresh f1 collection added another 109 attempts. No later phase or infrastructure/state write occurred. Historical records and adopted/rollback bytes are unchanged.
