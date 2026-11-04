@@ -1,5 +1,14 @@
 # Project environments: adopted artifacts and execution review
 
+**Latest: [read-only recovery inspection supports a guarded old-release reopen proposal](project-environments-recovery-inspect-868-r1.md).**
+Stage remains closed at `workflow-migration`/16. The separately authorized inspection
+used 87 attempts in 71.168 seconds; usage is **955/1,799**, with **844** headroom and
+the unchanged cumulative $1 allowance. Old packages/configuration/IAM/frontend,
+capabilities, generation/accounting and scoped state checks passed. The exact
+private transaction proposes only `active`/17 with seven accounting guards.
+**No stage write or reopen occurred.** Original campaign/deadlines are expired and
+unchanged; any reopen needs separate reviewed execution approval.
+
 **Latest deployment request: [held by the local minimum-time guard](project-environments-deploy-608-t1-time-hold.md).**
 At 2026-11-03 19:08:17 UTC, the fixed closed-stage window had **1,167.041 seconds**
 remaining, below the required **1,320 seconds**. No approval, authentication, AWS
@@ -59,7 +68,7 @@ Release source is **44f1fb79d943501c95e06fcc1a6114111a7c1ea4**. Adoption accepts
 artifacts only. Deployment, closure, migration, activation, identities/projects,
 and target/runtime execution require further authorization.
 
-Accounting is now **868/1,799**, with **931** arithmetic attempt headroom within the
+Accounting is now **955/1,799**, with **844** arithmetic attempt headroom within the
 approved ceiling. The cumulative **$1 procedural allowance** is unchanged;
 billing remains unmeasured. All six historical stopped campaigns and both completed collection campaigns, with their consumed claims, are preserved. The cp1 collection added 109 metered attempts, including one permitted renewal.
 The fresh f1 collection added another 109 attempts. No later phase or infrastructure/state write occurred. Historical records and adopted/rollback bytes are unchanged.

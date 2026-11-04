@@ -3,11 +3,11 @@
   "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
   "awsCalls": 152,
   "accounting": {
-    "cumulative": 868,
+    "cumulative": 955,
     "authorizedCeiling": 1799,
     "billingMeasured": false,
     "proceduralAllowanceUsd": 1,
-    "remainingAttempts": 931,
+    "remainingAttempts": 844,
     "newCallsForCredentialCorrection": 0,
     "newCallsForContextCorrection": 0,
     "newCallsForDenialReview": 0,
@@ -19,7 +19,8 @@
     "newCallsFor499P1Collection": 0,
     "newCallsFor499F1Collection": 109,
     "newCallsFor608T1Collection": 108,
-    "newCallsFor608T1Close": 152
+    "newCallsFor608T1Close": 152,
+    "newCallsForRecoveryInspection": 87
   },
   "checks": {
     "unitTestsPassed": 17,
@@ -208,7 +209,7 @@
   "completedCampaigns": 2,
   "totalCampaignsAndConsumedClaims": 8,
   "freshInitialCollectionAuthorizationConsumed": true,
-  "closureDeploymentReadiness": "closed-deployment-held-by-insufficient-original-closed-time",
+  "closureDeploymentReadiness": "closed-old-release-reopen-proposed-awaiting-separate-reviewed-write-approval",
   "closureDeploymentGoNoGoReview": "docs/development/project-environments-closure-deployment-go-no-go.json",
   "timingAmendmentImplemented": true,
   "newTimingCampaignAuthorized": false,
@@ -221,5 +222,9 @@
   "closePhaseCompleted": true,
   "deploymentAuthorized": false,
   "latestDeploymentRequestRecord": "docs/development/project-environments-deploy-608-t1-time-hold.json",
-  "latestDeploymentRequestStatus": "deployment-held-by-local-minimum-time-guard"
+  "latestDeploymentRequestStatus": "deployment-held-by-local-minimum-time-guard",
+  "latestRecoveryInspectionRecord": "docs/development/project-environments-recovery-inspect-868-r1.json",
+  "latestRecoveryInspectionStatus": "inspection-supports-proposed-old-release-reopen-no-stage-write",
+  "reopenAuthorized": false,
+  "reopenPerformed": false
 }
