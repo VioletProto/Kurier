@@ -21,17 +21,15 @@ def inspect(client, bucket, cutoff):
         raise ValueError("recovery-state-mutation-held")
     lock_header = None
     try:
-        lock_header = client.head_object(Bucket=bucket, Key=lock)
+        # The existing lock-response gate validates JSON on HTTP 200. A HEAD
+        # response has no body; use the already-scoped GET for this one key.
+        obj = client.get_object(Bucket=bucket, Key=lock)
     except ClientError as error:
         if error.response["Error"]["Code"] not in {"404", "NoSuchKey", "NotFound"}:
             raise
     else:
-        obj = client.get_object(Bucket=bucket, Key=lock)
-        if (
-            lock_header["LastModified"] > cutoff
-            or obj["LastModified"] != lock_header["LastModified"]
-            or obj["ETag"] != lock_header["ETag"]
-        ):
+        lock_header = obj
+        if lock_header["LastModified"] > cutoff:
             raise ValueError("recovery-state-mutation-held")
         raw = obj["Body"].read(65537)
         obj["Body"].close()

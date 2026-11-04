@@ -216,9 +216,15 @@ class StateTests(unittest.TestCase):
 
             def get_object(_, **kw):
                 self.calls.append(("get", kw))
+                if not self.lock:
+                    raise ClientError({"Error": {"Code": "404"}}, "GetObject")
                 return {
                     **self.header,
-                    "Body": io.BytesIO(b'{"created":"2026-11-03T19:00:00Z"}'),
+                    "Body": io.BytesIO(
+                        b'{"created":"0001-01-01T00:00:00Z"}'
+                        if self.lock == "empty"
+                        else b'{"created":"2026-11-03T19:00:00Z"}'
+                    ),
                 }
 
             def list_objects_v2(_, **kw):
@@ -234,6 +240,7 @@ class StateTests(unittest.TestCase):
                         }
                     ]
                     if prefix.startswith("app/")
+                    or (prefix.startswith("lock/") and self.lock)
                     else []
                 )
                 if self.changed and prefix.startswith("update/"):
@@ -254,6 +261,23 @@ class StateTests(unittest.TestCase):
         r = inspect(self.client, "owned", "2026-11-03T18:40:00+00:00")
         self.assertTrue(r["noObservedStateChangesSinceOriginalCollection"])
         self.assertEqual(len(self.calls), 8)
+
+    def test_existing_empty_lock_uses_get_and_passes_response_gate(self):
+        from test_policy_review import fixture
+        from wire import Policy
+
+        self.case()
+        self.lock = "empty"
+        result = inspect(self.client, "owned", "2026-11-03T18:40:00+00:00")
+        self.assertTrue(result["noCurrentDeployLock"])
+        self.assertNotIn(
+            ("head", {"Bucket": "owned", "Key": "lock/kurier/dev-api.json"}), self.calls
+        )
+        policy = Policy(fixture.S, fixture.R, {}, phase="collect")
+        policy.response(
+            {"lockRead": True}, 200, {}, b'{"created":"0001-01-01T00:00:00Z"}'
+        )
+        self.assertTrue(policy.lock_empty)
 
     def test_new_state_metadata_or_live_lock_stops(self):
         for mode in ["mutation", "lock", "app"]:
