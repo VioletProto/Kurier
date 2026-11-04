@@ -91,6 +91,7 @@ class Campaign:
         clock=time.monotonic,
         boot_id=boot,
         inspection=False,
+        recovery_write=False,
     ):
         requested = Path(os.path.abspath(directory))
         self.directory = requested.resolve()
@@ -99,7 +100,9 @@ class Campaign:
         self.clock, self.boot_id = clock, boot_id
         path = self.directory / "campaign.sqlite"
         if create is not None:
-            prior = 868 if inspection else PRIOR
+            if inspection and recovery_write:
+                raise Held("exclusive-recovery-profile-required")
+            prior = 955 if recovery_write else 868 if inspection else PRIOR
             self.directory.mkdir(mode=0o700, parents=False, exist_ok=False)
         elif not path.is_file() or path.is_symlink():
             raise Held("original-campaign-required")
@@ -132,12 +135,17 @@ class Campaign:
                     inspection
                     and (create["maximum"] != 1068 or create["seconds"] != 600)
                 )
+                or (
+                    recovery_write
+                    and (create["maximum"] != 1205 or create["seconds"] != 600)
+                )
             ):
                 raise Held("authorization-budget-held")
             for k, v in {
                 **create,
                 "count": prior,
                 **({"inspectionOnly": True} if inspection else {}),
+                **({"recoveryWriteOnly": True} if recovery_write else {}),
                 "started": now,
                 "deadline": now + create["seconds"],
                 "boot": boot_id(),
@@ -203,10 +211,11 @@ class Campaign:
             self.check()
             if self.get("inspectionOnly") and phase != "collect":
                 self.stop("inspection-only-phase-held")
+            phases = ("recover-old",) if self.get("recoveryWriteOnly") else PHASES
             if (
                 self.get("activePhase") is not None
-                or self.get("nextPhase") >= len(PHASES)
-                or PHASES[self.get("nextPhase")] != phase
+                or self.get("nextPhase") >= len(phases)
+                or phases[self.get("nextPhase")] != phase
             ):
                 self.stop("phase-replay-or-order")
             self.put("activePhase", phase)
@@ -220,7 +229,11 @@ class Campaign:
                     self.get("deadline"),
                     self.get("closedDeadline") or self.get("deadline"),
                     self.clock()
-                    + (600 if self.get("inspectionOnly") else PHASE_LIMITS[phase]),
+                    + (
+                        600
+                        if self.get("inspectionOnly") or self.get("recoveryWriteOnly")
+                        else PHASE_LIMITS[phase]
+                    ),
                 ),
             )
             self.event("phase-start", phase=phase)
@@ -238,6 +251,22 @@ class Campaign:
             ):
                 self.stop("inspection-write-held")
             phase = self.get("activePhase")
+            if (
+                self.get("recoveryWriteOnly")
+                and write
+                and operation != "signin/CreateOAuth2Token"
+            ) and (
+                operation != "dynamodb/TransactWriteItems"
+                or phase != "recover-old"
+                or not self.get("reopenWriteArmed")
+                or self.clock() >= (self.get("reopenArmDeadline") or 0)
+                or self.get("phaseDeadline") - self.clock() < 60
+                or self.get("maximum") - self.get("count") < 32
+                or self.db.execute(
+                    "SELECT COUNT(*) FROM attempts WHERE op=?", (operation,)
+                ).fetchone()[0]
+            ):
+                self.stop("one-shot-reopen-write-held")
             if phase is None or self.get("count") >= self.get("maximum"):
                 self.stop("phase-or-call-limit")
             n = self.get("count") + 1

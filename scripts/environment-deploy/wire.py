@@ -301,8 +301,13 @@ class Policy:
         if (
             service == "dynamodb"
             and op == "TransactWriteItems"
-            and self.phase in {"close", "activate"}
+            and self.phase in {"close", "activate", "recover-old"}
         ):
+            if self.phase == "recover-old":
+                from reopen_bindings import TRANSACTION_SHA
+
+                if digest(canonical(p)) != TRANSACTION_SHA:
+                    raise Held("accepted-reopen-transaction-hash-held")
             if self.stage_transaction is None or canonical(p) != canonical(
                 self.stage_transaction
             ):
@@ -973,6 +978,16 @@ class Policy:
             and meta["params"]["Key"]["SK"]["S"] == "META"
         ):
             item = strict_json(body).get("Item")
+            if self.phase == "recover-old":
+                from reopen_bindings import AFTER_SHA, BEFORE_SHA
+
+                expected = (
+                    AFTER_SHA
+                    if "stage/recover-old" in self.write_tickets
+                    else BEFORE_SHA
+                )
+                if digest(canonical(item)) != expected:
+                    raise Held("recovery-marker-readback-or-drift-held")
             self.last_marker_sha256 = digest(canonical(item))
             if self.closed_marker is not None and item == self.closed_marker:
                 self.closed_verified = True

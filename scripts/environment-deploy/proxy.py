@@ -161,6 +161,10 @@ class Gate:
             meta = self.policy.request(
                 q.method, q.host, q.path, q.headers, q.raw_content or b""
             )
+            if meta["write"] and self.config["phase"] == "recover-old":
+                from reopen_guard import verify_arm
+
+                verify_arm(self.c)
             if (
                 meta["write"]
                 and self.config["phase"] == "deploy"
