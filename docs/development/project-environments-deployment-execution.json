@@ -226,5 +226,8 @@
   "latestRecoveryInspectionRecord": "docs/development/project-environments-recovery-inspect-868-r1.json",
   "latestRecoveryInspectionStatus": "inspection-supports-proposed-old-release-reopen-no-stage-write",
   "reopenAuthorized": false,
-  "reopenPerformed": false
+  "reopenPerformed": false,
+  "reopenExecutorReview": "docs/development/project-environments-reopen-executor.md",
+  "reopenExecutorToolingCommit": "8c8419b25b30ef15937f6da2a9b8276ea3916fa4",
+  "reopenExecutorLocalOnly": true
 }

@@ -1,5 +1,14 @@
 # Project environments: adopted artifacts and execution review
 
+**Latest: [one-shot old-release recovery executor implemented and tested locally](project-environments-reopen-executor.md).**
+Tooling **8c8419b25b30ef15937f6da2a9b8276ea3916fa4** binds the accepted
+`workflow-migration`/16 → `active`/17 transaction with seven accounting guards.
+Proposed separate recovery authorization: 600 seconds / at most 250 additional
+attempts from **955/1,799** (hard local maximum 1,205), unchanged cumulative $1.
+**No AWS calls, fresh capture or stage write ran.** Original expired clocks and
+consumed inspection remain intact; a live recovery command needs separate approval.
+208 execution tests and 17 isolated scenarios pass; artifacts/evidence preserved.
+
 **Latest: [read-only recovery inspection supports a guarded old-release reopen proposal](project-environments-recovery-inspect-868-r1.md).**
 Stage remains closed at `workflow-migration`/16. The separately authorized inspection
 used 87 attempts in 71.168 seconds; usage is **955/1,799**, with **844** headroom and
