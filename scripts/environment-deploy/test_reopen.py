@@ -224,6 +224,7 @@ class ReopenTests(StartupFixture):
             "stale",
             "time",
             "calls",
+            "calls-boundary",
             "other",
             "pending",
             "complete",
@@ -252,8 +253,8 @@ class ReopenTests(StartupFixture):
                     )
                     if mode == "time":
                         c.clock = lambda: c.get("deadline") - 59
-                    if mode == "calls":
-                        c.put("count", 1174)
+                    if mode in ["calls", "calls-boundary"]:
+                        c.put("count", 1174 if mode == "calls" else 1173)
                     if mode in ["pending", "complete"]:
                         n = c.admit("dynamodb/TransactWriteItems", True)
                         if mode == "complete":

@@ -261,7 +261,7 @@ class Campaign:
                 or not self.get("reopenWriteArmed")
                 or self.clock() >= (self.get("reopenArmDeadline") or 0)
                 or self.get("phaseDeadline") - self.clock() < 60
-                or self.get("maximum") - self.get("count") < 32
+                or self.get("maximum") - self.get("count") < 33
                 or self.db.execute(
                     "SELECT COUNT(*) FROM attempts WHERE op=?", (operation,)
                 ).fetchone()[0]
