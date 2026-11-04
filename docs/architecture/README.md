@@ -2,6 +2,15 @@
 
 ## Accepted project environments continuation
 
+Current status (2026-11-04): Davian authorized completing the hosted deployment.
+Environments are deployed and active on `dev-api` at stage version 17 with the
+accepted environment capability tuple. The
+[hosted rollout record](../development/project-environments-hosted-rollout.md)
+records supported SST deployment, guarded activation, verification and remaining
+live-validation limits. Earlier holds below are historical. The
+[next OpenAPI milestone](../development/openapi-next-milestone.md) is proposed;
+library selection does not accept its production contract.
+
 Davian accepted the [environment packet](drafts/project-environments-review.md)
 and [compatibility amendment](drafts/project-environments-compatibility.md) at
 `d8be596a2306f2e888ef34e81dfa836bc4b84447` on 2026-10-24.
