@@ -385,12 +385,16 @@ func (s *Service) mcpData(ctx context.Context, c row, tool string, in wire.Input
 				delivery.OmissionReason = pointer("assertions_not_exposed")
 				delivery.OmittedFields = []string{"assertions"}
 			}
-			if capture.SchemaVersion == 3 {
+			if capture.TemplateSemanticsVersion == 1 {
 				delivery.OmissionReason = pointer("environment_context_not_exposed")
 				if capture.Assertions != nil {
 					delivery.OmissionReason = pointer("unsupported_context_not_exposed")
 				}
 				delivery.OmittedFields = append(delivery.OmittedFields, "templateSemanticsVersion", "environmentContext")
+			}
+			if capture.Contract != nil {
+				delivery.OmittedFields = append(delivery.OmittedFields, "contract")
+				delivery.OmissionReason = pointer("unsupported_context_not_exposed")
 			}
 		} else {
 			delivery.OmissionReason = pointer("mcp_summary_view")
@@ -398,8 +402,12 @@ func (s *Service) mcpData(ctx context.Context, c row, tool string, in wire.Input
 			if capture.Assertions != nil {
 				delivery.OmittedFields = append(delivery.OmittedFields, "assertions")
 			}
-			if capture.SchemaVersion == 3 {
+			if capture.TemplateSemanticsVersion == 1 {
 				delivery.OmittedFields = append(delivery.OmittedFields, "templateSemanticsVersion", "environmentContext")
+			}
+			if capture.Contract != nil {
+				delivery.OmittedFields = append(delivery.OmittedFields, "contract")
+				delivery.OmissionReason = pointer("unsupported_context_not_exposed")
 			}
 			delivery.Summary = &wire.CaptureSummary{ProjectID: capture.ProjectID, ExecutionID: capture.ExecutionID, Status: capture.Status, Outcome: capture.Outcome, SubmittedAt: capture.SubmittedAt, StartedAt: capture.StartedAt, CompletedAt: capture.CompletedAt, HTTPStatus: capture.Response.HTTPStatus, Timing: capture.Timing, RequestBody: wire.BodySummary{Kind: capture.Request.Body.Kind, OmissionReason: capture.Request.Body.OmissionReason}, ResponseBody: wire.BodySummary{Kind: capture.Response.Body.Kind, OmissionReason: capture.Response.Body.OmissionReason}, Redaction: capture.Redaction}
 		}

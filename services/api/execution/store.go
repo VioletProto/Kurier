@@ -60,6 +60,10 @@ type SecretSource struct {
 	Revision int64  `dynamodbav:"revision"`
 }
 type row struct {
+	OpenAPISchemaVersion             int                        `dynamodbav:"openapiSchemaVersion,omitempty"`
+	ImportID                         string                     `dynamodbav:"importId,omitempty"`
+	OperationID                      string                     `dynamodbav:"operationId,omitempty"`
+	OperationJSON                    string                     `dynamodbav:"operationJSON,omitempty"`
 	Capabilities                     *runner.AgentCapabilities  `dynamodbav:"capabilities,omitempty"`
 	TemplateSemanticsVersion         int                        `dynamodbav:"templateSemanticsVersion,omitempty"`
 	EnvironmentContext               *runner.EnvironmentContext `dynamodbav:"environmentContext,omitempty"`
@@ -317,13 +321,16 @@ func transactionConflict(err error) bool {
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
-	if r.SavedRequestsSchemaVersion == 9 {
+	if r.SavedRequestsSchemaVersion == 9 || r.SavedRequestsSchemaVersion == 10 {
+		if (r.SavedRequestsSchemaVersion == 10) != (r.OpenAPISchemaVersion == 1) || r.OpenAPISchemaVersion < 0 || r.OpenAPISchemaVersion > 1 {
+			return row{}, safeError()
+		}
 		if e != nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != 1 || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
 			return row{}, safeError()
 		}
 		return r, nil
 	}
-	if r.ProjectEnvironmentsSchemaVersion != 0 {
+	if r.ProjectEnvironmentsSchemaVersion != 0 || r.OpenAPISchemaVersion != 0 {
 		return row{}, safeError()
 	}
 
@@ -341,7 +348,7 @@ func (s *Service) stage(ctx context.Context) (row, error) {
 	return r, nil
 }
 func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
-	if stage.SavedRequestsSchemaVersion == 9 {
+	if stage.SavedRequestsSchemaVersion == 9 || stage.SavedRequestsSchemaVersion == 10 {
 		return s.environmentStageGuard(stage)
 	}
 	guard := dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &s.Table, Key: keys(stage.PK, "META"), ConditionExpression: aws.String("#s = :active AND recoveryGeneration = :g AND savedRequestsSchemaVersion = :r AND cloudExecutionsSchemaVersion = :c AND executionInputsSchemaVersion = :c AND protectedSecretsSchemaVersion = :c"), ExpressionAttributeNames: map[string]string{"#s": "state"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":active": str("active"), ":g": str(stage.RecoveryGeneration), ":r": num(int64(stage.SavedRequestsSchemaVersion)), ":c": num(1)}}}
@@ -371,6 +378,7 @@ func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
 		guard.ConditionCheck.ConditionExpression = aws.String(*guard.ConditionCheck.ConditionExpression + " AND attribute_not_exists(workflowAssertionsSchemaVersion)")
 	}
 
+	*guard.ConditionCheck.ConditionExpression += " AND attribute_not_exists(openapiSchemaVersion)"
 	return guard
 }
 func (s *Service) project(ctx context.Context, owner, project string) (row, error) {
@@ -498,6 +506,15 @@ func (s *Service) fastNotify(ctx context.Context, project, job string) {
 }
 func (s *Service) sourceGuard(r row, table string) dt.TransactWriteItem {
 	guard := dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &table, Key: keys(r.PK, r.SK), ConditionExpression: aws.String("revision = :r AND #s = :active AND #k = :kind"), ExpressionAttributeNames: map[string]string{"#s": "state", "#k": "kind"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":r": num(r.Revision), ":active": str("active"), ":kind": str(r.Kind)}}}
+	if r.Kind == "request" {
+		g := guard.ConditionCheck
+		if r.ImportID != "" {
+			*g.ConditionExpression += " AND importId = :import"
+			g.ExpressionAttributeValues[":import"] = str(r.ImportID)
+		} else {
+			*g.ConditionExpression += " AND attribute_not_exists(importId)"
+		}
+	}
 	if r.Kind == "savedSecret" {
 		g := guard.ConditionCheck
 		*g.ConditionExpression += " AND schemaVersion = :schema AND valueKind = :valueKind"
@@ -608,7 +625,7 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		source = plan.RequestID
 	}
 	request, e := s.get(ctx, s.Table, p.PK, "REQ#"+source)
-	if e != nil || request.Kind != "request" || request.State != "active" || (request.SchemaVersion != 1 && request.SchemaVersion != 2 && request.SchemaVersion != 3) {
+	if e != nil || request.Kind != "request" || request.State != "active" || (request.SchemaVersion != 1 && request.SchemaVersion != 2 && request.SchemaVersion != 3 && request.SchemaVersion != 4) {
 		return View{}, failure(400, "source_unavailable")
 	}
 	if !rerun {
@@ -621,6 +638,18 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		plan.RequestID = source
 		plan.Revision = revision
 		plan.Options = options
+	}
+	publicationGuards, e := s.importPublicationGuards(ctx, stage, project, request)
+	if e != nil {
+		return View{}, e
+	}
+	contractGuards, e := s.freezeContract(ctx, stage, project, &plan, rerun)
+	if e != nil {
+		return View{}, e
+	}
+	contractGuards, e = mergeContractGuards(contractGuards, publicationGuards)
+	if e != nil {
+		return View{}, e
 	}
 	envGuards, e := s.freezeEnvironment(ctx, project, &plan, options.Environment, rerun)
 	if e != nil {
@@ -685,6 +714,7 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 	}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), user, s.projectUpdate(p, 0, 1), s.sourceGuard(request, s.Table)}
 	actions = append(actions, envGuards...)
+	actions = append(actions, contractGuards...)
 	values := map[string]string{}
 	defer clear(values)
 	sources := []SecretSource{}

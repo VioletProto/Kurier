@@ -53,6 +53,14 @@ func NewServer(store *Store, verifier *Verifier, cursorSecret []byte) (*Server, 
 		pattern string
 		handler endpoint
 	}{
+
+		{"POST /api/v1/projects/{projectId}/openapi-imports", a.openapiEndpoint},
+		{"GET /api/v1/projects/{projectId}/openapi-imports", a.openapiEndpoint},
+		{"GET /api/v1/projects/{projectId}/openapi-imports/{importId}", a.openapiEndpoint},
+		{"PATCH /api/v1/projects/{projectId}/openapi-imports/{importId}", a.openapiEndpoint},
+		{"DELETE /api/v1/projects/{projectId}/openapi-imports/{importId}", a.openapiEndpoint},
+		{"POST /api/v1/projects/{projectId}/openapi-imports/{importId}/publish", a.openapiPublish},
+		{"GET /api/v1/projects/{projectId}/openapi-imports/{importId}/export", a.openapiExport},
 		{"POST /api/v1/projects/{projectId}/environments", a.environmentEndpoint},
 		{"GET /api/v1/projects/{projectId}/environments", a.environmentEndpoint},
 		{"GET /api/v1/projects/{projectId}/environments/{environmentId}", a.environmentEndpoint},

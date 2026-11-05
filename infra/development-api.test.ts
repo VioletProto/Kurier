@@ -18,7 +18,7 @@ class Resource {
     this.arn = `arn:test:${name}`;
     this.id = name;
     this.url = "https://abc.execute-api.us-east-2.amazonaws.com";
-    this.nodes = { rule: { name } };
+    this.nodes = { rule: { name }, api: { id: name } };
     const table: any = {};
     const stage: any = { accessLogSettings: { destinationArn: "logs" } };
     const fn: any = {};
@@ -27,10 +27,20 @@ class Resource {
     args.transform?.table?.(table);
     args.transform?.stage?.(stage);
     args.transform?.function?.(fn);
-    resources.push({ name, args, opts, table, stage, fn, api });
+    resources.push({
+      name,
+      args,
+      opts,
+      table,
+      stage,
+      fn,
+      api,
+      ...(args.routeKey ? { route: args.routeKey, arn: args.target } : {}),
+    });
   }
   route(route: string, arn: string) {
     resources.push({ route, arn });
+    return { nodes: { integration: { id: `existing-integration:${route}` } } };
   }
 }
 beforeEach(() => {
@@ -62,6 +72,7 @@ beforeEach(() => {
     },
     sqs: { Queue: Resource, RedriveAllowPolicy: Resource },
     lambda: { EventSourceMapping: Resource },
+    apigatewayv2: { Route: Resource },
   });
   vi.stubGlobal("sst", {
     aws: {
@@ -115,7 +126,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(53);
+    expect(resources.filter((r) => r.route)).toHaveLength(64);
     const declaredRoutes = resources.filter((r) => r.route).map((r) => r.route);
     expect(declaredRoutes).toEqual(
       expect.arrayContaining([
@@ -129,6 +140,31 @@ describe("scoped development API infrastructure", () => {
         "POST /api/v1/local-agent/capabilities",
       ]),
     );
+    expect(
+      declaredRoutes.filter((route) => route.includes("/openapi-imports")),
+    ).toEqual([
+      "POST /api/v1/projects/{projectId}/openapi-imports",
+      "GET /api/v1/projects/{projectId}/openapi-imports",
+      "GET /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "PATCH /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "DELETE /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "POST /api/v1/projects/{projectId}/openapi-imports/{importId}/publish",
+      "GET /api/v1/projects/{projectId}/openapi-imports/{importId}/export",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}/publish",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}/export",
+    ]);
+    const importRoutes = resources.filter((r) =>
+      r.name?.startsWith("OpenAPIImport"),
+    );
+    expect(importRoutes).toHaveLength(11);
+    for (const route of importRoutes)
+      expect(route.args).toMatchObject({
+        apiId: "DevelopmentHttpApi",
+        authorizationType: "NONE",
+        target: "integrations/existing-integration:GET /api/v1/users/me",
+      });
     expect(
       resources.filter((r) => r.route?.includes("/mcp/")).map((r) => r.route),
     ).toEqual([

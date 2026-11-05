@@ -15,6 +15,11 @@ func (s *Service) environmentStageGuard(stage row) types.TransactWriteItem {
 	expr := "#s = :active AND recoveryGeneration = :g"
 	keys := []string{}
 	versions := runner.EnvironmentStageVersions()
+	if stage.OpenAPISchemaVersion == 1 {
+		versions = runner.OpenAPIStageVersions()
+	} else {
+		expr += " AND attribute_not_exists(openapiSchemaVersion)"
+	}
 	for k := range versions {
 		keys = append(keys, k)
 	}

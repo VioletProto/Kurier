@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	contract "github.com/VioletProto/Kurier/services/request-runtime/openapi"
 	"io"
 	"net"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 )
 
 type Prepared struct {
+	contract   *FrozenContract
 	workflow   *ExtractionCapture
 	request    *http.Request
 	transport  *http.Transport
@@ -36,6 +38,13 @@ func prepare(ctx context.Context, plan Plan, values map[string]string, resolver 
 }
 func preparePolicy(ctx context.Context, plan Plan, values map[string]string, resolver Resolver, local *Destination, resolveDNS bool) (*Prepared, error) {
 	preparedAt := time.Now()
+	if plan.Configuration.OperationRef != nil {
+		if plan.Target == "local" || plan.FrozenContract.Validate(plan.Configuration.OperationRef) != nil {
+			return nil, failure(400, "openapi_validation_unavailable")
+		}
+	} else if plan.FrozenContract != nil {
+		return nil, failure(400, "openapi_reference_invalid")
+	}
 	resolved, corpus, resolveErr := ResolveTemplatePlan(plan, values)
 	if resolveErr != nil {
 		return nil, resolveErr
@@ -193,7 +202,7 @@ func preparePolicy(ctx context.Context, plan Plan, values map[string]string, res
 		dial = localDialer(resolver, *local)
 	}
 	tr := &http.Transport{Proxy: nil, DialContext: dial, TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12}, TLSHandshakeTimeout: 5 * time.Second, ResponseHeaderTimeout: 10 * time.Second, MaxResponseHeaderBytes: ConfigLimit, DisableKeepAlives: true, DisableCompression: true, ForceAttemptHTTP2: false}
-	return &Prepared{request: req, transport: tr, sanitizer: san, policy: plan.Options.ResponseRedaction, capture: capture, timeout: time.Duration(plan.Options.TimeoutSeconds) * time.Second, preparedAt: preparedAt}, nil
+	return &Prepared{contract: plan.FrozenContract, request: req, transport: tr, sanitizer: san, policy: plan.Options.ResponseRedaction, capture: capture, timeout: time.Duration(plan.Options.TimeoutSeconds) * time.Second, preparedAt: preparedAt}, nil
 }
 func headerBytes(h http.Header) int {
 	n := 0
@@ -242,6 +251,10 @@ func NewEvidence(project, execution, submitted string, plan Plan) *Evidence {
 			e.Request.URL = ""
 		}
 	}
+	if plan.FrozenContract != nil {
+		e.SchemaVersion = 4
+		e.Contract = UnavailableContract(plan.FrozenContract, "not_dispatched")
+	}
 	e.Redaction.PolicyVersion = 1
 	e.Redaction.Applied = true
 	if plan.Target == "local" {
@@ -253,10 +266,33 @@ func (e *Evidence) Fail(code, certainty string) {
 	e.Status = "failed"
 	e.Outcome = Outcome{&code, certainty}
 	e.CompletedAt = stamp(time.Now())
+	if e.Contract != nil && certainty != "not_dispatched" && len(e.Contract.Result.Checks) == 3 && e.Contract.Result.Checks[0].Code == "not_dispatched" {
+		// Recovery and early network failures may bypass Prepared.Run's deferred
+		// completion. Do not describe an uncertain attempt as never dispatched.
+		e.Contract.Result.Status = "not_evaluated"
+		for i := range e.Contract.Result.Checks {
+			e.Contract.Result.Checks[i].Status = "not_evaluated"
+			e.Contract.Result.Checks[i].Code = "evaluation_unavailable"
+		}
+	}
 }
 func (p *Prepared) Run(ctx context.Context, e *Evidence) {
+	if p.contract != nil {
+		defer func() {
+			if e.Contract == nil || len(e.Contract.Result.Checks) > 0 && e.Contract.Result.Checks[0].Code == "not_dispatched" {
+				reason := "not_dispatched"
+				if e.Outcome.Certainty != "not_dispatched" {
+					reason = "evaluation_unavailable"
+				}
+				e.Contract = UnavailableContract(p.contract, reason)
+			}
+			if e.Status == "completed" && e.Contract.Result.Status != "passed" {
+				e.Fail("contract_validation_failed", "known")
+			}
+		}()
+	}
 	if p.workflow != nil && p.workflow.AssertionSemanticsVersion == 1 {
-		if e.SchemaVersion != 3 {
+		if e.SchemaVersion != 3 && e.SchemaVersion != 4 {
 			e.SchemaVersion = 2
 		}
 		e.Assertions = NewAssertionEvaluation(p.workflow.Step, "not_dispatched")
@@ -362,6 +398,11 @@ func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 		e.Fail(code, "unknown")
 		return
 	}
+	if p.contract != nil {
+		suppressed := contractSuppressed(raw, response.Header, p.sanitizer, p.policy) || p.workflow != nil && len(p.workflow.Step.Extract) > 0
+		result := contract.Validate(p.contract.Operation, response.StatusCode, response.Header, raw, suppressed)
+		e.Contract = &ContractEvaluation{ImportID: p.contract.ImportID, OperationID: p.contract.OperationID, Revision: p.contract.Revision, Result: result}
+	}
 	var workflowStorageError error
 	assertionsEvaluated := false
 	if p.workflow != nil && len(p.workflow.Step.Extract) > 0 {
@@ -370,7 +411,7 @@ func (p *Prepared) Run(ctx context.Context, e *Evidence) {
 			e.Assertions = EvaluateAssertions(p.workflow.Step, e.Response.HTTPStatus, raw, response.Header.Get("Content-Type"), p.policy, p.workflow.Values, "")
 			assertionsEvaluated = true
 		}
-		if extractErr == nil && p.workflow.Seal != nil && (e.Assertions == nil || e.Assertions.Passed()) {
+		if extractErr == nil && p.workflow.Seal != nil && (e.Assertions == nil || e.Assertions.Passed()) && (e.Contract == nil || e.Contract.Result.Status == "passed") {
 			workflowStorageError = p.workflow.Seal(p.workflow.Outputs)
 		}
 		p.sanitizer = newSanitizer(p.workflow.Values)

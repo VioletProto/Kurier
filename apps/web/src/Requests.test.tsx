@@ -69,6 +69,28 @@ function confirm() {
     screen.getByRole("checkbox", { name: /All fields contain public data/ }),
   );
 }
+it("preserves a linked OpenAPI operation during unrelated request edits", async () => {
+  const linked = {
+    ...saved,
+    operationRef: { importId: "import", operationId: "operation" },
+  };
+  mocks.requestDetail.mockResolvedValue({ request: linked, etag: '"0"' });
+  mocks.patchRequest.mockResolvedValue({
+    request: { ...linked, name: "Renamed" },
+    etag: '"1"',
+  });
+  mount();
+  await edit();
+  fireEvent.change(screen.getByLabelText("Request name"), {
+    target: { value: "Renamed" },
+  });
+  confirm();
+  fireEvent.click(screen.getByRole("button", { name: "Save request changes" }));
+  await waitFor(() => expect(mocks.patchRequest).toHaveBeenCalledTimes(1));
+  expect(mocks.patchRequest.mock.calls[0][2].operationRef).toEqual(
+    linked.operationRef,
+  );
+});
 it("explains whole configuration limit and rejects credential headers before saving", async () => {
   mount();
   await edit();

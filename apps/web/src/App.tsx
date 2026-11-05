@@ -1,4 +1,5 @@
 import { Environments } from "./Environments";
+import { OpenAPI } from "./OpenAPI";
 import { MCPCredentials } from "./MCPCredentials";
 import { flushSync } from "react-dom";
 import { Workflows } from "./Workflows";
@@ -541,6 +542,13 @@ function Projects({ onExpired }: { onExpired: () => void }) {
               />
               <Environments
                 key={"environments-" + detail.project.projectId}
+                projectId={detail.project.projectId}
+                disabled={busy}
+                onExpired={onExpired}
+                onGateChanged={() => setStale(true)}
+              />
+              <OpenAPI
+                key={"openapi-" + detail.project.projectId}
                 projectId={detail.project.projectId}
                 disabled={busy}
                 onExpired={onExpired}

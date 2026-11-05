@@ -1,5 +1,14 @@
 # Project environments implementation and local verification
 
+## Hosted deployment — 2026-11-04
+
+Environments are deployed and active on `dev-api` at stage version 17.
+The [hosted rollout record](project-environments-hosted-rollout.md) supersedes
+the historical deployment holds below and records actual deployment, guarded
+activation and validation limits. The
+[next proposed milestone](openapi-next-milestone.md) is OpenAPI JSON/YAML
+import/export and response validation.
+
 ## Artifacts adopted; metered deployment tooling prepared locally
 
 The [consolidated execution packet](project-environments-deployment-execution.md)

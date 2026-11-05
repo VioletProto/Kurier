@@ -2,6 +2,15 @@
 
 ## Accepted project environments continuation
 
+Current status (2026-11-04): Davian authorized completing the hosted deployment.
+Environments are deployed and active on `dev-api` at stage version 17 with the
+accepted environment capability tuple. The
+[hosted rollout record](../development/project-environments-hosted-rollout.md)
+records supported SST deployment, guarded activation, verification and remaining
+live-validation limits. Earlier holds below are historical. The
+[OpenAPI implementation contract](openapi-contract.md) records the subsequent
+implementation direction, separate from the earlier library selection.
+
 Davian accepted the [environment packet](drafts/project-environments-review.md)
 and [compatibility amendment](drafts/project-environments-compatibility.md) at
 `d8be596a2306f2e888ef34e81dfa836bc4b84447` on 2026-10-24.
@@ -14,7 +23,19 @@ separate review. OpenAPI production import/validation remains unaccepted.
 pins the merged source and proposes deployment/activation and bounded runtime
 gates; all existing live-work holds remain in place.
 
-## Accepted OpenAPI library selection only
+## OpenAPI implementation continuation
+
+Davian requested continuing with OpenAPI on 2026-11-04 after the
+[milestone review](../development/openapi-next-milestone.md). Implementation uses
+its recommended defaults: bounded JSON/YAML import/export, preparing candidates,
+ready-only publication, frozen cloud response validation, conservative sensitive
+suppression, explicit local noncoverage and evidence 4. The
+[implementation contract](openapi-contract.md) defines the concrete interfaces
+and capability tuple. Validation and deployment status are recorded in the
+[development guide](../development/openapi.md). Earlier library-only restrictions
+below describe the historical selection decision, not the current request.
+
+### Historical library selection
 
 Davian accepted kin-openapi v0.152.0, santhosh-tekuri/jsonschema/v6 v6.0.3 and
 oasdiff/yaml3 v0.0.14 from revised research

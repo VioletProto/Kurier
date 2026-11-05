@@ -320,7 +320,7 @@ func (s *Service) expire(ctx context.Context, ret row) error {
 	return s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), remove})
 }
 func knownExecution(item map[string]dt.AttributeValue, r row) bool {
-	if r.Capabilities != nil || r.ProjectEnvironmentsSchemaVersion != 0 || r.EnvironmentID != "" || r.ScalarType != "" {
+	if r.Capabilities != nil || r.OpenAPISchemaVersion != 0 || r.ImportID != "" || r.OperationID != "" || r.OperationJSON != "" || r.ProjectEnvironmentsSchemaVersion != 0 || r.EnvironmentID != "" || r.ScalarType != "" {
 		return false
 	}
 	if r.TemplateSemanticsVersion != 0 && r.Kind != "executionReceipt" && r.Kind != "executionJob" && r.Kind != "executionLocalReceipt" {
@@ -331,6 +331,13 @@ func knownExecution(item map[string]dt.AttributeValue, r row) bool {
 		return false
 	}
 	if r.Plan != nil {
+		if r.Plan.Configuration.OperationRef != nil {
+			if r.Plan.FrozenContract.Validate(r.Plan.Configuration.OperationRef) != nil || r.Plan.Target == "local" {
+				return false
+			}
+		} else if r.Plan.FrozenContract != nil {
+			return false
+		}
 		if r.Plan.Configuration.TemplateSemanticsVersion == 1 {
 			if r.Plan.TemplateSnapshot.Validate() != nil {
 				return false

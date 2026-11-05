@@ -59,7 +59,7 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 		return record{}, missing()
 	}
 	var r record
-	if attributevalue.UnmarshalMap(result.Item, &r) != nil || (r.SchemaVersion != 1 && !(r.Kind == "request" && (r.SchemaVersion == 2 || r.SchemaVersion == 3))) {
+	if attributevalue.UnmarshalMap(result.Item, &r) != nil || (r.SchemaVersion != 1 && !(r.Kind == "request" && (r.SchemaVersion == 2 || r.SchemaVersion == 3 || r.SchemaVersion == 4))) {
 		return record{}, unavailable()
 	}
 	if r.Kind == "environment" || r.Kind == "environmentTombstone" {
@@ -77,13 +77,16 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if r.SavedRequestsSchemaVersion == 9 {
+	if r.SavedRequestsSchemaVersion == 9 || r.SavedRequestsSchemaVersion == 10 {
+		if (r.SavedRequestsSchemaVersion == 10) != (r.OpenAPISchemaVersion == 1) || r.OpenAPISchemaVersion < 0 || r.OpenAPISchemaVersion > 1 {
+			return record{}, unavailable()
+		}
 		if err != nil || st.executions == nil || st.protectedTable == "" || st.cipher == nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != 1 || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
 			return record{}, unavailable()
 		}
 		return r, nil
 	}
-	if r.ProjectEnvironmentsSchemaVersion != 0 {
+	if r.ProjectEnvironmentsSchemaVersion != 0 || r.OpenAPISchemaVersion != 0 {
 		return record{}, unavailable()
 	}
 
@@ -184,7 +187,7 @@ func pause(ctx context.Context, attempt int) error {
 	}
 }
 func (st *Store) stageGuard(stage record) types.TransactWriteItem {
-	if stage.SavedRequestsSchemaVersion == 9 {
+	if stage.SavedRequestsSchemaVersion == 9 || stage.SavedRequestsSchemaVersion == 10 {
 		return st.environmentStageGuard(stage)
 	}
 	mode := "localEmptyProjectsOnly = :yes"
@@ -231,6 +234,7 @@ func (st *Store) stageGuard(stage record) types.TransactWriteItem {
 		mode += " AND attribute_not_exists(workflowAssertionsSchemaVersion)"
 	}
 
+	mode += " AND attribute_not_exists(openapiSchemaVersion)"
 	return types.TransactWriteItem{ConditionCheck: &types.ConditionCheck{TableName: aws.String(st.table), Key: key(stage.PK, "META"), ConditionExpression: aws.String("#state = :active AND recoveryGeneration = :gen AND " + mode), ExpressionAttributeNames: map[string]string{"#state": "state"}, ExpressionAttributeValues: values}}
 }
 func (st *Store) userGuard(u record) types.TransactWriteItem {
@@ -508,6 +512,19 @@ func (st *Store) CleanupProject(ctx context.Context, projectID string) (Deletion
 			return DeletionOperation{}, err
 		}
 		r, more, err = st.drainEnvironments(ctx, r, stage, work)
+		if err != nil {
+			return DeletionOperation{}, err
+		}
+		if more {
+			return *r.Operation, conflict()
+		}
+	}
+	if stage.OpenAPISchemaVersion == 1 {
+		work, err = st.get(ctx, r.PK, workKey)
+		if err != nil {
+			return DeletionOperation{}, err
+		}
+		r, more, err = st.drainOpenAPI(ctx, r, stage, work)
 		if err != nil {
 			return DeletionOperation{}, err
 		}

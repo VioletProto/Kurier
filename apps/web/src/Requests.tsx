@@ -33,7 +33,7 @@ function configuration(r: RequestConfiguration): RequestConfiguration {
     queryParameters: r.queryParameters.map(editField),
     headers: r.headers.map(editField),
     body: r.body ? editBody(r.body) : null,
-    operationRef: null,
+    operationRef: r.operationRef,
   };
 }
 function editField(f: RequestField): RequestField {
@@ -777,6 +777,21 @@ export function Requests({
           >
             <fieldset disabled={locked}>
               <label htmlFor="request-name">Request name</label>
+              {draft.operationRef && (
+                <div>
+                  <p>
+                    This request has a frozen OpenAPI response contract when
+                    executed in the cloud. Local contract validation is
+                    unavailable.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setDraft({ ...draft, operationRef: null })}
+                  >
+                    Detach OpenAPI contract
+                  </button>
+                </div>
+              )}
               <input
                 id="request-name"
                 autoComplete="off"

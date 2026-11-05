@@ -66,14 +66,14 @@ type RequestBody struct {
 	SecretFields []SecretField `json:"secretFields,omitempty"`
 }
 type Configuration struct {
-	TemplateSemanticsVersion int          `json:"templateSemanticsVersion,omitempty"`
-	Name                     string       `json:"name"`
-	Method                   string       `json:"method"`
-	URL                      string       `json:"url"`
-	QueryParameters          []Field      `json:"queryParameters"`
-	Headers                  []Field      `json:"headers"`
-	Body                     *RequestBody `json:"body"`
-	OperationRef             any          `json:"operationRef"`
+	TemplateSemanticsVersion int           `json:"templateSemanticsVersion,omitempty"`
+	Name                     string        `json:"name"`
+	Method                   string        `json:"method"`
+	URL                      string        `json:"url"`
+	QueryParameters          []Field       `json:"queryParameters"`
+	Headers                  []Field       `json:"headers"`
+	Body                     *RequestBody  `json:"body"`
+	OperationRef             *OperationRef `json:"operationRef"`
 }
 type RedactionPolicy struct {
 	Headers      []string `json:"headers"`
@@ -90,6 +90,7 @@ type Options struct {
 	ResponseRedaction    RedactionPolicy `json:"responseRedaction"`
 }
 type Plan struct {
+	FrozenContract    *FrozenContract   `json:"frozenContract,omitempty"`
 	TemplateSnapshot  *TemplateSnapshot `json:"templateSnapshot,omitempty"`
 	Target            string            `json:"target,omitempty" dynamodbav:"target,omitempty"`
 	LocalAgentID      string            `json:"localAgentId,omitempty" dynamodbav:"localAgentId,omitempty"`
@@ -136,6 +137,7 @@ type Outcome struct {
 	Certainty string  `json:"certainty"`
 }
 type Evidence struct {
+	Contract                 *ContractEvaluation  `json:"contract,omitempty"`
 	TemplateSemanticsVersion int                  `json:"templateSemanticsVersion,omitempty"`
 	EnvironmentContext       *EnvironmentContext  `json:"environmentContext,omitempty"`
 	SchemaVersion            int                  `json:"schemaVersion"`

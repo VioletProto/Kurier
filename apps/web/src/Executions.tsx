@@ -486,6 +486,7 @@ export function Executions({
             <option
               value="local"
               disabled={
+                !!request?.request.operationRef ||
                 !agent ||
                 !!agent.revokedAt ||
                 Date.parse(agent.expiresAt) <=
@@ -885,7 +886,35 @@ export function Executions({
           </button>
         </div>
       )}
+      {request?.request.operationRef && (
+        <p>
+          OpenAPI response validation runs in the cloud. To execute locally
+          without validation, detach the contract in the saved-request editor.
+        </p>
+      )}
       {evidence && <AssertionResults evidence={evidence} />}
+      {evidence?.contract && (
+        <section aria-label="OpenAPI contract results">
+          <h4>
+            OpenAPI response contract:{" "}
+            {evidence.contract.result.status.replaceAll("_", " ")}
+          </h4>
+          <p>
+            Operation revision {evidence.contract.revision}. Protected inputs,
+            response redaction and workflow extraction can make validation
+            unavailable. An unavailable configured contract fails an otherwise
+            successful execution.
+          </p>
+          <ul>
+            {evidence.contract.result.checks.map((check) => (
+              <li key={check.kind}>
+                {check.kind}: {check.status.replaceAll("_", " ")}
+                {check.code ? ` · ${check.code.replaceAll("_", " ")}` : ""}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {evidence && (
         <div className="execution-evidence">
           <h4>Immutable sanitized capture</h4>

@@ -50,14 +50,14 @@ type RequestBody struct {
 	SecretWrite  *SecretWrite     `json:"secretWrite,omitempty"`
 }
 type RequestConfiguration struct {
-	TemplateSemanticsVersion int            `json:"templateSemanticsVersion,omitempty"`
-	Name                     string         `json:"name"`
-	Method                   string         `json:"method"`
-	URL                      string         `json:"url"`
-	QueryParameters          []RequestField `json:"queryParameters"`
-	Headers                  []RequestField `json:"headers"`
-	Body                     *RequestBody   `json:"body"`
-	OperationRef             any            `json:"operationRef"`
+	TemplateSemanticsVersion int                  `json:"templateSemanticsVersion,omitempty"`
+	Name                     string               `json:"name"`
+	Method                   string               `json:"method"`
+	URL                      string               `json:"url"`
+	QueryParameters          []RequestField       `json:"queryParameters"`
+	Headers                  []RequestField       `json:"headers"`
+	Body                     *RequestBody         `json:"body"`
+	OperationRef             *runner.OperationRef `json:"operationRef"`
 }
 type SavedRequest struct {
 	RequestID string `json:"requestId"`
@@ -238,7 +238,11 @@ func validateConfiguration(c *RequestConfiguration) error {
 			}
 		}
 	}
-	if c.OperationRef != nil || c.QueryParameters == nil || c.Headers == nil || len(c.Headers) > 100 || len(c.QueryParameters) > 100 {
+	if c.OperationRef != nil && c.OperationRef.Validate() != nil {
+		return invalidConfiguration()
+	}
+
+	if c.QueryParameters == nil || c.Headers == nil || len(c.Headers) > 100 || len(c.QueryParameters) > 100 {
 		return invalidConfiguration()
 	}
 	for _, entry := range []struct {
@@ -400,10 +404,15 @@ func mergeConfigurationMode(raw []byte, previous *RequestConfiguration, stored b
 			}
 			c.TemplateSemanticsVersion = 1
 		case "operationRef":
-			if !bytes.Equal(v, []byte("null")) {
+			if bytes.Equal(v, []byte("null")) {
+				c.OperationRef = nil
+				continue
+			}
+			var ref runner.OperationRef
+			if strictDecode(v, &ref) != nil {
 				return c, invalidConfiguration()
 			}
-			c.OperationRef = nil
+			c.OperationRef = &ref
 		default:
 			return c, invalidConfiguration()
 		}

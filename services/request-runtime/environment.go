@@ -193,9 +193,15 @@ func (c *Configuration) UnmarshalJSON(raw []byte) error {
 		if strings.EqualFold(k, "templateSemanticsVersion") && k != "templateSemanticsVersion" {
 			return failure(400, "invalid_request")
 		}
+		if strings.EqualFold(k, "operationRef") && k != "operationRef" {
+			return failure(400, "openapi_reference_invalid")
+		}
 	}
 	if marker, ok := m["templateSemanticsVersion"]; ok && (string(marker) != "1" || v.TemplateSemanticsVersion != 1) {
 		return failure(400, "invalid_request")
+	}
+	if v.OperationRef != nil && v.OperationRef.Validate() != nil {
+		return failure(400, "openapi_reference_invalid")
 	}
 	*c = Configuration(v)
 	return nil

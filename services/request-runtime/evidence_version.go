@@ -16,11 +16,17 @@ func (e *Evidence) UnmarshalJSON(raw []byte) error {
 		if (strings.EqualFold(k, "templateSemanticsVersion") || strings.EqualFold(k, "environmentContext")) && k != "templateSemanticsVersion" && k != "environmentContext" {
 			return workflowInvalid()
 		}
+		if strings.EqualFold(k, "contract") && k != "contract" {
+			return workflowInvalid()
+		}
 	}
-	if v.SchemaVersion == 3 && fields["templateSemanticsVersion"] == nil {
+	if (v.SchemaVersion == 3 || v.SchemaVersion == 4 && v.TemplateSemanticsVersion == 1) && fields["templateSemanticsVersion"] == nil {
 		return workflowInvalid()
 	}
-	if v.SchemaVersion < 3 && (fields["templateSemanticsVersion"] != nil || fields["environmentContext"] != nil) || v.SchemaVersion == 3 && (v.TemplateSemanticsVersion != 1 || fields["environmentContext"] == nil) {
+	if v.SchemaVersion < 3 && (fields["templateSemanticsVersion"] != nil || fields["environmentContext"] != nil) || (v.SchemaVersion == 3 || v.SchemaVersion == 4 && v.TemplateSemanticsVersion == 1) && (v.TemplateSemanticsVersion != 1 || fields["environmentContext"] == nil) {
+		return workflowInvalid()
+	}
+	if v.SchemaVersion == 4 && (fields["contract"] == nil || string(fields["contract"]) == "null") || v.SchemaVersion < 4 && fields["contract"] != nil || v.SchemaVersion == 4 && v.TemplateSemanticsVersion == 0 && fields["environmentContext"] != nil {
 		return workflowInvalid()
 	}
 	if v.SchemaVersion == 1 && fields["assertions"] != nil {
@@ -54,6 +60,24 @@ func (e Evidence) LegacyProjection() LegacyEvidence {
 }
 
 func ValidateEvidenceVersion(e *Evidence) error {
+	if e.SchemaVersion == 4 {
+		if e.Target != "cloud" || validateContractEvaluation(e.Contract) != nil || e.Status == "completed" && e.Contract.Result.Status != "passed" {
+			return workflowInvalid()
+		}
+		copy := *e
+		copy.Contract = nil
+		if copy.TemplateSemanticsVersion == 1 {
+			copy.SchemaVersion = 3
+		} else if copy.Assertions != nil {
+			copy.SchemaVersion = 2
+		} else {
+			copy.SchemaVersion = 1
+		}
+		return ValidateEvidenceVersion(&copy)
+	}
+	if e.Contract != nil {
+		return workflowInvalid()
+	}
 	if e.SchemaVersion == 3 {
 		if e.TemplateSemanticsVersion != 1 || e.EnvironmentContext != nil && (!workflowUUID.MatchString(e.EnvironmentContext.EnvironmentID) || e.EnvironmentContext.Revision < 0 || e.EnvironmentContext.Revision > 9007199254740991) {
 			return workflowInvalid()
@@ -126,12 +150,12 @@ func ValidateFrozenAssertions(e *Evidence, step WorkflowStep, semantics int) err
 		return workflowInvalid()
 	}
 	if semantics == 0 {
-		if (e.SchemaVersion != 1 && e.SchemaVersion != 3) || e.Assertions != nil || len(step.Assertions) != 0 {
+		if (e.SchemaVersion != 1 && e.SchemaVersion != 3 && e.SchemaVersion != 4) || e.Assertions != nil || len(step.Assertions) != 0 {
 			return workflowInvalid()
 		}
 		return nil
 	}
-	if semantics != 1 || (e.SchemaVersion != 2 && e.SchemaVersion != 3) || e.Assertions == nil || len(e.Assertions.Results) != len(step.Assertions) {
+	if semantics != 1 || (e.SchemaVersion != 2 && e.SchemaVersion != 3 && e.SchemaVersion != 4) || e.Assertions == nil || len(e.Assertions.Results) != len(step.Assertions) {
 		return workflowInvalid()
 	}
 	for i, a := range step.Assertions {

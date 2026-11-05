@@ -32,6 +32,32 @@ func validWorkflowSubmission(run row) bool {
 // Upgrade only newly produced fallback evidence, never retained bytes. A lost
 // worker buffer yields unavailable checks with the original dispatch certainty.
 func (s *Service) workflowEvidence(ctx context.Context, job row, evidence *Evidence, initialize bool) error {
+	anchor, err := s.get(ctx, s.Table, job.PK, "EXEC#"+job.ExecutionID)
+	if err != nil || anchor.Plan == nil {
+		return safeError()
+	}
+	frozen := anchor.Plan.FrozenContract
+	if frozen == nil {
+		if evidence.Contract != nil {
+			return safeError()
+		}
+	} else {
+		if frozen.Validate(anchor.Plan.Configuration.OperationRef) != nil {
+			return safeError()
+		}
+		if evidence.Contract == nil && initialize {
+			reason := "not_dispatched"
+			if evidence.Outcome.Certainty != "not_dispatched" {
+				reason = "evaluation_unavailable"
+			}
+			evidence.Contract = runner.UnavailableContract(frozen, reason)
+			evidence.SchemaVersion = 4
+		}
+		if evidence.Contract == nil || evidence.Contract.ImportID != frozen.ImportID || evidence.Contract.OperationID != frozen.OperationID || evidence.Contract.Revision != frozen.Revision {
+			return safeError()
+		}
+	}
+
 	if job.RunID == "" {
 		if evidence.Assertions != nil {
 			return safeError()
@@ -52,7 +78,7 @@ func (s *Service) workflowEvidence(ctx context.Context, job row, evidence *Evide
 		if evidence.Outcome.Certainty != "not_dispatched" {
 			reason = "evaluation_unavailable"
 		}
-		if evidence.SchemaVersion != 3 {
+		if evidence.SchemaVersion != 3 && evidence.SchemaVersion != 4 {
 			evidence.SchemaVersion = 2
 		}
 		evidence.Assertions = runner.NewAssertionEvaluation(step, reason)
@@ -208,6 +234,10 @@ func (s *Service) workflowIntent(ctx context.Context, job row) ([]dt.TransactWri
 	return actions, nil
 }
 func (s *Service) workflowRequestGuards(ctx context.Context, run row, exclude string) ([]dt.TransactWriteItem, error) {
+	stage, stageErr := s.stage(ctx)
+	if stageErr != nil {
+		return nil, stageErr
+	}
 	steps, e := s.runSteps(ctx, run)
 	if e != nil {
 		return nil, e
@@ -221,6 +251,14 @@ func (s *Service) workflowRequestGuards(ctx context.Context, run row, exclude st
 		r, e := s.get(ctx, s.Table, run.PK, "REQ#"+step.Plan.RequestID)
 		if e != nil || r.Kind != "request" || r.State != "active" || r.ProjectID != run.ProjectID {
 			return nil, failure(400, "source_unavailable")
+		}
+		publicationGuards, publicationErr := s.importPublicationGuards(ctx, stage, run.ProjectID, r)
+		if publicationErr != nil {
+			return nil, publicationErr
+		}
+		actions, publicationErr = mergeContractGuards(actions, publicationGuards)
+		if publicationErr != nil {
+			return nil, publicationErr
 		}
 		actions = append(actions, s.sourceGuard(r, s.Table))
 		seen[step.Plan.RequestID] = true
@@ -236,8 +274,20 @@ func (s *Service) workflowSourceGuards(ctx context.Context, run row) ([]dt.Trans
 	if err != nil {
 		return nil, err
 	}
+	stage, err := s.stage(ctx)
+	if err != nil {
+		return nil, err
+	}
 	seenEnvironments := map[string]bool{}
 	for _, step := range steps {
+		contractGuards, e := s.freezeContract(ctx, stage, run.ProjectID, step.Plan, true)
+		if e != nil {
+			return nil, e
+		}
+		actions, e = mergeContractGuards(actions, contractGuards)
+		if e != nil {
+			return nil, e
+		}
 		guards, err := s.environmentGuards(ctx, run.ProjectID, *step.Plan)
 		if err != nil {
 			return nil, err

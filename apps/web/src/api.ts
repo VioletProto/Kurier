@@ -1,4 +1,10 @@
 import { validStepAssertions, validAssertionEvaluation } from "./assertions";
+import {
+  validContractResult,
+  type ContractResult,
+  type OpenAPIImport,
+  type OpenAPIImportSummary,
+} from "./openapi";
 
 function checkedWorkflow<T extends { steps: WorkflowStep[] }>(value: T): T {
   if (
@@ -74,7 +80,7 @@ export interface RequestConfiguration {
   queryParameters: RequestField[];
   headers: RequestField[];
   body: RequestBody | null;
-  operationRef: null;
+  operationRef: { importId: string; operationId: string } | null;
 }
 export interface SavedRequest extends RequestConfiguration {
   requestId: string;
@@ -214,6 +220,118 @@ export class Api {
     private token = auth.token,
     private transport: typeof fetch = (...args) => fetch(...args),
   ) {}
+  private importPath(project: string, id?: string) {
+    return `/api/v1/projects/${encodeURIComponent(project)}/openapi-imports${id ? "/" + encodeURIComponent(id) : ""}`;
+  }
+  async listOpenAPIImports(
+    project: string,
+    cursor?: string | null,
+  ): Promise<{ items: OpenAPIImportSummary[]; nextCursor: string | null }> {
+    return (
+      await (
+        await this.request(
+          this.importPath(project) +
+            (cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""),
+        )
+      ).json()
+    ).data;
+  }
+  async openAPIImport(
+    project: string,
+    id: string,
+    operationOffset?: number,
+  ): Promise<OpenAPIImport> {
+    return (
+      await (
+        await this.request(
+          this.importPath(project, id) +
+            (operationOffset ? `?operationOffset=${operationOffset}` : ""),
+        )
+      ).json()
+    ).data.import;
+  }
+  async createOpenAPIImport(
+    project: string,
+    body: {
+      format: "json" | "yaml";
+      source: string;
+      publicDataConfirmed: true;
+      sensitiveValues?: string[];
+      sensitiveJSONPointers?: string[];
+    },
+  ): Promise<OpenAPIImport> {
+    const response = await this.request(
+      this.importPath(project),
+      "POST",
+      JSON.stringify(body),
+    );
+    try {
+      const value = (await response.json()).data.import;
+      if (!value?.importId) throw Error();
+      return value;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async saveOpenAPIChoices(
+    project: string,
+    current: OpenAPIImport,
+    operationId: string,
+    choicesJSON: string,
+  ): Promise<OpenAPIImport> {
+    const choices: unknown = JSON.parse(choicesJSON);
+    if (!choices || typeof choices !== "object" || Array.isArray(choices))
+      throw Error("Operation inputs must be a JSON object.");
+    const response = await this.request(
+      this.importPath(project, current.importId),
+      "PATCH",
+      `{"operationId":${JSON.stringify(operationId)},"choices":${choicesJSON},"publicDataConfirmed":true}`,
+      `"${current.revision}"`,
+    );
+    try {
+      return (await response.json()).data.import;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async publishOpenAPIImport(
+    project: string,
+    current: OpenAPIImport,
+  ): Promise<OpenAPIImport> {
+    const response = await this.request(
+      this.importPath(project, current.importId) + "/publish",
+      "POST",
+      "{}",
+      `"${current.revision}"`,
+    );
+    try {
+      return (await response.json()).data.import;
+    } catch {
+      throw new UncertainWrite();
+    }
+  }
+  async deleteOpenAPIImport(
+    project: string,
+    current: OpenAPIImport,
+  ): Promise<void> {
+    await this.request(
+      this.importPath(project, current.importId),
+      "DELETE",
+      undefined,
+      `"${current.revision}"`,
+    );
+  }
+  async exportOpenAPIImport(
+    project: string,
+    id: string,
+    format: "json" | "yaml",
+  ): Promise<string> {
+    return (
+      await this.request(
+        this.importPath(project, id) + `/export?format=${format}`,
+      )
+    ).text();
+  }
   private async request(
     path: string,
     method = "GET",
@@ -708,11 +826,20 @@ export class Api {
       !evidence ||
       (evidence.schemaVersion !== 1 &&
         evidence.schemaVersion !== 2 &&
-        evidence.schemaVersion !== 3) ||
+        evidence.schemaVersion !== 3 &&
+        evidence.schemaVersion !== 4) ||
+      (evidence.schemaVersion === 4 &&
+        !validContractResult(evidence.contract)) ||
+      (evidence.schemaVersion === 4 &&
+        evidence.assertions !== undefined &&
+        !validAssertionEvaluation(evidence.assertions)) ||
+      (evidence.schemaVersion !== 4 && evidence.contract !== undefined) ||
       (evidence.schemaVersion === 1 && evidence.assertions !== undefined) ||
       (evidence.schemaVersion === 2 &&
         !validAssertionEvaluation(evidence.assertions!)) ||
-      (evidence.schemaVersion === 3 &&
+      ((evidence.schemaVersion === 3 ||
+        (evidence.schemaVersion === 4 &&
+          evidence.templateSemanticsVersion !== undefined)) &&
         (evidence.templateSemanticsVersion !== 1 ||
           !("environmentContext" in evidence) ||
           (evidence.environmentContext !== null &&
@@ -1061,6 +1188,7 @@ export type EvidenceBody = {
   omissionReason: string | null;
 };
 export type Evidence = {
+  contract?: ContractResult;
   templateSemanticsVersion?: 1;
   environmentContext?: EnvironmentSelection | null;
   assertions?: AssertionEvaluation;
