@@ -1,0 +1,276 @@
+{"at": 1793128824.080466, "event": "created", "limit": 500, "seconds": 3600}
+{"at": 1793128824.1102092, "event": "attempt", "count": 1, "service": "signin", "operation": "CreateOAuth2Token"}
+{"at": 1793128824.402447, "event": "finished", "count": 1, "elapsedSeconds": 0.29223679399910907}
+{"at": 1793128968.3205934, "event": "resume", "count": 1}
+{"at": 1793128968.347254, "event": "attempt", "count": 2, "service": "sts", "operation": "GetCallerIdentity"}
+{"at": 1793128968.4997678, "event": "outcome", "attempt": 2, "status": 200}
+{"at": 1793128968.5191126, "event": "attempt", "count": 3, "service": "dynamodb", "operation": "GetItem"}
+{"at": 1793128968.6892488, "event": "outcome", "attempt": 3, "status": 200}
+{"at": 1793128968.7095246, "event": "attempt", "count": 4, "service": "lambda", "operation": "GetAccountSettings"}
+{"at": 1793128968.8806295, "event": "outcome", "attempt": 4, "status": 200}
+{"at": 1793128968.894928, "event": "attempt", "count": 5, "service": "freetier", "operation": "GetAccountPlanState"}
+{"at": 1793128969.1338356, "event": "outcome", "attempt": 5, "status": 200}
+{"at": 1793128969.1641903, "event": "attempt", "count": 6, "service": "ssm", "operation": "GetParameter"}
+{"at": 1793128969.3269255, "event": "outcome", "attempt": 6, "status": 200}
+{"at": 1793128969.337865, "event": "attempt", "count": 7, "service": "ssm", "operation": "DescribeParameters"}
+{"at": 1793128969.4031227, "event": "outcome", "attempt": 7, "status": 200}
+{"at": 1793128969.4081764, "event": "attempt", "count": 8, "service": "dynamodb", "operation": "Scan"}
+{"at": 1793128969.5052857, "event": "outcome", "attempt": 8, "status": 200}
+{"at": 1793128969.510799, "event": "attempt", "count": 9, "service": "dynamodb", "operation": "Scan"}
+{"at": 1793128969.5659378, "event": "outcome", "attempt": 9, "status": 200}
+{"at": 1793128969.5702403, "event": "attempt", "count": 10, "service": "dynamodb", "operation": "DescribeTable"}
+{"at": 1793128969.6692219, "event": "outcome", "attempt": 10, "status": 200}
+{"at": 1793128969.6731944, "event": "attempt", "count": 11, "service": "dynamodb", "operation": "DescribeTimeToLive"}
+{"at": 1793128969.7450285, "event": "outcome", "attempt": 11, "status": 200}
+{"at": 1793128969.7487423, "event": "attempt", "count": 12, "service": "dynamodb", "operation": "DescribeContinuousBackups"}
+{"at": 1793128969.806673, "event": "outcome", "attempt": 12, "status": 200}
+{"at": 1793128969.8092196, "event": "attempt", "count": 13, "service": "dynamodb", "operation": "Scan"}
+{"at": 1793128969.864632, "event": "outcome", "attempt": 13, "status": 200}
+{"at": 1793128969.8684888, "event": "attempt", "count": 14, "service": "dynamodb", "operation": "DescribeTable"}
+{"at": 1793128969.9252234, "event": "outcome", "attempt": 14, "status": 200}
+{"at": 1793128969.9293292, "event": "attempt", "count": 15, "service": "dynamodb", "operation": "DescribeTimeToLive"}
+{"at": 1793128969.9862561, "event": "outcome", "attempt": 15, "status": 200}
+{"at": 1793128969.9896924, "event": "attempt", "count": 16, "service": "dynamodb", "operation": "DescribeContinuousBackups"}
+{"at": 1793128970.0458379, "event": "outcome", "attempt": 16, "status": 200}
+{"at": 1793128970.0493844, "event": "attempt", "count": 17, "service": "lambda", "operation": "GetFunction"}
+{"at": 1793128970.1727114, "event": "outcome", "attempt": 17, "status": 200}
+{"at": 1793128970.1746993, "event": "attempt", "count": 18, "service": "s3-presigned", "operation": "GetLambdaCodeObject"}
+{"at": 1793128970.8775077, "event": "outcome", "attempt": 18, "status": 200}
+{"at": 1793128970.9538896, "event": "attempt", "count": 19, "service": "iam", "operation": "GetRole"}
+{"at": 1793128971.1815689, "event": "outcome", "attempt": 19, "status": 200}
+{"at": 1793128971.1938381, "event": "attempt", "count": 20, "service": "iam", "operation": "ListRolePolicies"}
+{"at": 1793128971.2830074, "event": "outcome", "attempt": 20, "status": 200}
+{"at": 1793128971.2860954, "event": "attempt", "count": 21, "service": "iam", "operation": "GetRolePolicy"}
+{"at": 1793128971.372874, "event": "outcome", "attempt": 21, "status": 200}
+{"at": 1793128971.376826, "event": "attempt", "count": 22, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793128971.4758017, "event": "outcome", "attempt": 22, "status": 200}
+{"at": 1793128971.4802272, "event": "attempt", "count": 23, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793128971.6025665, "event": "outcome", "attempt": 23, "status": 200}
+{"at": 1793128971.613962, "event": "attempt", "count": 24, "service": "iam", "operation": "GetPolicyVersion"}
+{"at": 1793128971.708757, "event": "outcome", "attempt": 24, "status": 200}
+{"at": 1793128971.7305388, "event": "attempt", "count": 25, "service": "lambda", "operation": "GetFunctionConcurrency"}
+{"at": 1793128971.799898, "event": "outcome", "attempt": 25, "status": 200}
+{"at": 1793128971.8041675, "event": "attempt", "count": 26, "service": "lambda", "operation": "ListProvisionedConcurrencyConfigs"}
+{"at": 1793128971.871723, "event": "outcome", "attempt": 26, "status": 200}
+{"at": 1793128971.8752973, "event": "attempt", "count": 27, "service": "lambda", "operation": "GetPolicy"}
+{"at": 1793128971.9812706, "event": "outcome", "attempt": 27, "status": 200}
+{"at": 1793128971.9940193, "event": "attempt", "count": 28, "service": "lambda", "operation": "GetFunction"}
+{"at": 1793128972.1186697, "event": "outcome", "attempt": 28, "status": 200}
+{"at": 1793128972.1275275, "event": "attempt", "count": 29, "service": "s3-presigned", "operation": "GetLambdaCodeObject"}
+{"at": 1793128972.769105, "event": "outcome", "attempt": 29, "status": 200}
+{"at": 1793128972.8309884, "event": "attempt", "count": 30, "service": "iam", "operation": "GetRole"}
+{"at": 1793128972.9331284, "event": "outcome", "attempt": 30, "status": 200}
+{"at": 1793128972.9374642, "event": "attempt", "count": 31, "service": "iam", "operation": "ListRolePolicies"}
+{"at": 1793128973.0357854, "event": "outcome", "attempt": 31, "status": 200}
+{"at": 1793128973.0394185, "event": "attempt", "count": 32, "service": "iam", "operation": "GetRolePolicy"}
+{"at": 1793128973.133298, "event": "outcome", "attempt": 32, "status": 200}
+{"at": 1793128973.1371117, "event": "attempt", "count": 33, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793128973.2290804, "event": "outcome", "attempt": 33, "status": 200}
+{"at": 1793128973.232245, "event": "attempt", "count": 34, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793128973.35023, "event": "outcome", "attempt": 34, "status": 200}
+{"at": 1793128973.36112, "event": "attempt", "count": 35, "service": "iam", "operation": "GetPolicyVersion"}
+{"at": 1793128973.4592144, "event": "outcome", "attempt": 35, "status": 200}
+{"at": 1793128973.481261, "event": "attempt", "count": 36, "service": "lambda", "operation": "GetFunctionConcurrency"}
+{"at": 1793128973.542094, "event": "outcome", "attempt": 36, "status": 200}
+{"at": 1793128973.5452173, "event": "attempt", "count": 37, "service": "lambda", "operation": "ListProvisionedConcurrencyConfigs"}
+{"at": 1793128973.6074598, "event": "outcome", "attempt": 37, "status": 200}
+{"at": 1793128973.610703, "event": "attempt", "count": 38, "service": "lambda", "operation": "GetPolicy"}
+{"at": 1793128973.6757824, "event": "outcome", "attempt": 38, "status": 200}
+{"at": 1793128973.6796608, "event": "attempt", "count": 39, "service": "lambda", "operation": "GetFunction"}
+{"at": 1793128973.844476, "event": "outcome", "attempt": 39, "status": 200}
+{"at": 1793128973.8460393, "event": "attempt", "count": 40, "service": "s3-presigned", "operation": "GetLambdaCodeObject"}
+{"at": 1793128974.4860573, "event": "outcome", "attempt": 40, "status": 200}
+{"at": 1793128974.544054, "event": "attempt", "count": 41, "service": "iam", "operation": "GetRole"}
+{"at": 1793128974.6429005, "event": "outcome", "attempt": 41, "status": 200}
+{"at": 1793128974.6467702, "event": "attempt", "count": 42, "service": "iam", "operation": "ListRolePolicies"}
+{"at": 1793128974.741281, "event": "outcome", "attempt": 42, "status": 200}
+{"at": 1793128974.7455647, "event": "attempt", "count": 43, "service": "iam", "operation": "GetRolePolicy"}
+{"at": 1793128974.8277173, "event": "outcome", "attempt": 43, "status": 200}
+{"at": 1793128974.8319025, "event": "attempt", "count": 44, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793128974.929292, "event": "outcome", "attempt": 44, "status": 200}
+{"at": 1793128974.933419, "event": "attempt", "count": 45, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793128975.0471513, "event": "outcome", "attempt": 45, "status": 200}
+{"at": 1793128975.0491524, "event": "attempt", "count": 46, "service": "iam", "operation": "GetPolicyVersion"}
+{"at": 1793128975.145722, "event": "outcome", "attempt": 46, "status": 200}
+{"at": 1793128975.168497, "event": "attempt", "count": 47, "service": "lambda", "operation": "GetFunctionConcurrency"}
+{"at": 1793128975.228489, "event": "outcome", "attempt": 47, "status": 200}
+{"at": 1793128975.2313282, "event": "attempt", "count": 48, "service": "lambda", "operation": "ListProvisionedConcurrencyConfigs"}
+{"at": 1793128975.2965856, "event": "outcome", "attempt": 48, "status": 200}
+{"at": 1793128975.3012726, "event": "attempt", "count": 49, "service": "lambda", "operation": "GetFunction"}
+{"at": 1793128975.4302478, "event": "outcome", "attempt": 49, "status": 200}
+{"at": 1793128975.4389653, "event": "attempt", "count": 50, "service": "s3-presigned", "operation": "GetLambdaCodeObject"}
+{"at": 1793128976.08182, "event": "outcome", "attempt": 50, "status": 200}
+{"at": 1793128976.1382844, "event": "attempt", "count": 51, "service": "iam", "operation": "GetRole"}
+{"at": 1793128976.2544234, "event": "outcome", "attempt": 51, "status": 200}
+{"at": 1793128976.2585757, "event": "attempt", "count": 52, "service": "iam", "operation": "ListRolePolicies"}
+{"at": 1793128976.34407, "event": "outcome", "attempt": 52, "status": 200}
+{"at": 1793128976.3476663, "event": "attempt", "count": 53, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793128976.4504478, "event": "outcome", "attempt": 53, "status": 200}
+{"at": 1793128976.454941, "event": "attempt", "count": 54, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793128976.5733657, "event": "outcome", "attempt": 54, "status": 200}
+{"at": 1793128976.585259, "event": "attempt", "count": 55, "service": "iam", "operation": "GetPolicyVersion"}
+{"at": 1793128976.7195585, "event": "outcome", "attempt": 55, "status": 200}
+{"at": 1793128976.7507167, "event": "attempt", "count": 56, "service": "lambda", "operation": "GetFunctionConcurrency"}
+{"at": 1793128976.8142507, "event": "outcome", "attempt": 56, "status": 200}
+{"at": 1793128976.8176181, "event": "attempt", "count": 57, "service": "lambda", "operation": "ListProvisionedConcurrencyConfigs"}
+{"at": 1793128976.8837945, "event": "outcome", "attempt": 57, "status": 200}
+{"at": 1793128976.887335, "event": "attempt", "count": 58, "service": "lambda", "operation": "GetPolicy"}
+{"at": 1793128976.9532552, "event": "outcome", "attempt": 58, "status": 200}
+{"at": 1793128976.9593227, "event": "attempt", "count": 59, "service": "lambda", "operation": "ListEventSourceMappings"}
+{"at": 1793128977.0589612, "event": "outcome", "attempt": 59, "status": 200}
+{"at": 1793128977.068059, "event": "attempt", "count": 60, "service": "sqs", "operation": "GetQueueAttributes"}
+{"at": 1793128977.2308588, "event": "outcome", "attempt": 60, "status": 200}
+{"at": 1793128977.2405853, "event": "attempt", "count": 61, "service": "sqs", "operation": "GetQueueAttributes"}
+{"at": 1793128977.301224, "event": "outcome", "attempt": 61, "status": 200}
+{"at": 1793128977.3132503, "event": "attempt", "count": 62, "service": "events", "operation": "DescribeRule"}
+{"at": 1793128977.4863856, "event": "outcome", "attempt": 62, "status": 200}
+{"at": 1793128977.497757, "event": "attempt", "count": 63, "service": "events", "operation": "ListTargetsByRule"}
+{"at": 1793128977.5661173, "event": "outcome", "attempt": 63, "status": 200}
+{"at": 1793128977.5808957, "event": "attempt", "count": 64, "service": "apigatewayv2", "operation": "GetApi"}
+{"at": 1793128977.8066792, "event": "outcome", "attempt": 64, "status": 200}
+{"at": 1793128977.8182912, "event": "attempt", "count": 65, "service": "apigatewayv2", "operation": "GetStage"}
+{"at": 1793128977.9557817, "event": "outcome", "attempt": 65, "status": 200}
+{"at": 1793128977.9672086, "event": "attempt", "count": 66, "service": "apigatewayv2", "operation": "GetRoutes"}
+{"at": 1793128978.088486, "event": "outcome", "attempt": 66, "status": 200}
+{"at": 1793128978.1002047, "event": "attempt", "count": 67, "service": "apigatewayv2", "operation": "GetRoutes"}
+{"at": 1793128978.2159872, "event": "outcome", "attempt": 67, "status": 200}
+{"at": 1793128978.220254, "event": "attempt", "count": 68, "service": "apigatewayv2", "operation": "GetIntegrations"}
+{"at": 1793128978.3327053, "event": "outcome", "attempt": 68, "status": 200}
+{"at": 1793128978.3370316, "event": "attempt", "count": 69, "service": "apigatewayv2", "operation": "GetIntegrations"}
+{"at": 1793128978.4621818, "event": "outcome", "attempt": 69, "status": 200}
+{"at": 1793128978.4767613, "event": "attempt", "count": 70, "service": "cognito-idp", "operation": "DescribeUserPool"}
+{"at": 1793128978.9121587, "event": "outcome", "attempt": 70, "status": 200}
+{"at": 1793128978.9255545, "event": "attempt", "count": 71, "service": "cognito-idp", "operation": "DescribeUserPoolClient"}
+{"at": 1793128979.0537653, "event": "outcome", "attempt": 71, "status": 200}
+{"at": 1793128979.0679278, "event": "attempt", "count": 72, "service": "kms", "operation": "DescribeKey"}
+{"at": 1793128979.2358491, "event": "outcome", "attempt": 72, "status": 200}
+{"at": 1793128979.2398744, "event": "attempt", "count": 73, "service": "kms", "operation": "GetKeyPolicy"}
+{"at": 1793128979.2925417, "event": "outcome", "attempt": 73, "status": 200}
+{"at": 1793128979.2963345, "event": "attempt", "count": 74, "service": "kms", "operation": "GetKeyRotationStatus"}
+{"at": 1793128979.3465142, "event": "outcome", "attempt": 74, "status": 200}
+{"at": 1793128979.3625612, "event": "attempt", "count": 75, "service": "cloudfront", "operation": "GetDistribution"}
+{"at": 1793128979.6507456, "event": "outcome", "attempt": 75, "status": 200}
+{"at": 1793128979.6790957, "event": "attempt", "count": 76, "service": "s3", "operation": "GetBucketLocation"}
+{"at": 1793128979.850578, "event": "outcome", "attempt": 76, "status": 200}
+{"at": 1793128979.8561215, "event": "attempt", "count": 77, "service": "s3", "operation": "GetPublicAccessBlock"}
+{"at": 1793128980.0213814, "event": "outcome", "attempt": 77, "status": 200}
+{"at": 1793128980.0257735, "event": "attempt", "count": 78, "service": "s3", "operation": "GetBucketVersioning"}
+{"at": 1793128980.076759, "event": "outcome", "attempt": 78, "status": 200}
+{"at": 1793128980.0809672, "event": "attempt", "count": 79, "service": "s3", "operation": "GetBucketEncryption"}
+{"at": 1793128980.1386049, "event": "outcome", "attempt": 79, "status": 200}
+{"at": 1793128980.1427503, "event": "attempt", "count": 80, "service": "s3", "operation": "GetBucketLocation"}
+{"at": 1793128980.2091386, "event": "outcome", "attempt": 80, "status": 200}
+{"at": 1793128980.2129111, "event": "attempt", "count": 81, "service": "s3", "operation": "GetPublicAccessBlock"}
+{"at": 1793128980.3843555, "event": "outcome", "attempt": 81, "status": 200}
+{"at": 1793128980.3880134, "event": "attempt", "count": 82, "service": "s3", "operation": "GetBucketVersioning"}
+{"at": 1793128980.4434564, "event": "outcome", "attempt": 82, "status": 200}
+{"at": 1793128980.446619, "event": "attempt", "count": 83, "service": "s3", "operation": "GetBucketEncryption"}
+{"at": 1793128980.4993749, "event": "outcome", "attempt": 83, "status": 200}
+{"at": 1793128980.5018084, "event": "attempt", "count": 84, "service": "s3", "operation": "GetBucketLocation"}
+{"at": 1793128980.5564861, "event": "outcome", "attempt": 84, "status": 200}
+{"at": 1793128980.559916, "event": "attempt", "count": 85, "service": "s3", "operation": "GetPublicAccessBlock"}
+{"at": 1793128980.7296147, "event": "outcome", "attempt": 85, "status": 200}
+{"at": 1793128980.733336, "event": "attempt", "count": 86, "service": "s3", "operation": "GetBucketVersioning"}
+{"at": 1793128980.7927098, "event": "outcome", "attempt": 86, "status": 200}
+{"at": 1793128980.7960293, "event": "attempt", "count": 87, "service": "s3", "operation": "GetBucketEncryption"}
+{"at": 1793128980.848504, "event": "outcome", "attempt": 87, "status": 200}
+{"at": 1793128980.8518224, "event": "attempt", "count": 88, "service": "s3", "operation": "GetBucketLocation"}
+{"at": 1793128980.9080875, "event": "outcome", "attempt": 88, "status": 200}
+{"at": 1793128980.9118876, "event": "attempt", "count": 89, "service": "s3", "operation": "GetPublicAccessBlock"}
+{"at": 1793128981.0830574, "event": "outcome", "attempt": 89, "status": 200}
+{"at": 1793128981.0865111, "event": "attempt", "count": 90, "service": "s3", "operation": "GetBucketVersioning"}
+{"at": 1793128981.138267, "event": "outcome", "attempt": 90, "status": 200}
+{"at": 1793128981.141401, "event": "attempt", "count": 91, "service": "s3", "operation": "GetBucketEncryption"}
+{"at": 1793128981.19009, "event": "outcome", "attempt": 91, "status": 200}
+{"at": 1793128981.194698, "event": "attempt", "count": 92, "service": "s3", "operation": "GetObject"}
+{"at": 1793128981.325456, "event": "outcome", "attempt": 92, "status": 200}
+{"at": 1793128981.3296473, "event": "attempt", "count": 93, "service": "s3", "operation": "GetObject"}
+{"at": 1793128981.4322672, "event": "outcome", "attempt": 93, "status": 200}
+{"at": 1793128981.435725, "event": "attempt", "count": 94, "service": "s3", "operation": "GetObject"}
+{"at": 1793128981.5412827, "event": "outcome", "attempt": 94, "status": 200}
+{"at": 1793128981.545361, "event": "attempt", "count": 95, "service": "s3", "operation": "GetObject"}
+{"at": 1793128981.6570544, "event": "outcome", "attempt": 95, "status": 200}
+{"at": 1793128981.660668, "event": "attempt", "count": 96, "service": "s3", "operation": "GetObject"}
+{"at": 1793128981.7563, "event": "outcome", "attempt": 96, "status": 200}
+{"at": 1793128981.9288363, "event": "attempt", "count": 97, "service": "s3", "operation": "GetObject"}
+{"at": 1793128982.0060635, "event": "outcome", "attempt": 97, "status": 200}
+{"at": 1793128982.0099351, "event": "attempt", "count": 98, "service": "s3", "operation": "GetObject"}
+{"at": 1793128982.0835075, "event": "outcome", "attempt": 98, "status": 200}
+{"at": 1793128982.0874147, "event": "attempt", "count": 99, "service": "s3", "operation": "GetObject"}
+{"at": 1793128982.1739867, "event": "outcome", "attempt": 99, "status": 200}
+{"at": 1793128982.1781707, "event": "attempt", "count": 100, "service": "s3", "operation": "GetObject"}
+{"at": 1793128982.2569928, "event": "outcome", "attempt": 100, "status": 200}
+{"at": 1793128982.2604437, "event": "attempt", "count": 101, "service": "s3", "operation": "GetObject"}
+{"at": 1793128982.3308675, "event": "outcome", "attempt": 101, "status": 200}
+{"at": 1793128982.3361025, "event": "attempt", "count": 102, "service": "s3", "operation": "ListObjectsV2"}
+{"at": 1793128982.3902233, "event": "outcome", "attempt": 102, "status": 200}
+{"at": 1793128982.394342, "event": "attempt", "count": 103, "service": "s3", "operation": "ListObjectsV2"}
+{"at": 1793128982.5038261, "event": "outcome", "attempt": 103, "status": 200}
+{"at": 1793128982.5116007, "event": "attempt", "count": 104, "service": "dynamodb", "operation": "GetItem"}
+{"at": 1793128982.55948, "event": "outcome", "attempt": 104, "status": 200}
+{"at": 1793128982.5643587, "event": "finished", "count": 104, "elapsedSeconds": 158.45414592687303}
+{"at": 1793129067.2867608, "event": "resume", "count": 104}
+{"at": 1793129067.333929, "event": "attempt", "count": 105, "service": "s3", "operation": "GetBucketPolicy"}
+{"at": 1793129067.5122788, "event": "outcome", "attempt": 105, "status": 200}
+{"at": 1793129067.5233414, "event": "attempt", "count": 106, "service": "s3", "operation": "GetBucketPolicy"}
+{"at": 1793129067.7002614, "event": "outcome", "attempt": 106, "status": 200}
+{"at": 1793129067.7211862, "event": "attempt", "count": 107, "service": "cloudfront", "operation": "DescribeFunction"}
+{"at": 1793129068.1026912, "event": "outcome", "attempt": 107, "status": 200}
+{"at": 1793129068.1148896, "event": "attempt", "count": 108, "service": "cloudfront", "operation": "GetFunction"}
+{"at": 1793129068.2449343, "event": "outcome", "attempt": 108, "status": 200}
+{"at": 1793129068.2675667, "event": "attempt", "count": 109, "service": "cloudfront-keyvaluestore", "operation": "DescribeKeyValueStore"}
+{"at": 1793129068.5638778, "event": "outcome", "attempt": 109, "status": 200}
+{"at": 1793129068.5753198, "event": "attempt", "count": 110, "service": "cloudfront-keyvaluestore", "operation": "ListKeys"}
+{"at": 1793129068.7242584, "event": "outcome", "attempt": 110, "status": 200}
+{"at": 1793129068.7352862, "event": "attempt", "count": 111, "service": "cloudfront", "operation": "GetCachePolicy"}
+{"at": 1793129068.8029299, "event": "outcome", "attempt": 111, "status": 200}
+{"at": 1793129068.8078456, "event": "attempt", "count": 112, "service": "cloudfront", "operation": "GetResponseHeadersPolicy"}
+{"at": 1793129068.8977423, "event": "outcome", "attempt": 112, "status": 200}
+{"at": 1793129068.9071126, "event": "attempt", "count": 113, "service": "ecr", "operation": "DescribeRepositories"}
+{"at": 1793129069.085085, "event": "outcome", "attempt": 113, "status": 200}
+{"at": 1793129069.1029878, "event": "attempt", "count": 114, "service": "logs", "operation": "DescribeLogGroups"}
+{"at": 1793129069.2778869, "event": "outcome", "attempt": 114, "status": 200}
+{"at": 1793129069.2882628, "event": "attempt", "count": 115, "service": "dynamodb", "operation": "GetItem"}
+{"at": 1793129069.4491909, "event": "outcome", "attempt": 115, "status": 200}
+{"at": 1793129069.46033, "event": "attempt", "count": 116, "service": "dynamodb", "operation": "GetItem"}
+{"at": 1793129069.504784, "event": "outcome", "attempt": 116, "status": 200}
+{"at": 1793129069.5154648, "event": "attempt", "count": 117, "service": "iam", "operation": "GetRole"}
+{"at": 1793129069.7465825, "event": "outcome", "attempt": 117, "status": 200}
+{"at": 1793129069.7589996, "event": "attempt", "count": 118, "service": "iam", "operation": "GetRolePolicy"}
+{"at": 1793129069.8476455, "event": "outcome", "attempt": 118, "status": 200}
+{"at": 1793129069.8517578, "event": "attempt", "count": 119, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793129069.9514997, "event": "outcome", "attempt": 119, "status": 200}
+{"at": 1793129069.955306, "event": "attempt", "count": 120, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793129070.0550354, "event": "outcome", "attempt": 120, "status": 200}
+{"at": 1793129070.0647914, "event": "attempt", "count": 121, "service": "lambda", "operation": "GetFunctionConfiguration"}
+{"at": 1793129070.2965574, "event": "outcome", "attempt": 121, "status": 200}
+{"at": 1793129070.308307, "event": "attempt", "count": 122, "service": "iam", "operation": "GetRole"}
+{"at": 1793129070.4130113, "event": "outcome", "attempt": 122, "status": 200}
+{"at": 1793129070.4168205, "event": "attempt", "count": 123, "service": "iam", "operation": "GetRolePolicy"}
+{"at": 1793129070.5012903, "event": "outcome", "attempt": 123, "status": 200}
+{"at": 1793129070.504682, "event": "attempt", "count": 124, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793129070.5967515, "event": "outcome", "attempt": 124, "status": 200}
+{"at": 1793129070.600243, "event": "attempt", "count": 125, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793129070.6947405, "event": "outcome", "attempt": 125, "status": 200}
+{"at": 1793129070.6988964, "event": "attempt", "count": 126, "service": "lambda", "operation": "GetFunctionConfiguration"}
+{"at": 1793129070.823176, "event": "outcome", "attempt": 126, "status": 200}
+{"at": 1793129070.834151, "event": "attempt", "count": 127, "service": "iam", "operation": "GetRole"}
+{"at": 1793129070.9286964, "event": "outcome", "attempt": 127, "status": 200}
+{"at": 1793129070.9325, "event": "attempt", "count": 128, "service": "iam", "operation": "GetRolePolicy"}
+{"at": 1793129071.0236087, "event": "outcome", "attempt": 128, "status": 200}
+{"at": 1793129071.026897, "event": "attempt", "count": 129, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793129071.1094296, "event": "outcome", "attempt": 129, "status": 200}
+{"at": 1793129071.1123595, "event": "attempt", "count": 130, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793129071.2096312, "event": "outcome", "attempt": 130, "status": 200}
+{"at": 1793129071.213086, "event": "attempt", "count": 131, "service": "lambda", "operation": "GetFunctionConfiguration"}
+{"at": 1793129071.476674, "event": "outcome", "attempt": 131, "status": 200}
+{"at": 1793129071.4803789, "event": "attempt", "count": 132, "service": "iam", "operation": "GetRole"}
+{"at": 1793129071.6027465, "event": "outcome", "attempt": 132, "status": 200}
+{"at": 1793129071.6066208, "event": "attempt", "count": 133, "service": "iam", "operation": "ListAttachedRolePolicies"}
+{"at": 1793129071.7023695, "event": "outcome", "attempt": 133, "status": 200}
+{"at": 1793129071.7053568, "event": "attempt", "count": 134, "service": "iam", "operation": "GetPolicy"}
+{"at": 1793129071.8238733, "event": "outcome", "attempt": 134, "status": 200}
+{"at": 1793129071.827519, "event": "attempt", "count": 135, "service": "lambda", "operation": "GetFunctionConfiguration"}
+{"at": 1793129071.9709318, "event": "outcome", "attempt": 135, "status": 200}
+{"at": 1793129071.9752204, "event": "finished", "count": 135, "elapsedSeconds": 247.8650052928242}
+{"at": 1793129179.932271, "event": "stop", "reason": "preview-provider-meter-not-established", "count": 135}

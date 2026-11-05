@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "artifactDirectory": ".build/project-environments-release/44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "packages": [
+    {
+      "name": "UsersProjectsApi",
+      "bootstrapBytes": 23003296,
+      "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+      "zipBytes": 7261815,
+      "zipSha256": "118621a9b8d84c7941b2ea795783da1183a018ae58295d2d761954ea176078c6",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    },
+    {
+      "name": "EmptyProjectCleanup",
+      "bootstrapBytes": 23003296,
+      "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+      "zipBytes": 7261815,
+      "zipSha256": "118621a9b8d84c7941b2ea795783da1183a018ae58295d2d761954ea176078c6",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    },
+    {
+      "name": "CloudExecutionWorker",
+      "bootstrapBytes": 21495968,
+      "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+      "zipBytes": 6770846,
+      "zipSha256": "d1bb890914413b1bad1e2108080296a5c05f63e3f023b851836860404b3a29fb",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    },
+    {
+      "name": "ExecutionControlledEndpoint",
+      "bootstrapBytes": 21495968,
+      "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+      "zipBytes": 6770846,
+      "zipSha256": "d1bb890914413b1bad1e2108080296a5c05f63e3f023b851836860404b3a29fb",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    }
+  ],
+  "frontend": {
+    "schemaVersion": 1,
+    "publicConfig": {
+      "VITE_API_URL": "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+      "VITE_COGNITO_USER_POOL_ID": "us-east-2_qTDZQT1FE",
+      "VITE_COGNITO_CLIENT_ID": "5jg9sb38i6ae9c0adm5rtdfkno",
+      "VITE_KURIER_STAGE": "dev-api"
+    },
+    "files": [
+      {
+        "path": "404.html",
+        "bytes": 344,
+        "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "assets/index-CAjex_6u.css",
+        "bytes": 2955,
+        "sha256": "89dd6331058a55d3bb75930baa3d6554ceaf73abaaff99b5913f904b07661ec9",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "assets/index-DXEG7-ST.js",
+        "bytes": 422230,
+        "sha256": "8b55e24fce2358c86d2a2feb385485888d2dc3b221c0a6ac4a25035cac74db3e",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "index.html",
+        "bytes": 666,
+        "sha256": "4cf85fd302be5fd09da94fb60c74ccf44a26124c206a872a6c5e86b12aa81127",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "startup.js",
+        "bytes": 1030,
+        "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      }
+    ],
+    "releaseId": "38325083b003b3f320752dbfa0357c377d57d2b66c1175e06c88ba3638210236"
+  },
+  "toolchain": {
+    "go": "go version go1.27.3-X:nodwarf5 linux/amd64",
+    "node": "v26.12.1",
+    "npm": "12.2.1",
+    "goBuildFlags": "CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags='-s -w'",
+    "zip": "single bootstrap, Unix0755, DEFLATE9, fixed2020-01-01 timestamp"
+  },
+  "lockfileSha256": "0002e759ded5ff43aca6c2c51a012378a19286d511675b934cc94b555a8d68dd",
+  "deploymentPerformed": false,
+  "activationPerformed": false,
+  "previewPerformed": false,
+  "publicConfigVerifiedAgainstInventory": true,
+  "rollbackPackages": [
+    {
+      "name": "UsersProjectsApi",
+      "zipBytes": 9251049,
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
+      "bootstrapBytes": 22741152,
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "matchesRetainedAssertionsRelease": true
+    },
+    {
+      "name": "EmptyProjectCleanup",
+      "zipBytes": 9251049,
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
+      "bootstrapBytes": 22741152,
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "matchesRetainedAssertionsRelease": true
+    },
+    {
+      "name": "CloudExecutionWorker",
+      "zipBytes": 8687530,
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
+      "bootstrapBytes": 21430432,
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "matchesRetainedAssertionsRelease": true
+    },
+    {
+      "name": "ExecutionControlledEndpoint",
+      "zipBytes": 8687530,
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
+      "bootstrapBytes": 21430432,
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "matchesRetainedAssertionsRelease": true
+    }
+  ],
+  "rollbackFrontendReleaseId": "bd511e3f9979d2ef7dd6b73d183dcf7620a423b62659ac89c64e4a1a08981cde",
+  "inventoryFile": "project-environments-inventory.json",
+  "clients": [
+    {
+      "name": "kurier-local-agent",
+      "platform": "linux/amd64",
+      "bytes": 7372960,
+      "sha256": "19f92365419c982782ba66426a8933a2fed77375c2771850a940e8f91bdd41f2",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    },
+    {
+      "name": "kurier-mcp",
+      "platform": "linux/amd64",
+      "bytes": 8937632,
+      "sha256": "0063edf0ee257a6519e9f21fa7cc35038f4ef91115a5f2011a739866fb7db5ab",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    }
+  ]
+}

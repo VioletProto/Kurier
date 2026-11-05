@@ -1,0 +1,209 @@
+{
+  "status": "blocked-not-deployment-ready",
+  "localOnly": true,
+  "toolingCommit": "fe7304cbc9d68fe85f3d1eac04799e14ab6878b4",
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "completedPreviewPacket": "e20b994cb83432bcbcca4ac36e59099b6b5bddd7",
+  "newReleaseManifest": "docs/development/project-environments-sst-release.json",
+  "newReleaseManifestSha256": "25ef3cd0c8f0c09037607c564bfb8964c1ef8e8e14a3aa0ae8757894918895a9",
+  "originalManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+  "accounting": {
+    "prior": 296,
+    "newAwsCalls": 0,
+    "cumulative": 296,
+    "maximum": 500,
+    "remaining": 204,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false,
+    "oldPreviewToolingBaselineUnmodified": 263
+  },
+  "bindingInspection": {
+    "localOnly": true,
+    "awsCalls": 0,
+    "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+    "packages": [
+      {
+        "name": "UsersProjectsApi",
+        "zipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+        "exactMembers": true,
+        "bootstrapMatches": true,
+        "bindingBytes": 18,
+        "bindingAuthenticated": false,
+        "bindingContent": "unverified-encrypted",
+        "credentialOrUnrelatedBindingAbsenceConfirmed": false
+      },
+      {
+        "name": "EmptyProjectCleanup",
+        "zipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+        "exactMembers": true,
+        "bootstrapMatches": true,
+        "bindingBytes": 18,
+        "bindingAuthenticated": false,
+        "bindingContent": "unverified-encrypted",
+        "credentialOrUnrelatedBindingAbsenceConfirmed": false
+      },
+      {
+        "name": "CloudExecutionWorker",
+        "zipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+        "exactMembers": true,
+        "bootstrapMatches": true,
+        "bindingBytes": 18,
+        "bindingAuthenticated": false,
+        "bindingContent": "unverified-encrypted",
+        "credentialOrUnrelatedBindingAbsenceConfirmed": false
+      },
+      {
+        "name": "ExecutionControlledEndpoint",
+        "zipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+        "exactMembers": true,
+        "bootstrapMatches": true,
+        "bindingBytes": 18,
+        "bindingAuthenticated": false,
+        "bindingContent": "unverified-encrypted",
+        "credentialOrUnrelatedBindingAbsenceConfirmed": false
+      }
+    ],
+    "bindingAuthenticated": false,
+    "adoptionHeld": true,
+    "cumulativeUsage": 296,
+    "remainingPreparationHeadroom": 204,
+    "regenerationCompared": false,
+    "goSstSdkLoaderDependency": false
+  },
+  "sourceEvidence": {
+    "intendedLinks": {},
+    "pinnedPlatformFunctionSourceSha256": "38dba7dec5ed34abc9593f352d5ae91079644a935366f9e04425453612f10c7c",
+    "review8PlatformSourceMatches": true,
+    "pinnedSstSha256": "539659fa60f00e8b9610b7dfd967928d382b4800ca25452d9697e31a4eb521fd",
+    "pinnedRuntimeFunctionTrace": [
+      {
+        "end": 25292672,
+        "entry": 25289056,
+        "name": "github.com/sst/sst/v3/pkg/runtime.(*Collection).Build"
+      },
+      {
+        "end": 25292864,
+        "entry": 25292672,
+        "name": "github.com/sst/sst/v3/pkg/runtime.(*Collection).Build.deferwrap1"
+      }
+    ],
+    "pinnedRuntimeResolvedCalls": [
+      {
+        "address": 5559968,
+        "name": "encoding/base64.(*Encoding).DecodeString"
+      },
+      {
+        "address": 6299104,
+        "name": "encoding/json.Marshal"
+      },
+      {
+        "address": 7686112,
+        "name": "crypto/aes.NewCipher"
+      },
+      {
+        "address": 7086016,
+        "name": "crypto/cipher.NewGCM"
+      },
+      {
+        "address": 4782144,
+        "name": "runtime.makeslice"
+      }
+    ],
+    "exactSstGoSourceAvailable": false,
+    "adjacentSourceNotClaimedIdentical": "github.com/sst/sst/v3@v3.19.3",
+    "applicationGoSstSdkDependency": false,
+    "plaintextSstKeyLocated": false,
+    "realCiphertextAuthenticated": false,
+    "credentialsOrUnrelatedBindingsAbsenceInsideCiphertextConfirmed": false,
+    "rawPrivateKeyPlaintextEnvironmentOrReceiptPublished": false
+  },
+  "authorizationReview": {
+    "gatewayNoneAcceptedPattern": true,
+    "ownerJwtAndOwnershipGuards": true,
+    "agentCredentialSeparationAndGenerationChecks": true,
+    "invokeApiWildcardMatchesAcceptedExistingPattern": true,
+    "authOrInvokeScopeChangeNeeded": false,
+    "liveCognitoGatewayChecksPerformed": false
+  },
+  "transition": {
+    "implementation": "scripts/lib/project-environments-activation.mjs",
+    "transportInjected": true,
+    "liveCliAdapterEnabled": false,
+    "expectedSavedRequestsSchemaVersion": 8,
+    "activationSavedRequestsSchemaVersion": 9,
+    "activationProtectedSecretsSchemaVersion": 2,
+    "activationLocalAgentSchemaVersion": 2,
+    "activationProjectEnvironmentsSchemaVersion": 1,
+    "fullTupleCasAndAbsentEnvironmentGate": true,
+    "accountingInSameTransaction": true,
+    "maxTransactionActions": 80,
+    "maxTransactionBytes": 2097152,
+    "oneTransactionAttemptNoReopenOrCompensation": true,
+    "closureReceiptHashApprovalBound": true,
+    "closedWindowSeconds": 1800,
+    "bindingAuthenticationRequiredForEitherWrite": true
+  },
+  "verification": {
+    "activatorTestsWithActualLocalDb": 88,
+    "activatorSkippedWithLocalDb": 0,
+    "archiveTests": 10,
+    "goIntegrationRaceSuitesPassed": ["ownership", "execution"],
+    "newGatewayNegativeRegression": "TestIntegrationEnvironmentGatewayNoneNegativeGuards",
+    "fullRepositoryVerifyPassedOffline": true,
+    "newUnitScriptPassed": true,
+    "ruffPassed": true,
+    "externalNetworkDisabledForIntegrationAndRepositoryVerify": true,
+    "originalProofsAndReleaseRollbackBytesUnchanged": true,
+    "postLocalPreparationAwsCalls": 0,
+    "logSha256": {
+      "repositoryVerify": "13f184ebdc775d63633271f6536ebfc3297d1b0ca8d73a097fb6fd1500ef10f2",
+      "integrationFinal": "8d38d3052dafa92595f139cd3dd49a55224a68fb13853d0557104e5770e1b0eb",
+      "unitFinal": "64e17184b6c9de560fd177a0dec2a61a67c2f99c7ed6fb43406574f8b163c835"
+    }
+  },
+  "proposedMinimalKeyObservation": {
+    "performed": false,
+    "maxPhysicalAwsAttemptsIncludingOptionalRefreshAndSts": 3,
+    "seconds": 600,
+    "readOperation": "GetFunctionConfiguration",
+    "logicalFunction": "UsersProjectsApi",
+    "retainOnlyKeyPrivatelyForOfflineAuthentication": true,
+    "requiresSeparateMeterReviewAndAuthorization": true
+  },
+  "deploymentByteGate": {
+    "localArchiveComparisonImplemented": true,
+    "retainedReview8ComparisonPassed": true,
+    "mismatchRegressionPassed": true,
+    "providerUploadBoundaryImplemented": false,
+    "plainSstDeployPermitted": false,
+    "stopBeforeAnyMutationIfRegeneratedArchiveDiffers": true
+  },
+  "unresolved": [
+    "Real resource.enc authentication using existing key; encrypted credential/unrelated-binding absence unconfirmed",
+    "Candidate archive adoption remains held",
+    "Metered live collector/stage adapter and original clock/boot/approval continuity",
+    "Provider upload boundary and immutable byte/check-use binding",
+    "Fresh live reader/state/IAM/accounting/billing observation and an explicitly reviewed execution ceiling",
+    "Separate deployment/closure/activation and bounded runtime authorization"
+  ],
+  "holds": {
+    "awsCalls": 0,
+    "deployment": false,
+    "closure": false,
+    "migration": false,
+    "activation": false,
+    "identityOrProjectCreation": false,
+    "liveTargetRequests": false,
+    "openApiProductionScopeSeparate": true
+  },
+  "reviewToolingFileSha256": {
+    "package.json": "76f621be1a3e8c6d46b429bf23a322b347d466e22da0a48d7fb7687306a5c3c9",
+    "scripts/activate-project-environments.mjs": "fa58f1ac568f6b56b9846afc429a2559054bd31279d40be314d226080b0deb9e",
+    "scripts/environment-release-check.py": "a0bfc01285e11f3b8b30fb64de64673b4d5780c53b0ad8ce1b543962df30ce53",
+    "scripts/environment-release-check.test.py": "59fcd98b7f80655a383c08998f558e21404ee0e3aea06df7e997b3b42785d16c",
+    "scripts/lib/project-environments-activation.mjs": "028186e34ebdb8085ca562138303bb53812e0e312f5e0b2a93e16fe1159b7016",
+    "scripts/project-environments-activation.test.mjs": "23786b13aaa2f54b88493ed025b855adcc2d63747353b0462ca87774f1d8532f",
+    "scripts/test-environment-readiness-offline.py": "abea9eafe8b722082634bc9aa71fa35e31258b54e14fe887ed82eb33febf24b9",
+    "services/api/internal/ownership/environment_readiness_integration_test.go": "69a367055b59be4d51020527afd93db9bbec5fefa06f5d7ec14aa5bfb42327d0"
+  }
+}

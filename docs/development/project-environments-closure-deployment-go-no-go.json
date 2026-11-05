@@ -1,0 +1,139 @@
+{
+  "conclusion": "no-go-for-stage-closure-or-deployment-until-timing-amendment-and-separate-live-approval",
+  "collectionEvidenceCommit": "dd2d54059206398ff96307a74b2d3003e38d0200",
+  "reviewedToolingCommit": "bf1effb2835ae6be00bdbd753a802dc0b9bf6741",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCallsThisReview": 0,
+  "accounting": {
+    "prior": 608,
+    "cumulativeCeiling": 1799,
+    "maximumAdditionalPhysicalAttempts": 1191,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "originalCampaignDeadlineInspection": {
+    "checkedUtc": "2026-11-02T00:59:05.434950+00:00",
+    "sameBoot": true,
+    "elapsedSeconds": 2102.970801,
+    "remainingSeconds": 1197.029199,
+    "expired": false,
+    "cumulative": 608,
+    "closedWindowStarted": false,
+    "nextPhase": 1,
+    "noDeadlineResetOrLedgerWrite": true
+  },
+  "measuredEvidence": {
+    "successfulCollectionSeconds": 90.598713764,
+    "collectionPhysicalAttempts": 109,
+    "completeDiffEntries": 60,
+    "uniqueChangedResources": 44,
+    "allFourExactAdoptedZipHashesMatched": true,
+    "oldFrontendAndGeneratedFrontendChecksPassed": true,
+    "liveDeploymentDurationMeasured": false,
+    "liveClosureDurationMeasured": false,
+    "offlineFixturesProveAwsCompletionTime": false
+  },
+  "currentDeploymentBounds": {
+    "allPhaseSeconds": 240,
+    "campaignSeconds": 3300,
+    "closedStageSeconds": 1800,
+    "credentialGuardSeconds": 5,
+    "sdkReuseThresholdSeconds": 300,
+    "signinMaximumIssuedLifetimeSeconds": 900,
+    "noBackgroundOrMidphaseRenewal": true,
+    "cloudfrontWaitEnabledInRelease": true,
+    "sstCloudfrontWaiterMaximumSeconds": 600,
+    "lambdaProviderDefaultUpdateTimeoutSeconds": 600,
+    "lambdaCodeUpdateWaitsForPropagation": true,
+    "providerTimeoutsOverrideHostDeadline": false,
+    "hostKillsOrHoldsAtFirstApplicableDeadline": true
+  },
+  "proposalNotImplemented": {
+    "deploySeconds": 840,
+    "otherPhaseSeconds": 240,
+    "credentialGuardSeconds": 5,
+    "phaseAwareReuseThreshold": "max(300, remaining approved phase seconds + 5), scoped to one pinned fetcher instance",
+    "maximumRenewalsPerPhase": 1,
+    "maximumRenewalsPerCampaign": 6,
+    "renewOnlyAtPhaseBoundary": true,
+    "freshStsBeforeChildren": true,
+    "fixedCampaignSeconds": 3300,
+    "fixedClosedStageSeconds": 1800,
+    "closedDeadlineRule": "min(original campaign deadline, close entry + 1800); never reset by renewal or later phase",
+    "closedPhaseCeilingsSumSeconds": 1560,
+    "closedReviewAndSetupHeadroomAtThoseCeilingsSeconds": 240,
+    "allSixPhaseCeilingsSumSeconds": 2040,
+    "guaranteesAwsCompletion": false,
+    "coversAllProviderWorstCases": false,
+    "freshCredentialMarginBeforeAuthOverheadSeconds": 55,
+    "uncertainWritesNeverReplayed": true,
+    "apiResourcePolicyOrReleaseSourceChangeProposed": false
+  },
+  "newCampaignProposal": {
+    "requiredForAmendedTooling": "existing campaign binds exact tooling; do not edit/migrate its authorization or ledger",
+    "campaignId": "release-608-t1",
+    "claim": "window-from-608-timing-1.json",
+    "authorization": "authorization-from-608-timing-1.json",
+    "prior": 608,
+    "maximum": 1799,
+    "maximumAdditionalPhysicalAttempts": 1191,
+    "firstPossibleOrdinal": 609,
+    "seconds": 3300,
+    "freshCaptureRequiresNewExplicitApproval": true,
+    "historicalGrantContinuityEstablished": false,
+    "freshCollectionRequiredBeforeClose": true,
+    "existingClaimCannotBeReused": true,
+    "implementedOrCreated": false,
+    "newToolingPinAvailable": false
+  },
+  "remainingDecisions": [
+    "Approve local implementation and offline verification of phase-specific deployment ceiling and required-validity-aware startup renewal.",
+    "Review the resulting exact clean tooling pin and new 608-based parent/claim/authorization bindings.",
+    "Separately approve one new initial collection, including explicit fresh capture for the exact existing identity/account and acknowledged historical continuity limitation.",
+    "Review that fresh collection, remaining original time/calls and explicit acceptance of bounded deployment timeout risk before separate close approval; separately approve deploy and every later phase."
+  ],
+  "preserved": {
+    "sevenCampaignsAndConsumedClaims": true,
+    "oldAndNewCheckpoints": true,
+    "privateEvidenceAndLedgers": true,
+    "adoptedAndRollbackArtifacts": true,
+    "originalCampaignNotResumedResetOrMarkedStoppedByReview": true
+  },
+  "sourceHashes": {
+    "scripts/environment-deploy/common.py": "cb0cdb82950d111c3cc42b5795cadbd5a77e9fa3509748561dadf63bf096522b",
+    "scripts/environment-deploy/phase_credentials.py": "b64ea043cb0104715bbe13e9af5768796abb46a34d698d88d4ff8c1407f6f97a",
+    "scripts/environment-deploy/driver.py": "5169cecfb40f914e53a5db3d22e520052f232c89c4a3103601860ed2bd84f74d",
+    "scripts/environment-deploy/phase.mjs": "2ae4d1401835cdf85d729c5ae14aee14a1e837b1418ae1f8480d1a582cc74fcc",
+    "scripts/environment-deploy/isolation.py": "6dc1b493068ba55e4553dbcee0cc0d5c1b5278ef97aa92b70515c2199adb69ba",
+    ".sst/platform/src/components/aws/static-site.ts": "3cfc315870a5875edddfba15038cb6c24b98e35f07767e40dad4695c045c18ce",
+    ".sst/platform/src/components/aws/providers/distribution-invalidation.ts": "a48a73bd1ad66c1685bf55d3cbed0721494fb146854ba48c6731cf23a2de7300",
+    "/tmp/kurier-environments-release-source/infra/frontend-hosting.ts": "fae507fec6afe648b6919d7b5a4db13e6a897212e573f50728f583dc5f632621"
+  },
+  "sourceInspectionMethod": "local pinned source and installed Go binary symbol/call/constant inspection; no provider or SST deployment invocation",
+  "limitations": [
+    "The 840-second proposal is a bounded engineering allowance, not a measured deployment duration or completion guarantee.",
+    "Lambda 600-second waits plus the downstream CloudFront 600-second wait and other work can exceed 840 seconds.",
+    "A timeout can leave a closed partially deployed stage and uncertain writes; all subsequent work then requires separate inspection/recovery approval.",
+    "1191 remaining attempts and the unchanged procedural dollar allowance are not proof of capacity or measured spend.",
+    "Current cache validity, future renewal acceptance and current cloud state were not checked."
+  ],
+  "publicationDeadlineRecheck": {
+    "checkedUtc": "2026-11-02T01:03:10.897597+00:00",
+    "sameBoot": true,
+    "elapsedSeconds": 2348.433465,
+    "remainingSeconds": 951.566535,
+    "expired": false,
+    "cumulative": 608,
+    "closedWindowStarted": false,
+    "nextPhase": 1,
+    "noDeadlineResetOrLedgerWrite": true
+  },
+  "verification": {
+    "repositoryVerifyPassed": true,
+    "externalNetworkingDisabled": true,
+    "dependenciesNotDownloaded": true,
+    "verificationLogSha256": "e79d6d5f4208258ac936985187747b902a5e98f38d63029ba4e48ad37f13277a",
+    "sourceBoundsAccountingBindingsAndPreservationAssertionsPassed": true,
+    "formattingPassed": true
+  }
+}

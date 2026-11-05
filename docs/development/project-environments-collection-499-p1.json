@@ -1,0 +1,83 @@
+{
+  "status": "checkpoint-drift-held-before-first-physical-attempt",
+  "toolingCommit": "83863b02132cbd3c70ace136261bde4ee30dd192",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "campaign": ".build/project-environments-execution/release-499-p1",
+  "authorizationSha256": "355ab87b2519b98c783ec3c23e83e3cb78dc0cda97d020beb399b04ad352269e",
+  "manifestSha256": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+  "scopeSha256": "760c1c25db84fedab09a440d5399a67f6e7a2c749d8fb5ec1e0d934b17411f72",
+  "accounting": {
+    "prior": 499,
+    "newPhysicalAttempts": 0,
+    "cumulative": 499,
+    "authorizedCeiling": 1799,
+    "remainingAttemptHeadroom": 1300,
+    "unmatchedAttempts": 0,
+    "httpStatuses": {},
+    "failedTransports": 0,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "window": {
+    "originalSeconds": 3300,
+    "phaseMaximumSeconds": 240,
+    "elapsedSecondsAtStop": 0.035184902,
+    "campaignRemainingSecondsAtStop": 3299.964815098,
+    "phaseRemainingSecondsAtStop": 239.993012871,
+    "closedWindowStarted": false,
+    "remainingTimeIsContinuationAuthority": false
+  },
+  "authentication": {
+    "failure": {
+      "code": "session-changed-no-unmetered-refresh",
+      "stage": "checkpoint-check"
+    },
+    "checkpointDriftEstablished": true,
+    "driftedMetadataDimensionsNotPublished": true,
+    "causeOfExternalCacheChangeEstablished": false,
+    "refreshAttempts": 0,
+    "stsAttempts": 0,
+    "credentialBoundaryCompleted": false,
+    "checkpointRecapturedOrSubstituted": false,
+    "backgroundOrMidPhaseRenewals": 0
+  },
+  "readerSnapshot": {
+    "started": false,
+    "completed": false,
+    "baselineEstablished": false,
+    "quiescenceEstablished": false,
+    "oldFrontendReadinessEstablished": false,
+    "configurationIamComparisonsAvailable": false
+  },
+  "preview": {
+    "started": false,
+    "complete": false,
+    "completeResourceDiffAvailable": false,
+    "generatedArchiveCount": 0,
+    "allFourArchiveAgreementEstablished": false,
+    "freshFrontendAgreementEstablished": false,
+    "collectionProofProduced": false
+  },
+  "operationCounts": [],
+  "localChecksPassed": true,
+  "authorizationClaimAndCheckpointBindingsVerified": true,
+  "campaignStopped": true,
+  "collectionCompleted": false,
+  "retainedStopReasons": [
+    "phase-authentication-held-no-retry",
+    "phase-failed-or-uncertain-no-restart"
+  ],
+  "laterPhasesRun": [],
+  "infrastructureOrStateWrites": 0,
+  "runtimeRequests": 0,
+  "automaticRestart": false,
+  "credentialValuesTokenHashesOrRawMetadataPublished": false,
+  "preservation": {
+    "allSixCampaignsAndClaimsRetained": true,
+    "carriedAndOriginalCheckpointsUnchanged": true,
+    "adoptedAndRollbackArtifactsVerified": true,
+    "privateEvidencePreserved": true,
+    "sourceAndToolingUnchanged": true
+  },
+  "nextDecision": "Review the checkpoint drift locally if desired. No current cache adoption, checkpoint recapture, session replacement or new campaign is authorized. Any future live work requires explicit checkpoint/claim review and separate authorization; preserve this consumed claim and do not replay the command."
+}

@@ -1,0 +1,71 @@
+{
+  "toolingCommit": "42915e66301e272d28f5d9a3aac253239ca51e9e",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCalls": 0,
+  "historicalInspection": {
+    "exactTupleRetained": false,
+    "onlyComparisonBooleansFound": true,
+    "unchangedSinceHistoricalInspectionEstablished": false,
+    "historicalGrantContinuityEstablished": false
+  },
+  "capture": {
+    "freshCaptureExplicitlyAuthorized": true,
+    "completedUnderExclusiveLock": true,
+    "approvedIdentityAndAccountRechecked": true,
+    "ownershipModeAndStructureRechecked": true,
+    "replacementAndChangesRejected": true,
+    "privateApprovalRecord": ".build/project-environments-execution/checkpoints/capture-approval-current-1.json",
+    "privateCheckpointRecord": ".build/project-environments-execution/checkpoints/adopted-current-1.json",
+    "acceptanceMarkerVerified": true,
+    "privateFileModes": "0600",
+    "privateDirectoryMode": "0700",
+    "credentialValuesOrTokenHashesPublished": false,
+    "cacheModified": false
+  },
+  "campaign": {
+    "id": "release-390-cp1",
+    "claim": "window-from-390-checkpoint-1.json",
+    "prior": 390,
+    "maximum": 1799,
+    "additionalAttemptMaximum": 1409,
+    "seconds": 3300,
+    "phaseSeconds": 240,
+    "closedStageMaximumSeconds": 1800,
+    "created": false,
+    "authorizationCreated": false,
+    "claimCreated": false,
+    "templateAuthorized": false,
+    "maximumRenewalsPerPhase": 1,
+    "freshStsRequiredBeforeCollection": true,
+    "checkpointContinuityRequired": true,
+    "liveExecutionAuthorized": false
+  },
+  "accounting": {
+    "cumulative": 390,
+    "authorizedCeiling": 1799,
+    "remainingAttempts": 1409,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "verification": {
+    "executionTestsPassed": 118,
+    "checkpointCaptureAndClaimTests": 19,
+    "startupTestsThroughDriverMain": 19,
+    "isolatedCasesPassed": 12,
+    "repositoryVerifyPassed": true,
+    "ruffPassed": true,
+    "dependencyDownloadsDisabled": true,
+    "networkDisabledForOfflineRegressions": true,
+    "verificationLogSha256": "41a0d153021e2585eb1d0ae790cacffd132044231d6773e5114c096588e558bd"
+  },
+  "preservation": {
+    "allFourStoppedCampaignsAndClaimsRetained": true,
+    "zeroCallCampaignUnchanged": true,
+    "originalCheckpointsUnmodified": true,
+    "adoptedAndRollbackBytesVerified": true,
+    "privateEvidenceRetained": true,
+    "providerAndAuthOperationsUnchanged": true
+  },
+  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-390-cp1 --authorization .build/project-environments-execution/authorization-from-390-checkpoint-1.json --checkpoint .build/project-environments-execution/checkpoints/adopted-current-1.json",
+  "nextDecision": "Separately authorize one initial collection using this tooling pin, unchanged source and the private adopted checkpoint. Do not replay release-from-390. Cache drift stops before any request and consumes the fresh campaign claim; no recapture, retry or deadline reset is automatic."
+}

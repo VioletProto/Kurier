@@ -1,0 +1,7 @@
+{"at":1793246986.198485,"monotonic":75265.478124634,"event":"created","prior":231,"maximum":500,"seconds":3600}
+{"at":1793246986.2004707,"monotonic":75265.480104476,"event":"shared-window"}
+{"at":1793246986.2278535,"monotonic":75265.507494338,"event":"attempt","count":232,"service":"signin","operation":"CreateOAuth2Token","protocol":"HTTP/1.1"}
+{"at":1793246986.50072,"monotonic":75265.780356147,"event":"outcome","attempt":232,"status":200,"transportError":false}
+{"at":1793246986.5181348,"monotonic":75265.797775613,"event":"attempt","count":233,"service":"sts","operation":"GetCallerIdentity","protocol":"HTTP/1.1"}
+{"at":1793246986.688763,"monotonic":75265.968399671,"event":"outcome","attempt":233,"status":200,"transportError":false}
+{"at":1793246986.6989787,"monotonic":75265.978616998,"event":"authenticated","identityVerified":true,"count":233}

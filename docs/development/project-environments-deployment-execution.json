@@ -1,0 +1,233 @@
+{
+  "toolingCommit": "4de31ab9a9c791a1fc224bbce8a7fe79220519ba",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCalls": 152,
+  "accounting": {
+    "cumulative": 955,
+    "authorizedCeiling": 1799,
+    "billingMeasured": false,
+    "proceduralAllowanceUsd": 1,
+    "remainingAttempts": 844,
+    "newCallsForCredentialCorrection": 0,
+    "newCallsForContextCorrection": 0,
+    "newCallsForDenialReview": 0,
+    "newCallsForApprovedReadCorrection": 0,
+    "newCallsForAclReadCorrection": 0,
+    "newCallsForBucketReadCorrection": 0,
+    "newCallsForCp1Collection": 109,
+    "newCallsForPackagingReview": 0,
+    "newCallsFor499P1Collection": 0,
+    "newCallsFor499F1Collection": 109,
+    "newCallsFor608T1Collection": 108,
+    "newCallsFor608T1Close": 152,
+    "newCallsForRecoveryInspection": 87
+  },
+  "checks": {
+    "unitTestsPassed": 17,
+    "isolatedTransportCasesPassed": 8,
+    "sharedFixturePhysicalAttempts": 11,
+    "repositoryVerifyPassed": true,
+    "ruffPassed": true,
+    "artifactAndEvidencePinsPassed": true,
+    "credentialTestsPassed": 22,
+    "pathTestsPassed": 9,
+    "isolatedContextCasesPassed": 1,
+    "policyDiagnosticTestsPassed": 18,
+    "frontendTestsPassed": 14,
+    "isolatedOldFrontendSdkCasesPassed": 1,
+    "transitionTestsWithActualLocalDbPassedInPriorReview": 90,
+    "isolatedProductionPreviewCasesPassed": 1,
+    "isolatedUnexpectedBucketReadCasesPassed": 1,
+    "startupTestsThroughDriverMain": 19,
+    "checkpointCaptureAndClaimTests": 21,
+    "isolatedPackagingParentUmaskCasesPassed": 4,
+    "freshActualEntrypointRegressions": 18,
+    "isolatedFreshMidphaseDriftCasePassed": true,
+    "executionAndFrontendTestsPassed": 151,
+    "actualDriverTimingTests": 9,
+    "completedParentTests": 4
+  },
+  "hashes": {
+    "docs/development/project-environments-adopted-release.json": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+    "docs/development/project-environments-execution-scope.json": "760c1c25db84fedab09a440d5399a67f6e7a2c749d8fb5ec1e0d934b17411f72",
+    "docs/development/project-environments-release.json": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "docs/development/project-environments-sst-release.json": "25ef3cd0c8f0c09037607c564bfb8964c1ef8e8e14a3aa0ae8757894918895a9"
+  },
+  "liveExecutionAuthorized": false,
+  "credentialPolicy": {
+    "renewal": "approved-phase-boundaries-only",
+    "phaseSeconds": {
+      "collect": 240,
+      "close": 240,
+      "deploy": 840,
+      "verify": 240,
+      "activate": 240,
+      "final": 240
+    },
+    "reuseThreshold": "max(300,remaining-phase-seconds+5)-per-fetcher-instance",
+    "expiryGuardSeconds": 5,
+    "maximumRefreshes": 6
+  },
+  "originalCampaignSeconds": 3300,
+  "closedStageMaximumSeconds": 1800,
+  "newCampaignAuthorizationRequired": true,
+  "stoppedParentRecord": "docs/development/project-environments-collection-from-303.json",
+  "credentialReview": "docs/development/project-environments-credential-renewal.md",
+  "verificationLogSha256": "76c90ddba2eca64c70fc1222aa7aff797d6fe962a6a280704e105649459d3007",
+  "contextReview": "docs/development/project-environments-context-path-correction.md",
+  "contextMapping": {
+    "destination": "/meter/phase-context.json",
+    "readOnly": true,
+    "campaignDirectoryMounted": false
+  },
+  "denialReview": "docs/development/project-environments-preview-denial-review.md",
+  "permissionApprovalRequiredBeforeStart": false,
+  "pendingScopedReads": [],
+  "frontendExpectations": {
+    "collect": "accepted-old-baseline",
+    "close": "accepted-old-baseline",
+    "verify": "adopted-release",
+    "activate": "adopted-release",
+    "final": "adopted-release"
+  },
+  "approvedAdditionalReads": [
+    {
+      "service": "s3",
+      "operation": "GetBucketPolicy",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObject",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": "assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "cloudfront-keyvaluestore",
+      "operation": "GetKey",
+      "kvsArn": "arn:aws:cloudfront::747336059622:key-value-store/0e7ac6e9-b4b6-4a9e-b673-4d3838436ecd",
+      "key": "76ef:/assets/index-CD_8s4hz.js"
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAcl",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketCors",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketWebsite",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketVersioning",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketAccelerateConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketRequestPayment",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLogging",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketLifecycleConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketReplication",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetBucketEncryption",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    },
+    {
+      "service": "s3",
+      "operation": "GetObjectLockConfiguration",
+      "bucket": "kurier-dev-api-web-fc2927a49a0b246240e5a17774",
+      "key": ""
+    }
+  ],
+  "unapprovedReadsAdded": false,
+  "readCorrection": "docs/development/project-environments-approved-read-correction.md",
+  "priorLocalDbVerificationLogSha256": "b82c752a802a6c90e753137f0c14a885fd33987522ac32baf05b44b04e218235",
+  "aclReadCorrection": "docs/development/project-environments-acl-read-correction.md",
+  "bucketReadCorrection": "docs/development/project-environments-bucket-read-correction.md",
+  "latestExecutionRecord": "docs/development/project-environments-close-608-t1.json",
+  "latestExecutionStatus": "stage-closed-verified-awaiting-separate-deployment-approval",
+  "stoppedCampaigns": 6,
+  "historicalStartCommandConsumed": true,
+  "credentialBoundaryReview": "docs/development/project-environments-credential-boundary-review.md",
+  "currentCheckpointAdopted": true,
+  "checkpointApprovalRequiredBeforeFutureLiveWork": true,
+  "checkpointAdoptionReview": "docs/development/project-environments-checkpoint-adoption.md",
+  "freshInitialCollectionAuthorizationRequired": false,
+  "historicalGrantContinuityEstablished": false,
+  "proposedCollectionCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-608-t1 --authorization .build/project-environments-execution/authorization-from-608-timing-1.json --fresh-checkpoint",
+  "reviewedAccountingFrom499Required": false,
+  "proposedCollectionCommandIsConsumedHistoricalCommand": true,
+  "packagingReview": "docs/development/project-environments-packaging-reproducibility.md",
+  "packagingChildUmask": "0077",
+  "carriedCheckpointPrepared": true,
+  "historicalCp1CommandConsumed": true,
+  "historical499P1CommandConsumed": true,
+  "freshStartPolicyReview": "docs/development/project-environments-fresh-start-policy.md",
+  "explicitFreshCaptureSupported": true,
+  "freshRealCacheCaptured": true,
+  "freshCaptureApprovalRequiredBeforeLiveWork": true,
+  "latestCollectionRecord": "docs/development/project-environments-collection-608-t1.json",
+  "latestCollectionCompleted": true,
+  "campaignContinuationRequiresSeparatePhaseApproval": true,
+  "completedCampaigns": 2,
+  "totalCampaignsAndConsumedClaims": 8,
+  "freshInitialCollectionAuthorizationConsumed": true,
+  "closureDeploymentReadiness": "closed-old-release-reopen-proposed-awaiting-separate-reviewed-write-approval",
+  "closureDeploymentGoNoGoReview": "docs/development/project-environments-closure-deployment-go-no-go.json",
+  "timingAmendmentImplemented": true,
+  "newTimingCampaignAuthorized": false,
+  "timingAmendmentReview": "docs/development/project-environments-timing-amendment.json",
+  "latestPreflightRecord": "docs/development/project-environments-collection-608-t1-preflight.json",
+  "latestRequestedCollectionStatus": "initial-collection-complete-awaiting-separate-phase-approval",
+  "missingReleaseSourceBlocksCollection": false,
+  "stageState": "workflow-migration",
+  "stageVersion": 16,
+  "closePhaseCompleted": true,
+  "deploymentAuthorized": false,
+  "latestDeploymentRequestRecord": "docs/development/project-environments-deploy-608-t1-time-hold.json",
+  "latestDeploymentRequestStatus": "deployment-held-by-local-minimum-time-guard",
+  "latestRecoveryInspectionRecord": "docs/development/project-environments-recovery-inspect-868-r1.json",
+  "latestRecoveryInspectionStatus": "inspection-supports-proposed-old-release-reopen-no-stage-write",
+  "reopenAuthorized": false,
+  "reopenPerformed": false,
+  "reopenExecutorReview": "docs/development/project-environments-reopen-executor.md",
+  "reopenExecutorToolingCommit": "8c8419b25b30ef15937f6da2a9b8276ea3916fa4",
+  "reopenExecutorLocalOnly": true
+}

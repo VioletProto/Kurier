@@ -1,0 +1,83 @@
+{
+  "status": "stopped-at-reader-child-context-load-no-restart",
+  "toolingCommit": "3e380db5f1ef7dba6587abb003d953bc79436871",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "campaign": ".build/project-environments-execution/release-from-301",
+  "authorizationSha256": "f099324d71f2e8469e23bed35092d2e57985d456370001302ae50ac98409dcd6",
+  "manifestSha256": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+  "scopeSha256": "3f559dfb51f1ad9dc11e7fd2c81b9d809e5709696aa6bf6070068e07b2b269dc",
+  "accounting": {
+    "prior": 301,
+    "newPhysicalAttempts": 2,
+    "cumulative": 303,
+    "authorizedCeiling": 1799,
+    "remainingAttemptHeadroom": 1496,
+    "unmatchedAttempts": 0,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "window": {
+    "originalSeconds": 3300,
+    "phaseMaximumSeconds": 240,
+    "elapsedSecondsAtStop": 1.377449,
+    "campaignRemainingSecondsAtStop": 3298.622551,
+    "phaseRemainingSecondsAtStop": 238.652698,
+    "closedWindowStarted": false,
+    "remainingTimeIsContinuationAuthority": false
+  },
+  "authentication": {
+    "refreshAttempts": 1,
+    "refreshHttpStatus": 200,
+    "stsAttempts": 1,
+    "stsHttpStatus": 200,
+    "hostIdentityVerified": true,
+    "credentialPhaseValidityGuardPassed": true,
+    "backgroundOrMidPhaseRenewals": 0
+  },
+  "attempts": [
+    {
+      "ordinal": 302,
+      "phase": "collect",
+      "operation": "signin/CreateOAuth2Token",
+      "write": true,
+      "status": 200,
+      "outcomeRecorded": true
+    },
+    {
+      "ordinal": 303,
+      "phase": "collect",
+      "operation": "sts/GetCallerIdentity",
+      "write": false,
+      "status": 200,
+      "outcomeRecorded": true
+    }
+  ],
+  "collector": {
+    "childLaunched": true,
+    "physicalAttempts": 0,
+    "errorCode": "ENOENT",
+    "missingPathMatchesRelativeContextArgument": true,
+    "hostContextFileExists": true,
+    "childWorkingDirectory": "/tmp/kurier-environments-release-source",
+    "diagnosis": "Relative context argument resolves from the detached release worktree instead of the original workspace; child fails at readFileSync before collector requests.",
+    "rawDiagnosticsPublished": false
+  },
+  "previewStarted": false,
+  "collectionCompleted": false,
+  "observations": {
+    "baseline": "not-observed",
+    "quiescence": "not-observed",
+    "configurationComparison": "not-observed",
+    "iamComparison": "not-observed",
+    "completeResourceDiff": "not-observed",
+    "generatedArchiveAgreement": "not-observed",
+    "frontendAgreement": "not-observed"
+  },
+  "localChecksPassed": true,
+  "campaignStopped": true,
+  "laterPhasesRun": [],
+  "infrastructureOrStateWrites": 0,
+  "runtimeRequests": 0,
+  "automaticRestart": false,
+  "nextDecision": "Review a local context-path correction and offline regression before separately authorizing a new campaign carrying forward 303 attempts. Preserve both consumed campaigns and claims."
+}

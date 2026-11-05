@@ -1,0 +1,11 @@
+"""Immutable accepted old-release reopen request. No observed-value substitution."""
+
+PROPOSAL_SHA = "307a987a15b4e372b61bda5df4fbe12bba6b270f4a4c207470461d4286e01251"
+TRANSACTION_SHA = "4bb06443f6c2d3eb578a2c15f7ced1ea1b2b7bd8ea003864d47e97610dec3f1f"
+BEFORE_SHA = "353cd6632e9351399bf4e62d853f500ec02e4fa2b5ba1fc7148b37965818a708"
+AFTER_SHA = "c89cdb1316d80dc2d497ff13a13080e3a55ad0fa85cc4f6b861781aad5489e95"
+INSPECTION_TOOL = "e0aa49c9f0e5201f2c85bdad5ae00a40db599d9a"
+SOURCE = "44f1fb79d943501c95e06fcc1a6114111a7c1ea4"
+ID = "recovery-reopen-955-r1"
+CLAIM = "reopen-window-from-955-r1.json"
+AUTH = "reopen-authorization-from-955-r1.json"

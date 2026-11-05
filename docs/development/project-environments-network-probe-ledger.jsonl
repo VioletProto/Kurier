@@ -1,0 +1,8 @@
+{"at":1793223722.5463433,"event":"created","prior":167,"maximum":500,"limits":{"dns":2,"tcp":2,"tls":1},"seconds":45}
+{"at":1793223722.7764611,"event":"attempt","kind":"dns","ordinal":1,"family":4,"cumulative":167}
+{"at":1793223722.8343065,"event":"outcome","kind":"dns","success":true,"family":4,"rcode":0,"addressCount":1}
+{"at":1793223722.8359358,"event":"attempt","kind":"dns","ordinal":2,"family":6,"cumulative":167}
+{"at":1793223722.8871245,"event":"outcome","kind":"dns","success":true,"family":6,"rcode":0,"addressCount":0}
+{"at":1793223722.8944666,"event":"attempt","kind":"tcp","ordinal":1,"family":4,"cumulative":168}
+{"at":1793223732.9058104,"event":"outcome","kind":"tcp","success":false,"family":4,"exceptionCategory":"timeout","failurePhase":"unknown","errorCode":null,"errorCodeDomain":null}
+{"at":1793223732.9159822,"event":"stop","reason":"tcp-failed","counters":{"dns":2,"tcp":1,"tls":0},"cumulative":168}

@@ -1,0 +1,115 @@
+{
+  "toolingCommit": "7e6e5046407ae9bde96d2e9ac5ac19ce3a0767ad",
+  "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "command": [
+    "python3",
+    "-B",
+    "scripts/preview-meter/run.py",
+    "refresh-preview",
+    "--review-commit",
+    "7e6e5046407ae9bde96d2e9ac5ac19ce3a0767ad",
+    "--source",
+    "/tmp/kurier-environments-release-source",
+    "--output",
+    "/home/king/Neumont/Kurier/.build/project-environments-preview/review-4"
+  ],
+  "invocations": 1,
+  "exitCode": 1,
+  "fixtureOnly": false,
+  "window": {
+    "startUtc": "2026-10-28T20:17:20.310459+00:00",
+    "nominalDeadlineUtc": "2026-10-28T21:17:20.310459+00:00",
+    "stopUtc": "2026-10-28T20:17:30.428151+00:00",
+    "elapsedToStopSeconds": 10.117784488000325,
+    "attemptToOutcomeSeconds": 10.033062465001422,
+    "secondsAllowed": 3600,
+    "restartAllowed": false
+  },
+  "accounting": {
+    "priorCalls": 166,
+    "additionalCeiling": 334,
+    "refreshCalls": 1,
+    "identityVerificationCalls": 0,
+    "authenticationCalls": 1,
+    "providerCalls": 0,
+    "newCalls": 1,
+    "cumulativeCalls": 167,
+    "maximum": 500,
+    "unusedArithmeticHeadroom": 333,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "diagnosis": {
+    "phase": "authentication",
+    "stopReason": "transport-failure",
+    "attempt": 167,
+    "exceptionCategory": "connect-timeout",
+    "failurePhase": "connect",
+    "errorCode": null,
+    "errorCodeDomain": null,
+    "status": null,
+    "transportError": true,
+    "remoteRefreshOutcome": "unverified-uncertain",
+    "underlyingCause": "unestablished",
+    "previousRefreshOutcome": "still-uncertain",
+    "previousFailureNotReattributed": true,
+    "identityVerified": false,
+    "providerStarted": false,
+    "authHandoffCreated": false,
+    "endpointPolicyDenial": false,
+    "retryRestartOrRepairPerformed": false
+  },
+  "retention": {
+    "privateOriginals": {
+      ".build/project-environments-preview/review-4/authentication.jsonl": {
+        "bytes": 1738,
+        "sha256": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69"
+      },
+      ".build/project-environments-preview/review-4/window.json": {
+        "bytes": 889,
+        "sha256": "538921f5c442ae7b2f3492267c62c8fe55bf1cd3f060e34d486923cde60b911e"
+      },
+      ".build/project-environments-preview/review-4/cumulative-usage.json": {
+        "bytes": 244,
+        "sha256": "1cca6aaeef18233ab7db538f4560684375167c731a8182b04756c7e2c5595765"
+      },
+      ".build/project-environments-preview/window-from-166.json": {
+        "bytes": 618,
+        "sha256": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a"
+      }
+    },
+    "publicProjection": {
+      "path": "docs/development/project-environments-refresh-preview-review-4-auth-projection.jsonl",
+      "sha256": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1",
+      "sanitizedDerivativeOnly": true
+    },
+    "oldReview3AndClaimPreserved": true,
+    "allOriginalHistoricalLedgersPreserved": true
+  },
+  "resourceDiff": {
+    "completed": false,
+    "partialAvailable": false,
+    "reason": "Authentication stopped before SST/Pulumi/provider startup"
+  },
+  "artifacts": {
+    "newPackagingGenerated": false,
+    "packagingReceiptGenerated": false,
+    "hashDifferences": [],
+    "retainedReleaseAndRollbackIntegrityPassedBeforeAndAfter": true,
+    "releaseManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "endpointPolicySha256": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "reviewedToolingUnchanged": true
+  },
+  "additionalAwsCallsForPublication": 0,
+  "holdsRemain": true,
+  "publicationVerification": {
+    "repositoryVerifyPassed": true,
+    "networkIsolatedLocalChecks": true,
+    "dependencyDownloadsDisabled": true,
+    "sanitizedProjectionValidated": true,
+    "privateOriginalHashesRecheckedUnchanged": true,
+    "historicalChecksumsPassed": true,
+    "reviewedToolingUnchanged": true,
+    "releaseSourceClean": true
+  }
+}

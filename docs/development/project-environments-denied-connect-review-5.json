@@ -1,0 +1,297 @@
+{
+  "localOnly": true,
+  "liveAwsCalls": 0,
+  "previewRerun": false,
+  "exactDestinationAttributed": false,
+  "hostnameGuessedOrProposed": false,
+  "accounting": {
+    "prior": 200,
+    "newAttempts": 0,
+    "cumulative": 200,
+    "maximum": 500,
+    "arithmeticHeadroom": 300,
+    "newLiveWindowOrClaim": false,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "confirmed": {
+    "historicalDenial": {
+      "count": 200,
+      "reason": "endpoint-held",
+      "phase": "connect",
+      "method": "CONNECT",
+      "httpVersion": "HTTP/1.1",
+      "port": 443,
+      "hostname": "<redacted-host>"
+    },
+    "inspectedFiles": [
+      {
+        "file": ".build/project-environments-preview/review-5/provider/private-output.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hostnameCandidates": 0,
+        "connectKeywordCount": 0,
+        "endpointHeldCount": 0,
+        "proxyConnectCount": 0
+      },
+      {
+        "file": ".build/project-environments-preview/review-5/provider/meter-errors.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hostnameCandidates": 0,
+        "connectKeywordCount": 0,
+        "endpointHeldCount": 0,
+        "proxyConnectCount": 0
+      },
+      {
+        "file": ".build/project-environments-preview/review-5/provider/config.json",
+        "bytes": 1293,
+        "sha256": "3ccf3e8c91bfef7537d7acc291aabb4fbf8b02ae767863c951afacaa05f06cd5",
+        "hostnameCandidates": 0,
+        "connectKeywordCount": 0,
+        "endpointHeldCount": 0,
+        "proxyConnectCount": 0
+      },
+      {
+        "file": ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.log",
+        "bytes": 3433,
+        "sha256": "7497186ba072fc862dfcf8995a3e45784f0244a2ba77a12c01934c29a7eb3bca",
+        "hostnameCandidates": 0,
+        "connectKeywordCount": 0,
+        "endpointHeldCount": 0,
+        "proxyConnectCount": 0
+      },
+      {
+        "file": ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.err.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hostnameCandidates": 0,
+        "connectKeywordCount": 0,
+        "endpointHeldCount": 0,
+        "proxyConnectCount": 0
+      },
+      {
+        "file": ".build/project-environments-preview/review-5/provider/work/sst/pulumi/fe5e7b5733952fb9878de32b/eventlog.json",
+        "bytes": 907184,
+        "sha256": "31f611ce30be7bc7e6db1a9678223aef20c683d263c7fc2ae73b72d0758332b6",
+        "hostnameCandidates": 11,
+        "connectKeywordCount": 0,
+        "endpointHeldCount": 0,
+        "proxyConnectCount": 0
+      }
+    ],
+    "scopedCandidateCount": 11,
+    "candidatesMatchedStaticCatalogue": true,
+    "candidateNamesOrHashesPublished": false,
+    "candidateLinkedToDenial": false,
+    "lastPulumiEventTimestampUTC": "2026-10-28T22:37:16Z",
+    "denialUTC": "2026-10-28T22:37:23.202198Z",
+    "eventTimestampPrecisionSeconds": 1,
+    "generatedProviderRegion": "us-east-2",
+    "explicitProviderEndpointsPresent": false,
+    "skipCredentialsValidation": "false",
+    "skipRegionValidation": "true",
+    "historicalPrivateCaptureEnabled": false
+  },
+  "sourceInspection": {
+    "sourceSha256": {
+      ".sst/platform/src/components/aws/helpers/provider.ts": "daeec50ee71db4babcdc927695f1ddac3ba172d2c276072a4e91e8d733664cde",
+      ".sst/platform/node_modules/@pulumi/aws/provider.js": "5bb45bb7e2aaa46fa3f043c4418f315f7b88aa406260e90f6fdc8cd74de21ec1",
+      ".sst/platform/node_modules/@pulumi/aws/package.json": "96cb43cf1f3e93046cb1594a6e2310a108b3069f75a6dfad10eca1128c0952b8",
+      "/home/king/.config/sst/plugins/resource-aws-v7.40.0/pulumi-resource-aws": "741bfe58a4f6100dfa839beb98d53e0f27c9b63998d53a293cbbfb7a6b23a797",
+      "scripts/preview-meter/diagnostics.py": "e145bed68d269065352ce428c28dbfbc4cfa80edf3f7de77d6ffe72e0fad0006",
+      "scripts/attempt-meter/relay.py": "fb30198954288f2ff04b37a348dc07bd21c7c5208ba80534f26857b13044b106"
+    },
+    "installedPlatformVersion": "4.17.1",
+    "generatedPulumiAwsVersion": "7.40.0",
+    "providerBinaryMatchesReviewedPin": true,
+    "matchingGoImplementationTreeLocated": false,
+    "terraformDependencyReplacedByLocalUpstreamDevel": true,
+    "cloudfrontSdkBuildVersion": "1.67.0",
+    "kvSdkBuildVersion": "1.15.0",
+    "sourceDownloadAttempted": false,
+    "binaryConstantsOrConfigDoNotProveObservedDestination": true
+  },
+  "amendment": {
+    "defaultEnabled": false,
+    "flag": "--private-denied-connect",
+    "hostConfigKey": "privateDeniedConnectCapture",
+    "privateFilename": "denied-connect.private.json",
+    "trigger": "first connect-phase endpoint-held only",
+    "maxParsedHostnameAsciiCharacters": 253,
+    "maxRecordBytes": 512,
+    "recordFields": [
+      "version",
+      "phase",
+      "count",
+      "port",
+      "hostnameStatus",
+      "hostname"
+    ],
+    "fileMode": "0600",
+    "directoryMode": "0700",
+    "exclusiveNoOverwrite": true,
+    "fileAndDirectoryFsync": true,
+    "directoryAndFileSymlinkRefusal": true,
+    "invalidInputRetainsNoHostname": true,
+    "noPathsQueriesHeadersBodies": true,
+    "outsideGitAndChildMounts": true,
+    "publicationReviewRequired": true,
+    "privateCaptureContentsOrHashesAutoPublished": false,
+    "existingPublicSanitizerByteIdentical": true,
+    "previewPolicyByteIdentical": true,
+    "stopBeforeForwardPreserved": true,
+    "captureFailureKillsMeterAndDescendants": true,
+    "realDeniedHostCapturedThisTask": false
+  },
+  "deadlineAmendment": {
+    "preexistingFloatBoundaryReproducedOffline": true,
+    "validationExpression": "deadline == started + SECONDS",
+    "seconds": 3600,
+    "toleranceAdded": false,
+    "historicalDeadlineChanged": false,
+    "oneMicrosecondDeadlineChangeRejectedByTest": true
+  },
+  "verification": {
+    "unitSuiteCounts": [4, 4, 8, 24, 7, 3, 22],
+    "unitTestsPassed": 72,
+    "privateReceiptUnitTests": 8,
+    "offlineTransportScenariosPassed": 16,
+    "fixtureOnly": true,
+    "externalNetworkDisabled": true,
+    "awsCalls": 0,
+    "actualCumulativeUsagePreserved": 200,
+    "privateScenarioResults": [
+      {
+        "case": "secret-host-label",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": true,
+        "privateCaptureFailureHeld": false,
+        "privateHostnameOmittedFromPublicReceipt": true
+      },
+      {
+        "case": "private-capture-exists",
+        "attempts": 0,
+        "stopped": true,
+        "allDescendantsStopped": true,
+        "privateCaptureOptIn": true,
+        "privateCaptureFailureHeld": true,
+        "privateHostnameOmittedFromPublicReceipt": true
+      }
+    ],
+    "ruffCheckAndFormatPassed": true,
+    "readOnlyLocalPreflightPrior": 200,
+    "readOnlyLocalPreflightRemaining": 300,
+    "repositoryVerifyPassedOffline": true,
+    "verificationLogSha256": {
+      "/tmp/kurier-private-connect-tests-release.log": "2baf1e162624fcc051ca1d3acddfe8f38b66c4968ecde52b81033d83ef573875",
+      "/tmp/kurier-private-connect-repository-final.log": "e94d908cbe48fee1177a1da4420e81a86cf4177a7d9e99fc42a86a2639633c3e"
+    }
+  },
+  "preservation": {
+    "review5ResultCommit": "5690854bd5b58865fcb04c18fd6ffc109e6cfe57",
+    "frozenFileCount": 38,
+    "originalFileSha256": {
+      "docs/development/project-environments-inventory-attempts.jsonl": "1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171",
+      "docs/development/project-environments-preview-attempts.jsonl": "e65635f9b3e21f406cb70dcd0ba7ae71f952e203e54d30f6474da591abe525eb",
+      "docs/development/project-environments-refresh-preview-auth-projection.jsonl": "a70542adbdab540682f958d826289ca70191b97f0e00cdf28bc0a71d07f42c99",
+      ".build/project-environments-preview/review-3/authentication.jsonl": "5316b2ec89fd7ff682f175a6cd14008a840fe2438814c368ab15a05023b997d7",
+      ".build/project-environments-preview/review-3/window.json": "19c362f32d5ce9e0ea4c8ad67c9f76e8ee03130f58c3e257aadbcdf1aa4c8f39",
+      ".build/project-environments-preview/review-3/cumulative-usage.json": "346fa66374bac7ac87fd48ef250e4eb438d8d3ad725ca23876f9a7cacf684671",
+      ".build/project-environments-preview/window-from-165.json": "87e39ae4b58c5942d951a7c12b5f5534e23c6f8fc64a8fc16db591921f5bd108",
+      "docs/development/project-environments-refresh-preview-review-4-auth-projection.jsonl": "e8d05b3663a499f8225bc3d68d1dd74d4ea4b4fed34d5418ccb1950a684b33b1",
+      ".build/project-environments-preview/review-4/authentication.jsonl": "0bb82bf9b14cd14a95861424bf3103ebb13bdf8218c08cf5444965837a72de69",
+      ".build/project-environments-preview/review-4/window.json": "538921f5c442ae7b2f3492267c62c8fe55bf1cd3f060e34d486923cde60b911e",
+      ".build/project-environments-preview/review-4/cumulative-usage.json": "1cca6aaeef18233ab7db538f4560684375167c731a8182b04756c7e2c5595765",
+      ".build/project-environments-preview/window-from-166.json": "68f93672420d6ffff27c74417351516e339687e1ea4384e6a646bd63a619039a",
+      ".build/project-environments-network-diagnostics/review-1/attempts.jsonl": "ad009e85a025ebbbd6b8b9398b56e4ea799d3d705e3b85d393ba0f55db9da9e9",
+      ".build/project-environments-network-diagnostics/review-1/result.json": "d0bd6f4c37cb92dbe18b33a995e4975688a24a04505b2d34881ac42cc3699432",
+      ".build/project-environments-network-diagnostics/review-1/context.json": "5b442af2a0ea0a552e93b476c6a22e6234ba2cce8e1ce5b032e13fe55d50f4fe",
+      ".build/project-environments-network-diagnostics/review-1/addresses.json": "b45ee55d1ba9a6781ff8a557dfb541fb388c7a3165bad4745f58c89cb6ed5874",
+      ".build/project-environments-network-diagnostics/review-1/route-4.json": "f7b7e49d6681f43ef44abebc61aa8930d7e112d95d4d2a0b04eaf9397f91e9a0",
+      ".build/project-environments-preview/window-from-167.json": "9e27595362462d7c24741b98dcc2274c152af3cbec2093b5c1b9d822e276181b",
+      ".build/project-environments-network-probe-offline/gate.json": "47eb5efd7a343640c49f69865487e7becc961b64195929719b92a637bfadf922",
+      "docs/development/project-environments-network-probe-ledger.jsonl": "2e3beb072185a8636635181f10a6efcb0733961369df0b23205fe1e9a5a470aa",
+      "docs/development/project-environments-network-probe-result.json": "80294d852d9c4d02dde6edf23854e14cdda4c2bcc6534bbbd325ddf1f580c262",
+      ".build/project-environments-preview/review-5/authentication.jsonl": "501661d3f821573433eb8346f8743aa183ff71306b875bb2b69a81c0ba28e4d7",
+      ".build/project-environments-preview/review-5/window.json": "58ad715a37148bbf4524cdcdd483ba1eb6054963c9685686c0ac8c12f3154e49",
+      ".build/project-environments-preview/review-5/handoff.json": "cf480799d0a115ff1e7da27bd0834ce030914f9c36e9c653845391cc1377a072",
+      ".build/project-environments-preview/review-5/provider-claim.json": "c48455b015efbf09b929cc0e014213283451ece22a3b150f16536032c6ac0fc7",
+      ".build/project-environments-preview/review-5/cumulative-usage.json": "6863ccb4e79eaeb84131e20322a117265d2d2507660f8609e477e646e6c44500",
+      ".build/project-environments-preview/review-5/packaging-review.json": "1fccc16bf5eb8aad77875dc2b8d2661339b6aa25547c5bf208d847d1dc727dfb",
+      ".build/project-environments-preview/review-5/provider/attempts.jsonl": "6a5cbd7c4b77b9850f3c10a8879f961d800819ff6fda1011fcea8bd59b4d0ba8",
+      ".build/project-environments-preview/review-5/provider/private-output.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-5/provider/meter-errors.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/review-5/provider/work/sst/frontend-hosting-artifact.json": "5d9f31e6c3404c3cb956f8b5db2d9c4e9797b3b64dcee8bde9a5f0f6b4a79230",
+      ".build/project-environments-preview/review-5/provider/work/sst/pulumi/fe5e7b5733952fb9878de32b/eventlog.json": "31f611ce30be7bc7e6db1a9678223aef20c683d263c7fc2ae73b72d0758332b6",
+      ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.log": "7497186ba072fc862dfcf8995a3e45784f0244a2ba77a12c01934c29a7eb3bca",
+      ".build/project-environments-preview/review-5/provider/work/sst/log/pulumi.err.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".build/project-environments-preview/window-from-168.json": "c1300008f5959c0ec7ee88dce165b749169a7ea4030795819ea97245bec9da2e",
+      "docs/development/project-environments-refresh-preview-review-5.json": "3caf9a2ee8ed94a2740919d1cbf51e4bca51f24e62d1b5c1e9ac6d997ef3599b",
+      "docs/development/project-environments-refresh-preview-review-5-auth-projection.jsonl": "272d7399d929bb87b80d0c42fedc2822a3ca115cd7216ded1473b7a667a10b03",
+      "docs/development/project-environments-refresh-preview-review-5-provider-projection.jsonl": "f88a1b84695ee6d32a890b34df4630b8228ea665c9bbed8ba48f7181f04d0ca7"
+    },
+    "releaseSource": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+    "releaseAndRollbackIntegrityPassed": true,
+    "artifactHashDifferences": [],
+    "releaseManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+    "previewPolicySha256": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "publicSanitizerSha256": "e145bed68d269065352ce428c28dbfbc4cfa80edf3f7de77d6ffe72e0fad0006",
+    "authenticationAndSdkPinsUnchanged": true,
+    "bothEarlierRemoteRefreshOutcomesRemainUncertain": true
+  },
+  "toolingHashChanges": {
+    "scripts/preview-meter/accounting.py": {
+      "beforeSha256": "4c80f584c9f6a8d83f542edf0ad24dbe15e7fb1e52da8ac04b57a2ed03d740b8",
+      "afterSha256": "2e6a6aec9f2681c046d47c5efb30b43929467426cf0f0909ba7cdbc95fd7a51f"
+    },
+    "scripts/preview-meter/handoff.py": {
+      "beforeSha256": "2ff4f549183f02661b713e7164df0d0ac71506535cfdbda48e4380a3f23999da",
+      "afterSha256": "fdd2d8e4ac7dd78dd9be02b8e0025c619207b3f148fbbb9d94a0b37b2f1fad92"
+    },
+    "scripts/preview-meter/proxy.py": {
+      "beforeSha256": "efb37c1800295e1b8151ac2dd810ed85e08f28c81a3a37c3547bb23cca5f73d0",
+      "afterSha256": "5f0d5504040528633326da1fec69fe862f4ff18974282d86e68cf049e979fd0b"
+    },
+    "scripts/preview-meter/run.py": {
+      "beforeSha256": "0fe4e42a1c6423cd2a09d2cc07416a36c0930842a620aa03d36ceb27910cfba3",
+      "afterSha256": "0b6a0a85af86ed0984b596622edb7bcb24d23a4a03d18760ba0ed4447fea82ee"
+    },
+    "scripts/preview-meter/test.sh": {
+      "beforeSha256": "61f37ed038d4dd4bdf521c7ac2820d80019241c498c09abc6c7d0b93743ec76d",
+      "afterSha256": "21fc00396f1fd3f6913c37870033f5192cd28cbd359631fb4b1f6d8e0d629fc7"
+    },
+    "scripts/preview-meter/test_auth_transport_diagnostics.py": {
+      "beforeSha256": "593d0065ac21215f5a162d30684df60ae1997605a9fe51bfaf434294c0a774c9",
+      "afterSha256": "8ebca8ba3b3510bd8b910503ea525a4a9e82a88b3d2e7c8ee1c524dc993046f6"
+    },
+    "scripts/preview-meter/test_handoff.py": {
+      "beforeSha256": "6c5e014509d4be7c4b0b28ef0fa26a233b0e5a3554e8ce9b2dc872b68414ab06",
+      "afterSha256": "10e0d9569ddde9f9faec04b8562466ca283f745d72ac7c1364f530aee53c9049"
+    },
+    "scripts/preview-meter/test_transport.py": {
+      "beforeSha256": "a400ffa6a4c31de13764b21d7f950c98fe068a0aaa1faf4f59d47a77b329829c",
+      "afterSha256": "5aa62a178c9e3ab225edb376a6fd24db4af467cd61ba8dbd40bbd3d3b56a98b2"
+    },
+    "scripts/preview-meter/private_diagnostics.py": {
+      "beforeSha256": null,
+      "afterSha256": "9965cbbf5b1a6c124ca2a6dc64834df8ca05af9dc0f7c1b7bbb63ca3c185b9bf"
+    },
+    "scripts/preview-meter/test_private_diagnostics.py": {
+      "beforeSha256": null,
+      "afterSha256": "2c6e3b1089c4c0741fd120821e2203f1ac649c08570967ab176b4aad70c2290a"
+    }
+  },
+  "policyAmendmentProposed": null,
+  "nextDecision": "Review opt-in private-only capture and 200-based proof tooling; any live execution and any hostname disclosure need separate explicit scope/review.",
+  "holds": {
+    "noLiveExecution": true,
+    "noPolicyWidening": true,
+    "noDeploymentClosureMigrationActivation": true,
+    "noIdentityProjectCreationOrTargets": true,
+    "noNetworkCacheRepairs": true,
+    "noAutomaticContinuation": true
+  }
+}

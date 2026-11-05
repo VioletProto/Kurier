@@ -1,0 +1,311 @@
+{
+  "status": "stage-closed-verified-awaiting-separate-deployment-approval",
+  "toolingCommit": "4de31ab9a9c791a1fc224bbce8a7fe79220519ba",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "campaign": ".build/project-environments-execution/release-608-t1",
+  "phase": "close",
+  "phaseInvocations": 1,
+  "boundApprovalVerified": true,
+  "collectionProofSha256": "7c88bf7ff89574b6a1a0b930422d7ae1a3bb5d45fb4941099f3923cca1967054",
+  "manifestSha256": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+  "scopeSha256": "760c1c25db84fedab09a440d5399a67f6e7a2c749d8fb5ec1e0d934b17411f72",
+  "authorizationSha256": "4ff59e4e3f0f538f32e33240bfe43b528ff6b998c1848978bcd3aa3f64837e36",
+  "accounting": {
+    "priorToClose": 716,
+    "newPhysicalAttempts": 152,
+    "cumulative": 868,
+    "ceiling": 1799,
+    "remainingAttemptHeadroom": 931,
+    "http200": 152,
+    "unmatchedAttempts": 0,
+    "failedTransports": 0,
+    "credentialRenewals": 1,
+    "guardedStageTransactions": 1,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "minimumTimeEntryGuard": {
+    "checkedUtc": "2026-11-03T18:57:43.245252+00:00",
+    "originalRemainingSeconds": 2492.7934798669994,
+    "requiredSeconds": 1800,
+    "guardPassed": true
+  },
+  "clocks": {
+    "campaignMaximumSeconds": 3300,
+    "closeMaximumSeconds": 240,
+    "closedStageMaximumSeconds": 1800,
+    "closeElapsedFromPhaseStartEventSeconds": 89.123204212,
+    "originalRemainingSecondsAtCloseCompletion": 2402.630300976,
+    "closedRemainingSecondsAtCloseCompletion": 1710.87675891,
+    "publicationLocalCheckUtc": "2026-11-03T19:01:45.952553+00:00",
+    "originalRemainingSecondsAtPublicationCheck": 2250.086695,
+    "closedRemainingSecondsAtPublicationCheck": 1558.333153,
+    "originalCampaignDeadlineMonotonicSeconds": 14856.815169516,
+    "fixedHostClosedDeadlineMonotonicSeconds": 14165.06162745,
+    "fixedHostClosedStartMonotonicSeconds": 12365.06162745,
+    "effectiveClosedDeadlineIsHostDeadline": true,
+    "deadlinesResetOrExtended": false,
+    "remainingTimeIsContinuationAuthority": false
+  },
+  "authentication": {
+    "renewalOrdinal": 717,
+    "renewalHttpStatus": 200,
+    "mandatoryHostStsOrdinal": 718,
+    "mandatoryHostStsHttpStatus": 200,
+    "sameIdentityAndAccountVerified": true,
+    "credentialValidityPassed": true,
+    "strictCacheContinuityPassed": true,
+    "recaptureBackgroundOrMidphaseRenewal": false
+  },
+  "stageTransaction": {
+    "ordinal": 853,
+    "status": 200,
+    "outcomeRecorded": true,
+    "physicalAttempts": 1,
+    "actions": 8,
+    "markerUpdates": 1,
+    "accountingConditionChecks": 7,
+    "prewriteMarkerAndAccountingHashesBound": true,
+    "actualTransactionMatchesReviewedOfflinePlan": true,
+    "retries": 0,
+    "readbackVerified": true
+  },
+  "closureReceipt": {
+    "closedAt": 12366340,
+    "deadline": 14166340,
+    "markerSha256": "353cd6632e9351399bf4e62d853f500ec02e4fa2b5ba1fc7148b37965818a708"
+  },
+  "resultingMarkerProjection": {
+    "cloudExecutionsSchemaVersion": {
+      "N": "1"
+    },
+    "evidencePinningSchemaVersion": {
+      "N": "1"
+    },
+    "executionInputsSchemaVersion": {
+      "N": "1"
+    },
+    "kind": {
+      "S": "stage"
+    },
+    "localAgentExecutionsSchemaVersion": {
+      "N": "1"
+    },
+    "mcpReadOnlySchemaVersion": {
+      "N": "1"
+    },
+    "protectedSecretsSchemaVersion": {
+      "N": "1"
+    },
+    "savedRequestsSchemaVersion": {
+      "N": "8"
+    },
+    "schemaVersion": {
+      "N": "1"
+    },
+    "sequentialWorkflowsSchemaVersion": {
+      "N": "1"
+    },
+    "state": {
+      "S": "workflow-migration"
+    },
+    "version": {
+      "N": "16"
+    },
+    "workflowAssertionsSchemaVersion": {
+      "N": "1"
+    },
+    "recoveryGenerationPreserved": true,
+    "rowKeysAndGenerationValueOmitted": true
+  },
+  "transition": {
+    "stateBefore": "active",
+    "stateAfter": "workflow-migration",
+    "versionBefore": 15,
+    "versionAfter": 16,
+    "onlyChangedFields": ["state", "version"],
+    "capabilitiesUnchanged": true,
+    "generationUnchanged": true,
+    "accountingPreserved": true
+  },
+  "readiness": {
+    "oldFrontendReady": true,
+    "adoptedBackendReadersReady": false,
+    "adoptedReadersReady": false,
+    "activationNotPerformed": true,
+    "note": "Adopted backend readiness is false before deployment; close verifies the accepted old baseline and does not activate capabilities."
+  },
+  "operationCounts": [
+    {
+      "operation": "apigateway/GetStage",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "cloudfront-keyvaluestore/GetKey",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "cloudfront/GetDistribution",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "dynamodb/GetItem",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "dynamodb/Scan",
+      "status": 200,
+      "write": false,
+      "attempts": 9
+    },
+    {
+      "operation": "dynamodb/TransactWriteItems",
+      "status": 200,
+      "write": true,
+      "attempts": 1
+    },
+    {
+      "operation": "events/DescribeRule",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "events/ListTargetsByRule",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "freetier/GetAccountPlanState",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "iam/GetPolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "iam/GetPolicyVersion",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "iam/GetRole",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "iam/GetRolePolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 6
+    },
+    {
+      "operation": "iam/ListAttachedRolePolicies",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "iam/ListRolePolicies",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "lambda/GetAccountSettings",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "lambda/GetFunctionConcurrency",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "lambda/GetFunctionConfiguration",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "lambda/ListEventSourceMappings",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "lambda/ListProvisionedConcurrencyConfigs",
+      "status": 200,
+      "write": false,
+      "attempts": 8
+    },
+    {
+      "operation": "s3/GET",
+      "status": 200,
+      "write": false,
+      "attempts": 10
+    },
+    {
+      "operation": "s3/GetObject",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "s3/ListObjectsV2",
+      "status": 200,
+      "write": false,
+      "attempts": 33
+    },
+    {
+      "operation": "signin/CreateOAuth2Token",
+      "status": 200,
+      "write": true,
+      "attempts": 1
+    },
+    {
+      "operation": "sqs/GetQueueAttributes",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "sts/GetCallerIdentity",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    }
+  ],
+  "attemptProjection": {
+    "path": "docs/development/project-environments-close-608-t1-attempts.jsonl",
+    "sha256": "d16665d2bfd7b23ed79e0848ed2511403e8e7f110206503f06e6615fdbbfd7c2"
+  },
+  "closedProofSha256": "bb2975f87a35f96565feb781ea05aa0fe65cffaea055b90e77bbce3e6f846b30",
+  "automaticReopenRepairOrWriteRetry": false,
+  "deploymentVerificationActivationFinalOrRuntimeRequests": false,
+  "preservation": {
+    "originalCampaignAndCollectionProofPreserved": true,
+    "allHistoricalClaimsCheckpointsAndLedgersPreserved": true,
+    "originalDeadlinesUnchanged": true,
+    "adoptedRollbackAndReleaseSourceBytesVerified": true,
+    "privateClosureApprovalContextProofAndLogsRetained": true
+  },
+  "nextDecision": "Review the closure receipt and current remaining original deadlines locally. Deployment requires separate explicit approval under this same campaign and fixed closed deadline; no automatic retry, reopen, repair, activation or deadline reset is granted."
+}

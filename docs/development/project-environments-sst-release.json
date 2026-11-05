@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 2,
+  "status": "proposed-for-adoption-binding-authentication-held",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "originalManifestPath": "docs/development/project-environments-release.json",
+  "originalManifestSha256": "94d658f4cdae67103c755e3cf5578a50252f8f780c2df82c46c2c2cf18f8c6c5",
+  "review8ResultSha256": "ef67859ce50e8028671c5ad8309c3761f216868615b54c734eb7d5f3ec263aca",
+  "artifactDirectory": ".build/project-environments-sst-release/44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "packages": [
+    {
+      "name": "UsersProjectsApi",
+      "bootstrapBytes": 23003296,
+      "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+      "zipBytes": 9363094,
+      "zipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    },
+    {
+      "name": "EmptyProjectCleanup",
+      "bootstrapBytes": 23003296,
+      "bootstrapSha256": "6c85373de3c464b12cd502e21496f799da6a229a72db4ca3d34f7fb1f124b9f4",
+      "zipBytes": 9363094,
+      "zipSha256": "58f2bbf364042ac209d4f9b3a4d6ca583da18914fb5851f0c166d34b9c757373",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    },
+    {
+      "name": "CloudExecutionWorker",
+      "bootstrapBytes": 21495968,
+      "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+      "zipBytes": 8738299,
+      "zipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    },
+    {
+      "name": "ExecutionControlledEndpoint",
+      "bootstrapBytes": 21495968,
+      "bootstrapSha256": "903309b98c8639062a24685b639e54f43968b59b0cb8331cf12865e387f7db4f",
+      "zipBytes": 8738299,
+      "zipSha256": "82af7beeda4b619afa6831b342c693bb1fb3e8d08e5e6c0416ce253526f59098",
+      "vcsRevision": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+      "vcsModified": false
+    }
+  ],
+  "frontend": {
+    "schemaVersion": 1,
+    "publicConfig": {
+      "VITE_API_URL": "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+      "VITE_COGNITO_USER_POOL_ID": "us-east-2_qTDZQT1FE",
+      "VITE_COGNITO_CLIENT_ID": "5jg9sb38i6ae9c0adm5rtdfkno",
+      "VITE_KURIER_STAGE": "dev-api"
+    },
+    "files": [
+      {
+        "path": "404.html",
+        "bytes": 344,
+        "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "assets/index-CAjex_6u.css",
+        "bytes": 2955,
+        "sha256": "89dd6331058a55d3bb75930baa3d6554ceaf73abaaff99b5913f904b07661ec9",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "assets/index-DXEG7-ST.js",
+        "bytes": 422230,
+        "sha256": "8b55e24fce2358c86d2a2feb385485888d2dc3b221c0a6ac4a25035cac74db3e",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "index.html",
+        "bytes": 666,
+        "sha256": "4cf85fd302be5fd09da94fb60c74ccf44a26124c206a872a6c5e86b12aa81127",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "startup.js",
+        "bytes": 1030,
+        "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      }
+    ],
+    "releaseId": "38325083b003b3f320752dbfa0357c377d57d2b66c1175e06c88ba3638210236"
+  },
+  "rollbackArtifactDirectory": ".build/project-environments-release/44f1fb79d943501c95e06fcc1a6114111a7c1ea4/rollback",
+  "rollbackPackages": [
+    {
+      "name": "UsersProjectsApi",
+      "zipBytes": 9251049,
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
+      "bootstrapBytes": 22741152,
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "matchesRetainedAssertionsRelease": true
+    },
+    {
+      "name": "EmptyProjectCleanup",
+      "zipBytes": 9251049,
+      "zipSha256": "f4be7af179049c70f479a45dd26e4ae24a19c3a9e8016a865318fa7a96965c32",
+      "bootstrapBytes": 22741152,
+      "bootstrapSha256": "677ece505d1fc8182cfed6d8c8a8da2bc69c4a9d51c0baea050264e9ca0b6fd3",
+      "matchesRetainedAssertionsRelease": true
+    },
+    {
+      "name": "CloudExecutionWorker",
+      "zipBytes": 8687530,
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
+      "bootstrapBytes": 21430432,
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "matchesRetainedAssertionsRelease": true
+    },
+    {
+      "name": "ExecutionControlledEndpoint",
+      "zipBytes": 8687530,
+      "zipSha256": "15e7e6db438de3c19fe962c95be0d3c9d52d17f81b21a0b58cd4603974021379",
+      "bootstrapBytes": 21430432,
+      "bootstrapSha256": "b89c6326d3de94337a9b65e1ee5d52b0b03d05a6ca265c914277ec88ee6b5775",
+      "matchesRetainedAssertionsRelease": true
+    }
+  ],
+  "bindingValidation": {
+    "authenticated": false,
+    "expectedLinks": {},
+    "reason": "No locally retained plaintext SST key or Pulumi passphrase located; ciphertext size alone is not authenticated validation",
+    "goSstSdkDependency": false,
+    "runtimeUsesExplicitKurierEnvironment": true,
+    "ciphertextLengthIsNotProof": true
+  },
+  "accounting": {
+    "prior": 296,
+    "newCalls": 0,
+    "cumulative": 296,
+    "ceiling": 500,
+    "remaining": 204,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "deployment": {
+    "permitted": false,
+    "regenerationMustMatchAllArchiveBytes": true,
+    "stopBeforeAnyUploadOrMutationOnDifference": true,
+    "artifactUploadGateImplemented": false,
+    "localRegenerationComparisonImplemented": true
+  }
+}

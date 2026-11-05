@@ -1,0 +1,272 @@
+{
+  "status": "reader-snapshot-complete-guarded-preview-held",
+  "toolingCommit": "fb0cd0e7f92751a6991a12a2af6e38827e7645ed",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "campaign": ".build/project-environments-execution/release-from-303",
+  "authorizationSha256": "f07b74eb1db3dae8fdf0ef4835f23052a62690c3bf47a0cd98ead3e8ae5b683f",
+  "manifestSha256": "cde6524aceb926224eac9c7119db784b7eaf0d23b5dac119860d4784fb58e215",
+  "scopeSha256": "3f559dfb51f1ad9dc11e7fd2c81b9d809e5709696aa6bf6070068e07b2b269dc",
+  "accounting": {
+    "prior": 303,
+    "newPhysicalAttempts": 87,
+    "cumulative": 390,
+    "authorizedCeiling": 1799,
+    "remainingAttemptHeadroom": 1409,
+    "unmatchedAttempts": 0,
+    "httpStatuses": {
+      "200": 84,
+      "404": 3
+    },
+    "failedTransports": 0,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "window": {
+    "originalSeconds": 3300,
+    "phaseMaximumSeconds": 240,
+    "elapsedSecondsAtStop": 51.638459,
+    "elapsedSecondsAtGateStop": 51.410416,
+    "campaignRemainingSecondsAtStop": 3248.361541,
+    "phaseRemainingSecondsAtStop": 188.395764,
+    "closedWindowStarted": false,
+    "remainingTimeIsContinuationAuthority": false
+  },
+  "authentication": {
+    "refreshAttempts": 1,
+    "refreshOrdinal": 304,
+    "refreshHttpStatus": 200,
+    "hostStsOrdinal": 305,
+    "hostStsHttpStatus": 200,
+    "hostIdentityAndCredentialValidityVerified": true,
+    "allStsAttempts": 9,
+    "backgroundOrMidPhaseRenewals": 0
+  },
+  "readerSnapshot": {
+    "completed": true,
+    "record": "docs/development/project-environments-collection-from-303-readers.json",
+    "recordSha256": "47c20db308e3f38426ec12c7ad36043e23b2dd2ca3e095b98d5f6218f94f5ebb",
+    "currentCloudStateAfterSnapshotNotEstablished": true
+  },
+  "preview": {
+    "started": true,
+    "complete": false,
+    "gateReason": "operation-resource-byte-or-budget-held",
+    "heldBeforeForwarding": true,
+    "exactDeniedOperationEstablished": false,
+    "rawOutputBytes": 0,
+    "meterErrorBytes": 0,
+    "completeResourceDiffAvailable": false,
+    "review8ProjectionAgreementEstablished": false,
+    "generatedArchiveCount": 0,
+    "allFourArchiveAgreementEstablished": false,
+    "generatedFrontendMarkerMatchesAdopted": true,
+    "collectionProofProduced": false
+  },
+  "operationCounts": [
+    {
+      "operation": "apigateway/GetIntegrations",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "apigateway/GetRoutes",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "apigateway/GetStage",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "cognito-idp/DescribeUserPool",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "cognito-idp/DescribeUserPoolClient",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "dynamodb/DescribeTable",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "dynamodb/GetItem",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "dynamodb/Scan",
+      "status": 200,
+      "write": false,
+      "attempts": 3
+    },
+    {
+      "operation": "events/DescribeRule",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "events/ListTargetsByRule",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "freetier/GetAccountPlanState",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "iam/GetPolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/GetPolicyVersion",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/GetRole",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/GetRolePolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 3
+    },
+    {
+      "operation": "iam/ListAttachedRolePolicies",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "iam/ListRolePolicies",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "lambda/GetAccountSettings",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "lambda/GetFunctionConcurrency",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "lambda/GetFunctionConfiguration",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "lambda/GetPolicy",
+      "status": 200,
+      "write": false,
+      "attempts": 3
+    },
+    {
+      "operation": "lambda/GetPolicy",
+      "status": 404,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "lambda/ListEventSourceMappings",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "lambda/ListProvisionedConcurrencyConfigs",
+      "status": 200,
+      "write": false,
+      "attempts": 4
+    },
+    {
+      "operation": "s3/GET",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "s3/GET",
+      "status": 404,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "s3/HEAD",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "s3/ListObjectsV2",
+      "status": 200,
+      "write": false,
+      "attempts": 11
+    },
+    {
+      "operation": "signin/CreateOAuth2Token",
+      "status": 200,
+      "write": true,
+      "attempts": 1
+    },
+    {
+      "operation": "sqs/GetQueueAttributes",
+      "status": 200,
+      "write": false,
+      "attempts": 1
+    },
+    {
+      "operation": "ssm/GetParameter",
+      "status": 200,
+      "write": false,
+      "attempts": 2
+    },
+    {
+      "operation": "sts/GetCallerIdentity",
+      "status": 200,
+      "write": false,
+      "attempts": 9
+    }
+  ],
+  "attemptProjection": {
+    "path": "docs/development/project-environments-collection-from-303-attempts.jsonl",
+    "sha256": "d5894a5b5f52100955098a92740ae7bfc2e5ef8a4452605b84ac74fe90268b88"
+  },
+  "localChecksPassed": true,
+  "campaignStopped": true,
+  "collectionCompleted": false,
+  "laterPhasesRun": [],
+  "infrastructureOrStateWrites": 0,
+  "runtimeRequests": 0,
+  "automaticRestart": false,
+  "rawDiagnosticsOrCredentialMaterialPublished": false,
+  "nextDecision": "Review the guarded-preview denial locally without widening policy or replaying the stopped campaign. Any later live campaign requires separately reviewed tooling/accounting from 390 and explicit authorization."
+}

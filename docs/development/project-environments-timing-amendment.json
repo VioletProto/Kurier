@@ -1,0 +1,83 @@
+{
+  "toolingCommit": "4de31ab9a9c791a1fc224bbce8a7fe79220519ba",
+  "proposalReviewCommit": "9f6933148d8fc743aebb36c4bdaf3e1b2579571c",
+  "releaseSourceCommit": "44f1fb79d943501c95e06fcc1a6114111a7c1ea4",
+  "awsCalls": 0,
+  "realCaptureRenewalOrLivePhaseRun": false,
+  "accounting": {
+    "prior": 608,
+    "maximum": 1799,
+    "maximumAdditionalAttempts": 1191,
+    "firstPossibleOrdinal": 609,
+    "proceduralAllowanceUsd": 1,
+    "billingMeasured": false
+  },
+  "phaseSeconds": {
+    "collect": 240,
+    "close": 240,
+    "deploy": 840,
+    "verify": 240,
+    "activate": 240,
+    "final": 240
+  },
+  "campaignSeconds": 3300,
+  "closedStageMaximumSeconds": 1800,
+  "deadlinesClippedAndNeverReset": true,
+  "credentialPolicy": {
+    "perFetcherReuseThreshold": "max(300, actual remaining phase time + 5)",
+    "installedSdkAndClassUnchanged": true,
+    "postStsActualValidityGuardSeconds": 5,
+    "maximumRenewalsPerPhase": 1,
+    "maximumRenewalsPerCampaign": 6,
+    "mandatoryFreshStsBeforeWork": true,
+    "strictCacheContinuity": true,
+    "backgroundOrMidphaseRenewal": false
+  },
+  "parent": {
+    "recordCommit": "dd2d54059206398ff96307a74b2d3003e38d0200",
+    "recordSha256": "14c2a5ea1850ddd837d87b23ff22eec472eaf572f40358d86cf7cd013e6f0ee9",
+    "verification": "read-only immutable SQLite and private record bindings; all attempts 500\u2013608",
+    "completedCampaignNotResumedOrModified": true,
+    "deadlineInspection": {
+      "checkedUtc": "2026-11-02T01:20:09.661831+00:00",
+      "sameBoot": true,
+      "remainingSeconds": -67.197705,
+      "expired": true,
+      "originalLedgerUnchanged": true,
+      "resumedOrReset": false
+    }
+  },
+  "workflow": {
+    "campaign": "release-608-t1",
+    "claim": "window-from-608-timing-1.json",
+    "authorization": "authorization-from-608-timing-1.json",
+    "templateAuthorized": false,
+    "realCampaignClaimOrAuthorizationCreated": false,
+    "separateFreshCaptureAndInitialCollectionApprovalRequired": true,
+    "historicalGrantContinuityEstablished": false,
+    "allLaterPhasesRequireSeparateApproval": true
+  },
+  "proposedCommand": "python3 -B scripts/environment-deploy/driver.py start --campaign .build/project-environments-execution/release-608-t1 --authorization .build/project-environments-execution/authorization-from-608-timing-1.json --fresh-checkpoint",
+  "verification": {
+    "executionAndFrontendTestsPassed": 151,
+    "actualDriverTimingTests": 9,
+    "completedParentEntrypointTests": 4,
+    "isolatedScenariosPassed": 17,
+    "repositoryVerifyPassed": true,
+    "ruffLintAndFormatPassed": true,
+    "pythonFiles": 30,
+    "externalNetworkingDisabled": true,
+    "dependenciesNotDownloaded": true,
+    "repositoryVerificationLogSha256": "76c90ddba2eca64c70fc1222aa7aff797d6fe962a6a280704e105649459d3007",
+    "cleanPinTemplateReviewedInMemory": true,
+    "allFourAdoptedZipsReproducedUnderFourParentUmasks": true
+  },
+  "preservation": {
+    "allSevenCampaignsClaimsCheckpointsAndLedgersUnchanged": true,
+    "adoptedAndRollbackBytesUnchanged": true,
+    "releaseSourceCleanAndUnchanged": true,
+    "worktreeRegistrationsPreserved": true,
+    "noCredentialValuesTokenHashesOrRawCacheMetadataPublished": true
+  },
+  "limitation": "840 seconds is a bounded engineering allowance, not measured AWS completion or spend; sequential Lambda and CloudFront waits may exceed it. Uncertain writes are never replayed and can leave a closed partially deployed stage."
+}

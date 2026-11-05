@@ -1,0 +1,127 @@
+{
+  "baseline": {
+    "state": "active",
+    "version": 15,
+    "capabilities": {
+      "mcpReadOnlySchemaVersion": 1,
+      "executionInputsSchemaVersion": 1,
+      "savedRequestsSchemaVersion": 8,
+      "protectedSecretsSchemaVersion": 1,
+      "cloudExecutionsSchemaVersion": 1,
+      "evidencePinningSchemaVersion": 1,
+      "localAgentExecutionsSchemaVersion": 1,
+      "workflowAssertionsSchemaVersion": 1,
+      "sequentialWorkflowsSchemaVersion": 1
+    },
+    "environmentCapabilityAbsent": true,
+    "recoveryGenerationMatchesHistorical": true,
+    "identityVerified": true,
+    "markerUnchangedAcrossCollection": true
+  },
+  "quiescence": {
+    "projectedRows": 107,
+    "kindCounts": {
+      "identity": 9,
+      "executionQuota": 7,
+      "user": 9,
+      "projectTombstone": 11,
+      "executionCursor": 40,
+      "cleanupCursor": 7,
+      "executionResidual": 11,
+      "localAgentSlot": 1,
+      "localAgentIssuance": 1,
+      "localAgentRate": 3,
+      "mcpAudit": 5,
+      "localAgentCredential": 1,
+      "localAgentLookup": 1,
+      "stage": 1
+    },
+    "activeProjects": 0,
+    "accountingRows": 7,
+    "inventoryGuardsPassed": true,
+    "residualRows": 11,
+    "allResidualPrefixesEmpty": true,
+    "queueDepth": {
+      "ApproximateNumberOfMessages": "0",
+      "ApproximateNumberOfMessagesNotVisible": "0",
+      "ApproximateNumberOfMessagesDelayed": "0"
+    },
+    "stageQuota": {
+      "version": 75,
+      "month": "2026-10",
+      "count": 32
+    }
+  },
+  "configurationIamComparisons": [
+    {
+      "logical": "UsersProjectsApi",
+      "codeMatches": true,
+      "configurationMatches": true,
+      "iamMatches": true,
+      "runtimeMatches": true,
+      "architectureMatches": true,
+      "memoryMatches": true,
+      "timeoutMatches": true,
+      "state": "Active",
+      "update": "Successful",
+      "reservedConcurrency": null
+    },
+    {
+      "logical": "EmptyProjectCleanup",
+      "codeMatches": true,
+      "configurationMatches": true,
+      "iamMatches": true,
+      "runtimeMatches": true,
+      "architectureMatches": true,
+      "memoryMatches": true,
+      "timeoutMatches": true,
+      "state": "Active",
+      "update": "Successful",
+      "reservedConcurrency": null
+    },
+    {
+      "logical": "CloudExecutionWorker",
+      "codeMatches": true,
+      "configurationMatches": true,
+      "iamMatches": true,
+      "runtimeMatches": true,
+      "architectureMatches": true,
+      "memoryMatches": true,
+      "timeoutMatches": true,
+      "state": "Active",
+      "update": "Successful",
+      "reservedConcurrency": null
+    },
+    {
+      "logical": "ExecutionControlledEndpoint",
+      "codeMatches": true,
+      "configurationMatches": true,
+      "iamMatches": true,
+      "runtimeMatches": true,
+      "architectureMatches": true,
+      "memoryMatches": true,
+      "timeoutMatches": true,
+      "state": "Active",
+      "update": "Successful",
+      "reservedConcurrency": null
+    }
+  ],
+  "controls": {
+    "freePlanActive": true,
+    "accountQuota": 10,
+    "unreservedConcurrency": 10,
+    "queueState": "Enabled",
+    "queueBatch": 1,
+    "queueMaximumConcurrency": 2,
+    "cleanupScheduleState": "ENABLED",
+    "cleanupScheduleExpression": "rate(1 minute)"
+  },
+  "routing": {
+    "routes": 45,
+    "integrations": 45,
+    "initialRoutingMatchesHistorical": true
+  },
+  "deployedFrontendMatchesAdoptedRelease": false,
+  "scope": "completed-reader-snapshot-before-preview-stop",
+  "currentCloudStateAfterSnapshotNotEstablished": true
+}

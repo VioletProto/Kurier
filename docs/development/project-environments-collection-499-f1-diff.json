@@ -1,0 +1,410 @@
+{
+  "complete": true,
+  "representation": "successful SST diff --json change list; not a fresh complete AWS inventory",
+  "rawEntries": 60,
+  "uniqueResourceUrns": 44,
+  "rawOperationCounts": {
+    "create": 40,
+    "read": 1,
+    "update": 7,
+    "create-replacement": 4,
+    "replace": 4,
+    "delete-replaced": 4
+  },
+  "uniqueResourceClassifications": {
+    "api-route-component": 8,
+    "existing-bucket-read": 1,
+    "frontend-dynamic-resource": 3,
+    "lambda-code-object": 4,
+    "application-lambda": 4,
+    "lambda-invoke-permission": 8,
+    "api-gateway": 16
+  },
+  "uniqueCreateResources": 32,
+  "uniqueUpdateResources": 7,
+  "uniqueReplacementResources": 4,
+  "uniqueReadResources": 1,
+  "duplicateComponentCreateEntries": 8,
+  "sameResourcesOmittedByChangeList": true,
+  "iamRoleOrIdentityOrManagedPolicyChangesInDiff": false,
+  "newLambdaInvokePermissions": 8,
+  "lambdaInvokePrincipal": "apigateway.amazonaws.com",
+  "lambdaInvokeAction": "lambda:InvokeFunction",
+  "lambdaInvokeSourceArnMatchesInventoriedApiWildcard": true,
+  "routeGatewayAuthorizationTypes": ["NONE"],
+  "runtimeAuthenticationNotExercised": true,
+  "noTableQueueKmsCognitoCloudFrontDistributionOrStageMetadataChangeInDiff": true,
+  "lambdaInvokeTargetsEncryptedInPreview": true,
+  "lambdaInvokeTargetValuesDirectlyEstablished": false,
+  "resources": [
+    {
+      "name": "CloudExecutionWorkerCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "category": "lambda-code-object",
+      "operations": ["create-replacement", "delete-replaced", "replace"],
+      "changedTopLevelFields": ["key", "source", "versionId"],
+      "rawEntryCount": 3
+    },
+    {
+      "name": "CloudExecutionWorkerFunction",
+      "type": "aws:lambda/function:Function",
+      "category": "application-lambda",
+      "operations": ["update"],
+      "changedTopLevelFields": ["lastModified", "s3Key"],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBateco",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBatecoIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBatecoPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBatecoRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "POST /api/v1/projects/{projectId}/environments",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBbrzwo",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBbrzwoIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBbrzwoPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBbrzwoRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "GET /api/v1/projects/{projectId}/environments/{environmentId}",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBcuohn",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBcuohnIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBcuohnPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteBcuohnRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "GET /api/v1/projects/{projectId}/environments",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKbebwh",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKbebwhIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKbebwhPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKbebwhRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "POST /api/v1/local-agent/capabilities",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKotabw",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKotabwIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKotabwPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteKotabwRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "OPTIONS /api/v1/projects/{projectId}/environments",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "DevelopmentHttpApiRouteRdfcms",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteRdfcmsIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteRdfcmsPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteRdfcmsRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "DELETE /api/v1/projects/{projectId}/environments/{environmentId}",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "DevelopmentHttpApiRouteSndcdb",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteSndcdbIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteSndcdbPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteSndcdbRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "OPTIONS /api/v1/projects/{projectId}/environments/{environmentId}",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "DevelopmentHttpApiRouteVxffaw",
+      "type": "sst:aws:ApiGatewayV2LambdaRoute",
+      "category": "api-route-component",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 2
+    },
+    {
+      "name": "DevelopmentHttpApiRouteVxffawIntegration",
+      "type": "aws:apigatewayv2/integration:Integration",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteVxffawPermissions",
+      "type": "aws:lambda/permission:Permission",
+      "category": "lambda-invoke-permission",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "DevelopmentHttpApiRouteVxffawRoute",
+      "type": "aws:apigatewayv2/route:Route",
+      "category": "api-gateway",
+      "operations": ["create"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1,
+      "route": "PATCH /api/v1/projects/{projectId}/environments/{environmentId}",
+      "gatewayAuthorizationType": "NONE"
+    },
+    {
+      "name": "EmptyProjectCleanupCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "category": "lambda-code-object",
+      "operations": ["create-replacement", "delete-replaced", "replace"],
+      "changedTopLevelFields": ["key", "source", "versionId"],
+      "rawEntryCount": 3
+    },
+    {
+      "name": "EmptyProjectCleanupFunction",
+      "type": "aws:lambda/function:Function",
+      "category": "application-lambda",
+      "operations": ["update"],
+      "changedTopLevelFields": ["lastModified", "s3Key"],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "ExecutionControlledEndpointCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "category": "lambda-code-object",
+      "operations": ["create-replacement", "delete-replaced", "replace"],
+      "changedTopLevelFields": ["key", "source", "versionId"],
+      "rawEntryCount": 3
+    },
+    {
+      "name": "ExecutionControlledEndpointFunction",
+      "type": "aws:lambda/function:Function",
+      "category": "application-lambda",
+      "operations": ["update"],
+      "changedTopLevelFields": ["lastModified", "s3Key"],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "FrontendWebAssetFiles.sst.aws.BucketFiles",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "category": "frontend-dynamic-resource",
+      "operations": ["update"],
+      "changedTopLevelFields": ["files"],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "FrontendWebAssets",
+      "type": "aws:s3/bucket:Bucket",
+      "category": "existing-bucket-read",
+      "operations": ["read"],
+      "changedTopLevelFields": [],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "FrontendWebInvalidation.sst.aws.DistributionInvalidation",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "category": "frontend-dynamic-resource",
+      "operations": ["update"],
+      "changedTopLevelFields": ["version"],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "FrontendWebKvKeys.sst.aws.KvKeys",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "category": "frontend-dynamic-resource",
+      "operations": ["update"],
+      "changedTopLevelFields": ["entries"],
+      "rawEntryCount": 1
+    },
+    {
+      "name": "UsersProjectsApiCode",
+      "type": "aws:s3/bucketObjectv2:BucketObjectv2",
+      "category": "lambda-code-object",
+      "operations": ["create-replacement", "delete-replaced", "replace"],
+      "changedTopLevelFields": ["key", "source", "versionId"],
+      "rawEntryCount": 3
+    },
+    {
+      "name": "UsersProjectsApiFunction",
+      "type": "aws:lambda/function:Function",
+      "category": "application-lambda",
+      "operations": ["update"],
+      "changedTopLevelFields": ["lastModified", "s3Key"],
+      "rawEntryCount": 1
+    }
+  ],
+  "freshProjectionMatchesReview8": true
+}

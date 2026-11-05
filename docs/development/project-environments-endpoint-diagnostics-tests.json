@@ -1,0 +1,176 @@
+{
+  "tooling": {
+    "sstSha256": "539659fa60f00e8b9610b7dfd967928d382b4800ca25452d9697e31a4eb521fd",
+    "pulumiAwsProviderSha256": "741bfe58a4f6100dfa839beb98d53e0f27c9b63998d53a293cbbfb7a6b23a797",
+    "node": "v26.12.1",
+    "go": "go version go1.27.3-X:nodwarf5 linux/amd64",
+    "bwrap": "bubblewrap 0.13.1"
+  },
+  "codeSha256": {
+    "test_diagnostics.py": "0607a15f5c5abe4feb05edd7bc3e55f02d70dd62c6693fac3918b200910acfdf",
+    "policy.py": "ed237fbf3fe24ccd06e5ed08a73df641499e5c19c9342c56f14e93198764a560",
+    "test_transport.py": "56413774777bf99224199434cc6d9b5c9a8d3bcb7846b4d8aa5c9c5eab816f68",
+    "test_unit.py": "6f77bfc13af9a0bac06af081637b4efcc7e6e98d53934e4f4d488b72f610fc28",
+    "proxy.py": "281f7244d4dd712f59d6d5474e0a397867e25f9216e98d72913cf76cd84d1703",
+    "diagnostics.py": "e145bed68d269065352ce428c28dbfbc4cfa80edf3f7de77d6ffe72e0fad0006",
+    "accounting.py": "1a84c03c77a6b59f5a7af241ffb72b2d54e96cbacf2bbc53b070a170cba10435",
+    "run.py": "1c535099469f238d33a6138ebe518a778b27ee88abfc1f473d0cdccca41a9e94"
+  },
+  "fixtureOnly": true,
+  "realCumulativeUsagePreserved": 165,
+  "awsCalls": 0,
+  "releaseAndRollbackVerifiedUnchanged": true,
+  "results": [
+    {
+      "case": "shared-real-SST-Pulumi-Go-Node",
+      "attempts": 14,
+      "goRetryPages": 3,
+      "nodeRetryPages": 3,
+      "exitCode": 0,
+      "namespaceBypassHeld": true,
+      "httpVersions": ["HTTP/1.1", "HTTP/2.0"],
+      "realSST": true,
+      "realPulumiAWSProvider": true,
+      "attemptCounts": {
+        "dynamodb:ListTables": 3,
+        "s3:GET": 6,
+        "ssm:GetParameter": 2,
+        "sts:GetCallerIdentity": 3
+      }
+    },
+    {
+      "case": "write",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "state-write",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "transaction-write",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "limit",
+      "attempts": 335,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "deadline",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": true
+    },
+    {
+      "case": "concurrent",
+      "attempts": 4,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "redirect",
+      "attempts": 1,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "disconnect",
+      "attempts": 1,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "persistence",
+      "attempts": 0,
+      "stopped": true,
+      "descendantShutdownVerified": false
+    },
+    {
+      "case": "denied-host",
+      "attempts": 0,
+      "stopped": true,
+      "allDescendantsStopped": true,
+      "sanitizedDiagnostic": {
+        "at": 1793157260.4506357,
+        "event": "denied-endpoint",
+        "count": 165,
+        "reason": "endpoint-held",
+        "hostname": "sts.us-east-1.amazonaws.com",
+        "hostnameStatus": "known-static",
+        "trailingDot": false,
+        "port": 443,
+        "scheme": "unspecified",
+        "httpVersion": "HTTP/1.1",
+        "method": "CONNECT",
+        "phase": "connect"
+      }
+    },
+    {
+      "case": "secret-host-label",
+      "attempts": 0,
+      "stopped": true,
+      "allDescendantsStopped": true,
+      "sanitizedDiagnostic": {
+        "at": 1793157262.1751084,
+        "event": "denied-endpoint",
+        "count": 165,
+        "reason": "endpoint-held",
+        "hostname": "<redacted-host>",
+        "hostnameStatus": "redacted",
+        "trailingDot": false,
+        "port": 443,
+        "scheme": "unspecified",
+        "httpVersion": "HTTP/1.1",
+        "method": "CONNECT",
+        "phase": "connect"
+      }
+    },
+    {
+      "case": "denied-port",
+      "attempts": 0,
+      "stopped": true,
+      "allDescendantsStopped": true,
+      "sanitizedDiagnostic": {
+        "at": 1793157263.9206839,
+        "event": "denied-endpoint",
+        "count": 165,
+        "reason": "port-held",
+        "hostname": "sts.us-east-2.amazonaws.com",
+        "hostnameStatus": "known-static",
+        "trailingDot": false,
+        "port": 8443,
+        "scheme": "unspecified",
+        "httpVersion": "HTTP/1.1",
+        "method": "CONNECT",
+        "phase": "connect"
+      }
+    },
+    {
+      "case": "denied-http",
+      "attempts": 0,
+      "stopped": true,
+      "allDescendantsStopped": true,
+      "sanitizedDiagnostic": {
+        "at": 1793157265.6666958,
+        "event": "denied-endpoint",
+        "count": 165,
+        "reason": "tls-required",
+        "hostname": "sts.us-east-2.amazonaws.com",
+        "hostnameStatus": "known-static",
+        "trailingDot": false,
+        "port": 80,
+        "scheme": "http",
+        "httpVersion": "HTTP/1.1",
+        "method": "POST",
+        "phase": "request"
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{"at":1793218640.368153,"monotonic":53098.625408691,"event":"created","prior":166,"maximum":500,"seconds":3600,"parentSha256":"1e4e9f987fdf378ac2b6b968d65175a1a1a5d3d5b8085c8145d86c434b937171"}
+{"at":1793218640.3696578,"monotonic":53098.626911344,"event":"shared-window","sourceWindowSha256":"538921f5c442ae7b2f3492267c62c8fe55bf1cd3f060e34d486923cde60b911e"}
+{"at":1793218640.3939302,"monotonic":53098.651186824,"event":"attempt","count":167,"service":"signin","operation":"CreateOAuth2Token","protocol":"HTTP/1.1"}
+{"at":1793218650.416984,"monotonic":53108.674234213,"event":"authentication-transport-error","attempt":167,"exceptionCategory":"connect-timeout","failurePhase":"connect","errorCode":null,"errorCodeDomain":null}
+{"at":1793218650.4269948,"monotonic":53108.684249289,"event":"outcome","attempt":167,"status":null,"transportError":true}
+{"at":1793218650.428151,"monotonic":53108.685406262,"event":"stop","reason":"transport-failure","count":167}
