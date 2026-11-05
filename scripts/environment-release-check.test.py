@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -128,7 +129,7 @@ class Tests(unittest.TestCase):
             os.chmod(key, 0o600)
             r = subprocess.run(
                 [
-                    str(m.ROOT / ".build/attempt-meter-venv/bin/python"),
+                    sys.executable,
                     "-B",
                     str(Path(__file__).with_name("environment-release-check.py")),
                     "--private-key-file",
@@ -149,7 +150,7 @@ class Tests(unittest.TestCase):
             (target / "code.zip").write_bytes(b"unreviewed")
             r = subprocess.run(
                 [
-                    str(m.ROOT / ".build/attempt-meter-venv/bin/python"),
+                    sys.executable,
                     "-B",
                     str(Path(__file__).with_name("environment-release-check.py")),
                     "--regenerated-directory",
