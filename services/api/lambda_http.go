@@ -8,11 +8,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/VioletProto/Kurier/services/api/execution"
 	"github.com/aws/aws-lambda-go/events"
 )
+
+var openAPIImportPath = regexp.MustCompile(`^/api/v1/projects/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/openapi-imports$`)
 
 // Adapt only HTTP API payload v2. Conversion errors never log request URLs,
 // headers or body data. The shared handler retains all auth/ownership checks.
@@ -30,6 +33,12 @@ func proxyHTTPV2(handler http.Handler) func(context.Context, events.APIGatewayV2
 			return bad(400, "invalid_request", "Invalid request.")
 		}
 		limit := 128 * 1024
+		// The import handler separately bounds the decoded source at 2 MiB.
+		// Allow its JSON upload envelope only on this canonical collection route;
+		// the complete Lambda event and metadata bounds below still apply.
+		if event.RequestContext.HTTP.Method == "POST" && event.RawQueryString == "" && openAPIImportPath.MatchString(event.RawPath) {
+			limit = 5 * 1024 * 1024
+		}
 		if event.RequestContext.HTTP.Method == "POST" && strings.HasSuffix(event.RawPath, "/result") && strings.Contains(event.RawPath, "/local-agent/jobs/") {
 			limit = execution.EvidenceLimit
 		}
