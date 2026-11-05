@@ -145,6 +145,21 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 		return s.publish(ctx, job, evidence)
 	}
 	guards = append(guards, envGuards...)
+	contractGuards, contractErr := s.freezeContract(ctx, stage, job.ProjectID, anchor.Plan, true)
+	if contractErr != nil {
+		evidence.Fail("source_unavailable", "not_dispatched")
+		return s.publish(ctx, job, evidence)
+	}
+	publicationGuards, publicationErr := s.importPublicationGuards(ctx, stage, job.ProjectID, source)
+	if publicationErr != nil {
+		evidence.Fail("source_unavailable", "not_dispatched")
+		return s.publish(ctx, job, evidence)
+	}
+	contractGuards, contractErr = mergeContractGuards(contractGuards, publicationGuards)
+	if contractErr != nil {
+		return contractErr
+	}
+	guards = append(guards, contractGuards...)
 	values := map[string]string{}
 	var capture *runner.ExtractionCapture
 	var output *Envelope
@@ -222,7 +237,10 @@ func (s *Service) Process(ctx context.Context, m Message) error {
 		if err != nil {
 			return err
 		}
-		actions = append(actions, extra...)
+		actions, err = mergeContractGuards(actions, extra)
+		if err != nil {
+			return err
+		}
 	}
 	if e = s.transact(ctx, actions); e != nil {
 		read, readErr := s.get(ctx, s.Table, job.PK, job.SK)

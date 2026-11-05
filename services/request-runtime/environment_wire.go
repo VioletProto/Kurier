@@ -23,7 +23,7 @@ func withEnvironmentContext(raw []byte, ctx *EnvironmentContext) ([]byte, error)
 func (e Evidence) MarshalJSON() ([]byte, error) {
 	type plain Evidence
 	raw, err := json.Marshal(plain(e))
-	if err != nil || e.SchemaVersion != 3 {
+	if err != nil || e.SchemaVersion != 3 && !(e.SchemaVersion == 4 && e.TemplateSemanticsVersion == 1) {
 		return raw, err
 	}
 	return withEnvironmentContext(raw, e.EnvironmentContext)

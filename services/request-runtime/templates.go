@@ -296,7 +296,7 @@ func wholeTemplate(text string, bearer bool) bool {
 	return e == nil && len(p) == 2 && p[0].literal == "" && p[1].name != ""
 }
 func TemplateLocations(c Configuration) ([]TemplateLocation, error) {
-	if c.TemplateSemanticsVersion != 1 || HasTemplate(c.Name) || HasTemplate(c.Method) || c.OperationRef != nil {
+	if c.TemplateSemanticsVersion != 1 || HasTemplate(c.Name) || HasTemplate(c.Method) {
 		return nil, failure(400, "template_invalid")
 	}
 	out := []TemplateLocation{{Kind: "url", Text: c.URL, Enabled: true}}

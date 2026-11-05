@@ -115,7 +115,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(53);
+    expect(resources.filter((r) => r.route)).toHaveLength(64);
     const declaredRoutes = resources.filter((r) => r.route).map((r) => r.route);
     expect(declaredRoutes).toEqual(
       expect.arrayContaining([
@@ -129,6 +129,21 @@ describe("scoped development API infrastructure", () => {
         "POST /api/v1/local-agent/capabilities",
       ]),
     );
+    expect(
+      declaredRoutes.filter((route) => route.includes("/openapi-imports")),
+    ).toEqual([
+      "POST /api/v1/projects/{projectId}/openapi-imports",
+      "GET /api/v1/projects/{projectId}/openapi-imports",
+      "GET /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "PATCH /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "DELETE /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "POST /api/v1/projects/{projectId}/openapi-imports/{importId}/publish",
+      "GET /api/v1/projects/{projectId}/openapi-imports/{importId}/export",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}/publish",
+      "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}/export",
+    ]);
     expect(
       resources.filter((r) => r.route?.includes("/mcp/")).map((r) => r.route),
     ).toEqual([

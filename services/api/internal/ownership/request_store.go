@@ -37,6 +37,9 @@ func (st *Store) GetRequest(ctx context.Context, userID, projectID, requestID st
 	if err != nil {
 		return SavedRequest{}, err
 	}
+	if err := st.requestImportReady(ctx, r); err != nil {
+		return SavedRequest{}, err
+	}
 	result, err := r.savedRequest()
 	if err != nil {
 		return SavedRequest{}, err
@@ -59,6 +62,11 @@ func (st *Store) CreateRequest(ctx context.Context, userID, projectID string, c 
 	if err != nil {
 		return SavedRequest{}, err
 	}
+	operationGuards, err := st.requestOperationGuards(ctx, stage, projectID, c)
+	if err != nil {
+		return SavedRequest{}, err
+	}
+	secretActions = append(secretActions, operationGuards...)
 	if c.TemplateSemanticsVersion == 1 && stage.ProjectEnvironmentsSchemaVersion != 1 {
 		return SavedRequest{}, unavailable()
 	}
@@ -74,6 +82,9 @@ func (st *Store) CreateRequest(ctx context.Context, userID, projectID string, c 
 	}
 	if c.TemplateSemanticsVersion == 1 {
 		r.SchemaVersion = 3
+	}
+	if c.OperationRef != nil {
+		r.SchemaVersion = 4
 	}
 	action, err := st.put(r, "attribute_not_exists(PK)", nil)
 	if err != nil {
@@ -93,6 +104,9 @@ func (st *Store) PatchRequest(ctx context.Context, userID, projectID, requestID 
 	if err != nil {
 		return SavedRequest{}, err
 	}
+	if err := st.requestImportReady(ctx, r); err != nil {
+		return SavedRequest{}, err
+	}
 	previous, err := r.savedRequest()
 	if err != nil {
 		return SavedRequest{}, err
@@ -108,6 +122,11 @@ func (st *Store) PatchRequest(ctx context.Context, userID, projectID, requestID 
 	if err != nil {
 		return SavedRequest{}, err
 	}
+	operationGuards, err := st.requestOperationGuards(ctx, stage, projectID, c)
+	if err != nil {
+		return SavedRequest{}, err
+	}
+	secretActions = append(secretActions, operationGuards...)
 	encoded, err := configurationJSON(c)
 	if err != nil {
 		return SavedRequest{}, err
@@ -117,6 +136,9 @@ func (st *Store) PatchRequest(ctx context.Context, userID, projectID, requestID 
 	}
 	if c.TemplateSemanticsVersion == 1 {
 		r.SchemaVersion = 3
+	}
+	if c.OperationRef != nil {
+		r.SchemaVersion = 4
 	}
 	if c.TemplateSemanticsVersion == 1 && stage.ProjectEnvironmentsSchemaVersion != 1 {
 		return SavedRequest{}, unavailable()
@@ -170,6 +192,9 @@ func (st *Store) DeleteRequest(ctx context.Context, userID, projectID, requestID
 	if err != nil {
 		return err
 	}
+	if err = st.requestImportReady(ctx, r); err != nil {
+		return err
+	}
 	if _, err = r.savedRequest(); err != nil {
 		return err
 	}
@@ -208,7 +233,7 @@ func (st *Store) drainRequests(ctx context.Context, p, stage, work record) (reco
 	}
 	actions := []types.TransactWriteItem{st.stageGuard(stage), st.requestGate(p, "deleting")}
 	allowed := map[string]bool{}
-	for _, name := range []string{"PK", "SK", "kind", "schemaVersion", "version", "projectId", "requestId", "revision", "state", "configurationJSON", "createdAt", "updatedAt", "LPK", "LSK"} {
+	for _, name := range []string{"PK", "SK", "kind", "schemaVersion", "version", "projectId", "requestId", "revision", "state", "configurationJSON", "createdAt", "updatedAt", "LPK", "LSK", "importId"} {
 		allowed[name] = true
 	}
 	for _, item := range page.Items {
@@ -219,7 +244,7 @@ func (st *Store) drainRequests(ctx context.Context, p, stage, work record) (reco
 			}
 		}
 		var r record
-		if !recognized || attributevalue.UnmarshalMap(item, &r) != nil || (r.SchemaVersion != 1 && r.SchemaVersion != 2 && r.SchemaVersion != 3) || r.PK != p.PK || r.ProjectID != p.ProjectID || r.RequestID == "" || r.SK != "REQ#"+r.RequestID || r.Revision < 0 {
+		if !recognized || attributevalue.UnmarshalMap(item, &r) != nil || (r.SchemaVersion != 1 && r.SchemaVersion != 2 && r.SchemaVersion != 3 && r.SchemaVersion != 4) || r.PK != p.PK || r.ProjectID != p.ProjectID || r.RequestID == "" || r.SK != "REQ#"+r.RequestID || r.Revision < 0 {
 			continue
 		}
 		switch r.Kind {

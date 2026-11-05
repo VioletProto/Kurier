@@ -168,7 +168,7 @@ func (st *Store) secretContext(ctx context.Context, user, project string) (recor
 	if err != nil {
 		return stage, u, p, err
 	}
-	if (stage.SavedRequestsSchemaVersion != 9 && stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || (stage.ProtectedSecretsSchemaVersion != 1 && stage.ProtectedSecretsSchemaVersion != 2) || st.protectedTable == "" {
+	if (stage.SavedRequestsSchemaVersion != 10 && stage.SavedRequestsSchemaVersion != 9 && stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || (stage.ProtectedSecretsSchemaVersion != 1 && stage.ProtectedSecretsSchemaVersion != 2) || st.protectedTable == "" {
 		return stage, u, p, unavailable()
 	}
 	return stage, u, p, nil
@@ -350,7 +350,7 @@ func (st *Store) protectIfEnabled(ctx context.Context, stage record, project str
 	if len(slots(c)) == 0 {
 		return nil, nil
 	}
-	if (stage.SavedRequestsSchemaVersion != 9 && stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || (stage.ProtectedSecretsSchemaVersion != 1 && stage.ProtectedSecretsSchemaVersion != 2) {
+	if (stage.SavedRequestsSchemaVersion != 10 && stage.SavedRequestsSchemaVersion != 9 && stage.SavedRequestsSchemaVersion != 2 && stage.SavedRequestsSchemaVersion != 3 && stage.SavedRequestsSchemaVersion != 4 && stage.SavedRequestsSchemaVersion != 5 && stage.SavedRequestsSchemaVersion != 6 && stage.SavedRequestsSchemaVersion != 7 && stage.SavedRequestsSchemaVersion != 8) || (stage.ProtectedSecretsSchemaVersion != 1 && stage.ProtectedSecretsSchemaVersion != 2) {
 		return nil, unavailable()
 	}
 	return st.protectConfiguration(ctx, project, c, previous)

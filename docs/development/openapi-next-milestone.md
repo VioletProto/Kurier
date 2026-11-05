@@ -1,6 +1,10 @@
 # Next milestone: OpenAPI import, export and response validation
 
-**Proposed implementation scope, not accepted contract or completed work.**
+**Historical milestone proposal.** Davian subsequently requested implementation
+on 2026-11-04. The [implementation contract](../architecture/openapi-contract.md)
+records the concrete defaults and interfaces; the
+[development guide](openapi.md) records delivery and verification status.
+The original proposal follows for context.
 This note follows the project-status review on 2026-11-04. It makes no claim
 about environment deployment or runtime validation; record those independently.
 

@@ -34,6 +34,7 @@ type DeletionOperation struct {
 // record is internal storage, never a response DTO. Omitted fields are removed
 // when the project becomes a minimal tombstone.
 type record struct {
+	OpenAPISchemaVersion              int    `dynamodbav:"openapiSchemaVersion,omitempty"`
 	ProjectEnvironmentsSchemaVersion  int    `dynamodbav:"projectEnvironmentsSchemaVersion,omitempty"`
 	EnvironmentID                     string `dynamodbav:"environmentId,omitempty"`
 	WorkflowAssertionsSchemaVersion   int    `dynamodbav:"workflowAssertionsSchemaVersion,omitempty"`
@@ -42,6 +43,7 @@ type record struct {
 	LocalAgentExecutionsSchemaVersion int    `dynamodbav:"localAgentExecutionsSchemaVersion,omitempty"`
 
 	RequestID                     string             `dynamodbav:"requestId,omitempty"`
+	ImportID                      string             `dynamodbav:"importId,omitempty"`
 	Revision                      int64              `dynamodbav:"revision,omitempty"`
 	ConfigurationJSON             string             `dynamodbav:"configurationJSON,omitempty"`
 	ProtectedSecretsSchemaVersion int                `dynamodbav:"protectedSecretsSchemaVersion,omitempty"`

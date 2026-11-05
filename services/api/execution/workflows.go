@@ -171,6 +171,10 @@ func workflowDTO(r row) (Workflow, error) {
 	return Workflow{d, r.WorkflowID, r.Revision, r.CreatedAt, r.UpdatedAt}, nil
 }
 func (s *Service) workflowPlans(ctx context.Context, p row, d *WorkflowDefinition, checkRevision bool) ([]Plan, []row, error) {
+	stage, stageErr := s.stage(ctx)
+	if stageErr != nil {
+		return nil, nil, stageErr
+	}
 	plans := []Plan{}
 	requests := []row{}
 	seen := map[string]bool{}
@@ -178,6 +182,9 @@ func (s *Service) workflowPlans(ctx context.Context, p row, d *WorkflowDefinitio
 		request, e := s.get(ctx, s.Table, p.PK, "REQ#"+step.RequestID)
 		if e != nil || request.Kind != "request" || request.State != "active" {
 			return nil, nil, failure(400, "source_unavailable")
+		}
+		if _, e := s.importPublicationGuards(ctx, stage, p.ProjectID, request); e != nil {
+			return nil, nil, e
 		}
 		if checkRevision && request.Revision != step.RequestRevision {
 			return nil, nil, failure(412, "precondition_failed")
@@ -427,6 +434,7 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	if e = runner.ValidateWorkflow(definition.Steps, plans); e != nil {
 		return WorkflowRun{}, e
 	}
+	contractActions := []dt.TransactWriteItem{}
 	environmentActions := []dt.TransactWriteItem{}
 	environmentSeen := map[string]int64{}
 	appendEnvironment := func(guards []dt.TransactWriteItem) error {
@@ -475,11 +483,29 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 		if plans[i].Configuration.TemplateSemanticsVersion == 1 && stage.ProjectEnvironmentsSchemaVersion != 1 {
 			return WorkflowRun{}, safeError()
 		}
+		contractGuards, e := s.freezeContract(ctx, stage, project, &plans[i], rerun)
+		if e != nil {
+			return WorkflowRun{}, e
+		}
+		contractActions, e = mergeContractGuards(contractActions, contractGuards)
+		if e != nil {
+			return WorkflowRun{}, e
+		}
 		guards, e := s.freezeEnvironment(ctx, project, &plans[i], selection, rerun)
 		if e != nil {
 			return WorkflowRun{}, e
 		}
 		if e = appendEnvironment(guards); e != nil {
+			return WorkflowRun{}, e
+		}
+	}
+	for _, request := range requests {
+		guards, e := s.importPublicationGuards(ctx, stage, project, request)
+		if e != nil {
+			return WorkflowRun{}, e
+		}
+		contractActions, e = mergeContractGuards(contractActions, guards)
+		if e != nil {
 			return WorkflowRun{}, e
 		}
 	}
@@ -586,6 +612,7 @@ func (s *Service) SubmitWorkflow(ctx context.Context, owner, project, source, ke
 	}
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), user, s.projectUpdate(p, 0, 1)}
 	actions = append(actions, environmentActions...)
+	actions = append(actions, contractActions...)
 	// Fence the definition or retained source run against concurrent deletion.
 	actions = append(actions, s.rowGuard(wf))
 	for _, r := range requests {
