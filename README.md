@@ -9,8 +9,8 @@ project and saved-request authoring, encrypted secrets, cloud and local-agent
 execution, immutable sanitized evidence, sequential workflows/assertions and
 read-only MCP access. Project environments are now
 [deployed and active](docs/development/project-environments-hosted-rollout.md).
-The [next proposed milestone](docs/development/openapi-next-milestone.md) is
-OpenAPI JSON/YAML import/export and response validation. See the
+The application also includes [OpenAPI JSON/YAML import/export and cloud
+response validation](docs/development/openapi.md). See the
 [saved-request guide](docs/development/saved-requests.md) for authoring details.
 
 ## Repository layout
