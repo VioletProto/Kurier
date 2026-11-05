@@ -41,11 +41,18 @@ not execute requests.
 
 ## Verification and release
 
-Verification and release results are recorded here when the implementation's
-format, lint, build, unit, integration and Chromium checks complete. Local tests
-use actual DynamoDB Local with synthetic authentication, KMS, queue/object
-adapters and bounded local HTTP fixtures; they do not establish live AWS,
-Cognito, IAM, email or hosted-runtime behavior.
+On 2026-11-05, `npm run verify` passed formatting, lint, 72 frontend tests,
+15 infrastructure tests, tooling tests, production frontend build and all Go
+tests/vet. The full API race/integration suite and Chromium browser suite passed
+against actual DynamoDB Local. Dedicated runtime/parser race checks also passed.
+The browser flow exercises upload, missing-input completion, publication,
+sanitized downloads and normal project cleanup. Backend tests include all four
+violation classes, 100-operation publication, interruption/hidden-row containment,
+unknown-row preservation, ownership, frozen reruns and workflow successor fences.
+
+These tests use synthetic authentication, KMS, queue/object adapters and bounded
+local HTTP fixtures; they do not establish genuine Cognito, IAM, email or hosted
+runtime behavior. Hosted rollout and smoke results follow separately when observed.
 
 The capability tuple adds savedRequests 10 and openapi 1 to the existing complete
 environments tuple. Startup never upgrades live capabilities. Source records use
@@ -53,3 +60,19 @@ private sanitized chunks, and linked saved requests use record schema 4. Owner
 evidence 4 preserves earlier versions and supports existing pinning/retention.
 MCP continues its explicit legacy projection; contract-result MCP exposure is a
 separate card.
+
+Current completion limits: public body inputs use the same 8 KiB bound as
+examples, inside the existing 64 KiB complete-request bound. Credential query
+arrays are unsupported; scalar credential references and whole-body references
+are supported. Named samples supply one safe deterministic default with manual
+typed overrides, rather than a named-example picker. These are explicit limits
+of this slice, not claims of general OpenAPI support.
+
+The first hosted deployment hit Lambda's 20 KiB invoke-policy limit: SST added
+an identical API-scoped permission for each new route. The stage remained closed
+at version 18 without capability activation. The routing correction reuses the
+existing users/me integration for all eleven OpenAPI routes, which invoke the
+same Go handler under the same existing API-scoped grant. It removes only the
+two duplicate permissions/integrations created by the partial attempt, preserves
+all existing routes and permissions, and adds no IAM access. Infrastructure
+tests explicitly assert this shared integration to prevent policy growth.

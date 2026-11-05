@@ -339,23 +339,13 @@ export async function createDevelopmentApi() {
       },
     ],
   });
+  let openapiIntegration: $util.Input<string> | undefined;
   for (const route of [
     "POST /api/v1/mcp/tokens",
     "GET /api/v1/mcp/tokens/current",
     "DELETE /api/v1/mcp/tokens/{tokenId}",
     "POST /api/v1/mcp/invocations",
-    // Source declarations only; environment capability activation is separate.
-    "POST /api/v1/projects/{projectId}/openapi-imports",
-    "GET /api/v1/projects/{projectId}/openapi-imports",
-    "GET /api/v1/projects/{projectId}/openapi-imports/{importId}",
-    "PATCH /api/v1/projects/{projectId}/openapi-imports/{importId}",
-    "DELETE /api/v1/projects/{projectId}/openapi-imports/{importId}",
-    "POST /api/v1/projects/{projectId}/openapi-imports/{importId}/publish",
-    "GET /api/v1/projects/{projectId}/openapi-imports/{importId}/export",
-    "OPTIONS /api/v1/projects/{projectId}/openapi-imports",
-    "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}",
-    "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}/publish",
-    "OPTIONS /api/v1/projects/{projectId}/openapi-imports/{importId}/export",
+    // Capability activation is separate from routing declarations.
     "POST /api/v1/projects/{projectId}/environments",
     "GET /api/v1/projects/{projectId}/environments",
     "GET /api/v1/projects/{projectId}/environments/{environmentId}",
@@ -405,7 +395,35 @@ export async function createDevelopmentApi() {
     "POST /api/v1/projects/{projectId}/executions/{executionId}/rerun",
     "OPTIONS /api/v1/{proxy+}",
   ]) {
-    api.route(route, fn.arn);
+    const endpoint = api.route(route, fn.arn);
+    if (route === "GET /api/v1/users/me")
+      openapiIntegration = endpoint.nodes.integration.id;
+  }
+  if (!openapiIntegration)
+    throw new Error("The existing API integration is required.");
+  // Every owner endpoint uses this same Go handler and API-scoped invoke grant.
+  // Reuse its existing integration: SST creates one duplicate Lambda permission
+  // per route, which exceeds Lambda's 20 KiB policy limit as the API grows.
+  const openapiPrefix = "/api/v1/projects/{projectId}/openapi-imports";
+  for (const [name, routeKey] of [
+    ["Create", `POST ${openapiPrefix}`],
+    ["List", `GET ${openapiPrefix}`],
+    ["Detail", `GET ${openapiPrefix}/{importId}`],
+    ["Update", `PATCH ${openapiPrefix}/{importId}`],
+    ["Delete", `DELETE ${openapiPrefix}/{importId}`],
+    ["Publish", `POST ${openapiPrefix}/{importId}/publish`],
+    ["Export", `GET ${openapiPrefix}/{importId}/export`],
+    ["CollectionOptions", `OPTIONS ${openapiPrefix}`],
+    ["DetailOptions", `OPTIONS ${openapiPrefix}/{importId}`],
+    ["PublishOptions", `OPTIONS ${openapiPrefix}/{importId}/publish`],
+    ["ExportOptions", `OPTIONS ${openapiPrefix}/{importId}/export`],
+  ]) {
+    new aws.apigatewayv2.Route(`OpenAPIImport${name}`, {
+      apiId: api.nodes.api.id,
+      routeKey,
+      authorizationType: "NONE", // Existing handler enforces Cognito/ownership.
+      target: $interpolate`integrations/${openapiIntegration}`,
+    });
   }
   const maintenance = new sst.aws.Function("EmptyProjectCleanup", {
     runtime: "go",
