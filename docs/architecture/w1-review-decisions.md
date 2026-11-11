@@ -248,8 +248,13 @@ Manager. [Envelope encryption](https://docs.aws.amazon.com/kms/latest/developerg
 ## Authentication and email
 
 Davian requested sign-in persistence across browser reload on 2026-11-11.
-The [session design spike](https://trello.com/c/JR5tQXNA) will define storage,
-rotation, expiry, sign-out and migration for that change. The
+The [session design findings](../spikes/browser-session-persistence.md) record his
+selection of backend sessions and reopening until sign-out or fixed one-day
+expiry. They propose a same-origin refresh broker, HttpOnly cookie, encrypted
+server-side refresh storage and memory-only access tokens. Detailed interfaces,
+hosting/storage amendments and residual JWT revocation delay await review before
+delivery implementation. The [session design spike](https://trello.com/c/JR5tQXNA)
+tracks research and the remaining acceptance step. The
 [planning continuation](../planning/onboarding-and-desktop.md) records the
 requested outcome and affected contracts. The following memory-only behavior
 describes the current baseline.

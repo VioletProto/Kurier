@@ -6,8 +6,11 @@ Davian requested reload-persistent sign-in, selectable MCP project exposure,
 consent-based local-agent setup and desktop/GitHub Releases/AUR feasibility on
 2026-11-11. The [planning continuation](../planning/onboarding-and-desktop.md)
 links delivery cards and prerequisite spikes and identifies affected contracts.
-Session storage, MCP scope evolution and agent installation interfaces remain
-design decisions to resolve in those spikes.
+The [session research](../spikes/browser-session-persistence.md) records Davian's
+backend-session and one-day reopening selections. Its detailed broker contract
+remains proposed for review; the active implementation is still memory-only.
+MCP scope evolution and agent installation interfaces remain design decisions
+to resolve in their spikes.
 
 ## Accepted project environments continuation
 

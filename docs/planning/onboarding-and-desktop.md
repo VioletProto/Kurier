@@ -39,6 +39,14 @@ Verify reload, concurrent tabs, rotation races, expired/revoked sessions,
 sign-out, offline recovery and the selected reopening policy. Existing natural
 refresh observations describe the current implementation.
 
+The [2026-11-11 research packet](../spikes/browser-session-persistence.md) records
+Davian's selection of backend sessions and reopening until sign-out or fixed
+one-day expiry. It proposes a same-origin refresh broker with encrypted server-side
+refresh credentials, an HttpOnly cookie and memory-only access tokens. Detailed
+contract/hosting/storage choices await review before the delivery card proceeds.
+The research distinguishes local checks from future browser/Cognito/AWS gates
+and estimates 24–40 active implementation hours plus hosted/elapsed validation.
+
 ## MCP connection and project exposure
 
 The [current MCP contract](../architecture/read-only-mcp-contract.md) uses a
