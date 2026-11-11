@@ -1,5 +1,14 @@
 # Accepted architecture
 
+## Requested onboarding and desktop improvements
+
+Davian requested reload-persistent sign-in, selectable MCP project exposure,
+consent-based local-agent setup and desktop/GitHub Releases/AUR feasibility on
+2026-11-11. The [planning continuation](../planning/onboarding-and-desktop.md)
+links delivery cards and prerequisite spikes and identifies affected contracts.
+Session storage, MCP scope evolution and agent installation interfaces remain
+design decisions to resolve in those spikes.
+
 ## Accepted project environments continuation
 
 Current status (2026-11-04): Davian authorized completing the hosted deployment.
