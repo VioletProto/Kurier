@@ -99,3 +99,23 @@ offline access-token revocation window; deployment does not add immediate denial
 The delivery card remains Doing until those required browser/Cognito gates are
 completed or explicitly accepted with their limits. No token-bearing HAR,
 screenshots, browser storage exports or request logs should be collected.
+
+## Password-manager focus fix
+
+On 2026-11-12 Davian reported that returning from Bitwarden cleared filled sign-in
+fields. The broker's unconditional window-focus handler remounted the auth form.
+Fix `d65aef3` limits focus revalidation to displayed signed-in workspaces; startup,
+explicit session-change events and BFCache revalidation remain. It was verified
+and deployed through the existing SST workflow, with no infrastructure-setting
+changes. Release:
+`fc68412e0102987fc5ce9b4784de05aa5156c0a542126e042ee729d6464cee3f`.
+
+Full repository verification passed (94 frontend tests, 16 infrastructure tests,
+tooling, build and Go tests/vet), as did both HTTPS Chromium fixtures. A real
+hosted Chromium probe filled synthetic fields and repeatedly returned window
+focus: field values and form identity were preserved, no extra restore requests
+occurred, and no page errors occurred. Live CloudFront security probes and public
+asset hashes passed; stage marker, Free plan and concurrency were preserved.
+The Bitwarden extension itself was not installed in the runner. No real vault
+values were used, submitted or saved. This fix does not close the remaining
+authenticated Cognito/expiry gates above.
