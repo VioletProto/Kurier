@@ -3,8 +3,10 @@
 Davian authorized scoped implementation after the
 [clarified session contract](../architecture/browser-session-contract.md).
 This record separates code/local checks from deployment and actual Cognito/
-CloudFront/browser results. The existing hosted deployment is unchanged until
-a reviewed SST deployment is performed.
+CloudFront/browser results. Davian subsequently authorized deployment; the
+[deployment record](browser-session-deployment.md) documents the completed
+2026-11-12 SST rollout and live CloudFront/storage checks. Historical preview
+boundaries below precede that authorization.
 
 ## Implemented scope
 
@@ -149,7 +151,9 @@ The source-address safety throttle may be shared by viewers behind a CloudFront
 edge. It is not presented as an accurate per-browser identity. Separate authenticated
 identity/session limits remain; no untrusted forwarded-address header is used.
 
-Outstanding hosted checks: actual CloudFront JSON error preservation; real Cognito
+The [deployment record](browser-session-deployment.md) now verifies actual
+CloudFront JSON error preservation, direct-origin denial, public assets, scoped
+storage/cancellation/sign-out probes and scheduled cleanup. Remaining checks: real Cognito
 SRP handoff/refresh/revocation; elapsed 15-minute rotation and one-day expiry;
 actual reopen/privacy restrictions; actual KMS/IAM/context enforcement; sanitized
 log inspection; Firefox/WebKit/mobile Safari. Synthetic clocks, local AEAD and

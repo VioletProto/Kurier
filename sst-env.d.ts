@@ -6,6 +6,14 @@
 
 declare module "sst" {
   export interface Resource {
+    BrowserSessionBroker: {
+      name: string;
+      type: "sst.aws.Function";
+    };
+    BrowserSessions: {
+      name: string;
+      type: "sst.aws.Dynamo";
+    };
     CloudExecutionWorker: {
       name: string;
       type: "sst.aws.Function";

@@ -12,6 +12,10 @@ implementation after clarifying session admission, bootstrap retries and
 CloudFront errors. The [focused contract](browser-session-contract.md) records
 those corrections; [implementation status](../development/browser-session.md)
 separates local verification from hosted deployment and live checks.
+Davian subsequently approved the scoped `dev-api` deployment of `3695874`; the
+[deployment record](../development/browser-session-deployment.md) records live
+CloudFront error preservation, storage probes and cleanup while distinguishing
+the remaining real-account/browser/Cognito checks.
 MCP scope evolution and agent installation interfaces remain design decisions
 to resolve in their spikes.
 
