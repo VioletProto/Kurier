@@ -3,6 +3,7 @@ export const publicKeys = [
   "VITE_COGNITO_USER_POOL_ID",
   "VITE_COGNITO_CLIENT_ID",
   "VITE_KURIER_STAGE",
+  "VITE_KURIER_SESSION_BROKER",
 ] as const;
 
 export function hostedPublicConfig(env: Record<string, unknown>) {
@@ -19,10 +20,14 @@ export function hostedPublicConfig(env: Record<string, unknown>) {
     !/^us-east-2_[A-Za-z0-9]+$/.test(
       String(env.VITE_COGNITO_USER_POOL_ID ?? ""),
     ) ||
-    !/^[a-z0-9]+$/.test(String(env.VITE_COGNITO_CLIENT_ID ?? ""))
+    !/^[a-z0-9]+$/.test(String(env.VITE_COGNITO_CLIENT_ID ?? "")) ||
+    (env.VITE_KURIER_SESSION_BROKER !== undefined &&
+      !["true", "false"].includes(String(env.VITE_KURIER_SESSION_BROKER)))
   )
     throw new Error("Hosted public configuration is missing or invalid.");
   return Object.fromEntries(
-    publicKeys.map((key) => [key, String(env[key])]),
+    publicKeys
+      .filter((key) => env[key] !== undefined)
+      .map((key) => [key, String(env[key])]),
   ) as Record<(typeof publicKeys)[number], string>;
 }

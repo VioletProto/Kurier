@@ -7,8 +7,11 @@ consent-based local-agent setup and desktop/GitHub Releases/AUR feasibility on
 2026-11-11. The [planning continuation](../planning/onboarding-and-desktop.md)
 links delivery cards and prerequisite spikes and identifies affected contracts.
 The [session research](../spikes/browser-session-persistence.md) records Davian's
-backend-session and one-day reopening selections. Its detailed broker contract
-remains proposed for review; the active implementation is still memory-only.
+backend-session and one-day reopening selections. He authorized scoped broker
+implementation after clarifying session admission, bootstrap retries and
+CloudFront errors. The [focused contract](browser-session-contract.md) records
+those corrections; [implementation status](../development/browser-session.md)
+separates local verification from hosted deployment and live checks.
 MCP scope evolution and agent installation interfaces remain design decisions
 to resolve in their spikes.
 

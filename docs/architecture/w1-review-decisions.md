@@ -252,9 +252,11 @@ The [session design findings](../spikes/browser-session-persistence.md) record h
 selection of backend sessions and reopening until sign-out or fixed one-day
 expiry. They propose a same-origin refresh broker, HttpOnly cookie, encrypted
 server-side refresh storage and memory-only access tokens. Detailed interfaces,
-hosting/storage amendments and residual JWT revocation delay await review before
-delivery implementation. The [session design spike](https://trello.com/c/JR5tQXNA)
-tracks research and the remaining acceptance step. The
+hosting/storage amendments are recorded in the subsequent
+[broker contract](browser-session-contract.md). Davian authorized scoped
+implementation after the session-cap, replay and CloudFront-error clarifications;
+deployment remains subject to existing preview/review. The
+[session design spike](https://trello.com/c/JR5tQXNA) tracks the research. The
 [planning continuation](../planning/onboarding-and-desktop.md) records the
 requested outcome and affected contracts. The following memory-only behavior
 describes the current baseline.

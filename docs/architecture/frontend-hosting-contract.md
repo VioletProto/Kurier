@@ -3,8 +3,11 @@
 Session continuation (2026-11-11): Davian selected backend session persistence.
 The [research packet](../spikes/browser-session-persistence.md) proposes an
 uncached same-origin broker route, cookie/header forwarding, CSP `connect-src`
-amendment and isolated API origin behavior. These amend the static-only policy
-below if accepted; no hosting changes were made by the spike. Product/evidence
+amendment and isolated API origin behavior. The subsequent accepted
+[broker contract](browser-session-contract.md) authorizes scoped implementation
+and removes distribution-wide custom-error replacements to preserve broker JSON
+status/body. These amend the static-only policy below; no hosting changes were
+made by the spike. Product/evidence
 requests remain direct bearer API calls in the proposal.
 
 Status: **Accepted by Davian at `6b026a7` on 2026-10-16.**

@@ -5,7 +5,13 @@ Research date: **2026-11-11**. [Spike](https://trello.com/c/JR5tQXNA),
 
 Davian selected **backend sessions** and **survival across browser reopening until
 sign-out or the existing one-day expiry** during this spike. The recommended
-implementation is a same-origin refresh-session broker. The detailed interface
+implementation is a same-origin refresh-session broker. **Continuation:** Davian
+subsequently authorized proceeding after three corrections, incorporated in the
+[focused broker contract](../architecture/browser-session-contract.md): defer
+the five-session cap; authenticate idempotent retries that can reissue the same
+browser-generated cookie proof; remove distribution-wide CloudFront error
+replacement. The historical proposal below is superseded on those points.
+The detailed interface
 below is a **proposed contract amendment for review**, not a claim of runtime
 implementation, deployment or acceptance of every wire detail. The memory-only
 implementation remains active. No AWS calls or mutations were made for research.

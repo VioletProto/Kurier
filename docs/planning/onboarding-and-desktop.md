@@ -43,7 +43,11 @@ The [2026-11-11 research packet](../spikes/browser-session-persistence.md) recor
 Davian's selection of backend sessions and reopening until sign-out or fixed
 one-day expiry. It proposes a same-origin refresh broker with encrypted server-side
 refresh credentials, an HttpOnly cookie and memory-only access tokens. Detailed
-contract/hosting/storage choices await review before the delivery card proceeds.
+contract/hosting/storage choices are now clarified in the
+[broker contract](../architecture/browser-session-contract.md): defer the session
+count cap, reissue cookies from authenticated retries with the original
+browser-generated proof, and remove CloudFront's global error replacement.
+Davian authorized proceeding with scoped implementation using existing workflows.
 The research distinguishes local checks from future browser/Cognito/AWS gates
 and estimates 24–40 active implementation hours plus hosted/elapsed validation.
 

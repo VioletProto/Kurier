@@ -104,7 +104,10 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
     constructor(_name: string, args: any, opts: any) {
       staticArgs = args;
       staticOpts = opts;
-      cdn = { defaultCacheBehavior: { targetOriginId: "default" } };
+      cdn = {
+        origins: [{ originId: "default", domainName: "placeholder.sst.dev" }],
+        defaultCacheBehavior: { targetOriginId: "default" },
+      };
       args.transform.cdn(cdn);
     }
   }
@@ -124,7 +127,11 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
       BucketServerSideEncryptionConfigurationV2: Resource,
       BucketPolicy: Resource,
     },
-    cloudfront: { CachePolicy: Resource, ResponseHeadersPolicy: Resource },
+    cloudfront: {
+      CachePolicy: Resource,
+      ResponseHeadersPolicy: Resource,
+      OriginRequestPolicy: Resource,
+    },
   });
   vi.stubGlobal("sst", { aws: { StaticSite: Site } });
   build.mockReturnValue({
@@ -139,6 +146,7 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
     config.VITE_API_URL,
     config.VITE_COGNITO_USER_POOL_ID,
     config.VITE_COGNITO_CLIENT_ID,
+    "fixture-origin-proof",
   );
   expect(result).toMatchObject({ siteUrl: "https://dexample.cloudfront.net" });
   expect(staticArgs.assets.purge).toBe(false);
@@ -148,6 +156,67 @@ it("keeps static origins separate, honors no-store, signs scoped S3 reads, retai
     responseHeadersPolicyId: "FrontendWebHeaders",
     cachePolicyId: "FrontendWebCache",
   });
+  expect(build).toHaveBeenCalledWith({
+    ...config,
+    VITE_KURIER_SESSION_BROKER: "true",
+  });
+  expect(JSON.stringify(build.mock.calls.at(-1))).not.toContain(
+    "fixture-origin-proof",
+  );
+  expect(
+    resources.find((r) => r.name === "BrowserSessionCache").args,
+  ).toMatchObject({ minTtl: 0, defaultTtl: 0, maxTtl: 0 });
+  const originRequest = resources.find(
+    (r) => r.name === "BrowserSessionOriginRequest",
+  ).args;
+  expect(originRequest.headersConfig).toEqual({
+    headerBehavior: "allExcept",
+    headers: { items: ["host"] },
+  });
+  expect(originRequest.cookiesConfig).toEqual({
+    cookieBehavior: "whitelist",
+    cookies: { items: ["__Host-kurier-session"] },
+  });
+  expect(cdn.origins).toContainEqual(
+    expect.objectContaining({
+      originId: "browser-session",
+      domainName: "abc.execute-api.us-east-2.amazonaws.com",
+      customHeaders: [
+        { name: "X-Kurier-Session-Origin", value: "fixture-origin-proof" },
+      ],
+    }),
+  );
+  expect(cdn.orderedCacheBehaviors.map((b: any) => b.pathPattern)).toEqual([
+    "/api/v1/browser-session",
+    "/api/v1/browser-session/*",
+  ]);
+  for (const behavior of cdn.orderedCacheBehaviors) {
+    expect(behavior).toMatchObject({
+      targetOriginId: "browser-session",
+      cachePolicyId: "BrowserSessionCache",
+      originRequestPolicyId: "BrowserSessionOriginRequest",
+      viewerProtocolPolicy: "https-only",
+    });
+    expect(behavior.functionAssociations).toBeUndefined();
+    expect(behavior.allowedMethods).toEqual(
+      expect.arrayContaining(["GET", "POST", "DELETE"]),
+    );
+  }
+  // These settings apply to every behavior: replacing 403 here would turn a
+  // broker JSON denial into a static response despite its zero-TTL behavior.
+  for (const error of cdn.customErrorResponses) {
+    expect(error.errorCachingMinTtl).toBe(0);
+    expect(error.responseCode).toBeUndefined();
+    expect(error.responsePagePath).toBeUndefined();
+  }
+  expect(cdn.customErrorResponses).toContainEqual({
+    errorCode: 403,
+    errorCachingMinTtl: 0,
+  });
+  expect(
+    resources.find((r) => r.name === "FrontendWebHeaders").args
+      .securityHeadersConfig.contentSecurityPolicy.contentSecurityPolicy,
+  ).toContain("connect-src 'self'");
   expect(
     resources.find((r) => r.name === "FrontendWebCache").args,
   ).toMatchObject({ minTtl: 0, defaultTtl: 0 });

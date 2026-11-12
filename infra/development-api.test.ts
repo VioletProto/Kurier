@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createDevelopmentApi } from "./development-api";
+import {
+  browserSessionOriginSecret,
+  createDevelopmentApi,
+} from "./development-api";
+import { createHmac } from "node:crypto";
 vi.mock("./frontend-hosting", () => ({
   createDevelopmentWeb: () => ({
     apply: (fn: any) => fn({ siteUrl: "https://dexample.cloudfront.net" }),
@@ -54,6 +58,11 @@ beforeEach(() => {
   });
   vi.stubGlobal("aws", {
     getCallerIdentity: identity,
+    ssm: {
+      getParameterOutput: () => ({
+        value: Buffer.alloc(32, 7).toString("base64"),
+      }),
+    },
     cognito: {
       getUserPool: async () => ({ id: "us-east-2_Example" }),
       getUserPoolClient: async () => ({
@@ -83,6 +92,9 @@ beforeEach(() => {
     },
   });
   vi.stubGlobal("$jsonStringify", JSON.stringify);
+  vi.stubGlobal("$util", {
+    secret: (value: any) => ({ apply: (fn: any) => fn(value) }),
+  });
   vi.stubGlobal("$app", { stage: "dev-api" });
   vi.stubGlobal(
     "$interpolate",
@@ -126,7 +138,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(64);
+    expect(resources.filter((r) => r.route)).toHaveLength(69);
     const declaredRoutes = resources.filter((r) => r.route).map((r) => r.route);
     expect(declaredRoutes).toEqual(
       expect.arrayContaining([
@@ -266,6 +278,90 @@ describe("scoped development API infrastructure", () => {
         .permissions,
     ).toBeUndefined();
     expect(out.stage).toBe("dev-api");
+  });
+  it("isolates disposable sessions, broker crypto and bounded cleanup from product roles", async () => {
+    const out = await createDevelopmentApi();
+    const table = resources.find((r) => r.name === "BrowserSessions")!;
+    expect(table.args).toMatchObject({
+      fields: { PK: "string" },
+      primaryIndex: { hashKey: "PK" },
+      ttl: "ttl",
+    });
+    expect(table.table).toMatchObject({
+      pointInTimeRecovery: { enabled: false },
+      deletionProtectionEnabled: true,
+      billingMode: "PAY_PER_REQUEST",
+    });
+    const broker = resources.find((r) => r.name === "BrowserSessionBroker")!;
+    expect(broker.args).toMatchObject({
+      handler:
+        "services/api/github.com/VioletProto/Kurier/services/api/cmd/browser-session",
+      runtime: "go",
+      architecture: "arm64",
+      timeout: "15 seconds",
+      dev: false,
+    });
+    expect(broker.args.environment).toMatchObject({
+      KURIER_SESSION_TABLE: "BrowserSessions",
+      KURIER_SESSION_KEY_ARN: "arn:test:ProtectedStageKey",
+      KURIER_SESSION_ORIGIN_SECRET_PARAMETER: "/kurier/dev-api/cursor-key",
+      KURIER_SESSION_FRONTEND_ORIGIN: "https://dexample.cloudfront.net",
+    });
+    expect(
+      broker.args.environment.KURIER_SESSION_ORIGIN_SECRET,
+    ).toBeUndefined();
+    const control = broker.args.permissions.find((p: any) =>
+      p.resources.includes("arn:test:Control"),
+    );
+    expect(control).toMatchObject({
+      actions: ["dynamodb:GetItem", "dynamodb:ConditionCheckItem"],
+      conditions: [
+        {
+          test: "ForAllValues:StringEquals",
+          variable: "dynamodb:LeadingKeys",
+          values: ["STAGE#dev-api"],
+        },
+      ],
+    });
+    const crypto = broker.args.permissions.find((p: any) =>
+      p.actions.includes("kms:Decrypt"),
+    );
+    expect(crypto.conditions).toContainEqual({
+      test: "StringEquals",
+      variable: "kms:EncryptionContext:purpose",
+      values: ["browser-session"],
+    });
+    for (const role of [
+      "UsersProjectsApi",
+      "CloudExecutionWorker",
+      "EmptyProjectCleanup",
+    ]) {
+      expect(
+        JSON.stringify(
+          resources.find((r) => r.name === role)!.args.permissions,
+        ),
+      ).not.toContain("BrowserSessions");
+      expect(
+        JSON.stringify(
+          resources.find((r) => r.name === role)!.args.permissions,
+        ),
+      ).not.toContain('"browser-session"');
+    }
+    expect(
+      resources.find((r) => r.name === "BrowserSessionCleanupSchedule")!.args,
+    ).toEqual({
+      schedule: "rate(1 minute)",
+      function: expect.objectContaining({ name: "BrowserSessionBroker" }),
+      event: { maintenance: true },
+    });
+    expect(JSON.stringify(out)).not.toContain("KURIER_SESSION_ORIGIN_SECRET");
+    const encoded = Buffer.alloc(32, 7).toString("base64");
+    expect(browserSessionOriginSecret(encoded)).toBe(
+      createHmac("sha256", encoded)
+        .update("kurier:dev-api:browser-session-origin:v1")
+        .digest("base64url"),
+    );
+    expect(() => browserSessionOriginSecret("short")).toThrow("unavailable");
   });
   it("refuses root and wrong-account deployment", async () => {
     identity.mockResolvedValue({

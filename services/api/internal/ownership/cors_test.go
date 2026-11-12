@@ -110,3 +110,25 @@ func TestHostedFrontendCORS(t *testing.T) {
 		}
 	}
 }
+
+func TestSecureLocalFrontendOriginRemainsExactAndBearerOnly(t *testing.T) {
+	h, err := LocalCORS(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	}), "https://localhost:5173")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, origin := range []string{"https://localhost:5173", "http://localhost:5173", "https://localhost:5174", "https://other.example:5173"} {
+		r := httptest.NewRequest("GET", "/api/v1/users/me", nil)
+		r.Header.Set("Origin", origin)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		want := http.StatusForbidden
+		if origin == "https://localhost:5173" {
+			want = http.StatusUnauthorized
+		}
+		if w.Code != want || w.Header().Get("Access-Control-Allow-Credentials") != "" {
+			t.Fatal("secure local origin broadened access or enabled cookies")
+		}
+	}
+}
