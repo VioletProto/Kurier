@@ -87,6 +87,31 @@ it("keeps transient broker failures retryable without rendering sign-in", async 
   fireEvent.click(screen.getByRole("button", { name: "Retry session" }));
   await screen.findByRole("button", { name: "Sign in" });
 });
+it("preserves password-manager-filled fields when focus returns to sign-in", async () => {
+  mocks.broker = true;
+  render(<App />);
+  await screen.findByRole("button", { name: /^Sign in$/ });
+  const originalEmail = screen.getByLabelText("Email");
+  const originalPassword = screen.getByLabelText("Password");
+  email();
+  password();
+  fireEvent(window, new Event("blur"));
+  fireEvent(window, new Event("focus"));
+  expect(screen.getByLabelText("Email")).toBe(originalEmail);
+  expect(screen.getByLabelText("Password")).toBe(originalPassword);
+  expect(originalEmail).toHaveValue("fixture@example.com");
+  expect(originalPassword).toHaveValue("Test-only-password1!");
+  expect(mocks.restore).toHaveBeenCalledTimes(1);
+});
+it("still revalidates a signed-in workspace when focus returns", async () => {
+  mocks.broker = true;
+  mocks.restore.mockResolvedValue(true);
+  render(<App />);
+  await screen.findByRole("button", { name: "Sign out" });
+  fireEvent(window, new Event("focus"));
+  await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(2));
+  await screen.findByRole("button", { name: "Sign out" });
+});
 it("suspends broker state on pagehide without revocation and restores BFCache", async () => {
   mocks.broker = true;
   mocks.restore.mockResolvedValue(true);

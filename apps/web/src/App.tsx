@@ -80,14 +80,20 @@ export function App() {
       void restoreSession();
     };
     window.addEventListener(sessionChangedEvent, changed);
-    window.addEventListener("focus", changed);
     const lifecycleRef = lifecycle;
     return () => {
       lifecycleRef.current++;
       window.removeEventListener(sessionChangedEvent, changed);
-      window.removeEventListener("focus", changed);
     };
   }, []);
+  useEffect(() => {
+    // Returning from a password-manager popup must preserve the auth form.
+    // Revalidate on focus only while private workspace content is displayed.
+    if (!sessionBrokerEnabled || !signedIn) return;
+    const focused = () => void restoreSession();
+    window.addEventListener("focus", focused);
+    return () => window.removeEventListener("focus", focused);
+  }, [signedIn]);
   useEffect(() => {
     // Clear rendered data before a history snapshot can preserve the workspace.
     const clear = () => {

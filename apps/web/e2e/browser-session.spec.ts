@@ -1,5 +1,39 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
 
+test("password-manager focus return preserves filled sign-in fields", async ({
+  page,
+}) => {
+  let restores = 0;
+  await page.route("**/api/v1/browser-session", async (route) => {
+    restores++;
+    await route.fulfill({
+      status: 401,
+      json: { error: { code: "unauthenticated" } },
+      headers: { "Cache-Control": "no-store" },
+    });
+  });
+  await page.goto("https://localhost:5176");
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeVisible();
+  const form = await page.locator("form").elementHandle();
+  await page.getByLabel("Email").fill("fixture@example.com");
+  await page
+    .getByLabel("Password", { exact: true })
+    .fill("Fixture-only-password1!");
+  const initialRestores = restores;
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("blur"));
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect(page.getByLabel("Email")).toHaveValue("fixture@example.com");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveValue(
+    "Fixture-only-password1!",
+  );
+  expect(await form?.evaluate((element) => element.isConnected)).toBe(true);
+  expect(restores).toBe(initialRestores);
+});
+
 test("restores a first-party HttpOnly session across reload, tabs and reopening, then signs out", async ({
   browser,
 }) => {
