@@ -112,6 +112,27 @@ it("still revalidates a signed-in workspace when focus returns", async () => {
   await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(2));
   await screen.findByRole("button", { name: "Sign out" });
 });
+it.each([false, true])(
+  "allows signing in again after sign-out (broker=%s)",
+  async (broker) => {
+    mocks.broker = broker;
+    mocks.login.mockResolvedValue("done");
+    render(<App />);
+    await screen.findByRole("button", { name: /^Sign in$/ });
+    email();
+    password();
+    fireEvent.click(screen.getByRole("button", { name: /^Sign in$/ }));
+    await screen.findByRole("button", { name: "Sign out" });
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("button", { name: /^Sign in$/ });
+    email();
+    password();
+    fireEvent.click(screen.getByRole("button", { name: /^Sign in$/ }));
+    await screen.findByRole("button", { name: "Sign out" });
+    expect(mocks.login).toHaveBeenCalledTimes(2);
+    expect(mocks.logout).toHaveBeenCalledTimes(1);
+  },
+);
 it("suspends broker state on pagehide without revocation and restores BFCache", async () => {
   mocks.broker = true;
   mocks.restore.mockResolvedValue(true);

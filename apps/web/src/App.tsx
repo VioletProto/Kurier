@@ -133,6 +133,7 @@ export function App() {
   }, []);
   async function logout(expired = false) {
     lifecycle.current++;
+    setAuthFormGeneration(lifecycle.current);
     setSignedIn(false);
     setLeaving(true);
     setNotice(
