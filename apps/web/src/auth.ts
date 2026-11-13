@@ -11,33 +11,108 @@ import {
 } from "aws-amplify/auth";
 import { cognitoUserPoolsTokenProvider } from "aws-amplify/auth/cognito";
 import { sharedInMemoryStorage } from "aws-amplify/utils";
+import {
+  SessionBroker,
+  SessionExpired,
+  SessionUnavailable,
+} from "./session-broker";
+export {
+  SessionExpired,
+  SessionUnavailable,
+  sessionChangedEvent,
+} from "./session-broker";
 
 const pool = import.meta.env.VITE_COGNITO_USER_POOL_ID;
 const client = import.meta.env.VITE_COGNITO_CLIENT_ID;
 export const authConfigured = Boolean(pool && client);
+export const sessionBrokerEnabled =
+  import.meta.env.VITE_KURIER_SESSION_BROKER === "true";
+// Supported Amplify storage interface. Refresh material exists here only during
+// the SRP-to-broker handoff; the pinned key suffix is covered by SDK adapter tests.
+const transient = new Map<string, string>();
+const handoffStorage = {
+  async getItem(key: string) {
+    return transient.get(key) ?? null;
+  },
+  async setItem(key: string, value: string) {
+    transient.set(key, value);
+  },
+  async removeItem(key: string) {
+    transient.delete(key);
+  },
+  async clear() {
+    transient.clear();
+  },
+};
+const broker = sessionBrokerEnabled ? new SessionBroker() : undefined;
 if (authConfigured) {
   Amplify.configure({
     Auth: { Cognito: { userPoolId: pool, userPoolClientId: client } },
   });
-  cognitoUserPoolsTokenProvider.setKeyValueStorage(sharedInMemoryStorage);
+  cognitoUserPoolsTokenProvider.setKeyValueStorage(
+    broker ? handoffStorage : sharedInMemoryStorage,
+  );
 }
 
 let generation = 0;
 let active = false;
 let refresh: Promise<string> | undefined;
-export class SessionExpired extends Error {
-  constructor() {
-    super("Your session ended. Please sign in again.");
-  }
-}
 export const auth = {
+  restore: () => {
+    if (!broker) return Promise.resolve(false);
+    generation++;
+    transient.clear();
+    return broker.restore();
+  },
+  suspend() {
+    if (broker) {
+      generation++;
+      transient.clear();
+      broker.suspend();
+    }
+  },
   async login(email: string, password: string) {
+    const loginGeneration = ++generation;
+    if (broker?.hasAttempt(email)) {
+      await broker.bootstrap(email);
+      await broker.confirmCookie();
+      transient.clear();
+      return "done";
+    }
+    if (broker) {
+      await broker.prepareLogin(email);
+      transient.clear();
+    }
     const result = await signIn({
       username: email,
       password,
       options: { authFlowType: "USER_SRP_AUTH" },
     });
+    if (broker && loginGeneration !== generation) {
+      transient.clear();
+      throw new SessionExpired();
+    }
     if (result.isSignedIn) {
+      if (broker) {
+        const session = await fetchAuthSession();
+        if (loginGeneration !== generation) {
+          transient.clear();
+          throw new SessionExpired();
+        }
+        const access = session.tokens?.accessToken?.toString();
+        const refreshValues = [...transient.entries()].filter(
+          ([key]) =>
+            key.startsWith(`CognitoIdentityServiceProvider.${client}.`) &&
+            key.endsWith(".refreshToken"),
+        );
+        if (!access || refreshValues.length !== 1) throw new SessionExpired();
+        try {
+          await broker.bootstrap(email, access, refreshValues[0][1]);
+          await broker.confirmCookie();
+        } finally {
+          transient.clear();
+        }
+      }
       active = true;
       generation++;
     }
@@ -64,6 +139,7 @@ export const auth = {
       newPassword: password,
     }),
   async token(force = false): Promise<string> {
+    if (broker) return broker.token(force);
     if (!active) throw new SessionExpired();
     if (refresh) return refresh;
     const current = generation;
@@ -93,6 +169,16 @@ export const auth = {
     return refresh;
   },
   async logout() {
+    if (broker) {
+      generation++;
+      try {
+        return await broker.logout();
+      } finally {
+        transient.clear();
+        active = false;
+        generation++;
+      }
+    }
     active = false;
     generation++;
     // Finish any SDK refresh before clearing storage, preventing late writes.
@@ -106,6 +192,8 @@ export const auth = {
 };
 
 export function authMessage(error: unknown): string {
+  if (error instanceof SessionUnavailable || error instanceof SessionExpired)
+    return error.message;
   const name = error instanceof Error ? error.name : "";
   if (name === "CodeMismatchException" || name === "ExpiredCodeException")
     return "The code is invalid or expired. Request a new code and try again.";

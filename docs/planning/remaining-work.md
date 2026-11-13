@@ -1,5 +1,16 @@
 # Remaining-work plan
 
+## November 11 backlog continuation
+
+Environments and OpenAPI are deployed with recorded hosted checks. The October
+snapshot below retains historical estimates and states. The
+[onboarding and desktop plan](onboarding-and-desktop.md) adds reload-persistent
+sign-in, selectable MCP project exposure, guided agent setup and a desktop /
+GitHub Releases / AUR feasibility spike, with linked prerequisites. The
+[tabbed workspace card](https://trello.com/c/cF4IzJMO) tracks responsive UI work.
+MCP stored contract results remains an open MVP item. Sequence new work using
+spike findings and actual remaining effort and deadline.
+
 Planning snapshot updated: **2026-10-27**. Davian owns all work. This is a delivery
 workload plan, separate from the proposal's preserved ten-week, 200-hour planned
 timeline. Estimates below are provisional active effort projected by Davian from his

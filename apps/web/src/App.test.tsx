@@ -14,6 +14,9 @@ const mocks = vi.hoisted(() => ({
   reset: vi.fn(),
   confirmReset: vi.fn(),
   logout: vi.fn(),
+  restore: vi.fn(),
+  suspend: vi.fn(),
+  broker: false,
   token: vi.fn(),
   me: vi.fn(),
   list: vi.fn(),
@@ -23,6 +26,9 @@ vi.mock("./auth", async () => {
   return {
     ...real,
     authConfigured: true,
+    get sessionBrokerEnabled() {
+      return mocks.broker;
+    },
     auth: {
       login: mocks.login,
       signup: mocks.signup,
@@ -31,6 +37,8 @@ vi.mock("./auth", async () => {
       reset: mocks.reset,
       confirmReset: mocks.confirmReset,
       logout: mocks.logout,
+      restore: mocks.restore,
+      suspend: mocks.suspend,
       token: mocks.token,
     },
   };
@@ -42,6 +50,8 @@ vi.mock("./api", async () => {
 import { App } from "./App";
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.broker = false;
+  mocks.restore.mockResolvedValue(false);
   mocks.me.mockResolvedValue({
     userId: "user",
     displayName: "",
@@ -51,6 +61,91 @@ beforeEach(() => {
   mocks.logout.mockResolvedValue(undefined);
 });
 afterEach(cleanup);
+it("holds both private content and sign-in while restoring a broker session", async () => {
+  mocks.broker = true;
+  let finish!: (restored: boolean) => void;
+  mocks.restore.mockReturnValue(
+    new Promise<boolean>((resolve) => {
+      finish = resolve;
+    }),
+  );
+  render(<App />);
+  expect(screen.getByText("Restoring your session…")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Sign in" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
+  finish(true);
+  await screen.findByRole("button", { name: "Sign out" });
+  expect(mocks.me).toHaveBeenCalled();
+});
+it("keeps transient broker failures retryable without rendering sign-in", async () => {
+  mocks.broker = true;
+  mocks.restore.mockRejectedValueOnce(new Error("temporary"));
+  render(<App />);
+  await screen.findByRole("button", { name: "Retry session" });
+  expect(screen.queryByRole("button", { name: "Sign in" })).toBeNull();
+  mocks.restore.mockResolvedValueOnce(false);
+  fireEvent.click(screen.getByRole("button", { name: "Retry session" }));
+  await screen.findByRole("button", { name: "Sign in" });
+});
+it("preserves password-manager-filled fields when focus returns to sign-in", async () => {
+  mocks.broker = true;
+  render(<App />);
+  await screen.findByRole("button", { name: /^Sign in$/ });
+  const originalEmail = screen.getByLabelText("Email");
+  const originalPassword = screen.getByLabelText("Password");
+  email();
+  password();
+  fireEvent(window, new Event("blur"));
+  fireEvent(window, new Event("focus"));
+  expect(screen.getByLabelText("Email")).toBe(originalEmail);
+  expect(screen.getByLabelText("Password")).toBe(originalPassword);
+  expect(originalEmail).toHaveValue("fixture@example.com");
+  expect(originalPassword).toHaveValue("Test-only-password1!");
+  expect(mocks.restore).toHaveBeenCalledTimes(1);
+});
+it("still revalidates a signed-in workspace when focus returns", async () => {
+  mocks.broker = true;
+  mocks.restore.mockResolvedValue(true);
+  render(<App />);
+  await screen.findByRole("button", { name: "Sign out" });
+  fireEvent(window, new Event("focus"));
+  await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(2));
+  await screen.findByRole("button", { name: "Sign out" });
+});
+it.each([false, true])(
+  "allows signing in again after sign-out (broker=%s)",
+  async (broker) => {
+    mocks.broker = broker;
+    mocks.login.mockResolvedValue("done");
+    render(<App />);
+    await screen.findByRole("button", { name: /^Sign in$/ });
+    email();
+    password();
+    fireEvent.click(screen.getByRole("button", { name: /^Sign in$/ }));
+    await screen.findByRole("button", { name: "Sign out" });
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("button", { name: /^Sign in$/ });
+    email();
+    password();
+    fireEvent.click(screen.getByRole("button", { name: /^Sign in$/ }));
+    await screen.findByRole("button", { name: "Sign out" });
+    expect(mocks.login).toHaveBeenCalledTimes(2);
+    expect(mocks.logout).toHaveBeenCalledTimes(1);
+  },
+);
+it("suspends broker state on pagehide without revocation and restores BFCache", async () => {
+  mocks.broker = true;
+  mocks.restore.mockResolvedValue(true);
+  render(<App />);
+  await screen.findByRole("button", { name: "Sign out" });
+  fireEvent(window, new PageTransitionEvent("pagehide", { persisted: true }));
+  expect(mocks.suspend).toHaveBeenCalled();
+  expect(mocks.logout).not.toHaveBeenCalled();
+  expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
+  fireEvent(window, new PageTransitionEvent("pageshow", { persisted: true }));
+  await screen.findByRole("button", { name: "Sign out" });
+  expect(mocks.restore).toHaveBeenCalledTimes(2);
+});
 it("clears signed-in state and auth inputs across browser history restoration", async () => {
   mocks.login.mockResolvedValue("done");
   render(<App />);

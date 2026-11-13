@@ -1,11 +1,13 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 import { hostedPublicConfig } from "./public-config";
+import { sessionDevelopmentConfig } from "./session-dev-config";
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
   base: "/",
   envDir: mode === "hosted" ? false : undefined,
+  ...(mode === "hosted" ? {} : sessionDevelopmentConfig(process.env)),
   ...(mode === "hosted"
     ? {
         define: Object.fromEntries(

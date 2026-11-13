@@ -247,6 +247,20 @@ Manager. [Envelope encryption](https://docs.aws.amazon.com/kms/latest/developerg
 
 ## Authentication and email
 
+Davian requested sign-in persistence across browser reload on 2026-11-11.
+The [session design findings](../spikes/browser-session-persistence.md) record his
+selection of backend sessions and reopening until sign-out or fixed one-day
+expiry. They propose a same-origin refresh broker, HttpOnly cookie, encrypted
+server-side refresh storage and memory-only access tokens. Detailed interfaces,
+hosting/storage amendments are recorded in the subsequent
+[broker contract](browser-session-contract.md). Davian authorized scoped
+implementation after the session-cap, replay and CloudFront-error clarifications;
+deployment remains subject to existing preview/review. The
+[session design spike](https://trello.com/c/JR5tQXNA) tracks the research. The
+[planning continuation](../planning/onboarding-and-desktop.md) records the
+requested outcome and affected contracts. The following memory-only behavior
+describes the current baseline.
+
 Use Cognito Essentials explicitly, public SRP-capable app client, 15-minute access
 tokens, one-day rotating refresh session, browser memory storage (not
 localStorage), reauthenticate after reload. Go verifies RS256/key type/kid,

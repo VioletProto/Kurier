@@ -1,6 +1,8 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
+  // The broker fixture has its own HTTPS server and capability configuration.
+  testIgnore: "browser-session.spec.ts",
   workers: 1,
   timeout: 60000,
   retries: 0,

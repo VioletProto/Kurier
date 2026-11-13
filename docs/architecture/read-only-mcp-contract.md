@@ -1,5 +1,16 @@
 # Read-only MCP slice: proposed review packet
 
+## Requested connection and scope continuation — 2026-11-11
+
+Davian requested one MCP connection with a user choice of manual project
+selection or automatic exposure of current and future owned projects. The
+[scope design spike](https://trello.com/c/mgcmRSIa) defines consent, scope mode
+and lifecycle, discovery/cursors, limits and compatibility before the
+[delivery card](https://trello.com/c/RaD7xqgS) is implemented. The
+[planning continuation](../planning/onboarding-and-desktop.md) records affected
+interfaces and verification. The existing immutable explicit-project credential
+model below is the current baseline.
+
 Status: **Accepted by Davian** at `2d8d43c`, including evidence-size limits
 and credential-storage tradeoffs. Scoped implementation, API synchronization,
 local/client tests and AWS deployment/activation preview with refreshed costs

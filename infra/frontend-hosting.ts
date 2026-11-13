@@ -9,7 +9,7 @@ export function hostingHeaders(apiOrigin: string) {
   return {
     contentSecurityPolicy: {
       override: true,
-      contentSecurityPolicy: `default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src ${apiOrigin} https://cognito-idp.us-east-2.amazonaws.com; form-action 'self'; manifest-src 'self'; worker-src 'none'; upgrade-insecure-requests`,
+      contentSecurityPolicy: `default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' ${apiOrigin} https://cognito-idp.us-east-2.amazonaws.com; form-action 'self'; manifest-src 'self'; worker-src 'none'; upgrade-insecure-requests`,
     },
     contentTypeOptions: { override: true },
     frameOptions: { override: true, frameOption: "DENY" },
@@ -23,11 +23,12 @@ export function hostingHeaders(apiOrigin: string) {
   };
 }
 
-// No API proxy and no secret links. Only this existing API's public URL is needed.
+// Only the session broker is proxied. Product/evidence requests remain direct.
 export function createDevelopmentWeb(
   apiUrl: $util.Input<string>,
   pool: string,
   client: string,
+  sessionOriginSecret: $util.Input<string>,
 ) {
   return $output(apiUrl).apply((apiOrigin) => {
     // Match the pinned StaticSite namespace; no additional KV store/resource.
@@ -40,6 +41,7 @@ export function createDevelopmentWeb(
       VITE_COGNITO_USER_POOL_ID: pool,
       VITE_COGNITO_CLIENT_ID: client,
       VITE_KURIER_STAGE: "dev-api",
+      VITE_KURIER_SESSION_BROKER: "true",
     });
     const bucket = new aws.s3.BucketV2(
       "FrontendWebAssets",
@@ -96,6 +98,35 @@ export function createDevelopmentWeb(
         },
       },
     );
+    const sessionCache = new aws.cloudfront.CachePolicy("BrowserSessionCache", {
+      minTtl: 0,
+      defaultTtl: 0,
+      maxTtl: 0,
+      parametersInCacheKeyAndForwardedToOrigin: {
+        enableAcceptEncodingBrotli: false,
+        enableAcceptEncodingGzip: false,
+        cookiesConfig: { cookieBehavior: "none" },
+        headersConfig: { headerBehavior: "none" },
+        queryStringsConfig: { queryStringBehavior: "none" },
+      },
+    });
+    const sessionRequest = new aws.cloudfront.OriginRequestPolicy(
+      "BrowserSessionOriginRequest",
+      {
+        // Forward Authorization and the browser's Origin/CSRF/Fetch Metadata
+        // headers, excluding Host so API Gateway receives its own origin
+        // hostname. The entire behavior is uncached.
+        headersConfig: {
+          headerBehavior: "allExcept",
+          headers: { items: ["host"] },
+        },
+        cookiesConfig: {
+          cookieBehavior: "whitelist",
+          cookies: { items: ["__Host-kurier-session"] },
+        },
+        queryStringsConfig: { queryStringBehavior: "none" },
+      },
+    );
     const site = new sst.aws.StaticSite(
       "FrontendWeb",
       {
@@ -145,15 +176,56 @@ event.request.cookies = {};
               cachePolicyId: cache.id,
               responseHeadersPolicyId: headers.id,
             };
-            args.customErrorResponses = [
+            args.origins = $output(args.origins).apply((origins) => [
+              ...origins,
               {
-                errorCode: 403,
-                responseCode: 404,
-                responsePagePath: "/404.html",
-                errorCachingMinTtl: 0,
+                originId: "browser-session",
+                domainName: new URL(apiOrigin).hostname,
+                customHeaders: [
+                  {
+                    name: "X-Kurier-Session-Origin",
+                    value: sessionOriginSecret,
+                  },
+                ],
+                customOriginConfig: {
+                  httpPort: 80,
+                  httpsPort: 443,
+                  originProtocolPolicy: "https-only",
+                  originSslProtocols: ["TLSv1.2"],
+                  originReadTimeout: 20,
+                },
               },
-              { errorCode: 404, errorCachingMinTtl: 0 },
-            ];
+            ]);
+            args.orderedCacheBehaviors = [
+              "/api/v1/browser-session",
+              "/api/v1/browser-session/*",
+            ].map((pathPattern) => ({
+              pathPattern,
+              targetOriginId: "browser-session",
+              viewerProtocolPolicy: "https-only",
+              // CloudFront requires its complete method set for POST/DELETE.
+              allowedMethods: [
+                "DELETE",
+                "GET",
+                "HEAD",
+                "OPTIONS",
+                "PATCH",
+                "POST",
+                "PUT",
+              ],
+              cachedMethods: ["GET", "HEAD"],
+              cachePolicyId: sessionCache.id,
+              originRequestPolicyId: sessionRequest.id,
+              responseHeadersPolicyId: headers.id,
+              compress: false,
+              // Deliberately no static viewer function or SPA rewriting.
+            }));
+            // Error replacement is distribution-wide, including broker paths.
+            // Preserve origin JSON/status; only disable error caching. Static
+            // missing files are handled by the static viewer function above.
+            args.customErrorResponses = [
+              400, 403, 404, 405, 414, 416, 500, 501, 502, 503, 504,
+            ].map((errorCode) => ({ errorCode, errorCachingMinTtl: 0 }));
             args.transform = {
               distribution(distribution) {
                 distribution.priceClass = "PriceClass_100";

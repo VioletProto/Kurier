@@ -18,10 +18,10 @@ func LocalCORS(next http.Handler, origin string) (http.Handler, error) {
 func FrontendCORS(next http.Handler, local, hosted string) (http.Handler, error) {
 	// Local development remains an explicit loopback origin.
 	u, err := url.Parse(local)
-	if err != nil || u.Scheme != "http" || u.User != nil || u.Port() == "" ||
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.Port() == "" ||
 		(u.Hostname() != "localhost" && u.Hostname() != "127.0.0.1" && u.Hostname() != "::1") ||
 		u.Path != "" || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.String() != local {
-		return nil, errors.New("frontend origin must be an explicit HTTP loopback origin with port")
+		return nil, errors.New("frontend origin must be an explicit HTTP or HTTPS loopback origin with port")
 	}
 	allowed := map[string]bool{local: true}
 	if hosted != "" {

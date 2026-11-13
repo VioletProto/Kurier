@@ -1,4 +1,13 @@
 import { createDevelopmentWeb } from "./frontend-hosting";
+import { createHmac } from "node:crypto";
+
+export function browserSessionOriginSecret(encodedKey: string) {
+  if (Buffer.from(encodedKey, "base64").length < 32)
+    throw new Error("Session origin key unavailable.");
+  return createHmac("sha256", encodedKey)
+    .update("kurier:dev-api:browser-session-origin:v1")
+    .digest("base64url");
+}
 
 // Scoped users/projects slice; existing Cognito is read, never managed here.
 export async function createDevelopmentApi() {
@@ -77,6 +86,19 @@ export async function createDevelopmentApi() {
       table(args) {
         args.billingMode = "PAY_PER_REQUEST";
         args.pointInTimeRecovery = { enabled: true };
+        args.deletionProtectionEnabled = true;
+      },
+    },
+  });
+  const sessions = new sst.aws.Dynamo("BrowserSessions", {
+    fields: { PK: "string" },
+    primaryIndex: { hashKey: "PK" },
+    ttl: "ttl",
+    transform: {
+      table(args) {
+        args.billingMode = "PAY_PER_REQUEST";
+        // Login state is disposable and must never be restored from PITR.
+        args.pointInTimeRecovery = { enabled: false };
         args.deletionProtectionEnabled = true;
       },
     },
@@ -259,7 +281,92 @@ export async function createDevelopmentApi() {
       },
     },
   });
-  const web = createDevelopmentWeb(api.url, poolId!, clientId!);
+  // Purpose separation prevents the public origin verifier from disclosing the
+  // cursor signing key. Keep the derived value secret in state/preview output;
+  // it is never exported or passed to the frontend build.
+  const sessionOriginSecret = $util
+    .secret(
+      aws.ssm.getParameterOutput({ name: parameterName, withDecryption: true })
+        .value,
+    )
+    .apply(browserSessionOriginSecret);
+  const web = createDevelopmentWeb(
+    api.url,
+    poolId!,
+    clientId!,
+    sessionOriginSecret,
+  );
+  const broker = new sst.aws.Function("BrowserSessionBroker", {
+    runtime: "go",
+    // SST 4.17.1 passes the module-relative handler suffix directly to
+    // `go build`, without adding `./`. Use the package's full import path
+    // after the module directory so nested main packages build correctly.
+    handler:
+      "services/api/github.com/VioletProto/Kurier/services/api/cmd/browser-session",
+    architecture: "arm64",
+    memory: "256 MB",
+    timeout: "15 seconds",
+    dev: false,
+    logging: { retention: "1 week" },
+    environment: {
+      KURIER_STAGE: "dev-api",
+      KURIER_SESSION_TABLE: sessions.name,
+      KURIER_CONTROL_TABLE: control.name,
+      KURIER_SESSION_KEY_ARN: stageKey.arn,
+      KURIER_SESSION_ORIGIN_SECRET_PARAMETER: parameterName,
+      KURIER_SESSION_FRONTEND_ORIGIN: web.apply((value) => value.siteUrl),
+      KURIER_COGNITO_ISSUER: `https://cognito-idp.us-east-2.amazonaws.com/${poolId}`,
+      KURIER_COGNITO_CLIENT_ID: clientId!,
+    },
+    permissions: [
+      {
+        actions: [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:ConditionCheckItem",
+        ],
+        resources: [sessions.arn],
+      },
+      {
+        actions: ["dynamodb:GetItem", "dynamodb:ConditionCheckItem"],
+        resources: [control.arn],
+        conditions: [
+          {
+            test: "ForAllValues:StringEquals",
+            variable: "dynamodb:LeadingKeys",
+            values: ["STAGE#dev-api"],
+          },
+        ],
+      },
+      {
+        actions: ["kms:GenerateDataKey", "kms:Decrypt"],
+        resources: [stageKey.arn],
+        conditions: purposeConditions("browser-session"),
+      },
+      {
+        actions: ["ssm:GetParameter"],
+        resources: [
+          `arn:aws:ssm:us-east-2:${account}:parameter${parameterName}`,
+        ],
+      },
+    ],
+  });
+  for (const route of [
+    "POST /api/v1/browser-session",
+    "GET /api/v1/browser-session",
+    "POST /api/v1/browser-session/token",
+    "DELETE /api/v1/browser-session",
+    "POST /api/v1/browser-session/bootstrap-cancellations",
+  ])
+    api.route(route, broker.arn);
+  new sst.aws.Cron("BrowserSessionCleanupSchedule", {
+    schedule: "rate(1 minute)",
+    function: broker,
+    event: { maintenance: true },
+  });
   const environment = {
     ...executionEnvironment,
     KURIER_STAGE: "dev-api",
@@ -555,6 +662,8 @@ export async function createDevelopmentApi() {
     controlTable: control.name,
     protectedTable: protectedTable.name,
     protectedKeyArn: stageKey.arn,
+    browserSessionTable: sessions.name,
+    browserSessionFunction: broker.name,
     apiFunction: fn.name,
     workerFunction: worker.name,
     evidenceBucket: evidence.bucket,

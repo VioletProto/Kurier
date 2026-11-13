@@ -1,5 +1,16 @@
 # Local-agent pairing and single saved-request execution: review packet
 
+## Requested installation continuation — 2026-11-11
+
+Davian requested installation, configuration, launch and pairing after user
+permission through a guided flow. The [onboarding spike](https://trello.com/c/kqa7Vggt)
+defines supported platforms, installer/launcher and browser handoff, consent,
+credential storage, updates/uninstall and compatibility before the
+[delivery card](https://trello.com/c/j5di83sr) is implemented. The
+[planning continuation](../planning/onboarding-and-desktop.md) also tracks
+desktop integration. The foreground/manual pairing flow below is the current
+baseline.
+
 Status: **Accepted by Davian**, 2026-10-13, at `585d5b3`. Scoped implementation,
 API-contract synchronization and local/race/protocol/browser validation are
 authorized. Davian subsequently approved scoped development deployment and

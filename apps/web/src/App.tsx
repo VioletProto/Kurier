@@ -5,7 +5,14 @@ import { flushSync } from "react-dom";
 import { Workflows } from "./Workflows";
 import { Requests } from "./Requests";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { auth, authConfigured, authMessage, SessionExpired } from "./auth";
+import {
+  auth,
+  authConfigured,
+  authMessage,
+  SessionExpired,
+  sessionBrokerEnabled,
+  sessionChangedEvent,
+} from "./auth";
 import {
   api,
   ApiError,
@@ -28,6 +35,8 @@ const titles: Record<Mode, string> = {
 export function App() {
   const [signedIn, setSignedIn] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [restoring, setRestoring] = useState(sessionBrokerEnabled);
+  const [restoreFailed, setRestoreFailed] = useState(false);
   const [notice, setNotice] = useState("");
   const [authFormGeneration, setAuthFormGeneration] = useState(0);
   const lifecycle = useRef(0);
@@ -37,23 +46,83 @@ export function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);
+  async function restoreSession() {
+    const current = ++lifecycle.current;
+    setSignedIn(false);
+    setRestoring(true);
+    setRestoreFailed(false);
+    setAuthFormGeneration(current);
+    try {
+      const restored = await auth.restore();
+      if (restored) await api.me();
+      if (current !== lifecycle.current) return;
+      setSignedIn(restored);
+      setNotice("");
+    } catch (error) {
+      if (current !== lifecycle.current) return;
+      if (
+        error instanceof SessionExpired ||
+        (error instanceof ApiError && error.status === 401)
+      ) {
+        setNotice("Your session ended. Please sign in again.");
+      } else {
+        setRestoreFailed(true);
+        setNotice(authMessage(error));
+      }
+    } finally {
+      if (current === lifecycle.current) setRestoring(false);
+    }
+  }
+  useEffect(() => {
+    if (!sessionBrokerEnabled) return;
+    void restoreSession();
+    const changed = () => {
+      void restoreSession();
+    };
+    window.addEventListener(sessionChangedEvent, changed);
+    const lifecycleRef = lifecycle;
+    return () => {
+      lifecycleRef.current++;
+      window.removeEventListener(sessionChangedEvent, changed);
+    };
+  }, []);
+  useEffect(() => {
+    // Returning from a password-manager popup must preserve the auth form.
+    // Revalidate on focus only while private workspace content is displayed.
+    if (!sessionBrokerEnabled || !signedIn) return;
+    const focused = () => void restoreSession();
+    window.addEventListener("focus", focused);
+    return () => window.removeEventListener("focus", focused);
+  }, [signedIn]);
   useEffect(() => {
     // Clear rendered data before a history snapshot can preserve the workspace.
     const clear = () => {
       lifecycle.current++;
       flushSync(() => {
         setSignedIn(false);
-        setLeaving(true);
-        setNotice("Your session ended. Please sign in again.");
+        setLeaving(!sessionBrokerEnabled);
+        setRestoring(sessionBrokerEnabled);
+        setNotice(
+          sessionBrokerEnabled
+            ? ""
+            : "Your session ended. Please sign in again.",
+        );
         setAuthFormGeneration(lifecycle.current);
       });
+      if (sessionBrokerEnabled) {
+        auth.suspend();
+        return;
+      }
       void auth
         .logout()
         .catch(() => undefined)
         .finally(() => setLeaving(false));
     };
     const restore = (event: PageTransitionEvent) => {
-      if (event.persisted) clear();
+      if (event.persisted) {
+        if (sessionBrokerEnabled) void restoreSession();
+        else clear();
+      }
     };
     window.addEventListener("pagehide", clear);
     window.addEventListener("pageshow", restore);
@@ -63,16 +132,21 @@ export function App() {
     };
   }, []);
   async function logout(expired = false) {
+    lifecycle.current++;
+    setAuthFormGeneration(lifecycle.current);
     setSignedIn(false);
     setLeaving(true);
     setNotice(
       expired ? "Your session ended. Please sign in again." : "Signed out.",
     );
     try {
-      await auth.logout();
-    } catch {
+      const message = await auth.logout();
+      if (message) setNotice(message);
+    } catch (error) {
       setNotice(
-        "Signed out locally. Cognito could not confirm token revocation.",
+        sessionBrokerEnabled
+          ? authMessage(error)
+          : "Signed out locally. Cognito could not confirm token revocation.",
       );
     } finally {
       setLeaving(false);
@@ -101,7 +175,11 @@ export function App() {
       </p>
       <div role="status">{notice}</div>
       <section id="workspace" aria-label="Workspace">
-        {signedIn ? (
+        {restoring ? (
+          <p role="status">Restoring your session…</p>
+        ) : restoreFailed ? (
+          <button onClick={() => void restoreSession()}>Retry session</button>
+        ) : signedIn ? (
           <>
             <button className="signout" onClick={() => void logout()}>
               Sign out
@@ -113,11 +191,14 @@ export function App() {
         ) : (
           <AuthForm
             key={authFormGeneration}
-            onSignedIn={() => {
+            onSignedIn={async () => {
               if (authFormGeneration !== lifecycle.current) {
-                void auth.logout().catch(() => undefined);
+                if (!sessionBrokerEnabled)
+                  void auth.logout().catch(() => undefined);
                 return;
               }
+              if (sessionBrokerEnabled) await api.me();
+              if (authFormGeneration !== lifecycle.current) return;
               setNotice("");
               setSignedIn(true);
             }}
@@ -125,14 +206,15 @@ export function App() {
         )}
       </section>
       <footer>
-        Credentials stay with Cognito. This browser session ends when you
-        reload.
+        {sessionBrokerEnabled
+          ? "Sign-in continues for up to one day, including after reopening this browser. Sign out on shared devices."
+          : "Credentials stay with Cognito. This browser session ends when you reload."}
       </footer>
     </main>
   );
 }
 
-function AuthForm({ onSignedIn }: { onSignedIn: () => void }) {
+function AuthForm({ onSignedIn }: { onSignedIn: () => void | Promise<void> }) {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -162,7 +244,7 @@ function AuthForm({ onSignedIn }: { onSignedIn: () => void }) {
     try {
       if (mode === "signin") {
         const result = await auth.login(email.trim(), password);
-        if (result === "done") onSignedIn();
+        if (result === "done") await onSignedIn();
         else if (result === "verify") {
           setMode("verify");
           setMessage("Verify your email before signing in.");
