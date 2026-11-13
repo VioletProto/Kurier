@@ -28,6 +28,7 @@ test("cloud workflow editor freezes revisions, configures Bearer rendering and s
   await page
     .getByRole("button", { name: "Workflow browser fixture", exact: true })
     .click();
+  await page.getByRole("tab", { name: "Workflows", exact: true }).click();
   const panel = page.getByRole("region", { name: "Workflows" });
   await panel.getByText("Load workflows", { exact: true }).click();
   await panel.getByLabel("Workflow name").fill("Browser login workflow");

@@ -26,9 +26,8 @@ body {
   margin: 0;
 }
 main {
-  max-width: 76rem;
   margin: auto;
-  padding: 2.5rem clamp(1rem, 4vw, 3rem);
+  padding: 2rem clamp(1rem, 2vw, 3rem);
 }
 header {
   display: flex;
@@ -78,8 +77,48 @@ footer {
 }
 .columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
   gap: 1.5rem;
+}
+.columns > *,
+.project-workspace,
+[role="tabpanel"],
+fieldset {
+  min-width: 0;
+}
+.workspace-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.workspace-tabs button {
+  margin: 0;
+}
+.workspace-tabs [aria-selected="true"] {
+  background: var(--accent);
+  color: var(--panel);
+  border-color: var(--accent);
+  box-shadow: inset 0 -3px currentColor;
+}
+[role="tabpanel"] {
+  padding-top: 0.5rem;
+}
+.panel {
+  overflow-wrap: anywhere;
+}
+.panel pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  overflow: auto;
+}
+input,
+textarea,
+select {
+  max-width: 100%;
+  min-width: 0;
 }
 fieldset {
   border: 0;
@@ -174,10 +213,18 @@ footer {
 .skip:focus {
   top: 0;
 }
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .columns {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+}
+@media (max-width: 480px) {
+  .panel {
+    padding: 1rem;
+  }
+  header {
+    flex-wrap: wrap;
   }
 }
 .requests {

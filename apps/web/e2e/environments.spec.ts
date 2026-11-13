@@ -43,6 +43,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
     }),
   ).toBeVisible();
   const project = (await details.locator("dd").first().textContent())!;
+  await page.getByRole("tab", { name: "Environments", exact: true }).click();
   try {
     const panel = page.getByRole("region", {
       name: "Project environments",
@@ -99,6 +100,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
     );
     expect(envs.status()).toBe(200);
     const summary = (await envs.json()).data.items[0];
+    await page.getByRole("tab", { name: "Requests & evidence" }).click();
     const requestPanel = page.getByRole("region", {
       name: "Saved requests",
       exact: true,
@@ -238,6 +240,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
     expect(JSON.stringify(evidence)).not.toContain(
       "environment-browser-before-canary",
     );
+    await page.getByRole("tab", { name: "Environments", exact: true }).click();
     await panel.getByLabel("Variable value 1", { exact: true }).fill("2");
     await panel
       .getByRole("button", { name: "Save environment changes", exact: true })

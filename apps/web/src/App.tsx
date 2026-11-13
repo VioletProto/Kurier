@@ -1,3 +1,4 @@
+import { WorkspaceTabs } from "./WorkspaceTabs";
 import { Environments } from "./Environments";
 import { OpenAPI } from "./OpenAPI";
 import { MCPCredentials } from "./MCPCredentials";
@@ -615,132 +616,187 @@ function Projects({ onExpired }: { onExpired: () => void }) {
           {detail ? (
             <>
               <h3>{detail.project.name}</h3>
-              <MCPCredentials
-                key={"mcp-" + detail.project.projectId}
-                projectId={detail.project.projectId}
-                projectName={detail.project.name}
-                disabled={busy}
-                onSessionExpired={onExpired}
-              />
-              <Environments
-                key={"environments-" + detail.project.projectId}
-                projectId={detail.project.projectId}
-                disabled={busy}
-                onExpired={onExpired}
-                onGateChanged={() => setStale(true)}
-              />
-              <OpenAPI
-                key={"openapi-" + detail.project.projectId}
-                projectId={detail.project.projectId}
-                disabled={busy}
-                onExpired={onExpired}
-                onGateChanged={() => setStale(true)}
-              />
-              <Workflows
-                key={"workflows-" + detail.project.projectId}
-                projectId={detail.project.projectId}
-                onExpired={onExpired}
-                onGateChanged={() => setStale(true)}
-                disabled={busy}
-              />
-              <Requests
+              <WorkspaceTabs
                 key={detail.project.projectId}
-                projectId={detail.project.projectId}
-                disabled={busy}
-                onExpired={onExpired}
-                onGateChanged={() => setStale(true)}
+                sections={[
+                  {
+                    id: "requests",
+                    label: "Requests & evidence",
+                    content: (
+                      <Requests
+                        key={detail.project.projectId}
+                        projectId={detail.project.projectId}
+                        disabled={busy}
+                        onExpired={onExpired}
+                        onGateChanged={() => setStale(true)}
+                      />
+                    ),
+                  },
+                  {
+                    id: "workflows",
+                    label: "Workflows",
+                    content: (
+                      <Workflows
+                        key={"workflows-" + detail.project.projectId}
+                        projectId={detail.project.projectId}
+                        onExpired={onExpired}
+                        onGateChanged={() => setStale(true)}
+                        disabled={busy}
+                      />
+                    ),
+                  },
+                  {
+                    id: "environments",
+                    label: "Environments",
+                    content: (
+                      <Environments
+                        key={"environments-" + detail.project.projectId}
+                        projectId={detail.project.projectId}
+                        disabled={busy}
+                        onExpired={onExpired}
+                        onGateChanged={() => setStale(true)}
+                      />
+                    ),
+                  },
+                  {
+                    id: "openapi",
+                    label: "OpenAPI",
+                    content: (
+                      <OpenAPI
+                        key={"openapi-" + detail.project.projectId}
+                        projectId={detail.project.projectId}
+                        disabled={busy}
+                        onExpired={onExpired}
+                        onGateChanged={() => setStale(true)}
+                      />
+                    ),
+                  },
+                  {
+                    id: "mcp",
+                    label: "MCP access",
+                    content: (
+                      <MCPCredentials
+                        key={"mcp-" + detail.project.projectId}
+                        projectId={detail.project.projectId}
+                        projectName={detail.project.name}
+                        disabled={busy}
+                        onSessionExpired={onExpired}
+                      />
+                    ),
+                  },
+                  {
+                    id: "settings",
+                    label: "Project settings",
+                    content: (
+                      <>
+                        <dl>
+                          <dt>Project ID</dt>
+                          <dd>{detail.project.projectId}</dd>
+                          <dt>Version</dt>
+                          <dd>{detail.project.version}</dd>
+                          <dt>Created</dt>
+                          <dd>
+                            {new Date(
+                              detail.project.createdAt,
+                            ).toLocaleString()}
+                          </dd>
+                          <dt>Updated</dt>
+                          <dd>
+                            {new Date(
+                              detail.project.updatedAt,
+                            ).toLocaleString()}
+                          </dd>
+                        </dl>
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            void run(() => open(detail.project.projectId))
+                          }
+                        >
+                          Refresh details
+                        </button>
+                        {stale && (
+                          <p role="status">
+                            Refresh details to review the current version, then
+                            submit your change again.
+                          </p>
+                        )}
+                        <form onSubmit={rename}>
+                          <label htmlFor="rename">Project name</label>
+                          <input
+                            id="rename"
+                            value={draft}
+                            onChange={(e) => setDraft(e.target.value)}
+                            disabled={busy || stale}
+                            required
+                          />
+                          <button disabled={busy || stale} type="submit">
+                            Rename project
+                          </button>
+                        </form>
+                        {confirmDelete ? (
+                          <div>
+                            <p>
+                              Delete “{detail.project.name}”? Access is removed
+                              immediately.
+                            </p>
+                            <button
+                              className="danger"
+                              disabled={busy || stale}
+                              onClick={() =>
+                                void run(async () => {
+                                  try {
+                                    const op = await api.delete(
+                                      detail.project.projectId,
+                                      detail.etag,
+                                    );
+                                    setOperations((old) => [...old, op]);
+                                    setItems((old) =>
+                                      old.filter(
+                                        (p) =>
+                                          p.projectId !==
+                                          detail.project.projectId,
+                                      ),
+                                    );
+                                    setDetail(undefined);
+                                    setConfirmDelete(false);
+                                  } catch (e) {
+                                    if (e instanceof UncertainWrite)
+                                      setUncertainDeletion(detail);
+                                    if (
+                                      e instanceof UncertainWrite ||
+                                      (e instanceof ApiError &&
+                                        [409, 412].includes(e.status))
+                                    )
+                                      setStale(true);
+                                    throw e;
+                                  }
+                                })
+                              }
+                            >
+                              Confirm deletion
+                            </button>
+                            <button
+                              disabled={busy}
+                              onClick={() => setConfirmDelete(false)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="danger"
+                            disabled={busy || stale}
+                            onClick={() => setConfirmDelete(true)}
+                          >
+                            Delete project
+                          </button>
+                        )}
+                      </>
+                    ),
+                  },
+                ]}
               />
-              <dl>
-                <dt>Project ID</dt>
-                <dd>{detail.project.projectId}</dd>
-                <dt>Version</dt>
-                <dd>{detail.project.version}</dd>
-                <dt>Created</dt>
-                <dd>{new Date(detail.project.createdAt).toLocaleString()}</dd>
-                <dt>Updated</dt>
-                <dd>{new Date(detail.project.updatedAt).toLocaleString()}</dd>
-              </dl>
-              <button
-                disabled={busy}
-                onClick={() => void run(() => open(detail.project.projectId))}
-              >
-                Refresh details
-              </button>
-              {stale && (
-                <p role="status">
-                  Refresh details to review the current version, then submit
-                  your change again.
-                </p>
-              )}
-              <form onSubmit={rename}>
-                <label htmlFor="rename">Project name</label>
-                <input
-                  id="rename"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  disabled={busy || stale}
-                  required
-                />
-                <button disabled={busy || stale} type="submit">
-                  Rename project
-                </button>
-              </form>
-              {confirmDelete ? (
-                <div>
-                  <p>
-                    Delete “{detail.project.name}”? Access is removed
-                    immediately.
-                  </p>
-                  <button
-                    className="danger"
-                    disabled={busy || stale}
-                    onClick={() =>
-                      void run(async () => {
-                        try {
-                          const op = await api.delete(
-                            detail.project.projectId,
-                            detail.etag,
-                          );
-                          setOperations((old) => [...old, op]);
-                          setItems((old) =>
-                            old.filter(
-                              (p) => p.projectId !== detail.project.projectId,
-                            ),
-                          );
-                          setDetail(undefined);
-                          setConfirmDelete(false);
-                        } catch (e) {
-                          if (e instanceof UncertainWrite)
-                            setUncertainDeletion(detail);
-                          if (
-                            e instanceof UncertainWrite ||
-                            (e instanceof ApiError &&
-                              [409, 412].includes(e.status))
-                          )
-                            setStale(true);
-                          throw e;
-                        }
-                      })
-                    }
-                  >
-                    Confirm deletion
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() => setConfirmDelete(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button
-                  className="danger"
-                  disabled={busy || stale}
-                  onClick={() => setConfirmDelete(true)}
-                >
-                  Delete project
-                </button>
-              )}
             </>
           ) : (
             <p>Select a project to inspect its details.</p>
