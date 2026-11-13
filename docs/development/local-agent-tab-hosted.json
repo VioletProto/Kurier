@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-11-13T19:51:13.434Z",
+  "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+  "releaseId": "3abd6828f18b58001fdc807e75d28000d98e329ba95f4284d28e6fe94d9014ad",
+  "publicAssetHashesPassed": true,
+  "genuineSignedOutNavigationAndReload": true,
+  "workspaceApiAndSession": "synthetic responses; deployed JS/CSS/HTML",
+  "results": [
+    {
+      "width": 375,
+      "keyboard": true,
+      "draftPreservation": true,
+      "noPageOverflow": true
+    },
+    {
+      "width": 1366,
+      "keyboard": true,
+      "draftPreservation": true,
+      "noPageOverflow": true
+    },
+    {
+      "width": 1920,
+      "keyboard": true,
+      "draftPreservation": true,
+      "noPageOverflow": true
+    }
+  ],
+  "realAuthenticatedProductValidation": false,
+  "uiSource": "e427342",
+  "separatePairingTabAndDraftChecks": true,
+  "preservation": {
+    "bootstrapVersion": 5,
+    "bootstrapHash": "f390213368ff859bf1b886d97785aee459948f4b20e495b1dabc799f56a688ff",
+    "stageHash": "02769c9c6c09fb66129aa681c6724b09b1e7873418fb36c91c7de3f6f29b5a61",
+    "freePlan": "FREE",
+    "concurrency": {
+      "TotalCodeSize": 322122547200,
+      "CodeSizeUnzipped": 262144000,
+      "CodeSizeZipped": 52428800,
+      "ConcurrentExecutions": 10,
+      "UnreservedConcurrentExecutions": 10
+    },
+    "lambdaFingerprintsUnchanged": true,
+    "bootstrapUnchanged": true,
+    "stageUnchanged": true
+  },
+  "initialBrowserStartupFallback": "Observed once; subsequent fresh run passed without application/deployment changes; cause not established."
+}

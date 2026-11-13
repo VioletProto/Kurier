@@ -66,6 +66,7 @@ test("browser pairing, compiled foreground agent, sanitized evidence, revocation
     .getByRole("button", { name: "Local agent browser fixture", exact: true })
     .click();
   const panel = page.getByRole("region", { name: "Executions", exact: true });
+  await page.getByRole("tab", { name: "Local agent pairing" }).click();
   const pairing = page.getByRole("region", { name: "Local agent pairing" });
   await pairing
     .getByLabel("Exact HTTP(S) origins, one per line (up to 16)")
@@ -83,6 +84,7 @@ test("browser pairing, compiled foreground agent, sanitized evidence, revocation
     .textContent();
   if (!capability) throw Error("Pairing token unavailable");
   await pairing.getByRole("button", { name: "Close token display" }).click();
+  await page.getByRole("tab", { name: "Requests & evidence" }).click();
   const req = (await saved.json()).data.request;
   await page
     .getByRole("button", { name: new RegExp("Local controlled request") })
@@ -149,8 +151,13 @@ test("browser pairing, compiled foreground agent, sanitized evidence, revocation
       )
     ).includes(capability),
   ).toBe(false);
+  await page.getByRole("tab", { name: "Local agent pairing" }).click();
   await pairing.getByRole("button", { name: "Revoke local agent" }).click();
   await expect(pairing.getByText(/Revoked/)).toBeVisible();
+  await page.getByRole("tab", { name: "Requests & evidence" }).click();
+  await expect(
+    panel.getByRole("option", { name: "Local agent", exact: true }),
+  ).toHaveJSProperty("disabled", true);
   const denied = await request.get(backend + "/api/v1/local-agent/session", {
     headers: { Authorization: `Bearer ${capability}` },
   });

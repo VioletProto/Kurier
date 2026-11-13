@@ -241,12 +241,15 @@ footer {
   flex: 1 1 10rem;
 }
 .request-field input[type="checkbox"],
-.requests input[type="checkbox"] {
+.requests input[type="checkbox"],
+.local-agents input[type="checkbox"] {
   width: auto;
   margin-right: 0.5rem;
 }
 .requests textarea,
-.requests select {
+.requests select,
+.local-agents textarea,
+.local-agents select {
   width: 100%;
   padding: 0.7rem;
   border: 1px solid var(--border);
@@ -254,7 +257,8 @@ footer {
   color: inherit;
   background: var(--panel);
 }
-.requests textarea {
+.requests textarea,
+.local-agents textarea {
   font-family: monospace;
   resize: vertical;
 }

@@ -1,6 +1,5 @@
 import { EnvironmentSelector } from "./Environments";
 import { AssertionResults } from "./Assertions";
-import { LocalAgents } from "./LocalAgents";
 import { useEffect, useRef, useState } from "react";
 import {
   api,
@@ -39,12 +38,14 @@ function Body({ body }: { body: EvidenceBody }) {
 }
 export function Executions({
   projectId,
+  agent = null,
   request,
   disabled,
   onSessionExpired,
   onGateChanged,
 }: {
   projectId: string;
+  agent?: LocalAgent | null;
   request?: RequestDetail;
   disabled: boolean;
   onSessionExpired: () => void;
@@ -53,7 +54,6 @@ export function Executions({
   const [environment, setEnvironment] = useState<EnvironmentSelection | null>(
     null,
   );
-  const [agent, setAgent] = useState<LocalAgent | null>(null);
   const [target, setTarget] = useState<"cloud" | "local">("cloud");
   const [localConsent, setLocalConsent] = useState(false);
   const [rerunConsent, setRerunConsent] = useState(false);
@@ -135,7 +135,6 @@ export function Executions({
   };
   useEffect(() => {
     mounted.current = true;
-    setAgent(null);
     setTarget("cloud");
     setLocalConsent(false);
     setSelected(undefined);
@@ -453,12 +452,6 @@ export function Executions({
   return (
     <section aria-label="Executions" className="panel">
       <h3>Executions and evidence</h3>
-      <LocalAgents
-        projectId={projectId}
-        disabled={disabled}
-        onAgent={setAgent}
-        onSessionExpired={onSessionExpired}
-      />
       <p>
         Execute the saved revision. Protected inputs are frozen in an encrypted
         bundle limited to 32 KiB; the complete request and resolved body each

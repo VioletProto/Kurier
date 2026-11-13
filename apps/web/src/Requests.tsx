@@ -3,6 +3,7 @@ import {
   api,
   ApiError,
   UncertainWrite,
+  type LocalAgent,
   type RequestConfiguration,
   type RequestDetail,
   type RequestField,
@@ -366,11 +367,13 @@ function Fields({
 }
 export function Requests({
   projectId,
+  agent,
   disabled,
   onExpired,
   onGateChanged,
 }: {
   projectId: string;
+  agent?: LocalAgent | null;
   disabled: boolean;
   onExpired: () => void;
   onGateChanged: () => void;
@@ -520,6 +523,7 @@ export function Requests({
       aria-busy={busy}
     >
       <Executions
+        agent={agent}
         projectId={projectId}
         request={detail}
         disabled={disabled}

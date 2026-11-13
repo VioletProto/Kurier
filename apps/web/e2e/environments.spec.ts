@@ -153,6 +153,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
       name: "Executions",
       exact: true,
     });
+    await page.getByRole("tab", { name: "Local agent pairing" }).click();
     const pairing = page.getByRole("region", {
       name: "Local agent pairing",
       exact: true,
@@ -182,6 +183,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
         })
       ).status(),
     ).toBe(204);
+    await page.getByRole("tab", { name: "Requests & evidence" }).click();
     await executions.getByLabel("Execution target").selectOption("local");
     await executions
       .getByLabel(

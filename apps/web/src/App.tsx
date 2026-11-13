@@ -1,3 +1,4 @@
+import { LocalAgents } from "./LocalAgents";
 import { WorkspaceTabs } from "./WorkspaceTabs";
 import { Environments } from "./Environments";
 import { OpenAPI } from "./OpenAPI";
@@ -19,6 +20,7 @@ import {
   ApiError,
   UncertainWrite,
   type Deletion,
+  type LocalAgent,
   type Project,
   type ProjectDetail,
   type User,
@@ -401,6 +403,7 @@ function Projects({ onExpired }: { onExpired: () => void }) {
   const [items, setItems] = useState<Project[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [detail, setDetail] = useState<ProjectDetail>();
+  const [agent, setAgent] = useState<LocalAgent | null>(null);
   const [name, setName] = useState("");
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(true);
@@ -476,6 +479,7 @@ function Projects({ onExpired }: { onExpired: () => void }) {
   }
   async function open(id: string) {
     const d = await api.detail(id);
+    setAgent(null);
     setDetail(d);
     setDraft(d.project.name);
     setStale(false);
@@ -492,6 +496,7 @@ function Projects({ onExpired }: { onExpired: () => void }) {
     await run(async () => {
       try {
         const d = await api.create(name.trim());
+        setAgent(null);
         setDetail(d);
         setDraft(d.project.name);
         setName("");
@@ -624,6 +629,7 @@ function Projects({ onExpired }: { onExpired: () => void }) {
                     label: "Requests & evidence",
                     content: (
                       <Requests
+                        agent={agent}
                         key={detail.project.projectId}
                         projectId={detail.project.projectId}
                         disabled={busy}
@@ -668,6 +674,18 @@ function Projects({ onExpired }: { onExpired: () => void }) {
                         disabled={busy}
                         onExpired={onExpired}
                         onGateChanged={() => setStale(true)}
+                      />
+                    ),
+                  },
+                  {
+                    id: "local-agent",
+                    label: "Local agent pairing",
+                    content: (
+                      <LocalAgents
+                        projectId={detail.project.projectId}
+                        disabled={busy}
+                        onAgent={setAgent}
+                        onSessionExpired={onExpired}
                       />
                     ),
                   },

@@ -47,7 +47,7 @@ for (const width of [375, 1366, 1920]) {
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await page.getByRole("button", { name: project.name, exact: true }).click();
     const tabs = page.getByRole("tab");
-    await expect(tabs).toHaveCount(6);
+    await expect(tabs).toHaveCount(7);
     const requests = page.getByRole("tab", { name: "Requests & evidence" });
     await expect(requests).toHaveAttribute("aria-selected", "true");
     await page
@@ -63,6 +63,22 @@ for (const width of [375, 1366, 1920]) {
     await page
       .getByLabel("Public request body")
       .fill(JSON.stringify({ text: "x".repeat(500) }));
+    await expect(
+      page.getByRole("region", { name: "Local agent pairing" }),
+    ).toBeHidden();
+    await page.getByRole("tab", { name: "Local agent pairing" }).click();
+    await page
+      .getByLabel("Agent name", { exact: true })
+      .fill("Unsaved agent name");
+    await requests.click();
+    await expect(
+      page.getByRole("region", { name: "Local agent pairing" }),
+    ).toBeHidden();
+    await page.getByRole("tab", { name: "Local agent pairing" }).click();
+    await expect(page.getByLabel("Agent name", { exact: true })).toHaveValue(
+      "Unsaved agent name",
+    );
+    await requests.click();
     await requests.focus();
     await page.keyboard.press("ArrowRight");
     const workflows = page.getByRole("tab", { name: "Workflows", exact: true });

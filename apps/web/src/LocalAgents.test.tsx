@@ -171,5 +171,5 @@ it("discards a late pairing response after project switch", async () => {
   await waitFor(() =>
     expect(screen.queryByLabelText("One-time agent token")).toBeNull(),
   );
-  expect(changed).not.toHaveBeenCalled();
+  expect(changed.mock.calls).toEqual([[null], [null]]);
 });
