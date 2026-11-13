@@ -57,6 +57,29 @@ jobs:
       - if: matrix.service == 'spikes/environment-resolution'
         run: go test -c -o /tmp/kurier-environment-resolution.test
 
+  browser-session:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Create disposable localhost TLS fixture
+        run: >-
+          openssl req -x509 -newkey rsa:2048 -nodes
+          -keyout "$RUNNER_TEMP/kurier-session-browser.key"
+          -out "$RUNNER_TEMP/kurier-session-browser.crt"
+          -days 1 -subj /CN=localhost
+          -addext subjectAltName=DNS:localhost,IP:127.0.0.1
+      - run: npx playwright test --config playwright.session.config.ts
+        working-directory: apps/web
+        env:
+          KURIER_LOCAL_HTTPS_CERT: ${{ runner.temp }}/kurier-session-browser.crt
+          KURIER_LOCAL_HTTPS_KEY: ${{ runner.temp }}/kurier-session-browser.key
+
   ownership-integration:
     runs-on: ubuntu-latest
     steps:
