@@ -10,6 +10,7 @@ import {
   ApiError,
   UncertainWrite,
   type Execution,
+  type LocalAgent,
   type RequestDetail,
 } from "./api";
 const mocks = vi.hoisted(() => ({
@@ -265,9 +266,10 @@ it("ignores a delayed pin response after switching project", async () => {
     ).not.toBeInTheDocument(),
   );
 });
-function mount() {
+function mount(agent: LocalAgent | null = null) {
   return render(
     <Executions
+      agent={agent}
       projectId="project"
       request={request}
       disabled={false}
@@ -362,8 +364,10 @@ it("renders unknown outcome and response text safely, and confirms a separate de
 });
 
 it("defaults cloud, requires local device consent and freezes target on an unresolved admission", async () => {
-  const agent = {
+  const agent: LocalAgent = {
     localAgentId: "local-fixture",
+    createdAt: new Date().toISOString(),
+    recoveryGeneration: "fixture",
     name: "Local fixture",
     scopes: [
       {
@@ -377,17 +381,15 @@ it("defaults cloud, requires local device consent and freezes target on an unres
     revokedAt: null,
     lastSeenAt: null,
   };
-  mocks.currentAgent.mockResolvedValue(agent);
   mocks.submitExecution.mockRejectedValue(new UncertainWrite());
-  mount();
+  mount(agent);
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: /Execute saved revision/ }),
+    ).toBeEnabled(),
+  );
   const select = screen.getByLabelText("Execution target") as HTMLSelectElement;
   expect(select.value).toBe("cloud");
-  fireEvent.click(
-    screen.getByRole("button", { name: "Refresh pairing status" }),
-  );
-  await waitFor(() =>
-    expect(screen.getByText(/Agent: Local fixture/)).toBeTruthy(),
-  );
   fireEvent.change(select, { target: { value: "local" } });
   const submit = screen.getByRole("button", {
     name: /Execute saved revision/,

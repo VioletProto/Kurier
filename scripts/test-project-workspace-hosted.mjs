@@ -86,7 +86,7 @@ try {
     await page.goto(siteUrl, { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: project.name, exact: true }).click();
     const tabs = page.getByRole("tab");
-    await expect(tabs).toHaveCount(6);
+    await expect(tabs).toHaveCount(7);
     const requests = page.getByRole("tab", { name: "Requests & evidence" });
     await expect(requests).toHaveAttribute("aria-selected", "true");
     await page

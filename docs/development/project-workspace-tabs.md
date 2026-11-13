@@ -3,9 +3,10 @@
 [Trello delivery card](https://trello.com/c/cF4IzJMO).
 
 The selected project opens on **Requests & evidence**, followed by Workflows,
-Environments, OpenAPI, MCP access and Project settings. Request execution,
-local-agent controls and evidence remain together in their existing request
-flow. Project creation, selection and sign-out remain outside the tabs.
+Environments, OpenAPI, Local agent pairing, MCP access and Project settings.
+Request execution and evidence remain together in their existing request flow.
+Local agent pairing has its own tab; its current status is shared with execution
+controls, including revocation and project/gate resets. Project creation, selection and sign-out remain outside the tabs.
 
 Tabs use a single keyboard stop with Left/Right (including wraparound), Home
 and End navigation. Tab moves into the selected panel. Active tabs have a
@@ -28,7 +29,7 @@ wrap, fields can shrink and long evidence/token text wraps within its panel.
   horizontal scrolling and desktop content width above 65% of the viewport.
   Fixtures include long URL/body values, theme switching, no writes on tab
   changes and empty local/session storage.
-- The race-enabled Go/DynamoDB Local browser integration passed with all ten
+- The race-enabled Go/DynamoDB Local browser integration passed with all eleven
   Chromium scenarios: project/request CRUD and conflict handling, protected
   inputs, local-agent execution, pinning/evidence, workflows/assertions,
   environments, OpenAPI, MCP and the three layout fixtures. Cognito is simulated.
@@ -80,3 +81,17 @@ and preservation hashes; raw deployment state/logs remain ignored.
 [PR #21](https://github.com/VioletProto/Kurier/pull/21) integrates the UI and
 this deployment record. Real authenticated sign-in, hosted execution and
 cross-engine validation were not repeated for this UI-only deployment.
+
+## Local-agent tab follow-up
+
+Davian requested separating Local agent pairing after the initial deployment.
+Pairing controls now occupy their own mounted project tab. Pairing draft inputs
+survive tab switches; requests continue to select paired agents and require
+explicit per-execution consent. Revocation updates the execution target controls.
+The local browser regression covers pairing in the new tab, executing from
+Requests & evidence, revoking in the pairing tab and disabled local execution
+after revocation. The layout fixture checks all seven tabs at the three widths.
+Formatting, frontend lint/build, all 96 frontend tests and the race-enabled
+Go/DynamoDB Local browser suite (11 scenarios) passed.
+This follow-up has not been deployed. The earlier hosted receipt describes the
+initial six-tab release.

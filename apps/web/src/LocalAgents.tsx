@@ -63,6 +63,7 @@ export function LocalAgents({
     active.current = new AbortController();
     flight.current = false;
     setAgent(null);
+    onAgent(null);
     setToken(null);
     setConsent(false);
     setUnresolved(false);
@@ -71,7 +72,7 @@ export function LocalAgents({
       active.current?.abort();
       active.current = null;
     };
-  }, [projectId, disabled]);
+  }, [projectId, disabled, onAgent]);
   const serverNow = agent?.serverTime
     ? Date.parse(agent.serverTime)
     : Date.now();
@@ -99,7 +100,7 @@ export function LocalAgents({
         ? "Seen within the last minute"
         : "Offline / unknown";
   return (
-    <section className="panel" aria-label="Local agent pairing">
+    <section className="panel local-agents" aria-label="Local agent pairing">
       <h4>Local agent pairing</h4>
       <p>
         One active agent per account, valid for 30 days. This device receives
