@@ -42,6 +42,7 @@ test("OpenAPI preview completes inputs, publishes requests and exports sanitized
     }),
   ).toBeVisible();
   const project = (await details.locator("dd").first().textContent())!;
+  await page.getByRole("tab", { name: "OpenAPI", exact: true }).click();
   try {
     const panel = page.getByRole("region", {
       name: "OpenAPI imports",

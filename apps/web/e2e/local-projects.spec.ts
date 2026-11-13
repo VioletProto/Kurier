@@ -60,6 +60,7 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   await expect(
     details.getByRole("heading", { name: "Browser project" }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "Project settings" }).click();
   const id = (await details.locator("dd").first().textContent())!;
   await page
     .getByLabel("Project name", { exact: true })
@@ -85,6 +86,7 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   await expect(
     details.getByRole("heading", { name: "Concurrent rename" }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "Requests & evidence" }).click();
   const requests = page.getByRole("region", { name: "Saved requests" });
   await expect(
     requests.getByText(/64 KiB applies to the complete saved configuration/),
@@ -115,9 +117,11 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   await expect(
     requests.getByRole("heading", { name: "Edit request (revision 0)" }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "Project settings" }).click();
   await expect(
     details.getByRole("button", { name: "Delete project", exact: true }),
   ).toBeDisabled();
+  await page.getByRole("tab", { name: "Requests & evidence" }).click();
   await requests.getByRole("button", { name: "Remove header 1" }).click();
   await requests.getByLabel("Body type").selectOption("none");
   await requests
@@ -244,6 +248,7 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   }, disposable);
   if (!storageSafe || (await Promise.all(responseChecks)).some((v) => !v))
     throw new Error("Protected value detected in forbidden browser surface");
+  await page.getByRole("tab", { name: "Project settings" }).click();
   await details
     .getByRole("button", { name: "Refresh details", exact: true })
     .click();
@@ -290,6 +295,7 @@ test("browser session and local DynamoDB projects with verified fixture JWT", as
   await expect(
     details.getByRole("heading", { name: "Lost acknowledgement" }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "Project settings" }).click();
   const lostId = (await details.locator("dd").first().textContent())!;
   let deletes = 0;
   await page.route(backend + "/api/v1/projects/" + lostId, async (route) => {
