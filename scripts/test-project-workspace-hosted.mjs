@@ -98,6 +98,22 @@ try {
     await page
       .getByLabel("Public request URL")
       .fill("https://example.com/" + "x".repeat(400));
+    await expect(
+      page.getByRole("region", { name: "Local agent pairing" }),
+    ).toBeHidden();
+    await page.getByRole("tab", { name: "Local agent pairing" }).click();
+    await page
+      .getByLabel("Agent name", { exact: true })
+      .fill("Unsaved hosted agent");
+    await requests.click();
+    await expect(
+      page.getByRole("region", { name: "Local agent pairing" }),
+    ).toBeHidden();
+    await page.getByRole("tab", { name: "Local agent pairing" }).click();
+    await expect(page.getByLabel("Agent name", { exact: true })).toHaveValue(
+      "Unsaved hosted agent",
+    );
+    await requests.click();
     await requests.focus();
     await page.keyboard.press("ArrowRight");
     await expect(

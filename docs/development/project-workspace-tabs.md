@@ -93,5 +93,35 @@ Requests & evidence, revoking in the pairing tab and disabled local execution
 after revocation. The layout fixture checks all seven tabs at the three widths.
 Formatting, frontend lint/build, all 96 frontend tests and the race-enabled
 Go/DynamoDB Local browser suite (11 scenarios) passed.
-This follow-up has not been deployed. The earlier hosted receipt describes the
-initial six-tab release.
+
+### Follow-up deployment — 2026-11-13
+
+Davian authorized deployment, testing and merge of the follow-up. UI source
+`e427342` is deployed to **https://d2kpq905qyh9zg.cloudfront.net**, release
+`3abd6828f18b58001fdc807e75d28000d98e329ba95f4284d28e6fe94d9014ad`.
+The existing SST 4.17.1 `FrontendWeb` target preview and deployment updated only
+static assets, KV file keys and waited cache invalidation. Account
+`747336059622`, non-root `davian-admin`, `us-east-2`, bootstrap v5 and the
+existing public configuration were verified. The distribution is Deployed and
+invalidation `I9OO49LAPRGO1GQ86JBBBXM4UU` is Completed.
+
+Before/after checks matched the bootstrap, complete stage marker, Free/ACTIVE
+plan, concurrency limits and all five backend Lambda code/configuration
+fingerprints. No backend/IAM/schema mutation or new resource was deployed.
+
+Post-deployment checks passed for every public file's byte count, SHA-256 and
+cache metadata; the four credential-free session JSON/no-store 401/403 cases;
+genuine signed-out Chromium navigation/reload; and the deployed seven-tab UI
+at 375/1366/1920px with synthetic session/project responses. The latter now
+explicitly checks pairing controls are hidden from Requests & evidence and
+preserves the agent-name draft across tab switches, alongside request/rename
+drafts, keyboard navigation, theme and overflow checks. No real account,
+credential, product mutation or target request was used. Actual authenticated
+Cognito/local-agent execution and cross-engine testing were not repeated live;
+the local compiled-agent browser regression remains separate evidence.
+
+The first hosted Chromium run showed the startup fallback. A fresh rerun passed
+without application or deployment changes; the initial cause was not established.
+Full `npm run verify` passed after restoring SST-generated declaration formatting.
+The [follow-up receipt](local-agent-tab-hosted.json) preserves these outcomes and
+preservation hashes; the earlier receipt describes the initial six-tab release.
