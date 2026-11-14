@@ -18,6 +18,9 @@ CloudFront error preservation, storage probes and cleanup while distinguishing
 the remaining real-account/browser/Cognito checks.
 MCP scope evolution and agent installation interfaces remain design decisions
 to resolve in their spikes.
+The [MCP connection/scope research](../spikes/mcp-connection-project-scopes.md)
+now recommends a concrete design with exact interfaces and verification gates;
+it remains proposed for acceptance before delivery implementation.
 
 ## Accepted project environments continuation
 
