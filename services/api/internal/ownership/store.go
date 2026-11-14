@@ -77,11 +77,11 @@ func (st *Store) get(ctx context.Context, pk, sk string) (record, error) {
 }
 func (st *Store) activeStage(ctx context.Context) (record, error) {
 	r, err := st.get(ctx, "STAGE#"+st.stage, "META")
-	if r.SavedRequestsSchemaVersion == 9 || r.SavedRequestsSchemaVersion == 10 {
-		if (r.SavedRequestsSchemaVersion == 10) != (r.OpenAPISchemaVersion == 1) || r.OpenAPISchemaVersion < 0 || r.OpenAPISchemaVersion > 1 {
+	if r.SavedRequestsSchemaVersion == 9 || r.SavedRequestsSchemaVersion == 10 || r.SavedRequestsSchemaVersion == 11 {
+		if (r.SavedRequestsSchemaVersion >= 10) != (r.OpenAPISchemaVersion == 1) || r.OpenAPISchemaVersion < 0 || r.OpenAPISchemaVersion > 1 {
 			return record{}, unavailable()
 		}
-		if err != nil || st.executions == nil || st.protectedTable == "" || st.cipher == nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != 1 || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
+		if err != nil || st.executions == nil || st.protectedTable == "" || st.cipher == nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != map[bool]int{false: 1, true: 2}[r.SavedRequestsSchemaVersion == 11] || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
 			return record{}, unavailable()
 		}
 		return r, nil
@@ -187,7 +187,7 @@ func pause(ctx context.Context, attempt int) error {
 	}
 }
 func (st *Store) stageGuard(stage record) types.TransactWriteItem {
-	if stage.SavedRequestsSchemaVersion == 9 || stage.SavedRequestsSchemaVersion == 10 {
+	if stage.SavedRequestsSchemaVersion == 9 || stage.SavedRequestsSchemaVersion == 10 || stage.SavedRequestsSchemaVersion == 11 {
 		return st.environmentStageGuard(stage)
 	}
 	mode := "localEmptyProjectsOnly = :yes"

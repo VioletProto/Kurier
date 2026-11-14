@@ -551,6 +551,9 @@ function Projects({ onExpired }: { onExpired: () => void }) {
       )}
       <p role="status">{busy ? "Loading…" : ""}</p>
       <p role="alert">{error}</p>
+      {!detail && (
+        <MCPCredentials disabled={busy} onSessionExpired={onExpired} />
+      )}
       <div className="columns">
         <section className="panel" aria-label="Project list">
           <button disabled={busy} onClick={() => void run(refreshList)}>

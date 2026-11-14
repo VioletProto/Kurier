@@ -66,7 +66,7 @@ func (d *mcpReadSet) guards(s *Service) ([]dt.TransactWriteItem, error) {
 		names := map[string]string{}
 		values := map[string]dt.AttributeValue{}
 		parts := []string{}
-		for i, k := range []string{"version", "kind", "revision", "state", "deletionEpoch", "disabled", "recoveryGeneration", "mcpReadOnlySchemaVersion", "savedRequestsSchemaVersion", "projectEnvironmentsSchemaVersion", "protectedSecretsSchemaVersion", "localAgentExecutionsSchemaVersion", "workflowAssertionsSchemaVersion", "assertionSemanticsVersion", "normalExpiresAt", "pinned", "evidenceAvailability", "tokenHash", "expiresAt"} {
+		for i, k := range []string{"version", "kind", "schemaVersion", "ownerId", "mcpScopeMode", "mcpProjectIds", "revision", "state", "deletionEpoch", "disabled", "recoveryGeneration", "mcpReadOnlySchemaVersion", "savedRequestsSchemaVersion", "projectEnvironmentsSchemaVersion", "protectedSecretsSchemaVersion", "localAgentExecutionsSchemaVersion", "workflowAssertionsSchemaVersion", "assertionSemanticsVersion", "normalExpiresAt", "pinned", "evidenceAvailability", "tokenHash", "expiresAt"} {
 			n := fmt.Sprintf("#f%d", i)
 			names[n] = k
 			if v, ok := m[k]; ok {
@@ -83,6 +83,10 @@ func (d *mcpReadSet) guards(s *Service) ([]dt.TransactWriteItem, error) {
 }
 
 type mcpCursor struct {
+	Schema     int    `json:"schema,omitempty"`
+	Owner      string `json:"owner,omitempty"`
+	Stage      string `json:"stage,omitempty"`
+	Scope      string `json:"scope,omitempty"`
 	Credential string `json:"credential"`
 	Version    int64  `json:"version"`
 	Generation string `json:"generation"`
@@ -207,7 +211,7 @@ func (s *Service) mcpAttempt(ctx context.Context, token, tool string, raw []byte
 		readErr = forced
 	} else if parseErr != nil {
 		readErr = failure(400, "invalid_request")
-	} else if in.ProjectID != "" && !slices.Contains(c.MCPProjectIDs, in.ProjectID) {
+	} else if in.ProjectID != "" && c.MCPScopeMode != "all_owned_projects" && !slices.Contains(c.MCPProjectIDs, in.ProjectID) {
 		readErr = failure(404, "not_found")
 	} else {
 		data, readErr = ss.mcpData(ctx, c, tool, in, tap)
@@ -414,6 +418,12 @@ func (s *Service) mcpData(ctx context.Context, c row, tool string, in wire.Input
 		return out, nil
 	}
 	cur := mcpCursor{Credential: c.MCPTokenID, Version: c.Version, Generation: c.RecoveryGeneration, Tool: tool, Project: in.ProjectID, Filter: in.RequestID + "/" + in.Status + "/" + in.WorkflowID + "/" + in.State, High: stamp(s.now()) + "#~", Expires: s.now().Add(24 * time.Hour).Unix()}
+	if c.SchemaVersion == 2 {
+		cur.Schema = 2
+		cur.Owner = c.OwnerID
+		cur.Stage = s.Stage
+		cur.Scope = mcpScopeDigest(c)
+	}
 	if in.Cursor != "" {
 		var decoded mcpCursor
 		if e := s.mcpCursorDecode(in.Cursor, &decoded); e != nil {
@@ -422,9 +432,15 @@ func (s *Service) mcpData(ctx context.Context, c row, tool string, in wire.Input
 		if decoded.Credential != cur.Credential || decoded.Version != cur.Version || decoded.Generation != cur.Generation || decoded.Tool != tool || decoded.Project != in.ProjectID || decoded.Filter != cur.Filter || decoded.Expires <= s.now().Unix() || decoded.Expires > s.now().Add(24*time.Hour).Unix() || decoded.High == "" {
 			return nil, failure(400, "invalid_request")
 		}
+		if decoded.Schema != cur.Schema || decoded.Owner != cur.Owner || decoded.Stage != cur.Stage || decoded.Scope != cur.Scope {
+			return nil, failure(400, "invalid_request")
+		}
 		cur = decoded
 	}
 	if tool == "list_projects" {
+		if c.MCPScopeMode == "all_owned_projects" {
+			return s.mcpOwnedProjects(ctx, c, in, cur, tap)
+		}
 		if cur.Offset < 0 || cur.Offset > len(c.MCPProjectIDs) {
 			return nil, failure(400, "invalid_request")
 		}

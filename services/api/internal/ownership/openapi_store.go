@@ -83,7 +83,7 @@ func (st *Store) openapiContext(ctx context.Context, user, project string) (reco
 	if e != nil {
 		return stage, u, p, e
 	}
-	if stage.OpenAPISchemaVersion != 1 || stage.SavedRequestsSchemaVersion != 10 {
+	if stage.OpenAPISchemaVersion != 1 || (stage.SavedRequestsSchemaVersion != 10 && stage.SavedRequestsSchemaVersion != 11) {
 		return stage, u, p, unavailable()
 	}
 	return stage, u, p, nil

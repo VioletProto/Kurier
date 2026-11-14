@@ -593,6 +593,69 @@ export class Api {
       return data.credential;
     throw new Error("MCP response unavailable");
   }
+  async currentMCPConnection(
+    signal?: AbortSignal,
+  ): Promise<MCPConnection | null> {
+    const response = await this.request(
+      "/api/v1/mcp/connections/current",
+      "GET",
+      undefined,
+      undefined,
+      signal,
+    );
+    const data = (await response.json()).data;
+    if (data?.connection === null || validConnection(data?.connection))
+      return data.connection;
+    throw new Error("MCP connection unavailable");
+  }
+  async issueMCPConnection(
+    key: string,
+    scope: MCPScope,
+    signal?: AbortSignal,
+  ): Promise<{ connection: MCPConnection; token: string | null }> {
+    const response = await this.request(
+      "/api/v1/mcp/connections",
+      "POST",
+      JSON.stringify({ scope }),
+      undefined,
+      signal,
+      false,
+      key,
+    );
+    try {
+      const data = (await response.json()).data;
+      if (
+        validConnection(data?.connection) &&
+        (data.token === null ||
+          (typeof data.token === "string" && data.token.length === 43))
+      )
+        return data;
+    } catch {
+      /* reconcile one-time issuance */
+    }
+    throw new UncertainWrite();
+  }
+  async updateMCPScope(
+    tokenId: string,
+    version: number,
+    scope: MCPScope,
+    signal?: AbortSignal,
+  ): Promise<MCPConnection> {
+    const response = await this.request(
+      "/api/v1/mcp/connections/" + encodeURIComponent(tokenId) + "/scope",
+      "PATCH",
+      JSON.stringify({ scope }),
+      `"${version}"`,
+      signal,
+    );
+    try {
+      const data = (await response.json()).data;
+      if (validConnection(data?.connection)) return data.connection;
+    } catch {
+      /* reconcile */
+    }
+    throw new UncertainWrite();
+  }
   async issueMCP(
     key: string,
     projectIds: string[],
@@ -1303,6 +1366,32 @@ export type MCPCredential = {
   expiresAt: string;
   revokedAt: string | null;
 };
+export type MCPScope =
+  | { mode: "selected_projects"; projectIds: string[] }
+  | { mode: "all_owned_projects" };
+export type MCPConnection = Omit<MCPCredential, "projectIds"> & {
+  version: number;
+  scope: MCPScope;
+  editable: boolean;
+};
+function validConnection(v: MCPConnection) {
+  return (
+    !!v &&
+    typeof v.tokenId === "string" &&
+    Number.isSafeInteger(v.version) &&
+    v.version >= 0 &&
+    typeof v.editable === "boolean" &&
+    typeof v.createdAt === "string" &&
+    Number.isFinite(Date.parse(v.expiresAt)) &&
+    (v.revokedAt === null || typeof v.revokedAt === "string") &&
+    !!v.scope &&
+    (v.scope.mode === "all_owned_projects" ||
+      (v.scope.mode === "selected_projects" &&
+        Array.isArray(v.scope.projectIds) &&
+        v.scope.projectIds.length <= 10 &&
+        v.scope.projectIds.every((id) => typeof id === "string")))
+  );
+}
 function validMCP(v: MCPCredential) {
   return (
     !!v &&

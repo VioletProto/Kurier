@@ -21,6 +21,9 @@ to resolve in their spikes.
 The [MCP connection/scope research](../spikes/mcp-connection-project-scopes.md)
 now recommends a concrete design with exact interfaces and verification gates;
 it remains proposed for acceptance before delivery implementation.
+Davian subsequently authorized its implementation, deployment, tests and merge
+on 2026-11-14. [Delivery status](../development/mcp-project-scopes.md) records the
+accepted scope continuation and distinguishes local from hosted verification.
 
 ## Accepted project environments continuation
 

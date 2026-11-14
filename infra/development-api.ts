@@ -244,7 +244,7 @@ export async function createDevelopmentApi() {
     },
   ];
   const executionEnvironment = {
-    KURIER_MCP_READ_ONLY_SCHEMA_VERSION: "1",
+    KURIER_MCP_READ_ONLY_SCHEMA_VERSION: "2",
     KURIER_SEQUENTIAL_WORKFLOWS_SCHEMA_VERSION: "1",
     KURIER_EVIDENCE_PINNING_SCHEMA_VERSION: "1",
     KURIER_LOCAL_AGENT_EXECUTIONS_SCHEMA_VERSION: "1",
@@ -448,6 +448,9 @@ export async function createDevelopmentApi() {
   });
   let openapiIntegration: $util.Input<string> | undefined;
   for (const route of [
+    "POST /api/v1/mcp/connections",
+    "GET /api/v1/mcp/connections/current",
+    "PATCH /api/v1/mcp/connections/{tokenId}/scope",
     "POST /api/v1/mcp/tokens",
     "GET /api/v1/mcp/tokens/current",
     "DELETE /api/v1/mcp/tokens/{tokenId}",

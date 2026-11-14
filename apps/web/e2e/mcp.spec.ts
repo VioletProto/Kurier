@@ -45,7 +45,7 @@ test("read-only MCP browser consent, one-time credential, scope denial, revoke a
     panel.getByRole("button", { name: "Create MCP credential" }),
   ).toBeDisabled();
   await panel.getByRole("button", { name: "Refresh MCP status" }).click();
-  await panel.getByRole("checkbox").check();
+  await panel.getByLabel(/^I authorize/).check();
   await panel.getByRole("button", { name: "Create MCP credential" }).click();
   const token = await panel.getByLabel("One-time MCP token").innerText();
   expect(token.length).toBe(43);

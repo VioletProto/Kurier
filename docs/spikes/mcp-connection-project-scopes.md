@@ -5,6 +5,13 @@ Status: **research complete; recommended design proposed for Davian's review**.
 The [delivery card](https://trello.com/c/RaD7xqgS) remains implementation work.
 This packet does not amend the accepted runtime contract until accepted.
 
+Continuation — 2026-11-14: Davian requested implementation, deployment, testing
+and merge of this recommendation, accepting the scope modes, in-place changes
+and release fence described here. The [delivery record](../development/mcp-project-scopes.md)
+tracks implementation and actual verification separately from this historical
+research. Connection metadata adds an `editable:boolean` compatibility signal
+so the browser can distinguish fixed schema-1 scope from editable schema 2.
+
 ## Recommendation and evidence
 
 Keep the foreground Go stdio bridge, one client registration and one active

@@ -138,7 +138,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(69);
+    expect(resources.filter((r) => r.route)).toHaveLength(72);
     const declaredRoutes = resources.filter((r) => r.route).map((r) => r.route);
     expect(declaredRoutes).toEqual(
       expect.arrayContaining([
@@ -180,12 +180,15 @@ describe("scoped development API infrastructure", () => {
     expect(
       resources.filter((r) => r.route?.includes("/mcp/")).map((r) => r.route),
     ).toEqual([
+      "POST /api/v1/mcp/connections",
+      "GET /api/v1/mcp/connections/current",
+      "PATCH /api/v1/mcp/connections/{tokenId}/scope",
       "POST /api/v1/mcp/tokens",
       "GET /api/v1/mcp/tokens/current",
       "DELETE /api/v1/mcp/tokens/{tokenId}",
       "POST /api/v1/mcp/invocations",
     ]);
-    expect(api.args.environment.KURIER_MCP_READ_ONLY_SCHEMA_VERSION).toBe("1");
+    expect(api.args.environment.KURIER_MCP_READ_ONLY_SCHEMA_VERSION).toBe("2");
     expect(api.args.environment.KURIER_SAVED_REQUESTS_SCHEMA_VERSION).toBe("7");
     expect(resources.filter((r) => r.route?.includes("workflow"))).toHaveLength(
       9,
