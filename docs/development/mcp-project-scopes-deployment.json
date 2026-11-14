@@ -1,0 +1,113 @@
+{
+  "checkedAt": "2026-11-14T21:07:02.611Z",
+  "stage": "dev-api",
+  "account": "747336059622",
+  "region": "us-east-2",
+  "sourceCommit": "494ee58db0bae72fb9ffdb6cd2bf3ede8b996da4",
+  "pullRequest": "https://github.com/VioletProto/Kurier/pull/23",
+  "marker": {
+    "before": 19,
+    "closed": 20,
+    "active": 21,
+    "savedRequests": 11,
+    "mcp": 2,
+    "generation": "dev-api-initial-v1",
+    "otherCapabilitiesPreserved": true,
+    "accountingPreserved": true
+  },
+  "controls": {
+    "plan": {
+      "type": "FREE",
+      "status": "ACTIVE"
+    },
+    "quota": 10,
+    "unreserved": 10,
+    "queue": {
+      "source": "arn:aws:sqs:us-east-2:747336059622:ExecutionQueue-180d2f5",
+      "state": "Enabled",
+      "batch": 1,
+      "max": 2,
+      "pollers": null,
+      "responses": ["ReportBatchItemFailures"]
+    },
+    "schedule": {
+      "state": "ENABLED",
+      "expression": "rate(1 minute)",
+      "target": "arn:aws:lambda:us-east-2:747336059622:function:kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku"
+    }
+  },
+  "bootstrapUnchanged": true,
+  "runtimeRoleIamHashesUnchanged": true,
+  "apiInvokePolicy": {
+    "statements": 52,
+    "sourceArnUnchanged": true,
+    "newInvokePermissions": 0
+  },
+  "functions": [
+    {
+      "resource": "UsersProjectsApi",
+      "name": "kurier-dev-api-UsersProjectsApiFunction-werhekow",
+      "codeSha256": "dKafk/aku2Yti6osfm+PKryFiA5zKmXx0CMpAWsO8/Q=",
+      "iamHash": "015a70be29dd3e5f74373cd2b865ed57d61bc210a45cb20aac0b5ee3a78548d3"
+    },
+    {
+      "resource": "EmptyProjectCleanup",
+      "name": "kurier-dev-api-EmptyProjectCleanupFunction-bcmuzwku",
+      "codeSha256": "dKafk/aku2Yti6osfm+PKryFiA5zKmXx0CMpAWsO8/Q=",
+      "iamHash": "a626cb1a3cc6b4b49825cf038daf6a6e3b74021a5ff11ce6dd4b912db9ebdebb"
+    },
+    {
+      "resource": "CloudExecutionWorker",
+      "name": "kurier-dev-api-CloudExecutionWorkerFunction-wrzufkkr",
+      "codeSha256": "oPjMi8P24hasQBAfNA+4rvS0YdqG2DAzHhds4+ko1hY=",
+      "iamHash": "06b752c48e23f979239e86785c92fbe4a02773f23945fa8649c304c5f42d6c66"
+    },
+    {
+      "resource": "ExecutionControlledEndpoint",
+      "name": "kurier-dev-api-ExecutionControlledEndpointFunction-mvdmchok",
+      "codeSha256": "oPjMi8P24hasQBAfNA+4rvS0YdqG2DAzHhds4+ko1hY=",
+      "iamHash": "6a4bae1a8fb6dead804e37cfcaf0a2af85c80eafd2a76c595330a46c448eac81"
+    }
+  ],
+  "brokerCodeAndConfigurationVerified": true,
+  "frontend": {
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "releaseId": "13c762f2df4906199fdd90b692d1cbfd54c34ff19a386ddb2710a475236f66ec"
+  },
+  "local": {
+    "repositoryVerify": true,
+    "dynamodbLocalRaceIntegration": true,
+    "chromiumGoDynamoFixture": true,
+    "installedCodexTLSFixture": true
+  },
+  "live": {
+    "codexVersion": "0.169.0",
+    "sdkVersion": "1.8.0",
+    "protocolVersion": "2025-11-25",
+    "checks": [
+      "real hosted Chromium/Cognito automatic consent and one-time token",
+      "installed Codex empty automatic account",
+      "same installed connection discovers new project",
+      "same installed connection narrows scope and invalidates cursor",
+      "automatic deletion denies subsequent reads and preserves expiry",
+      "installed connection immediately denies revoked credential",
+      "disposable fixture cleanup verified"
+    ],
+    "modelTurns": 0,
+    "targetExecutions": 0
+  },
+  "cleanup": {
+    "checkedAt": "2026-11-14T21:07:02.611Z",
+    "identitiesAbsent": 2,
+    "projectTombstonesVerified": 3,
+    "accountPartitionsClearedExceptPreservedQuota": true,
+    "evidencePrefixesEmpty": 3
+  },
+  "notPerformed": [
+    "real elapsed thirty-day expiry",
+    "PITR recovery",
+    "broad cloud fault injection",
+    "maximum-size cloud load",
+    "Firefox/WebKit certification"
+  ]
+}

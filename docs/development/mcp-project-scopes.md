@@ -77,7 +77,66 @@ mutation to preserve and compare that accounting while blocking inflight work.
 Shared Go dependency rebuilding also refreshes broker and controlled-endpoint
 code packages; their interfaces, authority and configuration remain unchanged.
 
-Hosted results and final merge are recorded here after execution. New scope
-behavior has not yet been claimed as hosted verification in this preparation
-record. Real elapsed thirty-day expiry, PITR, broad fault injection and every
-browser engine remain outside this bounded campaign.
+## Hosted deployment and live checks
+
+The [sanitized deployment proof](mcp-project-scopes-deployment.json) records
+package hashes, preserved controls, live checks and independent cleanup readback.
+
+Implementation `494ee58db0bae72fb9ffdb6cd2bf3ede8b996da4` is deployed on
+`dev-api`, account `747336059622`, us-east-2, after verifying non-root
+`davian-admin`. Marker version19/schema10/MCP1 was conditionally closed at
+version20, then reopened at **version21/schema11/MCP2**, retaining
+`dev-api-initial-v1`, every other capability and all accounting. Existing
+bootstrap5, role IAM hashes, runtime configuration, Free/ACTIVE plan, account
+and unreserved concurrency10, worker maximum2/batch1 and minute schedule were
+verified unchanged. API/cleanup/worker, broker and controlled-endpoint package
+hashes matched the local deployment ZIPs.
+
+The first deployment stopped after code/static updates when a third duplicate
+Lambda permission would have exceeded the 20-KiB resource-policy limit. No
+activation occurred. The corrected source reuses the existing API integration
+and API-scoped invoke grant, following the established OpenAPI route pattern.
+An explicit `preview-closed` reconciled the partial state; supported SST then
+removed only this attempt's two permissions/integrations and three components,
+and created the three raw API routes. The invoke policy's original source ARN
+was preserved; no policy-size/quota increase or broader runtime grant was used.
+Marker/accounting/readiness checks preceded activation.
+
+The bounded live campaign uses two disposable real Cognito SRP owners and three
+empty projects, with no target HTTP execution or model turn. Completed gates:
+
+- Real hosted Chromium sign-in, automatic access from an empty account,
+  separate future-project consent, one-time display, no token in Web Storage
+  and browser sign-out before closing the context.
+- Installed Codex 0.169.0 app-server launching the compiled foreground bridge,
+  discovering seven tools and successfully reading an empty automatic account.
+- The same live connection discovering a newly created project, paging,
+  narrowing to manual scope without restarting, rejecting an old cursor and
+  denying another project and a foreign owner's project.
+- Returning to automatic scope without extending expiry, immediate denial of
+  a deleting project and subsequent denial after credential revocation.
+
+The initial browser navigation waited for network idleness and timed out before
+any credential issuance. A signed-out DOM probe succeeded; the harness resumed
+the same identified fixtures using DOM/control readiness. No credential issuance
+or project creation was blindly replayed. Passwords/JWTs remain memory-only;
+the disposable MCP token uses a private temporary pairing file that is removed
+when the client exits. No screenshots, traces, token-bearing state or protocol
+transcripts are retained. The old fixture harness's fixed Codex0.162.1 success
+label remains historical; the installed CLI version was independently checked.
+
+All three projects completed scheduled deletion, with deleted tombstones and
+empty Protected partitions. The revoked MCP lookup/credential/slot, fixture
+account audits/rates/receipts, user/identity mappings and both Cognito users
+were removed; any quota row was preserved without resetting usage. The teardown
+helper initially conditioned rate rows on `ownerId`, which those partition-scoped
+rows intentionally lack. It stopped safely, then resumed only fixture cleanup
+with exact partition/kind/version conditions; no product change or test replay
+was needed. Identifier-only receipts remain in ignored `.sst` output.
+
+All 12 GitHub CI jobs passed for deployed source `494ee58`; final integration
+is tracked in [PR #23](https://github.com/VioletProto/Kurier/pull/23).
+Real elapsed thirty-day expiry, PITR, broad fault injection, cross-engine browser
+coverage and maximum-size cloud load remain unperformed. More-than-ten-project
+discovery and injected races were verified with DynamoDB Local, not represented
+as independently exercised hosted faults or load.

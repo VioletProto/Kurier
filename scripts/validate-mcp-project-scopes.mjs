@@ -26,9 +26,9 @@ import {
 } from "./verify-read-only-mcp-deployment.mjs";
 const mode = process.argv[2],
   path = process.argv[3];
-assert.ok(["--validate", "--cleanup"].includes(mode) && path);
+assert.ok(["--validate", "--resume", "--cleanup"].includes(mode) && path);
 const receipt =
-  mode === "--cleanup"
+  mode !== "--validate"
     ? JSON.parse(readFileSync(path))
     : {
         kind: "kurier-mcp-scopes-live-v1",
@@ -152,8 +152,8 @@ function metadata(table, pk) {
     TableName: table,
     KeyConditionExpression: "PK = :p",
     ExpressionAttributeValues: { ":p": { S: pk } },
-    ProjectionExpression: "PK,SK,#k,#s,ownerId,userId,mcpTokenId",
-    ExpressionAttributeNames: { "#k": "kind", "#s": "state" },
+    ProjectionExpression: "PK,SK,#k,#s,#v,ownerId,userId,mcpTokenId",
+    ExpressionAttributeNames: { "#k": "kind", "#s": "state", "#v": "version" },
     ConsistentRead: true,
   });
   assert.ok(!r.LastEvaluatedKey);
@@ -248,9 +248,13 @@ async function cleanup() {
         aws(["dynamodb", "delete-item"], {
           TableName: o.controlTable,
           Key: { PK: r.PK, SK: r.SK },
-          ConditionExpression:
-            r.kind?.S === "user" ? "userId = :u" : "ownerId = :u",
-          ExpressionAttributeValues: { ":u": { S: u.owner } },
+          ConditionExpression: "PK = :p AND #k = :k AND #v = :v",
+          ExpressionAttributeNames: { "#k": "kind", "#v": "version" },
+          ExpressionAttributeValues: {
+            ":p": { S: "U#" + u.owner },
+            ":k": r.kind,
+            ":v": r.version,
+          },
         });
       }
       const h = createHash("sha256");
@@ -284,6 +288,7 @@ async function cleanup() {
   save();
   ok("disposable fixture cleanup verified");
 }
+let phase = "startup";
 async function main() {
   identity();
   assert.equal(marker().savedRequestsSchemaVersion.N, "11");
@@ -292,38 +297,49 @@ async function main() {
     await cleanup();
     return;
   }
-  for (let n = 0; n < 2; n++) {
-    const u = {
-      name: "kurier-mcp-scopes-" + randomUUID() + "@example.com",
-      created: false,
-    };
-    receipt.users.push(u);
-    save();
-    aws(["cognito-idp", "admin-create-user"], {
-      UserPoolId: o.cognitoUserPoolId,
-      Username: u.name,
-      MessageAction: "SUPPRESS",
-      UserAttributes: [
-        { Name: "email", Value: u.name },
-        { Name: "email_verified", Value: "true" },
-      ],
-    });
-    u.created = true;
-    save();
-    await login(u);
-    const me = await call(
-      "GET",
-      "/api/v1/users/me",
-      sessions.get(u.name),
-      undefined,
-      200,
-    );
-    u.owner = me.data.user.userId;
-    save();
+  if (mode === "--validate")
+    for (let n = 0; n < 2; n++) {
+      const u = {
+        name: "kurier-mcp-scopes-" + randomUUID() + "@example.com",
+        created: false,
+      };
+      receipt.users.push(u);
+      save();
+      aws(["cognito-idp", "admin-create-user"], {
+        UserPoolId: o.cognitoUserPoolId,
+        Username: u.name,
+        MessageAction: "SUPPRESS",
+        UserAttributes: [
+          { Name: "email", Value: u.name },
+          { Name: "email_verified", Value: "true" },
+        ],
+      });
+      u.created = true;
+      save();
+      await login(u);
+      const me = await call(
+        "GET",
+        "/api/v1/users/me",
+        sessions.get(u.name),
+        undefined,
+        200,
+      );
+      u.owner = me.data.user.userId;
+      save();
+    }
+  if (mode === "--resume") {
+    assert.equal(receipt.users.length, 2);
+    for (const u of receipt.users) {
+      assert.ok(u.created && !u.deleted);
+      await login(u);
+    }
   }
   const [owner, other] = receipt.users;
   const jwt = sessions.get(owner.name);
-  const foreign = await project(other);
+  const foreign =
+    receipt.projects.find((p) => p.user === other.name && !p.deleting) ??
+    (await project(other));
+  phase = "browser launch";
   // Genuine hosted browser consent and SRP, with disposable credentials only.
   const browser = await chromium.launch({
     headless: true,
@@ -335,14 +351,20 @@ async function main() {
   try {
     const context = await browser.newContext();
     const page = await context.newPage();
-    await page.goto(o.frontendHosting.siteUrl, { waitUntil: "networkidle" });
+    phase = "hosted navigation";
+    await page.goto(o.frontendHosting.siteUrl, {
+      waitUntil: "domcontentloaded",
+    });
+    phase = "browser sign-in form";
     await page.getByLabel("Email", { exact: true }).fill(owner.name);
     await page
       .getByLabel("Password", { exact: true })
       .fill(passwords.get(owner.name));
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    phase = "browser MCP status";
     const panel = page.getByRole("region", { name: "Read-only MCP access" });
     await panel.getByRole("button", { name: "Refresh MCP status" }).click();
+    phase = "browser automatic consent";
     await panel
       .getByLabel("All my projects, including future projects")
       .check();
@@ -354,6 +376,7 @@ async function main() {
     );
     await panel.getByLabel(/^I understand/).check();
     await panel.getByRole("button", { name: "Create MCP credential" }).click();
+    phase = "browser one-time token";
     cap = await panel.getByLabel("One-time MCP token").innerText();
     assert.equal(cap.length, 43);
     assert.equal(
@@ -373,6 +396,7 @@ async function main() {
     connection = (
       await call("GET", "/api/v1/mcp/connections/current", jwt, undefined, 200)
     ).data.connection;
+    phase = "browser sign-out";
     await page.getByRole("button", { name: "Sign out", exact: true }).click();
     await page.getByRole("heading", { name: "Sign in", exact: true }).waitFor();
     await context.close();
@@ -380,6 +404,7 @@ async function main() {
   } finally {
     await browser.close();
   }
+  phase = "installed client";
   const dir = mkdtempSync(join(tmpdir(), "kurier-mcp-scopes-live-"));
   mkdirSync(join(dir, "private"), { mode: 0o700 });
   const credential = join(dir, "private", "credential.json");
@@ -568,9 +593,18 @@ async function main() {
     client.kill();
     rmSync(dir, { recursive: true, force: true });
   }
+  phase = "fixture cleanup";
   await cleanup();
 }
-main().catch(() => {
+main().catch((e) => {
+  console.error(
+    JSON.stringify({
+      phase,
+      failureName: /^[A-Za-z]+$/.test(e.name) ? e.name : "Error",
+      networkCode: e.message?.match(/net::[A-Z_]+/)?.[0] ?? null,
+      timeout: /Timeout|timed out/i.test(e.message ?? ""),
+    }),
+  );
   console.error(
     "Live scope validation stopped; use identifier-only receipt to reconcile and clean up. Secret responses are intentionally not printed.",
   );

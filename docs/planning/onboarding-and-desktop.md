@@ -76,6 +76,11 @@ completion does not accept the amendments or complete the delivery card; its
 design-acceptance and implementation checks remain open. The stored-results
 tool extension stays independent and must share the same authorization gates.
 
+Davian accepted that packet and requested implementation, deployment, testing
+and merge on 2026-11-14. The [delivery record](../development/mcp-project-scopes.md)
+tracks schema11/MCP2, browser-managed live scope, legacy compatibility and
+separate local/hosted verification. The stored-results extension remains open.
+
 Affected interfaces include browser credential management, bridge project
 discovery, authorization/cursors and MCP client setup. Coordinate with the
 separate stored-contract-results tool extension. Verify new-project discovery,
