@@ -27,6 +27,9 @@ func (st *Store) environmentStageGuard(stage record) types.TransactWriteItem {
 	versions := runner.EnvironmentStageVersions()
 	if stage.OpenAPISchemaVersion == 1 {
 		versions = runner.OpenAPIStageVersions()
+		if stage.SavedRequestsSchemaVersion == 11 {
+			versions = runner.MCPScopesStageVersions()
+		}
 	} else {
 		expr += " AND attribute_not_exists(openapiSchemaVersion)"
 	}

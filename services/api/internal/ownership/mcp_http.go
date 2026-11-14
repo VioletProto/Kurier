@@ -26,6 +26,9 @@ func (a *Server) mcpManagement(w http.ResponseWriter, r *http.Request, u User) e
 	if s == nil {
 		return unavailable()
 	}
+	if strings.HasPrefix(r.URL.Path, "/api/v1/mcp/connections") {
+		return a.mcpConnections(w, r, u)
+	}
 	switch r.Method {
 	case "GET":
 		v, e := s.CurrentMCP(r.Context(), u.UserID)
@@ -69,6 +72,63 @@ func (a *Server) mcpManagement(w http.ResponseWriter, r *http.Request, u User) e
 		return nil
 	}
 	return missing()
+}
+
+func (a *Server) mcpConnections(w http.ResponseWriter, r *http.Request, u User) error {
+	s := a.store.executions
+	if r.Method == "GET" {
+		v, e := s.CurrentMCPConnection(r.Context(), u.UserID)
+		if e != nil {
+			return mcpManagementError(e)
+		}
+		if v != nil {
+			w.Header().Set("ETag", `"`+strconv.FormatInt(v.Version, 10)+`"`)
+		}
+		success(w, 200, map[string]any{"connection": v, "serverTime": s.ServerTime()})
+		return nil
+	}
+	raw, e := readMCPBody(w, r)
+	if e != nil {
+		return e
+	}
+	defer clear(raw)
+	var in struct {
+		Scope execution.MCPScope `json:"scope"`
+	}
+	if execution.NonNullObject(raw) != nil || execution.StrictJSON(raw, &in) != nil {
+		return apiError(400, "invalid_request", "Invalid connection scope.")
+	}
+	if r.Method == "PATCH" {
+		version, e := precondition(r)
+		if e != nil {
+			return e
+		}
+		if version >= 9007199254740991 {
+			return apiError(400, "invalid_request", "Invalid credential version.")
+		}
+		v, e := s.UpdateMCPScope(r.Context(), u.UserID, r.PathValue("tokenId"), version, in.Scope)
+		if e != nil {
+			return mcpManagementError(e)
+		}
+		w.Header().Set("ETag", `"`+strconv.FormatInt(v.Version, 10)+`"`)
+		success(w, 200, map[string]any{"connection": v, "serverTime": s.ServerTime()})
+		return nil
+	}
+	keys := r.Header.Values("Idempotency-Key")
+	if len(keys) != 1 {
+		return apiError(400, "invalid_request", "One Idempotency-Key required.")
+	}
+	v, created, e := s.CreateMCPConnection(r.Context(), u.UserID, keys[0], in.Scope)
+	if e != nil {
+		return mcpManagementError(e)
+	}
+	status := 200
+	if created {
+		status = 201
+	}
+	w.Header().Set("ETag", `"`+strconv.FormatInt(v.Connection.Version, 10)+`"`)
+	success(w, status, v)
+	return nil
 }
 func readMCPBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
 	media, _, e := mime.ParseMediaType(r.Header.Get("Content-Type"))

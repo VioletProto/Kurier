@@ -22,3 +22,18 @@ func configureBrowserMCP(t *testing.T, i *integration) {
 		t.Fatal(e)
 	}
 }
+
+func configureBrowserMCPScopes(t *testing.T, i *integration) {
+	t.Helper()
+	stage, e := i.store.get(context.Background(), "STAGE#local", "META")
+	if e != nil {
+		t.Fatal(e)
+	}
+	stage.SavedRequestsSchemaVersion = 11
+	stage.MCPReadOnlySchemaVersion = 2
+	stage.Version++
+	item, _ := encode(stage)
+	if _, e = i.client.PutItem(context.Background(), &dynamodb.PutItemInput{TableName: &i.store.table, Item: item}); e != nil {
+		t.Fatal(e)
+	}
+}

@@ -144,6 +144,13 @@ func contractSuppressed(raw []byte, headers http.Header, san *sanitizer, policy 
 	return sensitive(value)
 }
 
+func MCPScopesStageVersions() map[string]int64 {
+	v := OpenAPIStageVersions()
+	v["savedRequestsSchemaVersion"] = 11
+	v["mcpReadOnlySchemaVersion"] = 2
+	return v
+}
+
 func OpenAPIStageVersions() map[string]int64 {
 	v := EnvironmentStageVersions()
 	v["savedRequestsSchemaVersion"] = 10

@@ -38,7 +38,7 @@ func mcpFields(item map[string]dt.AttributeValue, extra string) bool {
 	return true
 }
 func knownMCP(item map[string]dt.AttributeValue, r row) bool {
-	if r.SchemaVersion != 1 {
+	if r.SchemaVersion != 1 && !(r.Kind == "mcpCredential" && r.SchemaVersion == 2) {
 		return false
 	}
 	encoded, e := attributevalue.MarshalMap(r)
@@ -52,7 +52,7 @@ func knownMCP(item map[string]dt.AttributeValue, r row) bool {
 	}
 	switch r.Kind {
 	case "mcpCredential":
-		if !mcpFields(item, "ownerId mcpTokenId mcpProjectIds tokenHash state createdAt expiresAt recoveryGeneration revokedAt DPK DSK") {
+		if !mcpFields(item, "ownerId mcpTokenId mcpScopeMode mcpProjectIds tokenHash state createdAt expiresAt recoveryGeneration revokedAt DPK DSK") {
 			return false
 		}
 		for i, pid := range r.MCPProjectIDs {
@@ -60,7 +60,15 @@ func knownMCP(item map[string]dt.AttributeValue, r row) bool {
 				return false
 			}
 		}
-		return r.PK == "U#"+r.OwnerID && r.SK == "MCPCRED#"+r.MCPTokenID && wire.ValidID(r.MCPTokenID) && len(r.TokenHash) == 64 && len(r.MCPProjectIDs) <= 10 && r.ExpiresAt != "" && r.RecoveryGeneration != "" && (r.State == "active" && len(r.MCPProjectIDs) > 0 || r.State == "revoked")
+		if r.SchemaVersion == 1 && r.MCPScopeMode != "" || r.SchemaVersion == 2 && r.MCPScopeMode != "selected_projects" && r.MCPScopeMode != "all_owned_projects" {
+			return false
+		}
+		if r.MCPScopeMode == "all_owned_projects" {
+			if _, present := item["mcpProjectIds"]; present {
+				return false
+			}
+		}
+		return r.PK == "U#"+r.OwnerID && r.SK == "MCPCRED#"+r.MCPTokenID && wire.ValidID(r.MCPTokenID) && len(r.TokenHash) == 64 && len(r.MCPProjectIDs) <= 10 && r.ExpiresAt != "" && r.RecoveryGeneration != "" && (r.State == "active" && (len(r.MCPProjectIDs) > 0 || r.MCPScopeMode == "all_owned_projects") || r.State == "revoked")
 	case "mcpLookup":
 		if !mcpFields(item, "ownerId mcpTokenId tokenHash") {
 			return false
@@ -91,75 +99,92 @@ func knownMCP(item map[string]dt.AttributeValue, r row) bool {
 }
 func (s *Service) mcpStage(ctx context.Context) (row, error) {
 	r, e := s.stage(ctx)
-	if e != nil || r.MCPReadOnlySchemaVersion != 1 || (r.SavedRequestsSchemaVersion != 7 && r.SavedRequestsSchemaVersion != 8 && r.SavedRequestsSchemaVersion != 9 && r.SavedRequestsSchemaVersion != 10) {
+	if e != nil || (r.MCPReadOnlySchemaVersion != 1 && r.MCPReadOnlySchemaVersion != 2) || (r.SavedRequestsSchemaVersion != 11 && r.SavedRequestsSchemaVersion != 7 && r.SavedRequestsSchemaVersion != 8 && r.SavedRequestsSchemaVersion != 9 && r.SavedRequestsSchemaVersion != 10) {
 		return row{}, safeError()
 	}
 	return r, nil
 }
 func (s *Service) CreateMCP(ctx context.Context, owner, key string, in MCPPair) (MCPPairResponse, bool, error) {
+	c, token, created, e := s.createMCP(ctx, owner, key, MCPScope{Mode: "selected_projects", ProjectIDs: in.ProjectIDs}, true)
+	return MCPPairResponse{Credential: mcpView(c), Token: token}, created, e
+}
+func (s *Service) createMCP(ctx context.Context, owner, key string, scope MCPScope, legacy bool) (row, *string, bool, error) {
+	in := MCPPair{ProjectIDs: scope.ProjectIDs}
 	stage, e := s.mcpStage(ctx)
 	if e != nil {
-		return MCPPairResponse{}, false, e
+		return row{}, nil, false, e
 	}
 	user, e := s.userGuard(ctx, owner)
 	if e != nil {
-		return MCPPairResponse{}, false, e
+		return row{}, nil, false, e
 	}
-	if !wire.ValidID(key) || len(s.SigningKey) < 32 || len(in.ProjectIDs) < 1 || len(in.ProjectIDs) > 10 {
-		return MCPPairResponse{}, false, failure(400, "invalid_request")
+	if !wire.ValidID(key) || len(s.SigningKey) < 32 || !scope.valid() || !legacy && stage.MCPReadOnlySchemaVersion != 2 {
+		return row{}, nil, false, failure(400, "invalid_request")
 	}
 	slices.Sort(in.ProjectIDs)
 	actions := []dt.TransactWriteItem{s.stageGuard(stage), user}
 	for i, pid := range in.ProjectIDs {
 		if !wire.ValidID(pid) || i > 0 && pid == in.ProjectIDs[i-1] {
-			return MCPPairResponse{}, false, failure(400, "invalid_request")
+			return row{}, nil, false, failure(400, "invalid_request")
 		}
 		p, e := s.project(ctx, owner, pid)
 		if e != nil {
-			return MCPPairResponse{}, false, e
+			return row{}, nil, false, e
 		}
 		actions = append(actions, s.projectGuard(p, "active"))
 	}
-	sk := "MCPISSUE#" + s.digest("mcp-issuance-key-v1", []string{s.Stage, owner, key})
-	dig := s.digest("mcp-issuance-input-v1", in)
+	namespace := "mcp-issuance-key-v1"
+	if !legacy {
+		namespace = "mcp-connection-key-v2"
+	}
+	sk := "MCPISSUE#" + s.digest(namespace, []string{s.Stage, owner, key})
+	scope.ProjectIDs = in.ProjectIDs
+	dig := s.digest(namespace, scope)
+	if legacy {
+		dig = s.digest("mcp-issuance-input-v1", in)
+	}
 	receipt, e := s.get(ctx, s.Table, "U#"+owner, sk)
 	if e == nil {
 		if receipt.Kind != "mcpIssuance" || receipt.InputDigest != dig || receipt.ExpiresAt <= stamp(s.now()) {
-			return MCPPairResponse{}, false, failure(409, "conflict")
+			return row{}, nil, false, failure(409, "conflict")
 		}
 		c, e := s.get(ctx, s.Table, receipt.PK, "MCPCRED#"+receipt.MCPTokenID)
 		if e != nil {
-			return MCPPairResponse{}, false, e
+			return row{}, nil, false, e
 		}
 		actions = append(actions, s.rowGuard(receipt), s.rowGuard(c))
 		if e = s.transact(ctx, actions); e != nil {
-			return MCPPairResponse{}, false, safeError()
+			return row{}, nil, false, safeError()
 		}
-		return MCPPairResponse{Credential: mcpView(c)}, false, nil
+		return c, nil, false, nil
 	}
 	if !missingRow(e) {
-		return MCPPairResponse{}, false, e
+		return row{}, nil, false, e
 	}
 	if e = s.mcpRate(ctx, owner, "issuance", s.now().UTC().Format("2006-01-02T15"), 5, 1); e != nil {
-		return MCPPairResponse{}, false, e
+		return row{}, nil, false, e
 	}
 	slot, e := s.get(ctx, s.Table, "U#"+owner, "MCP#CURRENT")
 	fresh := missingRow(e)
 	if e != nil && !fresh {
-		return MCPPairResponse{}, false, e
+		return row{}, nil, false, e
 	}
 	if !fresh {
 		old, e := s.get(ctx, s.Table, slot.PK, "MCPCRED#"+slot.MCPTokenID)
 		if e != nil && !missingRow(e) {
-			return MCPPairResponse{}, false, e
+			return row{}, nil, false, e
 		}
 		if e == nil && old.State == "active" && old.ExpiresAt > stamp(s.now()) && old.RecoveryGeneration == stage.RecoveryGeneration {
-			return MCPPairResponse{}, false, failure(409, "conflict")
+			return row{}, nil, false, failure(409, "conflict")
 		}
 	}
 	tok := randomToken()
 	cid := id()
 	c := row{PK: "U#" + owner, SK: "MCPCRED#" + cid, Kind: "mcpCredential", SchemaVersion: 1, OwnerID: owner, MCPTokenID: cid, MCPProjectIDs: in.ProjectIDs, TokenHash: tokenHash(tok), State: "active", CreatedAt: stamp(s.now()), ExpiresAt: stamp(s.now().Add(30 * 24 * time.Hour)), RecoveryGeneration: stage.RecoveryGeneration}
+	if !legacy {
+		c.SchemaVersion = 2
+		c.MCPScopeMode = scope.Mode
+	}
 	c.DPK = dueShard(owner)
 	c.DSK = stamp(s.now().Add(37*24*time.Hour)) + "#" + cid
 	slot = row{PK: c.PK, SK: "MCP#CURRENT", Kind: "mcpSlot", SchemaVersion: 1, OwnerID: owner, MCPTokenID: cid, Version: slot.Version}
@@ -174,7 +199,7 @@ func (s *Service) CreateMCP(ctx context.Context, owner, key string, in MCPPair) 
 	}{{c, true}, {slot, fresh}, {receipt, true}, {lookup, true}} {
 		p, e := s.put(s.Table, ent.r, ent.fresh)
 		if e != nil {
-			return MCPPairResponse{}, false, e
+			return row{}, nil, false, e
 		}
 		actions = append(actions, p)
 	}
@@ -182,16 +207,27 @@ func (s *Service) CreateMCP(ctx context.Context, owner, key string, in MCPPair) 
 		link := row{PK: "P#" + pid, SK: "MCP#" + cid, Kind: "executionMCPScope", SchemaVersion: 1, OwnerID: owner, ProjectID: pid, MCPTokenID: cid}
 		p, e := s.put(s.Table, link, true)
 		if e != nil {
-			return MCPPairResponse{}, false, e
+			return row{}, nil, false, e
 		}
 		actions = append(actions, p)
 	}
 	if e = s.transact(ctx, actions); e != nil {
-		return MCPPairResponse{}, false, safeError()
+		return row{}, nil, false, safeError()
 	}
-	return MCPPairResponse{Credential: mcpView(c), Token: &tok}, true, nil
+	return c, &tok, true, nil
 }
 func (s *Service) CurrentMCP(ctx context.Context, owner string) (*wire.Credential, error) {
+	c, e := s.currentMCPRow(ctx, owner)
+	if e != nil || c == nil {
+		return nil, e
+	}
+	if c.SchemaVersion != 1 {
+		return nil, failure(409, "conflict")
+	}
+	v := mcpView(*c)
+	return &v, nil
+}
+func (s *Service) currentMCPRow(ctx context.Context, owner string) (*row, error) {
 	stage, e := s.mcpStage(ctx)
 	if e != nil {
 		return nil, e
@@ -220,8 +256,7 @@ func (s *Service) CurrentMCP(ctx context.Context, owner string) (*wire.Credentia
 	if c.RecoveryGeneration != stage.RecoveryGeneration {
 		return nil, nil
 	}
-	v := mcpView(c)
-	return &v, nil
+	return &c, nil
 }
 func (s *Service) RevokeMCP(ctx context.Context, owner, cid string) error {
 	stage, e := s.mcpStage(ctx)
@@ -269,7 +304,7 @@ func (s *Service) authenticateMCP(ctx context.Context, token string) (row, row, 
 		return row{}, row{}, deny
 	}
 	c, e := s.get(ctx, s.Table, "U#"+l.OwnerID, "MCPCRED#"+l.MCPTokenID)
-	if e != nil || c.Kind != "mcpCredential" || !hmac.Equal([]byte(c.TokenHash), []byte(tokenHash(token))) || c.State != "active" || c.RecoveryGeneration != stage.RecoveryGeneration || c.ExpiresAt <= stamp(s.now().Add(5*time.Second)) {
+	if e != nil || c.Kind != "mcpCredential" || c.SchemaVersion == 2 && stage.MCPReadOnlySchemaVersion != 2 || !hmac.Equal([]byte(c.TokenHash), []byte(tokenHash(token))) || c.State != "active" || c.RecoveryGeneration != stage.RecoveryGeneration || c.ExpiresAt <= stamp(s.now().Add(5*time.Second)) {
 		return row{}, row{}, deny
 	}
 	if _, e = s.userGuard(ctx, c.OwnerID); e != nil {

@@ -11,6 +11,23 @@ and lifecycle, discovery/cursors, limits and compatibility before the
 interfaces and verification. The existing immutable explicit-project credential
 model below is the current baseline.
 
+The [2026-11-14 spike findings](../spikes/mcp-connection-project-scopes.md)
+recommend keeping stdio and one registration, adding selected-project and
+current/future-owned-project modes, explicit future-project consent, versioned
+in-place scope changes, bounded eventual discovery and legacy compatibility.
+Exact proposed management DTOs/routes, cursor rules, cleanup/release fences and
+verification gates are in that packet. Research is complete; these amendments
+remain **proposed**, and the accepted runtime baseline below is unchanged.
+
+Davian subsequently requested implementing, deploying, testing and merging the
+2026-11-14 recommendation. Its exact union, management routes, shared versioned
+scope lifecycle, discovery/cursors and schema-11/MCP2 release fence are accepted
+for that delivery. New connection metadata includes `editable:boolean`: false
+for legacy schema-1 credentials and true for schema 2. This explicit signal
+preserves legacy upgrade/re-pairing behavior. [Implementation and actual checks](../development/mcp-project-scopes.md)
+record delivery separately. The original fixed-scope sections below remain the
+legacy contract; the accepted continuation supersedes them only for schema 2.
+
 Status: **Accepted by Davian** at `2d8d43c`, including evidence-size limits
 and credential-storage tradeoffs. Scoped implementation, API synchronization,
 local/client tests and AWS deployment/activation preview with refreshed costs

@@ -66,6 +66,21 @@ ownership, deletion, revocation/expiry, recovery generation, audit-before-data
 and sanitization on each read. Specify how new projects become discoverable and
 whether exclusions are supported. Evaluate the existing transport first.
 
+The [2026-11-14 design packet](../spikes/mcp-connection-project-scopes.md)
+recommends retaining stdio/one registration and the shared thirty-day credential,
+manual selection of 1–10 projects or explicit all-current/future-owned consent,
+in-place versioned scope edits, no exclusions and bounded eventual discovery.
+It specifies exact proposed routes/DTOs, legacy behavior, deletion/cleanup and
+release fences, test gates and a 28–44 active-hour delivery estimate. Research
+completion does not accept the amendments or complete the delivery card; its
+design-acceptance and implementation checks remain open. The stored-results
+tool extension stays independent and must share the same authorization gates.
+
+Davian accepted that packet and requested implementation, deployment, testing
+and merge on 2026-11-14. The [delivery record](../development/mcp-project-scopes.md)
+tracks schema11/MCP2, browser-managed live scope, legacy compatibility and
+separate local/hosted verification. The stored-results extension remains open.
+
 Affected interfaces include browser credential management, bridge project
 discovery, authorization/cursors and MCP client setup. Coordinate with the
 separate stored-contract-results tool extension. Verify new-project discovery,

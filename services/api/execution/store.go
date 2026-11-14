@@ -72,6 +72,7 @@ type row struct {
 	WorkflowAssertionsSchemaVersion  int                        `dynamodbav:"workflowAssertionsSchemaVersion,omitempty"`
 	AssertionSemanticsVersion        int                        `dynamodbav:"assertionSemanticsVersion,omitempty"`
 	MCPTokenID                       string                     `dynamodbav:"mcpTokenId,omitempty"`
+	MCPScopeMode                     string                     `dynamodbav:"mcpScopeMode,omitempty"`
 	MCPProjectIDs                    []string                   `dynamodbav:"mcpProjectIds,omitempty"`
 	MCPTool                          string                     `dynamodbav:"mcpTool,omitempty"`
 	MCPCode                          string                     `dynamodbav:"mcpCode,omitempty"`
@@ -321,11 +322,11 @@ func transactionConflict(err error) bool {
 }
 func (s *Service) stage(ctx context.Context) (row, error) {
 	r, e := s.get(ctx, s.Table, "STAGE#"+s.Stage, "META")
-	if r.SavedRequestsSchemaVersion == 9 || r.SavedRequestsSchemaVersion == 10 {
-		if (r.SavedRequestsSchemaVersion == 10) != (r.OpenAPISchemaVersion == 1) || r.OpenAPISchemaVersion < 0 || r.OpenAPISchemaVersion > 1 {
+	if r.SavedRequestsSchemaVersion == 9 || r.SavedRequestsSchemaVersion == 10 || r.SavedRequestsSchemaVersion == 11 {
+		if (r.SavedRequestsSchemaVersion >= 10) != (r.OpenAPISchemaVersion == 1) || r.OpenAPISchemaVersion < 0 || r.OpenAPISchemaVersion > 1 {
 			return row{}, safeError()
 		}
-		if e != nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != 1 || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
+		if e != nil || r.State != "active" || r.RecoveryGeneration == "" || r.ProjectEnvironmentsSchemaVersion != 1 || r.ProtectedSecretsSchemaVersion != 2 || r.LocalAgentExecutionsSchemaVersion != 2 || r.WorkflowAssertionsSchemaVersion != 1 || r.MCPReadOnlySchemaVersion != map[bool]int{false: 1, true: 2}[r.SavedRequestsSchemaVersion == 11] || r.SequentialWorkflowsSchemaVersion != 1 || r.CloudExecutionsSchemaVersion != 1 || r.ExecutionInputsSchemaVersion != 1 || r.EvidencePinningSchemaVersion != 1 {
 			return row{}, safeError()
 		}
 		return r, nil
@@ -348,7 +349,7 @@ func (s *Service) stage(ctx context.Context) (row, error) {
 	return r, nil
 }
 func (s *Service) stageGuard(stage row) dt.TransactWriteItem {
-	if stage.SavedRequestsSchemaVersion == 9 || stage.SavedRequestsSchemaVersion == 10 {
+	if stage.SavedRequestsSchemaVersion == 9 || stage.SavedRequestsSchemaVersion == 10 || stage.SavedRequestsSchemaVersion == 11 {
 		return s.environmentStageGuard(stage)
 	}
 	guard := dt.TransactWriteItem{ConditionCheck: &dt.ConditionCheck{TableName: &s.Table, Key: keys(stage.PK, "META"), ConditionExpression: aws.String("#s = :active AND recoveryGeneration = :g AND savedRequestsSchemaVersion = :r AND cloudExecutionsSchemaVersion = :c AND executionInputsSchemaVersion = :c AND protectedSecretsSchemaVersion = :c"), ExpressionAttributeNames: map[string]string{"#s": "state"}, ExpressionAttributeValues: map[string]dt.AttributeValue{":active": str("active"), ":g": str(stage.RecoveryGeneration), ":r": num(int64(stage.SavedRequestsSchemaVersion)), ":c": num(1)}}}
