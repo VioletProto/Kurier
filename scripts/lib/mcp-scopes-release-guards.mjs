@@ -70,6 +70,26 @@ export function checkPlan(changes) {
   ];
   for (const c of changes) {
     if (
+      c.op === "create" &&
+      c.type === "aws:apigatewayv2/route:Route" &&
+      /^MCPConnection(Create|Current|Scope)$/.test(c.name)
+    )
+      continue;
+    if (
+      c.op === "delete" &&
+      /^DevelopmentHttpApiRoute(Koanhm|Bakfkn|Ebmcab)(Permissions|Integration|Route)?$/.test(
+        c.name,
+      ) &&
+      [
+        "sst:aws:ApiGatewayV2LambdaRoute",
+        "aws:lambda/permission:Permission",
+        "aws:apigatewayv2/integration:Integration",
+        "aws:apigatewayv2/route:Route",
+      ].includes(c.type)
+    )
+      continue;
+
+    if (
       c.op === "update" &&
       c.type === "pulumi-nodejs:dynamic:Resource" &&
       [

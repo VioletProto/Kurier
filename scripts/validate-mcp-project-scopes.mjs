@@ -373,6 +373,8 @@ async function main() {
     connection = (
       await call("GET", "/api/v1/mcp/connections/current", jwt, undefined, 200)
     ).data.connection;
+    await page.getByRole("button", { name: "Sign out", exact: true }).click();
+    await page.getByRole("heading", { name: "Sign in", exact: true }).waitFor();
     await context.close();
     ok("real hosted Chromium/Cognito automatic consent and one-time token");
   } finally {

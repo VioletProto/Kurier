@@ -448,9 +448,6 @@ export async function createDevelopmentApi() {
   });
   let openapiIntegration: $util.Input<string> | undefined;
   for (const route of [
-    "POST /api/v1/mcp/connections",
-    "GET /api/v1/mcp/connections/current",
-    "PATCH /api/v1/mcp/connections/{tokenId}/scope",
     "POST /api/v1/mcp/tokens",
     "GET /api/v1/mcp/tokens/current",
     "DELETE /api/v1/mcp/tokens/{tokenId}",
@@ -514,6 +511,18 @@ export async function createDevelopmentApi() {
   // Every owner endpoint uses this same Go handler and API-scoped invoke grant.
   // Reuse its existing integration: SST creates one duplicate Lambda permission
   // per route, which exceeds Lambda's 20 KiB policy limit as the API grows.
+  for (const [name, routeKey] of [
+    ["Create", "POST /api/v1/mcp/connections"],
+    ["Current", "GET /api/v1/mcp/connections/current"],
+    ["Scope", "PATCH /api/v1/mcp/connections/{tokenId}/scope"],
+  ]) {
+    new aws.apigatewayv2.Route(`MCPConnection${name}`, {
+      apiId: api.nodes.api.id,
+      routeKey,
+      authorizationType: "NONE",
+      target: $interpolate`integrations/${openapiIntegration}`,
+    });
+  }
   const openapiPrefix = "/api/v1/projects/{projectId}/openapi-imports";
   for (const [name, routeKey] of [
     ["Create", `POST ${openapiPrefix}`],

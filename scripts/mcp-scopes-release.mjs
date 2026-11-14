@@ -124,7 +124,7 @@ function sst(operation) {
     operation === "diff" ? planPath : ".sst/mcp-scopes-deploy.txt",
     r.stdout + r.stderr,
   );
-  if (r.status === 0) {
+  {
     const fmt = spawnSync(
       "npm",
       [
@@ -215,7 +215,9 @@ function verifyDeployed(before) {
 }
 async function main() {
   const mode = process.argv[2];
-  assert.ok(["preview", "close", "deploy", "activate"].includes(mode));
+  assert.ok(
+    ["preview", "preview-closed", "close", "deploy", "activate"].includes(mode),
+  );
   identity();
   assert.equal(
     spawnSync("git", ["status", "--porcelain"], {
@@ -225,12 +227,24 @@ async function main() {
     "Clean pinned source required",
   );
   bootstrap();
-  if (mode === "preview") {
+  if (mode === "preview" || mode === "preview-closed") {
     const m = marker();
-    checkTuple(m, "active", 10, 1);
+    checkTuple(
+      m,
+      mode === "preview" ? "active" : "mcp-scopes-migration",
+      10,
+      1,
+    );
     const counts = inventory();
     const previous = JSON.parse(readFileSync(basePath));
-    assert.equal(hash(m), hash(previous.marker));
+    assert.equal(
+      hash(m),
+      hash(
+        mode === "preview"
+          ? previous.marker
+          : JSON.parse(readFileSync(".sst/mcp-scopes-closed.json")),
+      ),
+    );
     sst("diff");
     const changes = planSummary(readFileSync(planPath, "utf8"));
     checkPlan(changes);
