@@ -36,8 +36,10 @@ See [AWS KMS pricing](https://aws.amazon.com/kms/pricing/) and
 ## Authoring and lifecycle
 
 Run npm run dev:cloud after deploying dev-api and use http://localhost:5173/.
-Sign in with a genuine Cognito user. Mark a header/query Protected before
-entering a disposable value. Authorization takes the complete Bearer value.
+Sign in with a genuine Cognito user. Mark a header/query Protected to mask its
+draft. Enabling protection also retains a value already typed into that row;
+it is submitted as a protected value when the request is saved.
+Authorization takes the complete Bearer value.
 Write-only inputs clear after submission, including errors; refresh never
 returns a stored value. Unrelated request edits preserve stable bindings.
 
@@ -257,3 +259,45 @@ Genuine browser acceptance is complete: owner-session flags, persistence,
 second-user isolation, query/whole-body UI clearing/preserve and actual scheduled
 deletions passed. Operator readback confirms no Protected children remain for
 the reported completed probes. Submission status is recorded in Trello.
+
+## Protect-toggle value preservation (2026-11-15)
+
+Davian requested retaining an entered header value when enabling protection,
+then authorized deployment, testing, merge and repository cleanup.
+Implementation `a3f510ad87a1eb17c7002db2a065c18a6f94ea79` carries the public
+draft into `secretWrite: {action:"set",value}` and masks the same input. The shared
+control applies the behavior to headers and query parameters. Protected inputs
+still clear after submission; switching back to public clears the protected draft.
+
+Release `48fa86e7b87c6a2b817ed93ac436ec2a66da0cef7e3e2700d6ff22ca202b149f`
+is deployed at **https://d2kpq905qyh9zg.cloudfront.net**, using the existing
+`dev-api` stage in `us-east-2`, account `747336059622`, verified non-root
+`davian-admin`. SST 4.17.1 preview and deploy targeted `FrontendWeb`; the reviewed
+plan updated only existing static assets, lookup keys and cache invalidation.
+Post-deployment readback confirmed unchanged runtime packages/configuration/IAM,
+active version21/savedRequests11/MCP2 marker and recovery generation, bootstrap5,
+Free/ACTIVE plan, concurrency10, worker maximum2/batch1, maintenance schedule and
+CloudFront distribution configuration.
+
+Full `npm run verify` passed: formatting/gofmt, ESLint, 107 frontend tests,
+16 infrastructure tests, tooling suites, production build and Go tests/vet.
+PR CI passed, including the Chromium session fixtures and
+Go/DynamoDB/browser integration. Actual CloudFront asset hashes, security
+headers/CSP, private S3 denial, deep links, CORS and broker JSON denial checks passed.
+
+A real hosted Chromium/Cognito/broker test created one disposable project and
+saved request. Random disposable Authorization and api_key values were typed
+before enabling protection. The same inputs retained those values and switched
+to password fields without an API write. Saving submitted the original values
+only through the protected union, returned masked references and cleared both
+inputs; refreshing kept them blank. In-memory checks found no submitted plaintext
+in the returned API data or the project's Control/Protected records. Protected
+contained two active AES-256-GCM envelopes with wrapped keys and ciphertext.
+No browser persistence or page errors were observed. This test checked envelope
+presence and plaintext absence; it did not decrypt or execute the saved request.
+
+The disposable project was deleted through the product API. Scheduled cleanup
+left only its deleted project tombstone and no Protected children. Browser sign-out,
+conditional application-user/identity removal, Cognito deletion and independent
+cleanup readback completed. Credentials, disposable values and raw record contents
+stayed in memory; no screenshots, traces or browser-state exports were saved.
