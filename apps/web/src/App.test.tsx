@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -48,8 +49,13 @@ vi.mock("./api", async () => {
   return { ...real, api: { ...real.api, me: mocks.me, list: mocks.list } };
 });
 import { App } from "./App";
+import {
+  SessionExpired,
+  SessionUnavailable,
+  sessionChangedEvent,
+} from "./auth";
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   mocks.broker = false;
   mocks.restore.mockResolvedValue(false);
   mocks.me.mockResolvedValue({
@@ -59,6 +65,7 @@ beforeEach(() => {
   });
   mocks.list.mockResolvedValue({ items: [], nextCursor: null });
   mocks.logout.mockResolvedValue(undefined);
+  mocks.token.mockResolvedValue("fixture-access");
 });
 afterEach(cleanup);
 it("holds both private content and sign-in while restoring a broker session", async () => {
@@ -103,15 +110,100 @@ it("preserves password-manager-filled fields when focus returns to sign-in", asy
   expect(originalPassword).toHaveValue("Test-only-password1!");
   expect(mocks.restore).toHaveBeenCalledTimes(1);
 });
-it("still revalidates a signed-in workspace when focus returns", async () => {
+it("checks focus in the background, coalesces events and preserves the mounted draft", async () => {
+  mocks.broker = true;
+  mocks.restore.mockResolvedValue(true);
+  render(<App />);
+  const draft = await screen.findByLabelText("New project name");
+  await waitFor(() => expect(draft).toBeEnabled());
+  fireEvent.change(draft, { target: { value: "Unsaved project" } });
+  draft.focus();
+  let finish!: (token: string) => void;
+  mocks.token.mockReturnValueOnce(
+    new Promise<string>((resolve) => {
+      finish = resolve;
+    }),
+  );
+  fireEvent(window, new Event("focus"));
+  fireEvent(window, new Event("focus"));
+  expect(mocks.token).toHaveBeenCalledExactlyOnceWith(true);
+  expect(screen.getByLabelText("New project name")).toBe(draft);
+  expect(draft).toHaveFocus();
+  expect(screen.queryByText("Restoring your session…")).toBeNull();
+  await act(async () => finish("fixture-access"));
+  expect(screen.getByLabelText("New project name")).toBe(draft);
+  expect(draft).toHaveValue("Unsaved project");
+  expect(mocks.restore).toHaveBeenCalledTimes(1);
+  expect(mocks.list).toHaveBeenCalledTimes(1);
+});
+it("preserves drafts on a temporary focus-check failure and retries on focus", async () => {
+  mocks.broker = true;
+  mocks.restore.mockResolvedValue(true);
+  render(<App />);
+  const draft = await screen.findByLabelText("New project name");
+  await waitFor(() => expect(draft).toBeEnabled());
+  fireEvent.change(draft, { target: { value: "Keep this draft" } });
+  mocks.token.mockRejectedValueOnce(new SessionUnavailable());
+  fireEvent(window, new Event("focus"));
+  await screen.findByText(new SessionUnavailable().message);
+  expect(screen.getByLabelText("New project name")).toBe(draft);
+  expect(draft).toHaveValue("Keep this draft");
+  fireEvent(window, new Event("focus"));
+  await waitFor(() =>
+    expect(screen.queryByText(new SessionUnavailable().message)).toBeNull(),
+  );
+  expect(draft).toHaveValue("Keep this draft");
+});
+it("clears the workspace on confirmed expiry during a focus check", async () => {
   mocks.broker = true;
   mocks.restore.mockResolvedValue(true);
   render(<App />);
   await screen.findByRole("button", { name: "Sign out" });
+  mocks.token.mockRejectedValueOnce(new SessionExpired());
   fireEvent(window, new Event("focus"));
-  await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(2));
-  await screen.findByRole("button", { name: "Sign out" });
+  await screen.findByRole("button", { name: /^Sign in$/ });
+  expect(screen.queryByLabelText("New project name")).toBeNull();
+  expect(mocks.logout).toHaveBeenCalledTimes(1);
 });
+it.each(["signout", "replacement", "pagehide"])(
+  "ignores late focus-check expiry after %s",
+  async (transition) => {
+    mocks.broker = true;
+    mocks.restore.mockResolvedValue(true);
+    render(<App />);
+    await waitFor(() =>
+      expect(screen.getByLabelText("New project name")).toBeEnabled(),
+    );
+    let fail!: (error: Error) => void;
+    mocks.token.mockImplementationOnce(
+      () =>
+        new Promise<string>((_, reject) => {
+          fail = reject;
+        }),
+    );
+    fireEvent(window, new Event("focus"));
+    expect(mocks.token).toHaveBeenCalledExactlyOnceWith(true);
+    if (transition === "signout")
+      fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    else if (transition === "replacement") {
+      fireEvent(window, new Event(sessionChangedEvent));
+      await waitFor(() => expect(mocks.restore).toHaveBeenCalledTimes(2));
+      await screen.findByRole("button", { name: "Sign out" });
+    } else
+      fireEvent(
+        window,
+        new PageTransitionEvent("pagehide", { persisted: true }),
+      );
+    await act(async () => fail(new SessionExpired()));
+    expect(mocks.logout).toHaveBeenCalledTimes(
+      transition === "signout" ? 1 : 0,
+    );
+    if (transition === "replacement")
+      expect(
+        screen.getByRole("button", { name: "Sign out" }),
+      ).toBeInTheDocument();
+  },
+);
 it.each([false, true])(
   "allows signing in again after sign-out (broker=%s)",
   async (broker) => {

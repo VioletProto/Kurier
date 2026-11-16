@@ -139,6 +139,16 @@ Restore before showing private workspace or sign-in form. Transient failures
 show retry; definitive expiry returns sign-in. Pagehide clears private UI and
 memory without revoking the cookie; BFCache return revalidates. Sign-out uses
 generation fences and cancels known handoffs. Broadcast events carry no tokens.
+While a signed-in page remains open, focus revalidates the existing session
+binding in the background through the token route. Keep the workspace mounted
+so navigation, drafts and input focus survive both successful checks and
+temporary connection failures. Coalesce overlapping focus checks, report
+temporary failures without discarding work, and retry on the next focus.
+Confirmed expiry clears private UI; session replacement still performs full
+restoration. Ignore late check results after sign-out, pagehide or replacement.
+Draft preservation uses existing component memory, with no browser storage of
+request data or secrets. Reload and browser-history restoration retain the
+startup privacy boundary described above.
 Offline logout clears local UI but explicitly reports pending server sign-out;
 persist only a noncredential intent marker when storage permits. Do not clear it
 on fresh login until prior revocation/cancellation is settled.

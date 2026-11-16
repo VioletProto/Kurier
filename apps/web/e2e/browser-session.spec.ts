@@ -39,6 +39,8 @@ test("restores a first-party HttpOnly session across reload, tabs and reopening,
 }) => {
   let active = true;
   let productRequests = 0;
+  let tokenChecks = 0;
+  let holdToken: Promise<void> | undefined;
   const expiry = new Date(Date.now() + 3600000).toISOString();
   const metadata = {
     sessionBinding: "fixture-binding",
@@ -76,6 +78,10 @@ test("restores a first-party HttpOnly session across reload, tabs and reopening,
           },
         });
       } else {
+        if (request.method() === "POST") {
+          tokenChecks++;
+          await holdToken;
+        }
         await route.fulfill({
           json: {
             data:
@@ -144,6 +150,35 @@ test("restores a first-party HttpOnly session across reload, tabs and reopening,
     page.getByRole("heading", { name: "Your projects" }),
   ).toBeVisible();
   expect(await page.evaluate(() => document.cookie)).toBe("");
+  const draft = page.getByLabel("New project name");
+  await expect(draft).toBeEnabled();
+  await draft.fill("Unsaved focus-check draft");
+  const originalInput = await draft.elementHandle();
+  let finishCheck!: () => void;
+  holdToken = new Promise<void>((resolve) => {
+    finishCheck = resolve;
+  });
+  const previousChecks = tokenChecks;
+  const previousProductRequests = productRequests;
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("blur"));
+    window.dispatchEvent(new Event("focus"));
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect.poll(() => tokenChecks).toBe(previousChecks + 1);
+  await expect(draft).toHaveValue("Unsaved focus-check draft");
+  await expect(draft).toBeFocused();
+  await expect(page.getByText("Restoring your session…")).toHaveCount(0);
+  const checked = page.waitForResponse("**/api/v1/browser-session/token");
+  finishCheck();
+  holdToken = undefined;
+  await (await checked).finished();
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  expect(await originalInput?.evaluate((element) => element.isConnected)).toBe(
+    true,
+  );
+  await expect(draft).toHaveValue("Unsaved focus-check draft");
+  expect(productRequests).toBe(previousProductRequests);
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Your projects" }),

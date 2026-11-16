@@ -119,3 +119,57 @@ asset hashes passed; stage marker, Free plan and concurrency were preserved.
 The Bitwarden extension itself was not installed in the runner. No real vault
 values were used, submitted or saved. This fix does not close the remaining
 authenticated Cognito/expiry gates above.
+
+## Workspace focus preservation
+
+Davian authorized deployment, testing, merge and repository cleanup on 2026-11-15
+after reporting lost workspace progress when returning from another window.
+Implementation `fe051f20cfca3870e58d1b4864545eb4f0d23501` changes signed-in
+focus checks to validate the current binding in the background. Release
+`4ea92660947db4b0166123a818ace5e55503f383d5b800e63d7713ce6c266f25`
+is deployed at **https://d2kpq905qyh9zg.cloudfront.net** on `dev-api` in
+`us-east-2`, account `747336059622`, using verified non-root `davian-admin`.
+
+The full SST preview proposed unrelated Go Lambda package replacements because
+their embedded VCS metadata changes with the repository revision. That plan was
+rejected. Supported SST 4.17.1 `diff` and `deploy --stage dev-api --target
+FrontendWeb` limited the reviewed/applied plan to the existing static asset
+uploader, asset lookup keys and cache invalidation. No resources were created and
+no runtime, IAM, database, broker settings or bootstrap changes were applied.
+
+Post-deployment readback confirmed unchanged API/cleanup/worker/controlled-endpoint
+and broker code hashes, runtime configuration and IAM. The active version21,
+savedRequests11/MCP2 marker and recovery generation remained unchanged, along with
+bootstrap5, the Free/ACTIVE plan, account/unreserved concurrency10, worker
+maximum2/batch1, minute maintenance and CloudFront distribution configuration.
+
+Verification completed:
+
+- Full `npm run verify`: formatting/gofmt, ESLint, 104 frontend tests,
+  16 infrastructure tests, tooling suites, production build and Go tests/vet.
+  PR CI also passed, including HTTPS Chromium session fixtures and the
+  Go/DynamoDB/browser integration job.
+- Actual CloudFront public files matched the release manifest hashes. Security
+  headers/CSP, private S3 denial, deep links, static missing paths, CORS and the
+  broker's JSON 401/403/no-store denial cases passed.
+- Genuine hosted Chromium signed in through Cognito SRP and the broker with one
+  disposable identity and created one empty disposable project. Repeated focus
+  events preserved the selected **Project settings** tab, unsaved rename text,
+  original mounted input and keyboard focus, with no product-data reload.
+- Simulating a broker connection failure preserved the tab and draft while
+  displaying the connection notice. The next focus successfully checked the real
+  broker, removed the notice and preserved the same draft/input. No page errors
+  or Web Storage, IndexedDB or Cache Storage entries were observed.
+
+The test signed out, deleted the disposable project through the product API and
+confirmed scheduled cleanup left only its deleted project tombstone and no
+Protected children. Conditional removal of the disposable application-user and
+identity records, Cognito deletion and independent readback completed. Passwords,
+access tokens and cookies stayed in memory or the normal encrypted broker store;
+no screenshots, traces, browser-state exports or credential transcripts were saved.
+
+The connection failure is simulated; successful sign-in and checks use real
+hosted services. This bounded test does not establish natural 15-minute refresh,
+fixed one-day expiry or additional browser-engine coverage. Reload/history
+privacy boundaries remain unchanged; drafts are preserved only while the page
+stays mounted.
