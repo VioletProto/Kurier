@@ -1,4 +1,6 @@
 import { pathToFileURL } from "node:url";
+import { readFileSync } from "node:fs";
+import { coordinatorBudget } from "../lib/workflow-coordinator-transport.mjs";
 const { run } = await import(
   process.argv[2]
     ? pathToFileURL(process.argv[2]).href
@@ -20,6 +22,23 @@ const state = {
   workflows: { H: workflow },
 };
 const c = {
+  budget() {
+    const meterPath = process.env.KURIER_METER_TEST_LEDGER;
+    const events = readFileSync(meterPath, "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    const first = events.find((e) => e.event === "attempt");
+    // The first browser navigation creates the initial local attempt.
+    if (first)
+      coordinatorBudget({
+        ledger: {
+          startedAt: new Date(Math.floor(first.at * 1000)).toISOString(),
+          apiCalls: 0,
+        },
+        meterPath,
+      })();
+  },
   privateState: state,
   o: { hostedFrontendOrigin: "https://d2kpq905qyh9zg.cloudfront.net" },
   root: () => "/api/v1/projects/" + project.projectId,

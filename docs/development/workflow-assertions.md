@@ -4,9 +4,10 @@ Current status: **scoped implementation, deployment, functional validation and
 normal cleanup are complete and accepted**. Davian accepted the retained A–G
 and H–L evidence at `4ffdaaf4cfb569a349ebd16ca739d8deb15aa973`, explicitly including
 the nine read-only OPTIONS failures. The [PR review record](workflow-assertions-pr-review.md)
-tracks the full slice against current main. The [tooling follow-up](https://trello.com/c/F47iWJY8)
-remains open for teardown cancellation and stop enforcement; the existing
-correction is locally tested only. Historical packets below retain their original
+tracks the full slice against current main. The subsequent
+[tooling correction](browser-meter-stop.md) implements teardown request tracking
+and meter/coordinator stop enforcement with local and isolated transport tests.
+It has not been rerun against AWS. Historical packets below retain their original
 holds/failures; they do not reopen functional validation. This closeout authorizes
 no additional live validation, admissions, identities, deployment or AWS changes.
 

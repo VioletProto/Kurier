@@ -1,7 +1,9 @@
 import { chromium, expect } from "@playwright/test";
+import { browserRequestGuard } from "../lib/browser-request-guard.mjs";
 export async function run(c) {
   const { p, w, mode } = c.privateState.browserAction;
   const { privateState: s, check, root, note } = c;
+  c.budget();
   s.browserProgress = "launch";
   const browser = await chromium.launch({
     headless: true,
@@ -13,18 +15,16 @@ export async function run(c) {
     ],
   });
   let page;
+  let guard;
   try {
     const context = await browser.newContext({
       ignoreHTTPSErrors: true,
       serviceWorkers: "block",
     });
+    guard = browserRequestGuard(context);
     page = await context.newPage();
     page.setDefaultTimeout(20000);
     const bad = [];
-    let failedApi = 0;
-    page.on("requestfailed", (r) => {
-      if (r.url().includes("/api/v1/")) failedApi++;
-    });
     page.on("response", (r) => {
       if (r.url().includes("/api/v1/") && r.status() >= 400)
         bad.push(r.status());
@@ -174,7 +174,8 @@ export async function run(c) {
       section.getByRole("button", { name: "Save workflow", exact: true }),
     ).toBeEnabled({ timeout: 20000 });
     await page.waitForLoadState("networkidle", { timeout: 20000 });
-    check(failedApi === 0, "Hosted browser API transport failed");
+    guard.assertSettled();
+    c.budget();
     const storage = await page.evaluate(async () => ({
       local: localStorage.length,
       session: sessionStorage.length,
@@ -187,18 +188,18 @@ export async function run(c) {
     );
     check(!bad.length, "Unexpected hosted API response");
     s.browserProgress = "close-browser";
+    guard.beginClose();
     await context.close();
-    s.browserRequestFailures = failedApi;
-    check(
-      failedApi === 0,
-      "Hosted browser context closed pending API requests",
-    );
+    const summary = guard.summary();
+    s.browserRequestFailures = summary.transportFailures;
+    guard.assertSettled();
+    c.budget();
     note("hosted-decimal-roundtrip", {
       mode,
       revision: out.revision,
       decimalTokens: expected,
       storageEmpty: true,
-      apiTransportFailures: failedApi,
+      apiTransportFailures: summary.transportFailures,
       pendingReadsDrained: true,
     });
   } catch (error) {
@@ -209,6 +210,10 @@ export async function run(c) {
       : "unknown";
     throw Error("Hosted browser verification failed; no automatic replay");
   } finally {
-    await browser.close();
+    try {
+      await browser.close();
+    } finally {
+      s.browserTransportSummary = guard?.summary();
+    }
   }
 }

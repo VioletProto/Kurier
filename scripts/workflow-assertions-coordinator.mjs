@@ -408,8 +408,11 @@ for await (const line of createInterface({ input: process.stdin })) {
       !privateState.stopped || a.module === "stopped-cleanup.mjs",
       "Stopped: cleanup only; no automatic continuation",
     );
+    budget(a.module === "cleanup.mjs" || a.module === "stopped-cleanup.mjs");
     const mod = await import(new URL(a.module, dir) + "?" + Date.now());
+    budget(a.module === "cleanup.mjs" || a.module === "stopped-cleanup.mjs");
     await mod.run(c);
+    budget(privateState.cleanup === true);
     console.log(
       JSON.stringify({
         actionComplete: a.module,
