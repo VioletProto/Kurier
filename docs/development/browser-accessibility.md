@@ -51,9 +51,56 @@ sandboxed verification stopped at a denied Git subprocess; the rerun outside
 the sandbox passed. CI now runs the keyboard/reflow pair in the existing browser
 job, in addition to its broker checks. A local pass does not establish a CI run.
 
+## Deployed keyboard slice — 2026-11-16
+
+Davian authorized deployment, testing, merge and repository cleanup. Source
+`a9ecb9a63bec95dec756c44cea10e4012fdefa55` is deployed at
+**https://d2kpq905qyh9zg.cloudfront.net**, release
+`7bcf4abcbe6929189ec073162ba1aaba3abedcd004b04638ecc8bb22048fe362`.
+The [sanitized deployment receipt](browser-accessibility-deployment.json) records
+the exact plan, HTTP results, preservation checks and disposable-data cleanup.
+
+Used supported SST 4.17.1 `diff --stage dev-api --target FrontendWeb --json`
+and `deploy --stage dev-api --target FrontendWeb` in `us-east-2`, account
+`747336059622`, after verifying non-root `davian-admin` and existing bootstrap5.
+The reviewed/applied plan updated only the existing static asset uploader,
+asset lookup keys and invalidation. No resource creation, backend deployment or
+schema activation was needed. Post-deployment readback confirmed unchanged API,
+cleanup, worker, controlled endpoint and broker packages/configuration/IAM;
+active version21, savedRequests11/MCP2 and recovery generation; Free/ACTIVE plan,
+account/unreserved concurrency10, worker maximum2/batch1, minute maintenance,
+bootstrap and CloudFront distribution configuration. Distribution deployment and
+cache invalidation completed.
+
+All five public application files matched their manifest hashes and cache/content
+types. Real HTTP checks passed CSP/security headers, deep links, private S3 denial,
+missing/API/archive404, HTTPS redirect, exact hosted/local CORS and foreign denial.
+
+Genuine hosted Chromium used one disposable Cognito identity (mail suppressed)
+and one empty disposable project. Actual SRP and broker sign-in focused the
+workspace; project creation focused its first tab. All seven real workspace
+panels passed keyboard Tab/Shift+Tab/Arrow navigation and horizontal reflow at
+320, 683 and 1366px. Returning focus preserved the selected settings tab, unsaved
+rename and input focus. Real sign-out/reload removed private workspace/password
+content; Web Storage, IndexedDB and Cache Storage were empty, with no page errors.
+No target request was executed. Passwords, tokens and cookies were not exported,
+logged or included in evidence artifacts.
+
+Normal product deletion and scheduled cleanup left only the disposable project's
+deleted tombstone and no Protected children. Conditional removal/readback of the
+application-user and identity records and Cognito deletion/absence verification
+completed. The test did not modify existing users or projects. Broker session
+records follow the existing logout/retention policy; physical expiry of those
+records was not separately tested.
+
+Implementation CI passed all 12 jobs, including the new keyboard/reflow tests and
+DynamoDB/browser integration, in
+[run 43980354805](https://github.com/VioletProto/Kurier/actions/runs/43980354805).
+Integration and cleanup are tracked in [PR #27](https://github.com/VioletProto/Kurier/pull/27).
+
 ## Remaining hosted and browser work
 
-This change has not been deployed. The parent card remains open. Record each
+The parent card remains open. Record each
 future result individually, including browser/version, operating system, source
 release, scenario, outcome and cleanup, without credential-bearing artifacts.
 

@@ -1,0 +1,137 @@
+{
+  "sourceCommit": "a9ecb9a63bec95dec756c44cea10e4012fdefa55",
+  "releaseId": "7bcf4abcbe6929189ec073162ba1aaba3abedcd004b04638ecc8bb22048fe362",
+  "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+  "stage": "dev-api",
+  "region": "us-east-2",
+  "target": "FrontendWeb",
+  "plan": [
+    {
+      "name": "FrontendWebAssetFiles.sst.aws.BucketFiles",
+      "op": "update",
+      "properties": [
+        "files[0].hash",
+        "files[0].key",
+        "files[0].source",
+        "files[1].source",
+        "files[2].source",
+        "files[3].hash",
+        "files[3].source",
+        "files[4].hash",
+        "files[4].source",
+        "files[5].source",
+        "files[6].key",
+        "files[6].source",
+        "files[7].hash",
+        "files[7].key",
+        "files[7].source",
+        "files[8].hash",
+        "files[8].key",
+        "files[8].source",
+        "files[9].key",
+        "files[9].source"
+      ]
+    },
+    {
+      "name": "FrontendWebKvKeys.sst.aws.KvKeys",
+      "op": "update",
+      "properties": [
+        "entries[\"/assets/index-DBfg9noZ.js\"]",
+        "entries[\"/assets/index-_W8wgbxB.js\"]"
+      ]
+    },
+    {
+      "name": "FrontendWebInvalidation.sst.aws.DistributionInvalidation",
+      "op": "update",
+      "properties": ["version"]
+    }
+  ],
+  "preservation": {
+    "checkedAt": "2026-11-16T23:42:51.104Z",
+    "account": "747336059622",
+    "region": "us-east-2",
+    "stage": "dev-api",
+    "bootstrapUnchanged": true,
+    "markerUnchanged": true,
+    "runtimePackagesConfigurationIamControlsUnchanged": true,
+    "brokerUnchanged": true,
+    "distributionConfigurationUnchanged": true,
+    "distributionDeployed": true,
+    "invalidationsComplete": true
+  },
+  "http": {
+    "checkedAt": "2026-11-16T23:42:16.582Z",
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "releaseId": "7bcf4abcbe6929189ec073162ba1aaba3abedcd004b04638ecc8bb22048fe362",
+    "genuineAwsHttp": true,
+    "privateS3Denied": true,
+    "signedCdnAssetAccess": true,
+    "exactHostedAndLocalCors": true,
+    "foreignOriginsDenied": true,
+    "securityHeadersAndCsp": true,
+    "spaDeepLinks": true,
+    "missingFilesAndApi404": true,
+    "httpRedirect": true,
+    "appFiles": [
+      {
+        "path": "404.html",
+        "status": 200,
+        "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+        "contentType": "text/html;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "assets/index-CJkaSXxC.css",
+        "status": 200,
+        "sha256": "274ab2cf7497ab04b9073e87b7dd90486ed21a16bcef0cad39363f005539af1b",
+        "contentType": "text/css;charset=UTF-8",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "assets/index-DBfg9noZ.js",
+        "status": 200,
+        "sha256": "8a4126ad0c7574566925d9791aa8d61ca5ebd248f08ea1343bd919697a6ad16d",
+        "contentType": "text/javascript;charset=UTF-8",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "sha256": "e39853ab7a376b5d4e3c257c0411aaf0a145634f4d4c92516000f2e2c4371f91",
+        "contentType": "text/html;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "startup.js",
+        "status": 200,
+        "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+        "contentType": "text/javascript;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      }
+    ],
+    "authenticatedBrowserValidated": false,
+    "disposableApplicationDataCreated": false
+  },
+  "browser": {
+    "checkedAt": "2026-11-16T23:42:41.197Z",
+    "genuineHostedChromium": true,
+    "checks": [
+      "genuine hosted skip and account-form keyboard focus",
+      "genuine Cognito SRP and broker sign-in focuses workspace",
+      "genuine project creation focuses first workspace tab",
+      "seven real hosted workspace panels: keyboard and 320/683/1366px reflow",
+      "focus return preserves selected tab, unsaved draft and input focus",
+      "genuine sign-out/reload removes workspace and passwords with empty persistence"
+    ],
+    "cleanup": {
+      "projectDeletionAccepted": true,
+      "projectTombstoneOnly": true,
+      "protectedChildrenEmpty": true,
+      "applicationIdentityRemoved": true,
+      "cognitoIdentityAbsent": true
+    },
+    "ownerId": "8e48fb9d-df62-42b0-8967-f3974a5466c8",
+    "projectId": "b03ef334-aa4d-408f-8000-c89db69a55d5",
+    "pageErrors": 0
+  }
+}

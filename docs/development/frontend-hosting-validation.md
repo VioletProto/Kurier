@@ -203,8 +203,9 @@ launch, AWS changes or an account-plan/quota/concurrency increase:
 - [Broader browser and accessibility coverage](https://trello.com/c/ckyXtYHL):
   intended browser engines and authenticated keyboard/focus/zoom/mobile paths.
   The [2026-11-16 local keyboard slice](browser-accessibility.md) fixes focus
-  transitions and adds CI regressions; genuine hosted and cross-engine checks
-  remain open.
+  transitions and adds CI regressions. Its scoped hosted Chromium deployment
+  and genuine sign-in/project/keyboard checks passed; Vivaldi, actual zoom and
+  cross-engine coverage remain open.
 - [Elapsed refresh and expiry](https://trello.com/c/DgLGyfIc): actual 15-minute
   access-token refresh, subsequent rotation, one-day refresh and email-code expiry.
 - [Measured hosting costs and usage](https://trello.com/c/Uu64lmoe): compare real
