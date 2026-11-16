@@ -1,0 +1,15 @@
+{"sequence":1,"at":1794788692.5265644,"event":"meter-created","purpose":"authorized-signed-out-hosted-browser-smoke","sourceCommit":"b8a01826b996925ae5f92830605f38ad1f6f3fa5","priorSteps":0,"priorSends":0,"priorIdentitiesAndProjects":0,"cleanupParent":null,"limits":{"api":20,"aws":0,"poll":0,"static":200},"seconds":180}
+{"sequence":2,"at":1794788693.4407961,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":1}}
+{"sequence":3,"at":1794788694.359259,"event":"outcome","attempt":2,"status":200,"transportError":false}
+{"sequence":4,"at":1794788694.382976,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":2}}
+{"sequence":5,"at":1794788694.383996,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":3}}
+{"sequence":6,"at":1794788694.384661,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":4}}
+{"sequence":7,"at":1794788694.4102867,"event":"outcome","attempt":4,"status":200,"transportError":false}
+{"sequence":8,"at":1794788694.4576828,"event":"outcome","attempt":5,"status":200,"transportError":false}
+{"sequence":9,"at":1794788694.5937195,"event":"outcome","attempt":6,"status":200,"transportError":false}
+{"sequence":10,"at":1794788694.645211,"event":"attempt","category":"api","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":1,"aws":0,"poll":0,"static":4}}
+{"sequence":11,"at":1794788694.9646003,"event":"outcome","attempt":10,"status":401,"transportError":false}
+{"sequence":12,"at":1794788695.0638456,"event":"attempt","category":"api","operation":"OPTIONS","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":2,"aws":0,"poll":0,"static":4}}
+{"sequence":13,"at":1794788695.3037648,"event":"outcome","attempt":12,"status":204,"transportError":false}
+{"sequence":14,"at":1794788695.3084219,"event":"attempt","category":"api","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":3,"aws":0,"poll":0,"static":4}}
+{"sequence":15,"at":1794788695.5795996,"event":"outcome","attempt":14,"status":401,"transportError":false}

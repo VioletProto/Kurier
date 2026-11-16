@@ -1,0 +1,36 @@
+{
+  "hostedSignedOutBrowser": true,
+  "results": [
+    {
+      "cycle": 1,
+      "status": 401,
+      "pendingRequests": 0,
+      "transportFailures": 0,
+      "closeCancellations": 0
+    },
+    {
+      "cycle": 2,
+      "status": 401,
+      "pendingRequests": 0,
+      "transportFailures": 0,
+      "closeCancellations": 0
+    },
+    {
+      "cycle": 3,
+      "status": 401,
+      "pendingRequests": 0,
+      "transportFailures": 0,
+      "closeCancellations": 0
+    }
+  ],
+  "passed": true,
+  "sourceCommit": "8707e0a3fc586d17b67f6eb33e97c8c8659199a1",
+  "apiAttempts": 9,
+  "staticAttempts": 12,
+  "apiOptionsAttempts": 3,
+  "awsOperatorAttempts": 0,
+  "writes": 0,
+  "targetSends": 0,
+  "identitiesCreated": 0,
+  "projectsCreated": 0
+}

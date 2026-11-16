@@ -117,4 +117,58 @@ failed on the old session client and passed after the fix: consume non-success
 response bodies before throwing, within the existing request deadline. The
 409 path already consumes its JSON body and remains unchanged. No error body
 is logged or persisted. Full repository verification passed again with 99
-frontend tests. Deployment/readback results are recorded below when performed.
+frontend tests; both local HTTPS Chromium session scenarios passed. This new
+session-client issue does not attribute the historical October OPTIONS failures.
+
+### Deployment and hosted results
+
+Source `8707e0a3fc586d17b67f6eb33e97c8c8659199a1` was deployed to the existing
+`dev-api` frontend in `us-east-2`, after verifying account `747336059622` and
+non-root `davian-admin`. The normal full-stage preview included unrelated Go
+rebuilds, so SST's supported `--target FrontendWeb` was used for both preview and
+deployment. The [targeted plan](browser-meter-frontend-preview.json) contains
+only existing routing keys, uploaded frontend assets and invalidation updates.
+No Lambda, IAM, table, bootstrap or schema mutation was needed. The initial
+preview lacked the existing public Cognito identifiers and failed before any
+deployment; the corrected targeted preview succeeded.
+
+Deployed release:
+`27f4c3361da468373356e15c8e8f8cda1dcd0b98993ab1beaf8192fb72d3da36`.
+The [public manifest](browser-meter-frontend-artifact.json) and
+[genuine HTTP validation](browser-meter-frontend-http.json) verify all five app
+files, cache/security headers, CORS, private-bucket denial, SPA behavior and
+missing-file/API errors. The [preservation record](browser-meter-frontend-preservation.json)
+confirms all five Lambda code/configuration snapshots, active marker version 21,
+stage quota, recovery/capability marker hash, bootstrap v5, Free/ACTIVE plan and
+concurrency 10 remain unchanged.
+
+Three fresh, signed-out hosted Chromium cycles then passed **without the
+diagnostic fetch intervention**: real startup session 401, cross-origin OPTIONS
+and unauthenticated API GET 401, completed response bodies, empty Web Storage,
+zero pending requests, zero transport failures and zero close cancellations.
+The [safe result](browser-meter-hosted-smoke.json),
+[meter ledger](browser-meter-hosted-attempts.jsonl) and
+[retained driver](browser-meter-hosted-driver.py.txt) record nine API attempts
+(including three OPTIONS) and twelve static requests. The adapter is read-only,
+permits only the fixed public frontend/session/project-read routes, rejects
+credentials/bodies and isolates the browser network through the actual corrected
+meter. It uses a fresh three-minute verification window, a 20-API limit and a
+30-static runtime limit (the generic meter-created entry records its initial
+200-static default before the adapter lowers it).
+
+Earlier failed attempts remain in
+[initial](browser-meter-hosted-initial-attempts.jsonl),
+[second](browser-meter-hosted-second-attempts.jsonl) and
+[third](browser-meter-hosted-third-attempts.jsonl) ledgers. The browser-intervention
+diagnostic is separately recorded in its
+[result](browser-meter-hosted-drain-proof.json) and
+[ledger](browser-meter-hosted-drain-proof-attempts.jsonl). Across all five smoke
+windows, the cumulative observed total is 17 API and 28 static attempts. Their
+fresh clocks do not reset or reopen the old assertions campaign. No accounts,
+projects, target sends, authenticated sessions or AWS resource writes were
+created by these browser smoke tests. Post-deployment inventory and the separate
+HTTP artifact/security probes are additional genuine read-only checks outside
+those smoke ledgers. The deployment itself performs the three reviewed frontend
+updates. Authenticated workflow authoring and genuine live fault injection were
+not rerun; negative failure/no-replay behavior is established by the local
+isolated tests.

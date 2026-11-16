@@ -160,7 +160,8 @@ suite also runs actual legacy maintenance settlement and stale-reader regression
 
 Functional validation and normal cleanup are accepted. The
 [browser cancellation/stop correction](../docs/development/browser-meter-stop.md)
-adds locally verified request draining, latched read failures and coordinator
-handoff. Historical failures remain recorded; no live campaign rerun is claimed.
+adds request draining, latched read failures and coordinator handoff. Isolated
+failure tests and signed-out hosted smoke passed; the discovered frontend session
+error-body fix was deployed. Historical campaign failures remain recorded.
 No historical campaign launcher or approval record grants new live authority.
 See [review findings](../docs/development/workflow-assertions-pr-review.md).

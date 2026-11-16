@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-11-16T00:35:09.949Z",
+  "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+  "releaseId": "27f4c3361da468373356e15c8e8f8cda1dcd0b98993ab1beaf8192fb72d3da36",
+  "genuineAwsHttp": true,
+  "privateS3Denied": true,
+  "signedCdnAssetAccess": true,
+  "exactHostedAndLocalCors": true,
+  "foreignOriginsDenied": true,
+  "securityHeadersAndCsp": true,
+  "spaDeepLinks": true,
+  "missingFilesAndApi404": true,
+  "httpRedirect": true,
+  "appFiles": [
+    {
+      "path": "404.html",
+      "status": 200,
+      "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+      "contentType": "text/html;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "path": "assets/index-CJkaSXxC.css",
+      "status": 200,
+      "sha256": "274ab2cf7497ab04b9073e87b7dd90486ed21a16bcef0cad39363f005539af1b",
+      "contentType": "text/css;charset=UTF-8",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "assets/index-osTOBhV8.js",
+      "status": 200,
+      "sha256": "79fdf007bcbba2fa6396a9c77e006088b426fa961c9288b27639cf7cae849868",
+      "contentType": "text/javascript;charset=UTF-8",
+      "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "path": "index.html",
+      "status": 200,
+      "sha256": "911815b9cc1b384f4c7222c315e146097606dfd8b08f9ce25bb2a5035bbe872a",
+      "contentType": "text/html;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    },
+    {
+      "path": "startup.js",
+      "status": 200,
+      "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+      "contentType": "text/javascript;charset=UTF-8",
+      "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+    }
+  ],
+  "authenticatedBrowserValidated": false,
+  "disposableApplicationDataCreated": false
+}

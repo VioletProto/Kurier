@@ -80,7 +80,7 @@ the retained A–G/H–L evidence at `4ffdaaf4cfb569a349ebd16ca739d8deb15aa973`,
 the nine read-only OPTIONS stop-guard failures. Implementation and the authorized
 pinned dev-api deployment/activation are complete. The [PR review record](../development/workflow-assertions-pr-review.md)
 separates this acceptance from the subsequent
-[locally verified tooling correction](../development/browser-meter-stop.md).
+[tooling correction and hosted validation](../development/browser-meter-stop.md).
 Earlier holds below are historical. No
 additional live work is authorized by closeout.
 

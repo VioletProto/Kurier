@@ -1,0 +1,131 @@
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import tempfile
+import time
+
+ROOT = Path('/home/king/Neumont/Kurier')
+HERE = ROOT / 'scripts/attempt-meter'
+PYTHON = ROOT / '.build/attempt-meter-venv/bin/python'
+
+addon = '''
+import sys, runpy
+from urllib.parse import urlsplit
+sys.path.insert(0, ROOT + '/scripts/attempt-meter')
+import budget
+Original = budget.Budget
+class SmokeBudget(Original):
+    def __init__(self, ledger, **kwargs):
+        super().__init__(ledger, api_limit=20, aws_limit=0, poll_limit=0, seconds=180,
+                         history={'purpose':'authorized-signed-out-hosted-browser-smoke',
+                                  'sourceCommit':'8707e0a3fc586d17b67f6eb33e97c8c8659199a1',
+                                  'priorSteps':0,'priorSends':0,'priorIdentitiesAndProjects':0})
+        self.limits['static'] = 30
+    def classify(self, method, host, path, headers, content):
+        if headers.get('authorization') or headers.get('cookie') or content:
+            self.stop('smoke-credentials-or-body-forbidden')
+        url = urlsplit(path)
+        if url.query or method not in ('GET','HEAD','OPTIONS'):
+            self.stop('smoke-read-only-scope')
+        if host == 'd2kpq905qyh9zg.cloudfront.net':
+            if url.path == '/api/v1/browser-session' and method == 'GET':
+                return 'api', 'GET', False, False
+            if method in ('GET','HEAD') and (url.path in ('/','/startup.js','/favicon.ico') or url.path.startswith('/assets/')):
+                return 'static', method, False, False
+        if host == '8dnymkcoa0.execute-api.us-east-2.amazonaws.com' and url.path == '/api/v1/projects' and method in ('GET','OPTIONS'):
+            return 'api', method, False, False
+        self.stop('smoke-origin-or-route-forbidden')
+budget.Budget = SmokeBudget
+addons = runpy.run_path(ROOT + '/scripts/attempt-meter/proxy.py')['addons']
+'''
+
+node = '''
+import assert from 'node:assert/strict';
+import { chromium } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { browserRequestGuard } from '../scripts/lib/browser-request-guard.mjs';
+import { coordinatorBudget } from '../scripts/lib/workflow-coordinator-transport.mjs';
+const browser = await chromium.launch({headless:true,proxy:{server:'http://127.0.0.1:18080'},args:['--disable-background-networking','--disable-component-update','--disable-domain-reliability']});
+const path=process.env.KURIER_METER_LEDGER;
+const results=[];let stage='start';const pending=new Set();let pageErrors=0;
+function checkMeter(){
+  const rows=readFileSync(path,'utf8').trim().split('\\n').map(JSON.parse);
+  const first=rows.find(e=>e.event==='attempt');
+  coordinatorBudget({ledger:{startedAt:new Date(Math.floor(first.at*1000)).toISOString(),apiCalls:0},meterPath:path})();
+}
+try {
+  for(let cycle=0;cycle<3;cycle++){
+    const context=await browser.newContext({ignoreHTTPSErrors:true,serviceWorkers:'block'});
+    const guard=browserRequestGuard(context);
+    const page=await context.newPage();page.on('request',r=>pending.add(new URL(r.url()).pathname));page.on('requestfinished',r=>pending.delete(new URL(r.url()).pathname));page.on('requestfailed',r=>pending.delete(new URL(r.url()).pathname));page.on('pageerror',()=>pageErrors++);stage='navigation';
+    await page.goto('https://d2kpq905qyh9zg.cloudfront.net',{waitUntil:'domcontentloaded',timeout:30000});
+    stage='sign-in-heading';await page.getByRole('heading',{name:'Sign in',exact:true}).waitFor({timeout:20000});
+    stage='api-read';const status=await page.evaluate(async()=>{
+      const r=await fetch('https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com/api/v1/projects',{credentials:'omit',headers:{'Content-Type':'application/json'}});
+      await r.arrayBuffer();return r.status;
+    });
+    assert.equal(status,401);
+    stage='drain';await page.waitForLoadState('networkidle',{timeout:10000});
+    guard.assertSettled();checkMeter();
+    assert.equal(await page.evaluate(()=>localStorage.length+sessionStorage.length),0);
+    guard.beginClose();await context.close();guard.assertSettled();checkMeter();
+    results.push({cycle:cycle+1,status,...guard.summary()});
+  }
+  console.log(JSON.stringify({hostedSignedOutBrowser:true,results}));
+}catch(error){console.error(JSON.stringify({stage,pageErrors,pendingPublicPaths:[...pending],failureClass:error.name}));throw error;}finally{await browser.close();}
+'''
+
+def main():
+    children=[]
+    runner=ROOT/'.build/browser-meter-live-smoke.mjs'
+    runner.write_text(node)
+    with tempfile.TemporaryDirectory(prefix='kurier-hosted-smoke-') as temp:
+        d=Path(temp)
+        os.chmod(d,0o700)
+        (d/'control.json').write_text('{"writeCategories":[]}')
+        (d/'addon.py').write_text('ROOT='+repr(str(ROOT))+'\n'+addon)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1',0))
+            port=sock.getsockname()[1]
+        env={k:v for k,v in os.environ.items() if not k.startswith(('AWS_','KURIER_','NODE_'))}
+        env.update(KURIER_METER_LEDGER=str(d/'attempts.jsonl'),KURIER_METER_CONTROL=str(d/'control.json'))
+        try:
+            children.append(subprocess.Popen([str(PYTHON.parent/'mitmdump'),'--quiet','--listen-host','127.0.0.1','--listen-port',str(port),'--set','confdir='+str(d/'ca'),'--set','connection_strategy=lazy','--set','upstream_cert=false','-s',str(d/'addon.py')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL))
+            for _ in range(100):
+                if children[0].poll() is not None: raise RuntimeError('smoke meter startup failed')
+                if (d/'attempts.jsonl').exists() and (d/'ca/mitmproxy-ca-cert.pem').exists(): break
+                time.sleep(.1)
+            else: raise RuntimeError('smoke meter startup timeout')
+            children.append(subprocess.Popen([str(PYTHON),str(HERE/'relay.py'),'host',str(d/'relay.sock'),str(port)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL))
+            for _ in range(100):
+                if (d/'relay.sock').exists(): break
+                time.sleep(.05)
+            command=['bwrap','--unshare-net','--ro-bind','/','/','--bind',str(ROOT),str(ROOT),'--bind','/tmp','/tmp','--proc','/proc','--dev','/dev',str(PYTHON),str(HERE/'relay.py'),'inside',str(d/'relay.sock'),'18080','node',str(runner)]
+            result=subprocess.run(command,env=env,capture_output=True,timeout=120)
+            raw=(d/'attempts.jsonl').read_text()
+            destination=ROOT/'docs/development/browser-meter-hosted-attempts.jsonl'
+            destination.write_text(raw)
+            if result.returncode:
+                print(json.dumps({'passed':False,'reason':'hosted-browser-smoke-failed','ledger':str(destination)}))
+                print(result.stderr.decode()[-2400:])
+                raise RuntimeError('hosted smoke failed; inspect safe ledger')
+            report=json.loads(result.stdout)
+            rows=[json.loads(line) for line in raw.splitlines()]
+            attempts=[r for r in rows if r['event']=='attempt']
+            outcomes=[r for r in rows if r['event']=='outcome']
+            assert not any(r['event']=='stop' for r in rows)
+            assert len(attempts)==len(outcomes)
+            assert not any(r['write'] or r['category']=='aws' for r in attempts)
+            assert not any(r.get('transportError') for r in outcomes)
+            report.update(passed=True,sourceCommit='8707e0a3fc586d17b67f6eb33e97c8c8659199a1',apiAttempts=sum(r['category']=='api' for r in attempts),staticAttempts=sum(r['category']=='static' for r in attempts),apiOptionsAttempts=sum(r['category']=='api' and r['operation']=='OPTIONS' for r in attempts),awsOperatorAttempts=0,writes=0,targetSends=0,identitiesCreated=0,projectsCreated=0)
+            assert report['apiOptionsAttempts']==3
+            (ROOT/'docs/development/browser-meter-hosted-smoke.json').write_text(json.dumps(report,indent=2)+'\n')
+            print(json.dumps(report))
+        finally:
+            for process in reversed(children):
+                if process.poll() is None: process.terminate()
+                process.wait(timeout=10)
+
+if __name__=='__main__': main()

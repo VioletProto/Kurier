@@ -1,0 +1,11 @@
+{"sequence":1,"at":1794788603.7375262,"event":"meter-created","purpose":"authorized-signed-out-hosted-browser-smoke","sourceCommit":"b8a01826b996925ae5f92830605f38ad1f6f3fa5","priorSteps":0,"priorSends":0,"priorIdentitiesAndProjects":0,"cleanupParent":null,"limits":{"api":20,"aws":0,"poll":0,"static":200},"seconds":180}
+{"sequence":2,"at":1794788604.5990782,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":1}}
+{"sequence":3,"at":1794788605.0607011,"event":"outcome","attempt":2,"status":200,"transportError":false}
+{"sequence":4,"at":1794788605.0812514,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":2}}
+{"sequence":5,"at":1794788605.082024,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":3}}
+{"sequence":6,"at":1794788605.0827253,"event":"attempt","category":"static","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":0,"aws":0,"poll":0,"static":4}}
+{"sequence":7,"at":1794788605.113916,"event":"outcome","attempt":4,"status":200,"transportError":false}
+{"sequence":8,"at":1794788605.206552,"event":"outcome","attempt":5,"status":200,"transportError":false}
+{"sequence":9,"at":1794788605.2153203,"event":"outcome","attempt":6,"status":200,"transportError":false}
+{"sequence":10,"at":1794788605.275928,"event":"attempt","category":"api","operation":"GET","write":false,"poll":false,"protocol":"HTTP/2.0","counts":{"api":1,"aws":0,"poll":0,"static":4}}
+{"sequence":11,"at":1794788605.4368486,"event":"outcome","attempt":10,"status":401,"transportError":false}
