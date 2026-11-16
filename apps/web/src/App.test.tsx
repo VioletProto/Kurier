@@ -55,7 +55,7 @@ import {
   sessionChangedEvent,
 } from "./auth";
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   mocks.broker = false;
   mocks.restore.mockResolvedValue(false);
   mocks.me.mockResolvedValue({
@@ -171,14 +171,18 @@ it.each(["signout", "replacement", "pagehide"])(
     mocks.broker = true;
     mocks.restore.mockResolvedValue(true);
     render(<App />);
-    await screen.findByRole("button", { name: "Sign out" });
+    await waitFor(() =>
+      expect(screen.getByLabelText("New project name")).toBeEnabled(),
+    );
     let fail!: (error: Error) => void;
-    mocks.token.mockReturnValueOnce(
-      new Promise<string>((_, reject) => {
-        fail = reject;
-      }),
+    mocks.token.mockImplementationOnce(
+      () =>
+        new Promise<string>((_, reject) => {
+          fail = reject;
+        }),
     );
     fireEvent(window, new Event("focus"));
+    expect(mocks.token).toHaveBeenCalledExactlyOnceWith(true);
     if (transition === "signout")
       fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
     else if (transition === "replacement") {
