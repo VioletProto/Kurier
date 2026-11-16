@@ -158,7 +158,10 @@ claims to rebuild the deployed release. Optional DynamoDB Local CAS tests requir
 `KURIER_ACTIVATOR_DDB_ENDPOINT=http://127.0.0.1:8000`; the normal race integration
 suite also runs actual legacy maintenance settlement and stale-reader regressions.
 
-Functional validation and normal cleanup are accepted. Browser cancellation/stop
-enforcement remains a [separate tooling follow-up](https://trello.com/c/F47iWJY8).
+Functional validation and normal cleanup are accepted. The
+[browser cancellation/stop correction](../docs/development/browser-meter-stop.md)
+adds request draining, latched read failures and coordinator handoff. Isolated
+failure tests and signed-out hosted smoke passed; the discovered frontend session
+error-body fix was deployed. Historical campaign failures remain recorded.
 No historical campaign launcher or approval record grants new live authority.
 See [review findings](../docs/development/workflow-assertions-pr-review.md).

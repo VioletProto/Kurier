@@ -1,0 +1,22 @@
+{
+  "hostedSignedOutBrowser": true,
+  "results": [
+    {
+      "cycle": 1,
+      "status": 401,
+      "pendingRequests": 0,
+      "transportFailures": 0,
+      "closeCancellations": 0
+    }
+  ],
+  "passed": true,
+  "sourceCommit": "b8a01826b996925ae5f92830605f38ad1f6f3fa5",
+  "apiAttempts": 3,
+  "staticAttempts": 4,
+  "apiOptionsAttempts": 1,
+  "awsOperatorAttempts": 0,
+  "writes": 0,
+  "targetSends": 0,
+  "identitiesCreated": 0,
+  "projectsCreated": 0
+}

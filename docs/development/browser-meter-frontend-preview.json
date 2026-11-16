@@ -1,0 +1,49 @@
+{
+  "target": "FrontendWeb",
+  "stage": "dev-api",
+  "region": "us-east-2",
+  "changes": [
+    {
+      "operation": "update",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "name": "FrontendWebKvKeys.sst.aws.KvKeys",
+      "properties": [
+        "entries[\"/assets/index-UwtTeWYj.js\"]",
+        "entries[\"/assets/index-osTOBhV8.js\"]"
+      ]
+    },
+    {
+      "operation": "update",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "name": "FrontendWebAssetFiles.sst.aws.BucketFiles",
+      "properties": [
+        "files[0].hash",
+        "files[0].key",
+        "files[0].source",
+        "files[1].source",
+        "files[2].source",
+        "files[3].hash",
+        "files[3].source",
+        "files[4].hash",
+        "files[4].source",
+        "files[5].source",
+        "files[6].key",
+        "files[6].source",
+        "files[7].hash",
+        "files[7].key",
+        "files[7].source",
+        "files[8].hash",
+        "files[8].key",
+        "files[8].source",
+        "files[9].key",
+        "files[9].source"
+      ]
+    },
+    {
+      "operation": "update",
+      "type": "pulumi-nodejs:dynamic:Resource",
+      "name": "FrontendWebInvalidation.sst.aws.DistributionInvalidation",
+      "properties": ["version"]
+    }
+  ]
+}

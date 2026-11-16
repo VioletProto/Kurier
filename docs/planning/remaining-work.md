@@ -91,7 +91,7 @@ not move cards, approve contracts, merge PRs or start product work.
 | Area                                                           | State at snapshot                                                                                                                                                                               | Remaining outcome / dependency                                                                                                                                                    |
 | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Ownership, requests, protected inputs, cloud evidence, pinning | Accepted development slices                                                                                                                                                                     | Preserve their tested behavior in final regression; no reimplementation planned.                                                                                                  |
-| Sequential workflows and assertions                            | Accepted and merged; bounded genuine evidence retained                                                                                                                                          | Keep operational gaps distinct; assertion teardown/meter correction remains open.                                                                                                 |
+| Sequential workflows and assertions                            | Accepted and merged; bounded genuine evidence retained                                                                                                                                          | Keep operational gaps distinct; tooling correction is locally verified (see below).                                                                                               |
 | Local agent, read-only MCP and frontend hosting                | Accepted and merged development/demo slices                                                                                                                                                     | Final demonstration and selected coverage; no claim of full operational certification.                                                                                            |
 | [Environments](https://trello.com/c/K2e3Nv2f)                  | Accepted contract; [PR #15](https://github.com/VioletProto/Kurier/pull/15) and [PR #16](https://github.com/VioletProto/Kurier/pull/16) merged on October 26; implementation locally/CI verified | Deployment/activation and runtime validation remain held for separate review. Merged source is not deployed runtime evidence.                                                     |
 | [OpenAPI import and validation](https://trello.com/c/zUsI4e6l) | Unimplemented; [libraries selected](../spikes/openapi-library-selection.md), production design unaccepted                                                                                       | Accept dialect/features, generation, safe examples/sources, DTOs, evidence/result version, targets and sanitization; implement import, generation and all four violation classes. |
@@ -139,8 +139,9 @@ busywork, speculative abstractions and repeating checks without a new reason.
    existing vertical slice: clearer errors and unsupported-feature explanations,
    loading/conflict/revocation states, keyboard/focus/responsive behavior,
    onboarding examples, focused regression gaps and a reliable demonstration.
-   The open browser teardown/stop-enforcement tooling correction takes priority
-   before that tooling is reused in a live campaign.
+   The [browser teardown/stop-enforcement correction](../development/browser-meter-stop.md)
+   is locally verified; historical failures remain recorded and no live campaign
+   rerun is claimed.
 3. **Optional candidates if earlier priorities finish early:** compare two
    sanitized JSON execution records (a proposal stretch feature); provide a
    bounded report/export of already sanitized execution summaries; improve
@@ -174,7 +175,8 @@ raise that planning issue instead of logging unworked reserve or inventing work.
       classes, immutable safe results and accepted target coverage delivered.
 - [ ] MCP retrieves stored contract results with explicit unavailable/not-run
       behavior and preserved ownership, audit and secret filtering.
-- [ ] Guard tooling corrected and checked before reuse in a live campaign.
+- [x] Guard tooling corrected and checked locally; see the
+      [tooling verification](../development/browser-meter-stop.md). No live rerun.
 - [ ] MVP regression, contract/schema reconciliation, demonstration, backup
       recording and final submission completed with evidence.
 

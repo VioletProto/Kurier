@@ -1,0 +1,28 @@
+{
+  "sourceCommit": "8707e0a3fc586d17b67f6eb33e97c8c8659199a1",
+  "stage": "dev-api",
+  "region": "us-east-2",
+  "account": "747336059622",
+  "nonRootIdentityVerified": true,
+  "target": "FrontendWeb",
+  "releaseId": "27f4c3361da468373356e15c8e8f8cda1dcd0b98993ab1beaf8192fb72d3da36",
+  "bootstrapVersion": 5,
+  "bootstrapHash": "f390213368ff859bf1b886d97785aee459948f4b20e495b1dabc799f56a688ff",
+  "stageHash": "3e1d333c19b1532e91f4aa0f7b302d772612953a6582390919c99ab265f1d683",
+  "stageVersion": "21",
+  "stageQuotaHash": "6e45e778e50c7f3016313a566102360626f1be1894ce4b637ead2165aafbab8b",
+  "bootstrapUnchanged": true,
+  "stageMarkerAndQuotaUnchanged": true,
+  "lambdaCodeAndConfigurationUnchanged": true,
+  "functionsChecked": [
+    "apiFunction",
+    "browserSessionFunction",
+    "cleanupFunction",
+    "controlledEndpointFunction",
+    "workerFunction"
+  ],
+  "freePlanPreserved": true,
+  "concurrencyPreserved": true,
+  "newResources": 0,
+  "schemaActivation": false
+}

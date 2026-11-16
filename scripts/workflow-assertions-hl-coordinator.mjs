@@ -447,8 +447,11 @@ for await (const line of createInterface({ input: process.stdin })) {
       !privateState.stopped || a.module === "stopped-cleanup.mjs",
       "Stopped: cleanup only; no automatic continuation",
     );
+    budget(a.module === "cleanup.mjs" || a.module === "stopped-cleanup.mjs");
     const mod = await import(new URL(a.module, dir) + "?" + Date.now());
+    budget(a.module === "cleanup.mjs" || a.module === "stopped-cleanup.mjs");
     await mod.run(c);
+    budget(privateState.cleanup === true);
     console.log(
       JSON.stringify({
         actionComplete: a.module,
@@ -461,6 +464,8 @@ for await (const line of createInterface({ input: process.stdin })) {
   } catch (e) {
     privateState.stopped = true;
     ledger.stoppedAt = new Date().toISOString();
+    if (privateState.browserTransportSummary)
+      ledger.browserTransportSummary = privateState.browserTransportSummary;
     if (
       /^(launch|navigate|sign-in|select-project|load-workflows|select-workflow|author-step-[12](-assertion-[1-8]-add)?|author-(kind|path|type|decimal)|reopen-decimals|save-workflow|drain-browser-reads|close-browser)$/.test(
         privateState.browserProgress ?? "",

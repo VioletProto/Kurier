@@ -79,8 +79,9 @@ Current status: Davian accepted scoped assertions functionality and cleanup from
 the retained A–G/H–L evidence at `4ffdaaf4cfb569a349ebd16ca739d8deb15aa973`, including
 the nine read-only OPTIONS stop-guard failures. Implementation and the authorized
 pinned dev-api deployment/activation are complete. The [PR review record](../development/workflow-assertions-pr-review.md)
-separates this acceptance from the [open tooling follow-up](https://trello.com/c/F47iWJY8)
-and locally-only teardown correction. Earlier holds below are historical. No
+separates this acceptance from the subsequent
+[tooling correction and hosted validation](../development/browser-meter-stop.md).
+Earlier holds below are historical. No
 additional live work is authorized by closeout.
 
 The accepted contract and subsequent rollout chronology follow.

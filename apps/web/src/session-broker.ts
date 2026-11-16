@@ -158,6 +158,10 @@ export class SessionBroker {
         },
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       });
+      // Finish error responses before leaving the request. Otherwise Chromium
+      // can retain an unread fetch body through page teardown. The same request
+      // deadline bounds this read; error bytes are never logged or persisted.
+      if (!response.ok && response.status !== 409) await response.arrayBuffer();
       if (response.status === 401) throw new SessionExpired();
       if (!response.ok) {
         if (response.status === 409) {

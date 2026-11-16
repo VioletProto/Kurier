@@ -7,6 +7,150 @@ import {
   persistCoordinatorLedger,
   createCoordinatorTransport,
 } from "./lib/workflow-coordinator-transport.mjs";
+
+test("meter failures and unfinished requests block coordinator writes before authentication", async () => {
+  const dir = mkdtempSync(tmpdir() + "/kurier-stop-handoff-");
+  try {
+    const meterPath = dir + "/attempts.jsonl";
+    const start = Date.now();
+    for (const outcomes of [
+      [], // Request is still in flight, including a potentially accepted write.
+      [{ event: "outcome", attempt: 2, status: null, transportError: true }],
+      [{ event: "outcome", attempt: 2, status: null }],
+      [{ event: "outcome", attempt: 2, status: 503 }],
+      [
+        { event: "outcome", attempt: 2, status: 200 },
+        { event: "outcome", attempt: 2, status: 200 },
+      ],
+      [{ event: "outcome", attempt: 2, status: 200 }, { event: "stop" }],
+    ]) {
+      const ledger = { startedAt: new Date(start).toISOString(), apiCalls: 0 };
+      writeFileSync(
+        meterPath,
+        [
+          { event: "meter-created" },
+          {
+            event: "attempt",
+            sequence: 2,
+            at: start / 1000,
+            write: true,
+            counts: { api: 1, aws: 0, poll: 0 },
+          },
+          ...outcomes,
+        ]
+          .map(JSON.stringify)
+          .join("\n") + "\n",
+      );
+      let auth = 0;
+      const budget = coordinatorBudget({ ledger, meterPath });
+      const transport = createCoordinatorTransport({
+        origin: "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+        ledger,
+        budget,
+        persist() {},
+        token() {
+          auth++;
+          throw Error("must not authenticate");
+        },
+      });
+      await assert.rejects(transport.call("POST", "/api/v1/projects"));
+      assert.equal(auth, 0);
+      assert.equal(ledger.apiCalls, 0);
+      assert.throws(() => budget({ cleanup: true }));
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("legacy failed read without a stop event still blocks later coordinator work", () => {
+  const dir = mkdtempSync(tmpdir() + "/kurier-legacy-read-");
+  try {
+    const meterPath = dir + "/attempts.jsonl";
+    const start = Date.now();
+    const ledger = { startedAt: new Date(start).toISOString(), apiCalls: 0 };
+    writeFileSync(
+      meterPath,
+      [
+        { event: "meter-created" },
+        {
+          event: "attempt",
+          sequence: 2,
+          at: start / 1000,
+          write: false,
+          operation: "OPTIONS",
+          counts: { api: 1, aws: 0, poll: 0 },
+        },
+        { event: "outcome", attempt: 2, status: null, transportError: true },
+      ]
+        .map(JSON.stringify)
+        .join("\n") + "\n",
+    );
+    const budget = coordinatorBudget({ ledger, meterPath });
+    assert.throws(() => budget(), /Failed or uncertain/);
+    assert.throws(() => budget({ cleanup: true }), /Failed or uncertain/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a stop during authentication blocks the pending write with no replay", async () => {
+  const dir = mkdtempSync(tmpdir() + "/kurier-auth-stop-");
+  try {
+    const meterPath = dir + "/attempts.jsonl";
+    const start = Date.now();
+    const ledger = { startedAt: new Date(start).toISOString(), apiCalls: 0 };
+    writeFileSync(
+      meterPath,
+      [
+        { event: "meter-created" },
+        {
+          event: "attempt",
+          sequence: 2,
+          at: start / 1000,
+          counts: { api: 0, aws: 1, poll: 0 },
+        },
+        { event: "outcome", attempt: 2, status: 200 },
+      ]
+        .map(JSON.stringify)
+        .join("\n") + "\n",
+    );
+    let auth = 0;
+    const transport = createCoordinatorTransport({
+      origin: "https://8dnymkcoa0.execute-api.us-east-2.amazonaws.com",
+      ledger,
+      budget: coordinatorBudget({ ledger, meterPath }),
+      persist() {},
+      token() {
+        auth++;
+        writeFileSync(
+          meterPath,
+          readFileSync(meterPath) + '{"event":"stop"}\n',
+        );
+        return "fixture";
+      },
+    });
+    const originalFetch = globalThis.fetch;
+    let writes = 0;
+    globalThis.fetch = async () => {
+      writes++;
+      throw Error("must not dispatch");
+    };
+    try {
+      await assert.rejects(
+        transport.call("POST", "/api/v1/projects"),
+        /no replay/,
+      );
+      await assert.rejects(transport.call("POST", "/api/v1/projects"));
+      assert.equal(auth, 1);
+      assert.equal(writes, 0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
 test("actual coordinator reserve wiring blocks GET before transport and preserves cleanup", async () => {
   const dir = mkdtempSync(tmpdir() + "/kurier-coordinator-");
   try {
@@ -23,7 +167,8 @@ test("actual coordinator reserve wiring blocks GET before transport and preserve
         meter,
         [
           { event: "meter-created" },
-          { event: "attempt", at: start / 1000, counts },
+          { event: "attempt", sequence: 2, at: start / 1000, counts },
+          { event: "outcome", attempt: 2, status: 200 },
         ]
           .map(JSON.stringify)
           .join("\n") + "\n",
@@ -192,9 +337,11 @@ test("authorized replacement uses first NEW attempt clock while preserving total
         },
         {
           event: "attempt",
+          sequence: 2,
           at: start / 1000,
           counts: { api: 31, aws: 174, poll: 0, static: 9 },
         },
+        { event: "outcome", attempt: 2, status: 200 },
       ]
         .map(JSON.stringify)
         .join("\n") + "\n",

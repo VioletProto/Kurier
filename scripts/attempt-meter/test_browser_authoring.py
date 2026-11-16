@@ -109,6 +109,8 @@ class AuthorOrigin(auth.AuthOrigin):
 
 
 def scenario(run, d, env):
+    env["KURIER_METER_TEST_LEDGER"] = str(d / "ledger.jsonl")
+    old_close = len(sys.argv) > 1 and sys.argv[1] == "old-close"
     if len(sys.argv) > 1 and sys.argv[1] == "old-close":
         retained = (
             harness.ROOT
@@ -133,6 +135,7 @@ def scenario(run, d, env):
             }
         )
     )
+    failed = False
     try:
         run(
             [
@@ -151,6 +154,9 @@ def scenario(run, d, env):
             ]
         )
     except RuntimeError:
+        failed = True
+        if not old_close:
+            raise
         print(
             json.dumps(
                 {
@@ -160,19 +166,36 @@ def scenario(run, d, env):
                 }
             )
         )
-        raise
     rows = [json.loads(x) for x in (d / "ledger.jsonl").read_text().splitlines()]
-    assert not any(r["event"] == "stop" for r in rows)
     attempts = {r["sequence"]: r for r in rows if r["event"] == "attempt"}
     errors = [r for r in rows if r["event"] == "outcome" and r.get("transportError")]
-    if len(sys.argv) > 1 and sys.argv[1] == "old-close":
+    if old_close:
+        assert failed, "Old driver must now fail closed"
+        assert any(r.get("reason") == "read-transport-failure" for r in rows)
         assert errors and all(
             attempts[r["attempt"]]["category"] == "api"
             and attempts[r["attempt"]]["operation"] == "OPTIONS"
             and not attempts[r["attempt"]]["write"]
             for r in errors
         )
+        stop = next(i for i, r in enumerate(rows) if r["event"] == "stop")
+        assert not any(r["event"] == "attempt" for r in rows[stop + 1 :])
+        assert len(patches) == 1, "No second edit after transport failure"
+        print(
+            json.dumps(
+                {
+                    "oldCloseStopped": True,
+                    "localPatches": 1,
+                    "noAttemptsAfterStop": True,
+                    "liveAwsCalls": 0,
+                    "targetSends": 0,
+                }
+            )
+        )
+        return
     else:
+        assert not failed
+        assert not any(r["event"] == "stop" for r in rows)
         assert not errors, (
             "Corrected driver must drain all read preflights before closing"
         )

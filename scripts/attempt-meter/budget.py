@@ -237,6 +237,10 @@ class Budget:
         )
         if write and (transport_error or status is None or status >= 500):
             self.stop("uncertain-write")
+        if transport_error or status is None:
+            # A proxy error cannot prove an intentional browser cancellation.
+            # Keep the failed outcome and block every subsequent admission.
+            self.stop("read-transport-failure")
 
     def close(self):
         os.close(self.fd)

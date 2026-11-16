@@ -43,6 +43,22 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it("finishes signed-out error response bodies before returning control to the browser", async () => {
+  for (const status of [401, 403, 429, 503]) {
+    fetcher.mockReset();
+    const errorResponse = new Response('{"error":{"code":"fixture"}}', {
+      status,
+    });
+    fetcher.mockResolvedValueOnce(errorResponse);
+    const broker = new SessionBroker();
+    if (status === 401) expect(await broker.restore()).toBe(false);
+    else
+      await expect(broker.restore()).rejects.toBeInstanceOf(SessionUnavailable);
+    expect(errorResponse.bodyUsed).toBe(true);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  }
+});
+
 it("waits for the shared rotation lease instead of ending a concurrent tab's session", async () => {
   vi.useFakeTimers();
   const broker = new SessionBroker();

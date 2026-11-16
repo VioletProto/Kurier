@@ -34,6 +34,23 @@ export function coordinatorBudget({ ledger, meterPath, now = Date.now }) {
     )
       throw Error("Invalid or stopped transport meter");
     const attempts = events.filter((e) => e.event === "attempt");
+    const outcomes = new Map();
+    for (const event of events.filter((e) => e.event === "outcome")) {
+      if (outcomes.has(event.attempt))
+        throw Error("Duplicate transport outcome; inspect recorded state");
+      outcomes.set(event.attempt, event);
+    }
+    for (const attempt of attempts) {
+      const outcome = outcomes.get(attempt.sequence);
+      if (!outcome)
+        throw Error("Transport requests still in flight; no next action");
+      if (
+        outcome.transportError ||
+        !Number.isInteger(outcome.status) ||
+        (attempt.write && outcome.status >= 500)
+      )
+        throw Error("Failed or uncertain transport outcome; no continuation");
+    }
     const counts = attempts.at(-1)?.counts ??
       events[0].cleanupParent?.counts ??
       events[0].continuationParent?.counts ??
@@ -95,6 +112,9 @@ export function createCoordinatorTransport({
           : typeof identity === "string"
             ? identity
             : await token(identity);
+      // Authentication may itself have metered requests. Recheck immediately
+      // before dispatch so a failure during refresh cannot permit a write.
+      await budget({ cleanup: ledger.cleanup === true });
       const response = await fetch(origin + route, {
         method,
         redirect: "error",

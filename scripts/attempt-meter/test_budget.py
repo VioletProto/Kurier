@@ -40,12 +40,36 @@ class BudgetTests(unittest.TestCase):
         with self.assertRaises(MeterStop):
             self.b.admit("api", "POST", True, write_allowed=True)
 
-    def test_failed_read_transport_and_retry_are_separate_attempts(self):
+    def test_failed_read_transport_latches_before_any_new_request(self):
         first = self.b.admit("aws", "Scan", False)
-        self.b.outcome(first, transport_error=True)
-        second = self.b.admit("aws", "Scan", False)
-        self.b.outcome(second, 200)
-        self.assertEqual(self.b.counts["aws"], 2)
+        in_flight = self.b.admit("api", "OPTIONS", False)
+        with self.assertRaisesRegex(MeterStop, "read-transport-failure"):
+            self.b.outcome(first, transport_error=True)
+        # Requests admitted before the failure still receive their outcomes.
+        self.b.outcome(in_flight, 200)
+        for category, operation, write in [
+            ("aws", "Scan", False),
+            ("api", "OPTIONS", False),
+            ("api", "POST", True),
+            ("api", "DELETE", True),
+        ]:
+            with self.assertRaisesRegex(MeterStop, "latched-stop"):
+                self.b.admit(category, operation, write, write_allowed=True)
+        with open(self.path, encoding="utf8") as file:
+            rows = [json.loads(line) for line in file]
+        self.assertEqual(sum(r["event"] == "stop" for r in rows), 1)
+        self.assertEqual(sum(r["event"] == "attempt" for r in rows), 2)
+        self.assertEqual(sum(r["event"] == "outcome" for r in rows), 2)
+
+    def test_options_error_is_not_silently_treated_as_cancellation(self):
+        n = self.b.admit("api", "OPTIONS", False)
+        with self.assertRaisesRegex(MeterStop, "read-transport-failure"):
+            self.b.outcome(n, transport_error=True)
+
+    def test_unknown_read_status_stops(self):
+        n = self.b.admit("api", "GET", False)
+        with self.assertRaisesRegex(MeterStop, "read-transport-failure"):
+            self.b.outcome(n)
 
     def test_poll_interval_and_time(self):
         self.b.admit("api", "GET", False, True, b"opaque-in-memory-key")
