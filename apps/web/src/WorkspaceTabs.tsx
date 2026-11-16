@@ -21,6 +21,7 @@ export function WorkspaceTabs({
             ref={(element) => {
               tabs.current[index] = element;
             }}
+            autoFocus={index === 0}
             type="button"
             role="tab"
             id={`${prefix}-tab-${section.id}`}

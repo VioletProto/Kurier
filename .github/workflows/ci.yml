@@ -80,6 +80,10 @@ jobs:
           KURIER_LOCAL_HTTPS_CERT: ${{ runner.temp }}/kurier-session-browser.crt
           KURIER_LOCAL_HTTPS_KEY: ${{ runner.temp }}/kurier-session-browser.key
 
+      - name: Keyboard accessibility and workspace reflow
+        run: npx playwright test e2e/accessibility.spec.ts e2e/workspace.spec.ts
+        working-directory: apps/web
+
   ownership-integration:
     runs-on: ubuntu-latest
     steps:

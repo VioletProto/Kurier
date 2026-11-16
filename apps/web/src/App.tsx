@@ -38,9 +38,30 @@ const titles: Record<Mode, string> = {
 export function App() {
   const [signedIn, setSignedIn] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const workspace = useRef<HTMLElement>(null);
   const [restoring, setRestoring] = useState(sessionBrokerEnabled);
   const [restoreFailed, setRestoreFailed] = useState(false);
   const [notice, setNotice] = useState("");
+  const screen = restoring
+    ? "restoring"
+    : restoreFailed
+      ? "retry"
+      : signedIn
+        ? "projects"
+        : leaving
+          ? "leaving"
+          : "signin";
+  const previousScreen = useRef(screen);
+  useEffect(() => {
+    if (
+      previousScreen.current !== screen &&
+      screen !== "restoring" &&
+      screen !== "leaving"
+    ) {
+      workspace.current?.focus();
+    }
+    previousScreen.current = screen;
+  }, [screen]);
   const [authFormGeneration, setAuthFormGeneration] = useState(0);
   const lifecycle = useRef(0);
   const [dark, setDark] = useState(
@@ -199,7 +220,12 @@ export function App() {
         Environment: {import.meta.env.VITE_KURIER_STAGE ?? "local"}
       </p>
       <div role="status">{notice}</div>
-      <section id="workspace" aria-label="Workspace">
+      <section
+        id="workspace"
+        aria-label="Workspace"
+        tabIndex={-1}
+        ref={workspace}
+      >
         {restoring ? (
           <p role="status">Restoring your session…</p>
         ) : restoreFailed ? (
@@ -241,6 +267,12 @@ export function App() {
 
 function AuthForm({ onSignedIn }: { onSignedIn: () => void | Promise<void> }) {
   const [mode, setMode] = useState<Mode>("signin");
+  const heading = useRef<HTMLHeadingElement>(null);
+  const previousMode = useRef(mode);
+  useEffect(() => {
+    if (previousMode.current !== mode) heading.current?.focus();
+    previousMode.current = mode;
+  }, [mode]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -327,7 +359,9 @@ function AuthForm({ onSignedIn }: { onSignedIn: () => void | Promise<void> }) {
   }
   return (
     <div className="auth panel">
-      <h2>{titles[mode]}</h2>
+      <h2 ref={heading} tabIndex={-1}>
+        {titles[mode]}
+      </h2>
       {!authConfigured && (
         <p role="alert">
           Configure the development Cognito pool and client before signing in.
