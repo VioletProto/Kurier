@@ -44,9 +44,11 @@ ignoring obsolete check results.
 Verified locally with frontend formatting, lint, production build, all 104 web
 unit/component tests and both HTTPS Chromium session fixtures. The browser fixture
 holds a token response while asserting draft/focus preservation and no product
-reload, then checks the original input remains mounted after success. Broker and
-product responses are synthetic; this follow-up has no hosted deployment or new
-real Cognito/CloudFront validation.
+reload, then checks the original input remains mounted after success. Those local
+broker/product responses are synthetic. Davian subsequently authorized deployment,
+testing, merge and branch cleanup; the
+[deployment follow-up](browser-session-deployment.md#workspace-focus-preservation)
+records the scoped frontend rollout and separate real hosted browser checks.
 
 ## Local commands
 
