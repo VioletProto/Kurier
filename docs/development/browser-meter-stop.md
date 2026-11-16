@@ -94,3 +94,27 @@ The frozen original ledger remains SHA256
 The retained original live driver remains SHA256
 `14c6e1e402ec1b7e45d005f6c00502b35c02018f3fc59c2fd6120981b8193017`.
 Neither its failures nor their unknown historical causes are reclassified.
+
+## Authorized hosted continuation
+
+On 2026-11-15 Davian requested deployment, testing, merge and task-branch cleanup.
+The operator scripts themselves need no application deployment. A signed-out
+hosted check then exposed a frontend session-client response-body leak: the
+startup session check returned 401, the sign-in form appeared, but Chromium kept
+the unread response pending and the new guard correctly refused teardown.
+
+Three pre-deployment smoke attempts are retained separately. The first two
+timed out awaiting navigation network idle; the third used DOM readiness and
+identified the pending `/api/v1/browser-session` body after a successful explicit
+API read. These were not transport errors or uncertain writes. All attempts
+were signed out, with no identity/project creation or target execution.
+
+A single hosted diagnostic cycle applied the proposed error-body drain inside
+the test browser, without changing the deployed application. It passed with
+zero pending requests, transport failures or close cancellations. This is a
+test-browser intervention, not deployed-fix evidence. The matching regression
+failed on the old session client and passed after the fix: consume non-success
+response bodies before throwing, within the existing request deadline. The
+409 path already consumes its JSON body and remains unchanged. No error body
+is logged or persisted. Full repository verification passed again with 99
+frontend tests. Deployment/readback results are recorded below when performed.
