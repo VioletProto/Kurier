@@ -32,6 +32,22 @@ Source credential material, cookies, bodies and raw provider errors are never
 logged. Runtime errors are fixed public messages. Fixture credentials are synthetic.
 The separate MCP/local-agent credentials and product evidence schemas are unchanged.
 
+## Focus preservation follow-up (2026-11-15)
+
+Focus now checks the current session binding through `auth.token(true)` without
+unmounting the workspace or clearing its credentials. Open tabs, drafts and input
+focus remain in component memory; temporary failures show a notice and the next
+focus retries. Overlapping focus checks are coalesced. Expiry, account replacement,
+sign-out and pagehide retain their private-data boundaries, with lifecycle fences
+ignoring obsolete check results.
+
+Verified locally with frontend formatting, lint, production build, all 104 web
+unit/component tests and both HTTPS Chromium session fixtures. The browser fixture
+holds a token response while asserting draft/focus preservation and no product
+reload, then checks the original input remains mounted after success. Broker and
+product responses are synthetic; this follow-up has no hosted deployment or new
+real Cognito/CloudFront validation.
+
 ## Local commands
 
 Normal repository verification is `npm run verify`. It includes frontend tests,

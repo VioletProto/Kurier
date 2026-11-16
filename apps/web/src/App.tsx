@@ -93,9 +93,31 @@ export function App() {
     // Returning from a password-manager popup must preserve the auth form.
     // Revalidate on focus only while private workspace content is displayed.
     if (!sessionBrokerEnabled || !signedIn) return;
-    const focused = () => void restoreSession();
+    // Check the existing binding without clearing credentials or unmounting the
+    // workspace. Full restoration is reserved for startup and session changes.
+    let checking = false;
+    let disposed = false;
+    const focused = async () => {
+      if (checking) return;
+      checking = true;
+      const current = lifecycle.current;
+      try {
+        await auth.token(true);
+        if (!disposed && current === lifecycle.current) setNotice("");
+      } catch (error) {
+        if (disposed || current !== lifecycle.current) return;
+        if (error instanceof SessionExpired) void logout(true);
+        else setNotice(authMessage(error));
+      } finally {
+        checking = false;
+      }
+    };
     window.addEventListener("focus", focused);
-    return () => window.removeEventListener("focus", focused);
+    return () => {
+      disposed = true;
+      window.removeEventListener("focus", focused);
+    };
+    // Lifecycle fences discard checks after sign-out, pagehide or replacement.
   }, [signedIn]);
   useEffect(() => {
     // Clear rendered data before a history snapshot can preserve the workspace.
