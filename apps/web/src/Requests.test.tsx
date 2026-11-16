@@ -69,6 +69,79 @@ function confirm() {
     screen.getByRole("checkbox", { name: /All fields contain public data/ }),
   );
 }
+it.each([
+  ["Header", "headers"],
+  ["Query parameter", "queryParameters"],
+] as const)(
+  "carries an entered %s value into a protected write and clears it after saving",
+  async (title, collection) => {
+    mocks.patchRequest.mockResolvedValue({
+      request: {
+        ...saved,
+        revision: 1,
+        [collection]: [
+          {
+            name: "X-Example",
+            enabled: true,
+            sensitive: true,
+            bindingId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            masked: true,
+            secretRef: { secretId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" },
+          },
+        ],
+      },
+      etag: '"1"',
+    });
+    mount();
+    await edit();
+    fireEvent.click(
+      screen.getByRole("button", { name: `Add ${title.toLowerCase()}` }),
+    );
+    fireEvent.change(screen.getByLabelText(`${title} name 1`), {
+      target: { value: "X-Example" },
+    });
+    const input = screen.getByLabelText(`${title} value 1`);
+    fireEvent.change(input, { target: { value: "Entered draft value" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Protected" }));
+    expect(screen.getByLabelText(`${title} value 1`)).toBe(input);
+    expect(input).toHaveAttribute("type", "password");
+    expect(input).toHaveValue("Entered draft value");
+    expect(mocks.patchRequest).not.toHaveBeenCalled();
+    confirm();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save request changes" }),
+    );
+    await waitFor(() => expect(mocks.patchRequest).toHaveBeenCalledTimes(1));
+    expect(mocks.patchRequest.mock.calls[0][2][collection]).toEqual([
+      {
+        name: "X-Example",
+        enabled: true,
+        sensitive: true,
+        bindingId: expect.any(String),
+        secretWrite: { action: "set", value: "Entered draft value" },
+      },
+    ]);
+    await waitFor(() => expect(input).toHaveValue(""));
+  },
+);
+it("clears a protected draft when switching back to public instead of revealing it", async () => {
+  mount();
+  await edit();
+  fireEvent.click(screen.getByRole("button", { name: "Add header" }));
+  fireEvent.change(screen.getByLabelText("Header value 1"), {
+    target: { value: "Entered draft value" },
+  });
+  fireEvent.click(screen.getByRole("checkbox", { name: "Protected" }));
+  expect(screen.getByLabelText("Header value 1")).toHaveValue(
+    "Entered draft value",
+  );
+  fireEvent.click(screen.getByRole("checkbox", { name: "Protected" }));
+  expect(screen.getByLabelText("Header value 1")).toHaveAttribute(
+    "type",
+    "text",
+  );
+  expect(screen.getByLabelText("Header value 1")).toHaveValue("");
+});
 it("preserves a linked OpenAPI operation during unrelated request edits", async () => {
   const linked = {
     ...saved,

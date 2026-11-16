@@ -262,7 +262,10 @@ function Fields({
                             enabled: v.enabled,
                             sensitive: true,
                             bindingId: crypto.randomUUID(),
-                            secretWrite: { action: "set", value: "" },
+                            secretWrite: {
+                              action: "set",
+                              value: v.value ?? "",
+                            },
                           }
                         : {
                             name: v.name,
