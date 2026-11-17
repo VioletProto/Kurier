@@ -132,7 +132,8 @@ Do not capture token displays in screenshots/traces or put tokens in shell
 arguments/files. The localhost execution and repeated revocation/re-pairing are
 now operator-reported as tested, along with same-machine private-interface
 execution. The operator ambiguity/no-replay check and its cleanup are also
-completed as recorded below; separate-device LAN remains prepared/unconfirmed.
+completed as recorded below. The independent Windows target check is recorded in
+[separate-device LAN execution](#separate-device-lan-execution).
 
 ### Operator-reported results — 2026-10-13
 
@@ -210,9 +211,31 @@ already deleted, so the original stored outcome code/bytes could not be
 independently verified; `unavailable` remains attributed to the operator's UI
 report. No target request was sent during inspection.
 
-Mark this controlled-target connection-loss/no-replay check and fixture cleanup
-**completed**, distinct from an induced AWS fault, agent-process crash, offline
-recovery or separate-device LAN test. Those unperformed checks remain open.
+This operator check completed the controlled-target connection-loss/no-replay
+scenario and its cleanup. Hosted faults and offline recovery remain open.
+
+### Separate-device LAN execution
+
+A compiled Linux foreground agent sent one GET to the disposable check target
+running on Davian's Windows 11 desktop over its Wi-Fi or Ethernet LAN address.
+The account pairing authorized the exact private origin and the submission
+explicitly allowed a synthetic Authorization value over HTTP. The agent polled
+the real Kurier API implementation over fixture TLS with DynamoDB Local and
+KMS/S3 doubles.
+
+Independent reads of the Windows `/counts` endpoint measured 0 before the
+submission and 1 after a follow-up polling interval. Kurier completed the
+execution with HTTP 200. The captured JSON contained a redacted Authorization
+reflection, and the raw synthetic Authorization value, response cookie value
+and pairing token were absent from stored evidence. The bytes matched on a
+second evidence read. The CLI acknowledged publication, and its captured
+stdout/stderr contained neither the Authorization value nor the pairing token.
+
+The test stopped the Linux agent, revoked the fixture credential and removed
+the temporary Linux services and records. The Windows operator received the
+stop instruction. The observation verifies traffic between two physical
+devices with a local backend fixture. Hosted AWS validation and Windows agent
+runtime coverage remain open.
 
 ## Implementation and compatibility
 
@@ -347,7 +370,7 @@ beyond 2 MiB, actual S3 immutable publication, identical ACK retry, and revoked
 session/poll/upload denial. Cloud regression covers actual KMS/DynamoDB/SQS/
 worker/HTTPS/S3 and duplicate handling, credential-name sanitization and
 disposable-fixture cleanup. Crashes/lost responses remain simulation evidence;
-Separate-device LAN and elapsed expiry checks remain operator work. Davian's
+Separate-device LAN and elapsed expiry checks were open at the time. Davian's
 subsequent localhost/private-interface execution, revocation/re-pairing and
 verified operator fixture cleanup results are recorded above.
 
@@ -482,17 +505,15 @@ KURIER_DYNAMODB_TEST_ENDPOINT=http://127.0.0.1:8000 \
 ```
 
 This check exercises a real Linux process kill and restart with a simulated
-lease clock on one host. The separate-device, hosted failure and hosted log
-checks are still open on the
+lease clock on one host. Hosted failure and hosted log checks are still open on the
 [operational validation card](https://trello.com/c/k1lh9EG1).
 
 ## Remaining validation and operational gaps
 
-- Davian's localhost execution and repeated revocation/re-pairing are recorded
-  as operator-tested, including same-machine private-interface execution.
-  Separate-device LAN, real device offline recovery, thirty-day elapsed
-  credential expiry and clock skew remain unconfirmed. Automated CLI/TLS/browser
-  fixtures remain controlled local evidence.
+- Operator reports cover localhost, same-machine private-interface execution
+  and repeated revocation/re-pairing. The independent Linux-to-Windows LAN check
+  used a local Kurier backend fixture. Real device offline recovery, thirty-day
+  elapsed credential expiry and clock skew remain unconfirmed.
 - The Linux process recovery check used the local fixture. Hosted crashes and
   AWS lost-response injection remain unperformed.
   An uncertain S3 PUT keeps its ticket/reservation inaccessible and can keep
