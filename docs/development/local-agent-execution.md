@@ -456,6 +456,36 @@ retries, rejected calls, accumulated pins and key rotations can exceed this ligh
 allowance. Existing key/bootstrap/maintenance fixed costs are not charged again.
 No account plan change or capacity reservation is part of the estimate.
 
+## Linux agent process recovery
+
+After the account-level pairing rollout, a race-enabled integration check ran the
+compiled Linux foreground agent against the Kurier API over fixture TLS and
+DynamoDB Local, with KMS and S3 doubles. It used a memory-only account credential
+and an explicitly approved loopback destination. The controlled target confirmed
+receipt of the synthetic Authorization value, then withheld its response while
+the test sent SIGKILL to the agent.
+
+The restarted process polled with the same pairing. The API returned busy
+without work before lease expiry. After the fixture advanced server time, the
+same process polled again and received no work. The execution settled as
+`failed/execution_outcome_unknown`, with one target request and zero agent result
+uploads. The test checked both processes' captured stdout/stderr and the stored
+failure evidence for the synthetic Authorization value and agent token. It
+revoked the fixture credential and discarded the test tables and temporary
+process files.
+
+```sh
+docker compose -f compose.dynamodb.yml up -d
+KURIER_DYNAMODB_TEST_ENDPOINT=http://127.0.0.1:8000 \
+  go test -C services/api -race -tags=integration \
+  -run '^TestIntegrationLocalAgentProcessKilledAfterDispatch$' ./internal/ownership
+```
+
+This check exercises a real Linux process kill and restart with a simulated
+lease clock on one host. The separate-device, hosted failure and hosted log
+checks are still open on the
+[operational validation card](https://trello.com/c/k1lh9EG1).
+
 ## Remaining validation and operational gaps
 
 - Davian's localhost execution and repeated revocation/re-pairing are recorded
@@ -463,7 +493,8 @@ No account plan change or capacity reservation is part of the estimate.
   Separate-device LAN, real device offline recovery, thirty-day elapsed
   credential expiry and clock skew remain unconfirmed. Automated CLI/TLS/browser
   fixtures remain controlled local evidence.
-- Crashes and lost responses are injected simulations, not induced AWS faults.
+- The Linux process recovery check used the local fixture. Hosted crashes and
+  AWS lost-response injection remain unperformed.
   An uncertain S3 PUT keeps its ticket/reservation inaccessible and can keep
   physical deletion pending indefinitely until reviewed settlement; absence
   alone does not release it. Normal acknowledged PUT/deletion is tested.
@@ -475,9 +506,9 @@ No account plan change or capacity reservation is part of the estimate.
   supplied. Arbitrary secret transformations and device honesty remain explicit
   trust limitations, not sanitization guarantees.
 
-Trello keeps implementation/synchronization separate from deployment/genuine
-validation; the full slice card remains Doing while those later obligations are
-open. No additional workflows, MCP or hosting behavior is implemented.
+The [implementation card](https://trello.com/c/sule204p) was completed when the
+slice merged. The [operational validation card](https://trello.com/c/k1lh9EG1)
+tracks the remaining device and hosted checks.
 
 Known metadata endpoints remain denied even inside ULA: the AWS reserved
 `fd00:ec2::/32` range and GCP `fd20:ce::254`, alongside IPv4 link-local metadata.
