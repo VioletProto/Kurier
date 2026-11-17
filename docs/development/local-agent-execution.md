@@ -132,7 +132,8 @@ Do not capture token displays in screenshots/traces or put tokens in shell
 arguments/files. The localhost execution and repeated revocation/re-pairing are
 now operator-reported as tested, along with same-machine private-interface
 execution. The operator ambiguity/no-replay check and its cleanup are also
-completed as recorded below; separate-device LAN remains prepared/unconfirmed.
+completed as recorded below. The independent Windows target check is recorded in
+[separate-device LAN execution](#separate-device-lan-execution).
 
 ### Operator-reported results — 2026-10-13
 
@@ -210,9 +211,31 @@ already deleted, so the original stored outcome code/bytes could not be
 independently verified; `unavailable` remains attributed to the operator's UI
 report. No target request was sent during inspection.
 
-Mark this controlled-target connection-loss/no-replay check and fixture cleanup
-**completed**, distinct from an induced AWS fault, agent-process crash, offline
-recovery or separate-device LAN test. Those unperformed checks remain open.
+This operator check completed the controlled-target connection-loss/no-replay
+scenario and its cleanup. Hosted faults and offline recovery remain open.
+
+### Separate-device LAN execution
+
+A compiled Linux foreground agent sent one GET to the disposable check target
+running on Davian's Windows 11 desktop over its Wi-Fi or Ethernet LAN address.
+The account pairing authorized the exact private origin and the submission
+explicitly allowed a synthetic Authorization value over HTTP. The agent polled
+the real Kurier API implementation over fixture TLS with DynamoDB Local and
+KMS/S3 doubles.
+
+Independent reads of the Windows `/counts` endpoint measured 0 before the
+submission and 1 after a follow-up polling interval. Kurier completed the
+execution with HTTP 200. The captured JSON contained a redacted Authorization
+reflection, and the raw synthetic Authorization value, response cookie value
+and pairing token were absent from stored evidence. The bytes matched on a
+second evidence read. The CLI acknowledged publication, and its captured
+stdout/stderr contained neither the Authorization value nor the pairing token.
+
+The test stopped the Linux agent, revoked the fixture credential and removed
+the temporary Linux services and records. The Windows operator received the
+stop instruction. The observation verifies traffic between two physical
+devices with a local backend fixture. Hosted AWS validation and Windows agent
+runtime coverage remain open.
 
 ## Implementation and compatibility
 
@@ -347,7 +370,7 @@ beyond 2 MiB, actual S3 immutable publication, identical ACK retry, and revoked
 session/poll/upload denial. Cloud regression covers actual KMS/DynamoDB/SQS/
 worker/HTTPS/S3 and duplicate handling, credential-name sanitization and
 disposable-fixture cleanup. Crashes/lost responses remain simulation evidence;
-Separate-device LAN and elapsed expiry checks remain operator work. Davian's
+Separate-device LAN and elapsed expiry checks were open at the time. Davian's
 subsequent localhost/private-interface execution, revocation/re-pairing and
 verified operator fixture cleanup results are recorded above.
 
@@ -456,14 +479,43 @@ retries, rejected calls, accumulated pins and key rotations can exceed this ligh
 allowance. Existing key/bootstrap/maintenance fixed costs are not charged again.
 No account plan change or capacity reservation is part of the estimate.
 
+## Linux agent process recovery
+
+After the account-level pairing rollout, a race-enabled integration check ran the
+compiled Linux foreground agent against the Kurier API over fixture TLS and
+DynamoDB Local, with KMS and S3 doubles. It used a memory-only account credential
+and an explicitly approved loopback destination. The controlled target confirmed
+receipt of the synthetic Authorization value, then withheld its response while
+the test sent SIGKILL to the agent.
+
+The restarted process polled with the same pairing. The API returned busy
+without work before lease expiry. After the fixture advanced server time, the
+same process polled again and received no work. The execution settled as
+`failed/execution_outcome_unknown`, with one target request and zero agent result
+uploads. The test checked both processes' captured stdout/stderr and the stored
+failure evidence for the synthetic Authorization value and agent token. It
+revoked the fixture credential and discarded the test tables and temporary
+process files.
+
+```sh
+docker compose -f compose.dynamodb.yml up -d
+KURIER_DYNAMODB_TEST_ENDPOINT=http://127.0.0.1:8000 \
+  go test -C services/api -race -tags=integration \
+  -run '^TestIntegrationLocalAgentProcessKilledAfterDispatch$' ./internal/ownership
+```
+
+This check exercises a real Linux process kill and restart with a simulated
+lease clock on one host. Hosted failure and hosted log checks are still open on the
+[operational validation card](https://trello.com/c/k1lh9EG1).
+
 ## Remaining validation and operational gaps
 
-- Davian's localhost execution and repeated revocation/re-pairing are recorded
-  as operator-tested, including same-machine private-interface execution.
-  Separate-device LAN, real device offline recovery, thirty-day elapsed
-  credential expiry and clock skew remain unconfirmed. Automated CLI/TLS/browser
-  fixtures remain controlled local evidence.
-- Crashes and lost responses are injected simulations, not induced AWS faults.
+- Operator reports cover localhost, same-machine private-interface execution
+  and repeated revocation/re-pairing. The independent Linux-to-Windows LAN check
+  used a local Kurier backend fixture. Real device offline recovery, thirty-day
+  elapsed credential expiry and clock skew remain unconfirmed.
+- The Linux process recovery check used the local fixture. Hosted crashes and
+  AWS lost-response injection remain unperformed.
   An uncertain S3 PUT keeps its ticket/reservation inaccessible and can keep
   physical deletion pending indefinitely until reviewed settlement; absence
   alone does not release it. Normal acknowledged PUT/deletion is tested.
@@ -475,9 +527,9 @@ No account plan change or capacity reservation is part of the estimate.
   supplied. Arbitrary secret transformations and device honesty remain explicit
   trust limitations, not sanitization guarantees.
 
-Trello keeps implementation/synchronization separate from deployment/genuine
-validation; the full slice card remains Doing while those later obligations are
-open. No additional workflows, MCP or hosting behavior is implemented.
+The [implementation card](https://trello.com/c/sule204p) was completed when the
+slice merged. The [operational validation card](https://trello.com/c/k1lh9EG1)
+tracks the remaining device and hosted checks.
 
 Known metadata endpoints remain denied even inside ULA: the AWS reserved
 `fd00:ec2::/32` range and GCP `fd20:ce::254`, alongside IPv4 link-local metadata.
