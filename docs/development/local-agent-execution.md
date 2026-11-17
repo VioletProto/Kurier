@@ -2,8 +2,8 @@
 
 The [Kurier Settings continuation](connection-settings.md) moves pairing out of
 project tabs and introduces one agent for all current/future owned projects.
-It requires updated API/frontend/CLI delivery; historical deployment results
-below do not establish that this continuation is deployed.
+Its API/frontend release is deployed; use the updated CLI for account pairing.
+The linked continuation records its separate hosted tests and cleanup.
 
 Davian accepted [the contract](../architecture/local-agent-execution-contract.md)
 at `585d5b3` on 2026-10-13 and authorized implementation, API-contract
