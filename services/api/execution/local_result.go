@@ -41,13 +41,7 @@ func (s *Service) UploadAgentResult(ctx context.Context, token, project, jobID s
 	if e != nil {
 		return runner.Receipt{}, e
 	}
-	scoped := false
-	for _, scope := range a.Scopes {
-		if scope.ProjectID == project {
-			scoped = true
-		}
-	}
-	if !scoped || !uuidPattern.MatchString(jobID) {
+	if !agentAllowsProject(a, project) || !uuidPattern.MatchString(jobID) {
 		return runner.Receipt{}, failure(404, "not_found")
 	}
 	canonical, e := runner.CanonicalResult(result)

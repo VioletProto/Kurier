@@ -1,3 +1,4 @@
+import { agentDestinations } from "./api";
 import { EnvironmentSelector } from "./Environments";
 import { AssertionResults } from "./Assertions";
 import { useEffect, useRef, useState } from "react";
@@ -486,7 +487,7 @@ export function Executions({
                   (agent.serverTime
                     ? Date.parse(agent.serverTime)
                     : Date.now()) ||
-                !agent.scopes.some((s) => s.projectId === projectId)
+                agentDestinations(agent, projectId).length === 0
               }
             >
               Local agent
@@ -497,9 +498,8 @@ export function Executions({
           <div>
             <p>
               Device: {agent.name}. Approved services:{" "}
-              {agent.scopes
-                .find((s) => s.projectId === projectId)
-                ?.destinations.map((d) => d.origin)
+              {agentDestinations(agent, projectId)
+                .map((d) => d.origin)
                 .join(", ")}
               . Last seen: {agent.lastSeenAt ?? "Offline / unknown"}. Offline
               submissions may wait up to ten minutes; there is no cloud
@@ -568,7 +568,7 @@ export function Executions({
                   (agent.serverTime
                     ? Date.parse(agent.serverTime)
                     : Date.now()) ||
-                !agent.scopes.some((s) => s.projectId === projectId)))
+                agentDestinations(agent, projectId).length === 0))
           }
           onClick={() => {
             if (request)
@@ -822,7 +822,7 @@ export function Executions({
                         (agent.serverTime
                           ? Date.parse(agent.serverTime)
                           : Date.now()) ||
-                      !agent.scopes.some((s) => s.projectId === projectId)))
+                      agentDestinations(agent, projectId).length === 0))
                 }
                 onClick={() =>
                   void run(() =>

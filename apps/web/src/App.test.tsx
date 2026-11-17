@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   token: vi.fn(),
   me: vi.fn(),
   list: vi.fn(),
+  currentAgent: vi.fn(),
+  pairAgent: vi.fn(),
 }));
 vi.mock("./auth", async () => {
   const real = await vi.importActual<typeof import("./auth")>("./auth");
@@ -46,7 +48,16 @@ vi.mock("./auth", async () => {
 });
 vi.mock("./api", async () => {
   const real = await vi.importActual<typeof import("./api")>("./api");
-  return { ...real, api: { ...real.api, me: mocks.me, list: mocks.list } };
+  return {
+    ...real,
+    api: {
+      ...real.api,
+      me: mocks.me,
+      list: mocks.list,
+      currentAgent: mocks.currentAgent,
+      pairAgent: mocks.pairAgent,
+    },
+  };
 });
 import { App } from "./App";
 import {
@@ -64,6 +75,7 @@ beforeEach(() => {
     createdAt: "2026-10-07T00:00:00Z",
   });
   mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+  mocks.currentAgent.mockResolvedValue(null);
   mocks.logout.mockResolvedValue(undefined);
   mocks.token.mockResolvedValue("fixture-access");
 });
@@ -374,4 +386,61 @@ describe("accessible authentication screens", () => {
     ).not.toBeInTheDocument();
     expect(mocks.logout).toHaveBeenCalled();
   });
+});
+
+it("keeps one account settings surface and ignores a stale initial agent lookup", async () => {
+  mocks.login.mockResolvedValue("done");
+  let initial!: (value: null) => void;
+  mocks.currentAgent.mockReturnValueOnce(
+    new Promise<null>((resolve) => {
+      initial = resolve;
+    }),
+  );
+  const agent = {
+    localAgentId: "shared",
+    name: "Account device",
+    projectScope: "all_owned_projects",
+    scopes: [],
+    destinations: [
+      { origin: "http://localhost:3000", addressClass: "loopback" },
+    ],
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    revokedAt: null,
+    lastSeenAt: null,
+    recoveryGeneration: "fixture",
+  };
+  mocks.pairAgent.mockResolvedValue({ agent, token: "fixture-once" });
+  render(<App />);
+  email();
+  password();
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  await screen.findByRole("heading", { name: "Your projects" });
+  expect(
+    screen.queryByRole("region", { name: "Read-only MCP access" }),
+  ).toBeNull();
+  const draft = screen.getByLabelText("New project name");
+  fireEvent.change(draft, { target: { value: "Unsaved project" } });
+  fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+  expect(
+    screen.getAllByRole("region", { name: "Read-only MCP access" }),
+  ).toHaveLength(1);
+  fireEvent.click(
+    screen.getByLabelText(
+      "I authorize all my current and future projects to use these exact destinations on the named device.",
+    ),
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Create agent credential" }),
+  );
+  await screen.findByText(/Agent: Account device/);
+  await act(async () => initial(null));
+  expect(screen.getByText(/Agent: Account device/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Projects" }));
+  expect(screen.getByLabelText("New project name")).toBe(draft);
+  expect(draft).toHaveValue("Unsaved project");
+  expect(screen.queryByLabelText("One-time agent token")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+  expect(screen.getByText(/Agent: Account device/)).toBeInTheDocument();
+  expect(screen.queryByLabelText("One-time agent token")).toBeNull();
 });

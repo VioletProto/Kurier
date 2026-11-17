@@ -66,14 +66,14 @@ test("browser pairing, compiled foreground agent, sanitized evidence, revocation
     .getByRole("button", { name: "Local agent browser fixture", exact: true })
     .click();
   const panel = page.getByRole("region", { name: "Executions", exact: true });
-  await page.getByRole("tab", { name: "Local agent pairing" }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   const pairing = page.getByRole("region", { name: "Local agent pairing" });
   await pairing
     .getByLabel("Exact HTTP(S) origins, one per line (up to 16)")
     .fill(target);
   await pairing
     .getByLabel(
-      "I authorize this project and these exact destinations for the named device.",
+      "I authorize all my current and future projects to use these exact destinations on the named device.",
     )
     .check();
   await pairing
@@ -84,7 +84,7 @@ test("browser pairing, compiled foreground agent, sanitized evidence, revocation
     .textContent();
   if (!capability) throw Error("Pairing token unavailable");
   await pairing.getByRole("button", { name: "Close token display" }).click();
-  await page.getByRole("tab", { name: "Requests & evidence" }).click();
+  await page.getByRole("button", { name: "Projects", exact: true }).click();
   const req = (await saved.json()).data.request;
   await page
     .getByRole("button", { name: new RegExp("Local controlled request") })
@@ -151,10 +151,10 @@ test("browser pairing, compiled foreground agent, sanitized evidence, revocation
       )
     ).includes(capability),
   ).toBe(false);
-  await page.getByRole("tab", { name: "Local agent pairing" }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   await pairing.getByRole("button", { name: "Revoke local agent" }).click();
   await expect(pairing.getByText(/Revoked/)).toBeVisible();
-  await page.getByRole("tab", { name: "Requests & evidence" }).click();
+  await page.getByRole("button", { name: "Projects", exact: true }).click();
   await expect(
     panel.getByRole("option", { name: "Local agent", exact: true }),
   ).toHaveJSProperty("disabled", true);

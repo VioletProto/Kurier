@@ -1,5 +1,9 @@
 # Accepted architecture
 
+The [account connection settings continuation](connection-settings-contract.md)
+records Davian's 2026-11-16 request for global MCP/local-agent Settings and one
+local-agent pairing for all current and future owned projects.
+
 ## Requested onboarding and desktop improvements
 
 Davian requested reload-persistent sign-in, selectable MCP project exposure,

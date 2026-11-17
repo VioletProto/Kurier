@@ -706,7 +706,12 @@ export class Api {
   }
   async pairAgent(
     key: string,
-    input: { name: string; scopes: LocalAgentScope[] },
+    input: {
+      name: string;
+      scopes: LocalAgentScope[];
+      projectScope?: "all_owned_projects";
+      destinations?: LocalAgentScope["destinations"];
+    },
     signal?: AbortSignal,
   ): Promise<{ agent: LocalAgent; token: string | null }> {
     const response = await this.request(
@@ -1279,6 +1284,8 @@ export type LocalAgentScope = {
   destinations: { origin: string; addressClass: "loopback" | "private" }[];
 };
 export type LocalAgent = {
+  projectScope?: "all_owned_projects";
+  destinations?: LocalAgentScope["destinations"];
   serverTime?: string;
   localAgentId: string;
   name: string;
@@ -1289,6 +1296,14 @@ export type LocalAgent = {
   lastSeenAt: string | null;
   recoveryGeneration: string;
 };
+
+export function agentDestinations(agent: LocalAgent, projectId: string) {
+  return agent.projectScope === "all_owned_projects"
+    ? (agent.destinations ?? [])
+    : agent.scopes
+        .filter((s) => s.projectId === projectId)
+        .flatMap((s) => s.destinations);
+}
 
 export type WorkflowExtraction = {
   name: string;

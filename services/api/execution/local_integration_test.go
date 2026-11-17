@@ -591,3 +591,176 @@ func TestIntegrationLocalPendingUploadExpiryOfflineAndDeletion(t *testing.T) {
 		})
 	}
 }
+
+func TestIntegrationAccountAgentFutureProjectAndOwnership(t *testing.T) {
+	f := newLocalFixture(t)
+	ctx := context.Background()
+	if err := f.s.RevokeAgent(ctx, f.owner, f.agent.LocalAgentID); err != nil {
+		t.Fatal(err)
+	}
+	pair, created, err := f.s.CreateAgent(ctx, f.owner, id(), PairInput{Name: "Shared device", ProjectScope: runner.AllOwnedProjects, Destinations: []Destination{{Origin: f.target, AddressClass: "loopback"}}})
+	if err != nil || !created || pair.Agent.ProjectScope != runner.AllOwnedProjects || len(pair.Agent.Scopes) != 0 {
+		t.Fatal("account pairing failed", err)
+	}
+	f.agent, f.token = pair.Agent, *pair.Token
+	// This project did not exist when the one credential was issued.
+	oldProject, _ := f.s.project(ctx, f.owner, f.project)
+	request, _ := f.s.get(ctx, f.s.Table, oldProject.PK, "REQ#"+f.request)
+	future := id()
+	oldProject.PK = "P#" + future
+	oldProject.ProjectID = future
+	oldProject.Version = 0
+	f.write(t, f.s.Table, oldProject)
+	request.PK = oldProject.PK
+	request.ProjectID = future
+	f.write(t, f.s.Table, request)
+	f.project = future
+	view, _ := f.submit(t)
+	var work *runner.Work
+	for i := 0; i < 30; i++ {
+		f.now = f.now.Add(time.Second)
+		r, e := f.s.PollAgent(ctx, f.token, "")
+		if e != nil {
+			t.Fatal(e)
+		}
+		if r.Work != nil {
+			work = r.Work
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if work == nil || work.ProjectID != future || work.ExecutionID != view.ExecutionID {
+		t.Fatal("future project not discovered with original credential")
+	}
+	// A lost account-poll response never grants that request a second time.
+	f.now = f.now.Add(time.Second)
+	again, e := f.s.PollAgent(ctx, f.token, "")
+	if e != nil || again.Work != nil || !again.Busy {
+		t.Fatal("account poll replayed work", e)
+	}
+	foreign := oldProject
+	foreign.PK = "P#" + id()
+	foreign.ProjectID = strings.TrimPrefix(foreign.PK, "P#")
+	foreign.OwnerID = id()
+	f.write(t, f.s.Table, foreign)
+	if _, e = f.s.PollAgent(ctx, f.token, foreign.ProjectID); e == nil {
+		t.Fatal("foreign project authorized")
+	}
+	if _, e = agentDestination(row{ProjectScope: runner.AllOwnedProjects, Destinations: pair.Agent.Destinations}, future, "http://localhost:1"); e == nil {
+		t.Fatal("unapproved destination authorized")
+	}
+	result := resultFor(t, work)
+	ack, err := f.s.UploadAgentResult(ctx, f.token, future, work.JobID, result)
+	if err != nil || ack.ExecutionID != view.ExecutionID {
+		t.Fatal("account result publication failed", err)
+	}
+	repeat, err := f.s.UploadAgentResult(ctx, f.token, future, work.JobID, result)
+	if err != nil || repeat != ack || f.calls.Load() != 1 {
+		t.Fatal("account receipt retry changed publication or replayed HTTP", err)
+	}
+	if err = f.s.RevokeAgent(ctx, f.owner, pair.Agent.LocalAgentID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = f.s.PollAgent(ctx, f.token, ""); err == nil {
+		t.Fatal("revoked account credential polled")
+	}
+	if _, err = f.s.UploadAgentResult(ctx, f.token, future, work.JobID, result); err == nil {
+		t.Fatal("revoked account credential acknowledged results")
+	}
+	if f.calls.Load() != 1 {
+		t.Fatal("account grant/receipt replayed target HTTP")
+	}
+}
+
+func TestIntegrationAccountAgentEmptyAccountAndLegacyIsolation(t *testing.T) {
+	f := newLocalFixture(t)
+	ctx := context.Background()
+	if _, e := f.s.PollAgent(ctx, f.token, ""); e == nil {
+		t.Fatal("legacy credential gained account polling")
+	}
+	if e := f.s.RevokeAgent(ctx, f.owner, f.agent.LocalAgentID); e != nil {
+		t.Fatal(e)
+	}
+	p, _ := f.s.project(ctx, f.owner, f.project)
+	p.State = "deleting"
+	f.write(t, f.s.Table, p)
+	// Account pairing does not require any project identifier or create project links.
+	pair, _, e := f.s.CreateAgent(ctx, f.owner, id(), PairInput{Name: "One shared device", ProjectScope: runner.AllOwnedProjects, Destinations: []Destination{{Origin: f.target, AddressClass: "loopback"}}})
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = f.s.PollAgent(ctx, *pair.Token, ""); e != nil {
+		t.Fatal("empty account queue cannot poll", e)
+	}
+	if _, _, e = f.s.CreateAgent(ctx, f.owner, id(), PairInput{Name: "Mixed", ProjectScope: runner.AllOwnedProjects, Scopes: []Scope{{ProjectID: f.project, Destinations: pair.Agent.Destinations}}, Destinations: pair.Agent.Destinations}); e == nil {
+		t.Fatal("mixed authority accepted")
+	}
+	// Deleting a project cannot revoke a global pairing (there is no project-scope link).
+	current, e := f.s.CurrentAgent(ctx, f.owner)
+	if e != nil || current == nil || current.RevokedAt != nil {
+		t.Fatal("account pairing depended on a deleted project", e)
+	}
+}
+
+func TestIntegrationAccountAgentFinalGrantAuthorization(t *testing.T) {
+	for _, mode := range []string{"revocation", "project-deletion"} {
+		t.Run(mode, func(t *testing.T) {
+			f := newLocalFixture(t)
+			ctx := context.Background()
+			if e := f.s.RevokeAgent(ctx, f.owner, f.agent.LocalAgentID); e != nil {
+				t.Fatal(e)
+			}
+			pair, _, e := f.s.CreateAgent(ctx, f.owner, id(), PairInput{Name: "Shared device", ProjectScope: runner.AllOwnedProjects, Destinations: []Destination{{Origin: f.target, AddressClass: "loopback"}}})
+			if e != nil {
+				t.Fatal(e)
+			}
+			f.agent, f.token = pair.Agent, *pair.Token
+			f.submit(t)
+			blocked := false
+			f.db.after = func(in *dynamodb.TransactWriteItemsInput) error {
+				for _, action := range in.TransactItems {
+					if action.Put == nil {
+						continue
+					}
+					var r row
+					_ = attributevalue.UnmarshalMap(action.Put.Item, &r)
+					if r.Kind == "executionJob" && r.State == "running" {
+						f.db.after = nil
+						blocked = true
+						if mode == "revocation" {
+							if e := f.s.RevokeAgent(ctx, f.owner, f.agent.LocalAgentID); e != nil {
+								t.Fatal(e)
+							}
+						} else {
+							p, _ := f.s.project(ctx, f.owner, f.project)
+							p.State = "deleting"
+							p.Version++
+							f.write(t, f.s.Table, p)
+						}
+					}
+				}
+				return nil
+			}
+			for n := 0; n < 30; n++ {
+				f.now = f.now.Add(time.Second)
+				r, e := f.s.PollAgent(ctx, f.token, "")
+				if r.Work != nil {
+					t.Fatal("released work after final authorization changed")
+				}
+				if blocked {
+					if e == nil {
+						t.Fatal("authorization loss not reported")
+					}
+					break
+				}
+				if e != nil {
+					t.Fatal(e)
+				}
+				time.Sleep(20 * time.Millisecond)
+			}
+			if !blocked || f.calls.Load() != 0 {
+				t.Fatal("final grant fence was not exercised safely")
+			}
+		})
+	}
+}

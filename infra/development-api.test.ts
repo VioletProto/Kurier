@@ -138,7 +138,7 @@ describe("scoped development API infrastructure", () => {
     expect(resources.filter((r) => r.route).map((r) => r.route)).toContain(
       "GET /api/v1/users/me",
     );
-    expect(resources.filter((r) => r.route)).toHaveLength(72);
+    expect(resources.filter((r) => r.route)).toHaveLength(73);
     const declaredRoutes = resources.filter((r) => r.route).map((r) => r.route);
     expect(declaredRoutes).toEqual(
       expect.arrayContaining([
@@ -207,6 +207,14 @@ describe("scoped development API infrastructure", () => {
         authorizationType: "NONE",
         target: "integrations/existing-integration:GET /api/v1/users/me",
       });
+    expect(
+      resources.find((r) => r.name === "LocalAgentAccountPoll")?.args,
+    ).toMatchObject({
+      apiId: "DevelopmentHttpApi",
+      routeKey: "POST /api/v1/local-agent/poll",
+      authorizationType: "NONE",
+      target: "integrations/existing-integration:GET /api/v1/users/me",
+    });
     const http = resources.find((r) => r.name === "DevelopmentHttpApi")!;
     expect(http.args.cors).toBe(false);
     expect(http.api.corsConfiguration).toBeUndefined();

@@ -43,6 +43,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
     }),
   ).toBeVisible();
   const project = (await details.locator("dd").first().textContent())!;
+  let pairedAgentId: string | undefined;
   await page.getByRole("tab", { name: "Environments", exact: true }).click();
   try {
     const panel = page.getByRole("region", {
@@ -153,7 +154,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
       name: "Executions",
       exact: true,
     });
-    await page.getByRole("tab", { name: "Local agent pairing" }).click();
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
     const pairing = page.getByRole("region", {
       name: "Local agent pairing",
       exact: true,
@@ -163,7 +164,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
       .fill(target);
     await pairing
       .getByLabel(
-        "I authorize this project and these exact destinations for the named device.",
+        "I authorize all my current and future projects to use these exact destinations on the named device.",
       )
       .check();
     await pairing
@@ -175,6 +176,11 @@ test("environment editor and compiled agent preserve typed frozen values, curren
     await pairing
       .getByRole("button", { name: "Close token display", exact: true })
       .click();
+    const paired = await request.get(`${backend}/api/v1/local-agents/current`, {
+      headers,
+    });
+    pairedAgentId = (await paired.json()).data.agent.localAgentId;
+    await page.getByRole("button", { name: "Projects", exact: true }).click();
     // The compiled CLI declares its capabilities before admission, with no job.
     expect(
       (
@@ -351,11 +357,7 @@ test("environment editor and compiled agent preserve typed frozen values, curren
     );
     if (current.status() === 200) {
       const agent = (await current.json()).data.agent;
-      if (
-        agent?.scopes?.some(
-          (scope: { projectId: string }) => scope.projectId === project,
-        )
-      ) {
+      if (pairedAgentId && agent?.localAgentId === pairedAgentId) {
         await request.delete(
           `${backend}/api/v1/local-agents/${agent.localAgentId}`,
           { headers },

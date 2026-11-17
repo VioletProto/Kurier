@@ -27,16 +27,39 @@ type LocalOptions struct {
 	LocalAgentID        string `json:"localAgentId"`
 	AllowPrivateNetwork bool   `json:"allowPrivateNetwork"`
 }
+
+const AllOwnedProjects = "all_owned_projects"
+
 type Agent struct {
-	LocalAgentID       string  `json:"localAgentId"`
-	Name               string  `json:"name"`
-	Scopes             []Scope `json:"scopes"`
-	CreatedAt          string  `json:"createdAt"`
-	ExpiresAt          string  `json:"expiresAt"`
-	RevokedAt          *string `json:"revokedAt"`
-	LastSeenAt         *string `json:"lastSeenAt"`
-	RecoveryGeneration string  `json:"recoveryGeneration"`
+	ProjectScope       string        `json:"projectScope,omitempty"`
+	Destinations       []Destination `json:"destinations,omitempty"`
+	LocalAgentID       string        `json:"localAgentId"`
+	Name               string        `json:"name"`
+	Scopes             []Scope       `json:"scopes"`
+	CreatedAt          string        `json:"createdAt"`
+	ExpiresAt          string        `json:"expiresAt"`
+	RevokedAt          *string       `json:"revokedAt"`
+	LastSeenAt         *string       `json:"lastSeenAt"`
+	RecoveryGeneration string        `json:"recoveryGeneration"`
 }
+
+// Project ownership is checked by the hosted admission/grant transaction.
+// The device independently intersects its immutable exact-origin consent.
+func (a Agent) DestinationsForProject(project string) []Destination {
+	if a.ProjectScope == AllOwnedProjects {
+		return a.Destinations
+	}
+	if a.ProjectScope != "" {
+		return nil
+	}
+	for _, scope := range a.Scopes {
+		if scope.ProjectID == project {
+			return scope.Destinations
+		}
+	}
+	return nil
+}
+
 type Work struct {
 	TemplateSemanticsVersion int                 `json:"templateSemanticsVersion,omitempty"`
 	EnvironmentContext       *EnvironmentContext `json:"environmentContext,omitempty"`

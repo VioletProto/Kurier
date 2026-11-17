@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import {
   cleanup,
   fireEvent,
@@ -17,6 +18,30 @@ vi.mock("./api", async () => ({
   api: mocks,
 }));
 import { LocalAgents } from "./LocalAgents";
+function Settings({
+  onAgent,
+  disabled = false,
+}: {
+  onAgent: (a: LocalAgent | null) => void;
+  disabled?: boolean;
+}) {
+  const [current, setCurrent] = useState<LocalAgent | null>(null);
+  const changed = useCallback(
+    (a: LocalAgent | null) => {
+      setCurrent(a);
+      onAgent(a);
+    },
+    [onAgent],
+  );
+  return (
+    <LocalAgents
+      agent={current}
+      disabled={disabled}
+      onAgent={changed}
+      onSessionExpired={vi.fn()}
+    />
+  );
+}
 beforeEach(() => {
   vi.stubGlobal("localStorage", {
     length: 0,
@@ -51,20 +76,13 @@ const agent: LocalAgent = {
   lastSeenAt: null,
   recoveryGeneration: "fixture",
 };
-it("requires explicit project/destination consent and clears the one-time credential without persistence", async () => {
+it("requires explicit current/future-project and destination consent and clears the one-time credential without persistence", async () => {
   mocks.pairAgent.mockResolvedValue({
     agent,
     token: "disposable-one-time-capability",
   });
   const changed = vi.fn();
-  const view = render(
-    <LocalAgents
-      projectId="project"
-      disabled={false}
-      onAgent={changed}
-      onSessionExpired={vi.fn()}
-    />,
-  );
+  const view = render(<Settings disabled={false} onAgent={changed} />);
   expect(
     (
       screen.getByRole("button", {
@@ -74,14 +92,21 @@ it("requires explicit project/destination consent and clears the one-time creden
   ).toBe(true);
   fireEvent.click(
     screen.getByLabelText(
-      "I authorize this project and these exact destinations for the named device.",
+      "I authorize all my current and future projects to use these exact destinations on the named device.",
     ),
   );
   fireEvent.click(
     screen.getByRole("button", { name: "Create agent credential" }),
   );
   await screen.findByLabelText("One-time agent token");
-  expect(mocks.pairAgent.mock.calls[0][1].scopes[0].projectId).toBe("project");
+  expect(mocks.pairAgent.mock.calls[0][1]).toEqual({
+    name: "My local agent",
+    projectScope: "all_owned_projects",
+    scopes: [],
+    destinations: [
+      { origin: "http://localhost:3000", addressClass: "loopback" },
+    ],
+  });
   expect(localStorage.length).toBe(0);
   expect(sessionStorage.length).toBe(0);
   fireEvent.click(screen.getByRole("button", { name: "Close token display" }));
@@ -92,17 +117,10 @@ it("requires explicit project/destination consent and clears the one-time creden
 it("handles lost issuance response by refresh and deliberate revoke instead of another credential", async () => {
   mocks.pairAgent.mockRejectedValue(new UncertainWrite());
   mocks.currentAgent.mockResolvedValue(agent);
-  render(
-    <LocalAgents
-      projectId="project"
-      disabled={false}
-      onAgent={vi.fn()}
-      onSessionExpired={vi.fn()}
-    />,
-  );
+  render(<Settings disabled={false} onAgent={vi.fn()} />);
   fireEvent.click(
     screen.getByLabelText(
-      "I authorize this project and these exact destinations for the named device.",
+      "I authorize all my current and future projects to use these exact destinations on the named device.",
     ),
   );
   fireEvent.click(
@@ -134,7 +152,7 @@ it("handles lost issuance response by refresh and deliberate revoke instead of a
     ),
   );
 });
-it("discards a late pairing response after project switch", async () => {
+it("discards a late pairing response after leaving settings", async () => {
   let complete!: (value: unknown) => void;
   mocks.pairAgent.mockImplementation(
     () =>
@@ -143,33 +161,19 @@ it("discards a late pairing response after project switch", async () => {
       }),
   );
   const changed = vi.fn();
-  const view = render(
-    <LocalAgents
-      projectId="project"
-      disabled={false}
-      onAgent={changed}
-      onSessionExpired={vi.fn()}
-    />,
-  );
+  const view = render(<Settings disabled={false} onAgent={changed} />);
   fireEvent.click(
     screen.getByLabelText(
-      "I authorize this project and these exact destinations for the named device.",
+      "I authorize all my current and future projects to use these exact destinations on the named device.",
     ),
   );
   fireEvent.click(
     screen.getByRole("button", { name: "Create agent credential" }),
   );
-  view.rerender(
-    <LocalAgents
-      projectId="other"
-      disabled={false}
-      onAgent={changed}
-      onSessionExpired={vi.fn()}
-    />,
-  );
+  view.rerender(<Settings disabled={true} onAgent={changed} />);
   complete({ agent, token: "late-disposable-capability" });
   await waitFor(() =>
     expect(screen.queryByLabelText("One-time agent token")).toBeNull(),
   );
-  expect(changed.mock.calls).toEqual([[null], [null]]);
+  expect(changed).not.toHaveBeenCalled();
 });
