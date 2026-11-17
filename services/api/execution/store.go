@@ -95,25 +95,27 @@ type row struct {
 
 	CandidateCompletedAt string `dynamodbav:"candidateCompletedAt,omitempty"`
 
-	LocalAgentExecutionsSchemaVersion int     `dynamodbav:"localAgentExecutionsSchemaVersion,omitempty"`
-	LocalAgentID                      string  `dynamodbav:"localAgentId,omitempty"`
-	Target                            string  `dynamodbav:"target,omitempty"`
-	Name                              string  `dynamodbav:"name,omitempty"`
-	Scopes                            []Scope `dynamodbav:"scopes,omitempty"`
-	TokenHash                         string  `dynamodbav:"tokenHash,omitempty"`
-	ActiveJob                         string  `dynamodbav:"activeJob,omitempty"`
-	ActiveProject                     string  `dynamodbav:"activeProject,omitempty"`
-	CreatedAt                         string  `dynamodbav:"createdAt,omitempty"`
-	RevokedAt                         *string `dynamodbav:"revokedAt,omitempty"`
-	LastSeenAt                        *string `dynamodbav:"lastSeenAt,omitempty"`
-	NonceHash                         string  `dynamodbav:"nonceHash,omitempty"`
-	ExecuteNotAfter                   string  `dynamodbav:"executeNotAfter,omitempty"`
-	CandidateDigest                   string  `dynamodbav:"candidateDigest,omitempty"`
-	CandidateTicket                   string  `dynamodbav:"candidateTicket,omitempty"`
-	AcceptedAt                        string  `dynamodbav:"acceptedAt,omitempty"`
-	HMACKeyID                         string  `dynamodbav:"hmacKeyId,omitempty"`
-	CanonicalizationVersion           int     `dynamodbav:"canonicalizationVersion,omitempty"`
-	RecoveryWriter                    bool    `dynamodbav:"recoveryWriter,omitempty"`
+	LocalAgentExecutionsSchemaVersion int           `dynamodbav:"localAgentExecutionsSchemaVersion,omitempty"`
+	LocalAgentID                      string        `dynamodbav:"localAgentId,omitempty"`
+	Target                            string        `dynamodbav:"target,omitempty"`
+	Name                              string        `dynamodbav:"name,omitempty"`
+	Scopes                            []Scope       `dynamodbav:"scopes,omitempty"`
+	ProjectScope                      string        `dynamodbav:"projectScope,omitempty"`
+	Destinations                      []Destination `dynamodbav:"destinations,omitempty"`
+	TokenHash                         string        `dynamodbav:"tokenHash,omitempty"`
+	ActiveJob                         string        `dynamodbav:"activeJob,omitempty"`
+	ActiveProject                     string        `dynamodbav:"activeProject,omitempty"`
+	CreatedAt                         string        `dynamodbav:"createdAt,omitempty"`
+	RevokedAt                         *string       `dynamodbav:"revokedAt,omitempty"`
+	LastSeenAt                        *string       `dynamodbav:"lastSeenAt,omitempty"`
+	NonceHash                         string        `dynamodbav:"nonceHash,omitempty"`
+	ExecuteNotAfter                   string        `dynamodbav:"executeNotAfter,omitempty"`
+	CandidateDigest                   string        `dynamodbav:"candidateDigest,omitempty"`
+	CandidateTicket                   string        `dynamodbav:"candidateTicket,omitempty"`
+	AcceptedAt                        string        `dynamodbav:"acceptedAt,omitempty"`
+	HMACKeyID                         string        `dynamodbav:"hmacKeyId,omitempty"`
+	CanonicalizationVersion           int           `dynamodbav:"canonicalizationVersion,omitempty"`
+	RecoveryWriter                    bool          `dynamodbav:"recoveryWriter,omitempty"`
 
 	PK                            string         `dynamodbav:"PK"`
 	SK                            string         `dynamodbav:"SK"`
@@ -763,7 +765,7 @@ func (s *Service) Submit(ctx context.Context, owner, project, source, key string
 		j.SchemaVersion = 2
 		j.Target = "local"
 		j.LocalAgentID = agent.LocalAgentID
-		j.DPK = agentQueue(agent.LocalAgentID, project)
+		j.DPK = agentQueueFor(agent, project)
 		j.DSK = r.SubmittedAt + "#" + job
 		out = row{PK: p.PK, SK: "LOCALWAIT#" + job, Kind: "executionLocalWait", SchemaVersion: 1, ProjectID: project, OwnerID: owner, ExecutionID: execution, JobID: job, LocalAgentID: agent.LocalAgentID, RecoveryGeneration: stage.RecoveryGeneration, DPK: dueShard(project), DSK: stamp(now.Add(10*time.Minute)) + "#" + job}
 	}

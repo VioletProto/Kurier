@@ -112,10 +112,11 @@ These are separate setup steps; only the final `serve` process is launched by Co
    For the local option, open `http://localhost:5173`. If already running, leave that terminal running
    and refresh the browser so it uses the current UI; do not start a second copy. This local frontend connects to the deployed development API.
 
-3. **In the browser**, sign in and select the owned project you want Codex to
-   inspect. Open **Read-only MCP access**, click **Refresh MCP status**, review
-   the project scope/30-day disclosure, check consent and click **Create MCP
-   credential**. The token appears once. If an active credential already exists
+3. **In the browser**, sign in and open **Settings → MCP connection** (see
+   [the Settings continuation](connection-settings.md) for delivery status).
+   Click **Refresh MCP status**, choose selected projects or all current/future
+   projects, review the scope/30-day disclosure, check consent and click
+   **Create MCP credential**. The token appears once. If an active credential already exists
    and its token is lost, revoke it before creating another. Do not copy a browser
    JWT or local-agent credential instead.
 

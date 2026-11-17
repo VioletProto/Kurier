@@ -1,5 +1,10 @@
 # Local-agent execution: startup, validation and deployment review
 
+The [Kurier Settings continuation](connection-settings.md) moves pairing out of
+project tabs and introduces one agent for all current/future owned projects.
+Its API/frontend release is deployed; use the updated CLI for account pairing.
+The linked continuation records its separate hosted tests and cleanup.
+
 Davian accepted [the contract](../architecture/local-agent-execution-contract.md)
 at `585d5b3` on 2026-10-13 and authorized implementation, API-contract
 synchronization, meaningful local tests and an AWS preview. Davian subsequently
@@ -30,9 +35,11 @@ go -C services/local-agent build -o /tmp/kurier-agent .
 ```
 
 1. Open https://d2kpq905qyh9zg.cloudfront.net (or start the local React UI
-   with `npm run dev:cloud`) and sign in through Cognito. Open an owned project's execution panel.
+   with `npm run dev:cloud`) and sign in through Cognito. With the Settings
+   continuation deployed, open Kurier **Settings → Local agent pairing**.
 2. Refresh pairing status. Choose the device name, loopback/private address class
-   and exact origins for this project, and explicitly approve their scope.
+   and exact origins for all current/future owned projects, and explicitly
+   approve that scope.
    Create the credential and enter its one-time token into the CLI hidden prompt.
    The browser token display closes without adding it to browser storage.
 3. Run against the public development API origin, confirmed from SST outputs:

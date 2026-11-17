@@ -7,6 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"golang.org/x/term"
 	"io"
 	"os"
@@ -107,6 +108,9 @@ func command(args []string, input *os.File, out io.Writer) error {
 	}
 	safe, _ := json.Marshal(c.agent)
 	fmt.Fprintf(out, "Agent scope and expiry: %s\n", safe)
+	if c.agent.ProjectScope == runner.AllOwnedProjects {
+		fmt.Fprintln(out, "This pairing covers all current and future owned projects, limited to the approved exact services.")
+	}
 	if operation == "status" {
 		return nil
 	}

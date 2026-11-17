@@ -1,0 +1,232 @@
+{
+  "sourceCommit": "924df0757cbc5b7b179fc22b7de4e34591a5402f",
+  "stage": "dev-api",
+  "region": "us-east-2",
+  "account": "747336059622",
+  "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+  "releaseId": "62262dd1b88c874339a06904a45a6e37076b4b10bc7af2e53e77aa400c3d2924",
+  "targetOrder": ["UsersProjectsApi", "EmptyProjectCleanup", "FrontendWeb"],
+  "plans": {
+    "UsersProjectsApi": [
+      {
+        "name": "UsersProjectsApiCode",
+        "op": "create-replacement",
+        "properties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "UsersProjectsApiCode",
+        "op": "replace",
+        "properties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "UsersProjectsApiFunction",
+        "op": "update",
+        "properties": ["lastModified", "s3Key"]
+      },
+      {
+        "name": "LocalAgentAccountPoll",
+        "op": "create",
+        "properties": []
+      },
+      {
+        "name": "UsersProjectsApiCode",
+        "op": "delete-replaced",
+        "properties": []
+      }
+    ],
+    "EmptyProjectCleanup": [
+      {
+        "name": "EmptyProjectCleanupCode",
+        "op": "create-replacement",
+        "properties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "EmptyProjectCleanupCode",
+        "op": "replace",
+        "properties": ["key", "source", "versionId"]
+      },
+      {
+        "name": "EmptyProjectCleanupFunction",
+        "op": "update",
+        "properties": ["lastModified", "s3Key"]
+      },
+      {
+        "name": "EmptyProjectCleanupCode",
+        "op": "delete-replaced",
+        "properties": []
+      }
+    ],
+    "FrontendWeb": [
+      {
+        "name": "FrontendWebKvKeys.sst.aws.KvKeys",
+        "op": "update",
+        "properties": [
+          "entries[\"/assets/index-CJkaSXxC.css\"]",
+          "entries[\"/assets/index-CLl_At-K.js\"]",
+          "entries[\"/assets/index-DBfg9noZ.js\"]",
+          "entries[\"/assets/index-DCgCoz8k.css\"]"
+        ]
+      },
+      {
+        "name": "FrontendWebAssetFiles.sst.aws.BucketFiles",
+        "op": "update",
+        "properties": [
+          "files[0].contentType",
+          "files[0].hash",
+          "files[0].key",
+          "files[0].source",
+          "files[1].contentType",
+          "files[1].hash",
+          "files[1].key",
+          "files[1].source",
+          "files[2].source",
+          "files[3].hash",
+          "files[3].source",
+          "files[4].hash",
+          "files[4].source",
+          "files[5].source",
+          "files[6].key",
+          "files[6].source",
+          "files[7].hash",
+          "files[7].key",
+          "files[7].source",
+          "files[8].hash",
+          "files[8].key",
+          "files[8].source",
+          "files[9].key",
+          "files[9].source"
+        ]
+      },
+      {
+        "name": "FrontendWebInvalidation.sst.aws.DistributionInvalidation",
+        "op": "update",
+        "properties": ["version"]
+      }
+    ]
+  },
+  "preservation": {
+    "checkedAt": "2026-11-17T00:37:31.796Z",
+    "account": "747336059622",
+    "region": "us-east-2",
+    "stage": "dev-api",
+    "bootstrapUnchanged": true,
+    "markerUnchanged": true,
+    "runtimeIamConfigurationControlsUnchanged": true,
+    "unrelatedFunctionPackagesUnchanged": true,
+    "apiAndCleanupPackagesVerified": true,
+    "accountPollRouteVerified": true,
+    "brokerUnchanged": true,
+    "distributionConfigurationUnchanged": true,
+    "distributionDeployed": true,
+    "invalidationsComplete": true
+  },
+  "http": {
+    "checkedAt": "2026-11-17T00:37:06.958Z",
+    "siteUrl": "https://d2kpq905qyh9zg.cloudfront.net",
+    "releaseId": "62262dd1b88c874339a06904a45a6e37076b4b10bc7af2e53e77aa400c3d2924",
+    "genuineAwsHttp": true,
+    "privateS3Denied": true,
+    "signedCdnAssetAccess": true,
+    "exactHostedAndLocalCors": true,
+    "foreignOriginsDenied": true,
+    "securityHeadersAndCsp": true,
+    "spaDeepLinks": true,
+    "missingFilesAndApi404": true,
+    "httpRedirect": true,
+    "appFiles": [
+      {
+        "path": "404.html",
+        "status": 200,
+        "sha256": "e68178d54b2060c92f6a6dbc170f3681727003b011af79f12dd6e3a1e75a4c21",
+        "contentType": "text/html;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "assets/index-CLl_At-K.js",
+        "status": 200,
+        "sha256": "b61fd362f360fb9f7a2f4371a624db990fa772d68b3b75ba5a61d59e897e238c",
+        "contentType": "text/javascript;charset=UTF-8",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "assets/index-DCgCoz8k.css",
+        "status": 200,
+        "sha256": "ef420ea31b10e32bf1bd8538b67b4a0f6e66b4fef422fd5458cbbcf717e3be3a",
+        "contentType": "text/css;charset=UTF-8",
+        "cacheControl": "public, max-age=31536000, immutable"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "sha256": "4a0093fc1d1e04cd96652617c527b2318f8e2739367fa0bd5c69adb6e676d22a",
+        "contentType": "text/html;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      },
+      {
+        "path": "startup.js",
+        "status": 200,
+        "sha256": "7134c565ad7ece24c32c3f5f208506f4f585de329698b74782f5b6e31bd95778",
+        "contentType": "text/javascript;charset=UTF-8",
+        "cacheControl": "no-store, max-age=0, must-revalidate, stale-if-error=0"
+      }
+    ],
+    "authenticatedBrowserValidated": false,
+    "disposableApplicationDataCreated": false
+  },
+  "live": {
+    "checkedAt": "2026-11-17T00:37:05.577Z",
+    "sourceCommit": "924df0757cbc5b7b179fc22b7de4e34591a5402f",
+    "genuineHostedChromium": true,
+    "checks": [
+      "real owner Cognito SRP and browser broker sign-in",
+      "one account agent paired before any projects; updated foreground agent started",
+      "future project 1 executed once through original pairing with sanitized immutable evidence",
+      "future project 2 executed once through original pairing with sanitized immutable evidence",
+      "single Settings surface outside five project tabs; shared agent and unsaved project draft preserved",
+      "MCP issued and retained globally; one-time token cleared on Settings exit",
+      "real foreign-owned project denied to account agent and omitted from MCP discovery",
+      "unapproved exact destination rejected before dispatch",
+      "Settings independently revoked agent and MCP; both later credentials denied",
+      "sign-out/reload clears private surfaces and persistence; agent logs contain no test secrets"
+    ],
+    "cleanup": {
+      "projectsTombstoneOnly": true,
+      "protectedAndEvidenceEmpty": true,
+      "identitiesRemoved": true,
+      "nonrefundableNumericUsageRetained": true
+    },
+    "targetSendCount": 2,
+    "agentId": "af19c93f-b0b9-4ac7-a443-251cc4379a90"
+  },
+  "packageHashes": {
+    "UsersProjectsApi": "6NIbHYFeJm5AdoonOBUVdUxP3ggbo/3BjVaXxczcDq0=",
+    "EmptyProjectCleanup": "6NIbHYFeJm5AdoonOBUVdUxP3ggbo/3BjVaXxczcDq0=",
+    "CloudExecutionWorker": "oPjMi8P24hasQBAfNA+4rvS0YdqG2DAzHhds4+ko1hY=",
+    "ExecutionControlledEndpoint": "oPjMi8P24hasQBAfNA+4rvS0YdqG2DAzHhds4+ko1hY="
+  },
+  "agentBuild": {
+    "path": ".build/local-agent/kurier-agent",
+    "platform": "linux/amd64",
+    "sourceCommit": "924df0757cbc5b7b179fc22b7de4e34591a5402f",
+    "dirty": false,
+    "sha256": "899d4872d55ba0df50a28ba38a3624a3ee396bba3bf4c8afe2e9fd1f8bb7c417"
+  },
+  "disposableProjects": [
+    {
+      "id": "68a364c2-49f0-4117-96d7-a2a61f091836",
+      "owner": "bc526400-7e73-4916-b974-02ca019f42d5",
+      "cleaned": true
+    },
+    {
+      "id": "a5c874ce-d2ec-46cd-ae4b-8356f099804d",
+      "owner": "bc526400-7e73-4916-b974-02ca019f42d5",
+      "cleaned": true
+    },
+    {
+      "id": "21ebc470-d62d-4cf0-b74c-a836787c9c23",
+      "owner": "cadc6ae6-b710-4f22-bbe2-992150e77837",
+      "cleaned": true
+    }
+  ],
+  "deletedIdentityCount": 2
+}

@@ -3,6 +3,7 @@ package execution
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -11,7 +12,25 @@ import (
 	"time"
 )
 
-func agentQueue(a, p string) string { return "AGENT#" + a + "#PROJECT#" + p }
+func agentQueue(a, p string) string {
+	if p == "" {
+		return "AGENT#" + a
+	}
+	return "AGENT#" + a + "#PROJECT#" + p
+}
+func agentQueueFor(a row, project string) string {
+	if a.ProjectScope == runner.AllOwnedProjects {
+		project = ""
+	}
+	return agentQueue(a.LocalAgentID, project)
+}
+func agentReadGuards(s *Service, stage, p row, actions ...dt.TransactWriteItem) []dt.TransactWriteItem {
+	guards := []dt.TransactWriteItem{s.stageGuard(stage)}
+	if p.ProjectID != "" {
+		guards = append(guards, s.projectGuard(p, "active"))
+	}
+	return append(guards, actions...)
+}
 func newWork(j row, p Plan, values map[string]string, nonce string) *runner.Work {
 	w := &runner.Work{SchemaVersion: 1, ProjectID: j.ProjectID, JobID: j.JobID, ExecutionID: j.ExecutionID, LocalAgentID: j.LocalAgentID, RecoveryGeneration: j.RecoveryGeneration, LeaseID: j.LeaseID, Fence: j.Fence, Nonce: nonce, DispatchIntentAt: j.DispatchIntentAt, ExecuteNotAfter: j.ExecuteNotAfter, Deadline: j.Deadline, Plan: p, Destination: *p.Destination}
 	if p.TemplateSnapshot != nil {
@@ -49,21 +68,19 @@ func (s *Service) PollAgent(ctx context.Context, token, project string) (runner.
 	if e != nil {
 		return response, e
 	}
-	if !uuidPattern.MatchString(project) {
-		return response, failure(404, "not_found")
-	}
-	scoped := false
-	for _, scope := range a.Scopes {
-		if scope.ProjectID == project {
-			scoped = true
+	var p row
+	if project == "" {
+		if a.ProjectScope != runner.AllOwnedProjects {
+			return response, failure(404, "not_found")
 		}
-	}
-	if !scoped {
-		return response, failure(404, "not_found")
-	}
-	p, e := s.project(ctx, a.OwnerID, project)
-	if e != nil {
-		return response, e
+	} else {
+		if !agentAllowsProject(a, project) {
+			return response, failure(404, "not_found")
+		}
+		p, e = s.project(ctx, a.OwnerID, project)
+		if e != nil {
+			return response, e
+		}
 	}
 	if e = s.rate(ctx, a.OwnerID, "poll#"+a.LocalAgentID, s.now().UTC().Format("2006-01-02T15:04:05"), 2); e != nil {
 		return response, e
@@ -84,7 +101,7 @@ func (s *Service) PollAgent(ctx context.Context, token, project string) (runner.
 	}
 	var start map[string]dt.AttributeValue
 	for page := 0; page < 5; page++ {
-		out, e := s.DB.Query(ctx, &dynamodb.QueryInput{TableName: &s.Table, IndexName: aws.String("GSI2"), KeyConditionExpression: aws.String("DPK = :pk"), ExpressionAttributeValues: map[string]dt.AttributeValue{":pk": str(agentQueue(a.LocalAgentID, project))}, ExclusiveStartKey: start, Limit: aws.Int32(20)})
+		out, e := s.DB.Query(ctx, &dynamodb.QueryInput{TableName: &s.Table, IndexName: aws.String("GSI2"), KeyConditionExpression: aws.String("DPK = :pk"), ExpressionAttributeValues: map[string]dt.AttributeValue{":pk": str(agentQueueFor(a, project))}, ExclusiveStartKey: start, Limit: aws.Int32(20)})
 		if e != nil {
 			return response, safeError()
 		}
@@ -100,8 +117,19 @@ func (s *Service) PollAgent(ctx context.Context, token, project string) (runner.
 			if e != nil {
 				return response, e
 			}
-			if j.ProjectID != project || j.OwnerID != a.OwnerID || j.LocalAgentID != a.LocalAgentID || j.Target != "local" || j.State != "queued" || j.RecoveryGeneration != stage.RecoveryGeneration {
+			if (project != "" && j.ProjectID != project) || j.OwnerID != a.OwnerID || j.LocalAgentID != a.LocalAgentID || j.Target != "local" || j.State != "queued" || j.RecoveryGeneration != stage.RecoveryGeneration {
 				continue
+			}
+			// The account queue is discovery only. Strong ownership/project reads
+			// and the existing final transaction still authorize every grant.
+			project := j.ProjectID
+			p, e := s.project(ctx, a.OwnerID, project)
+			if e != nil {
+				var denied *Error
+				if errors.As(e, &denied) && denied.Status == 404 {
+					continue
+				}
+				return response, e
 			}
 			submitted, e := time.Parse(time.RFC3339Nano, j.SubmittedAt)
 			if e != nil {
@@ -237,25 +265,8 @@ func (s *Service) PollAgent(ctx context.Context, token, project string) (runner.
 			break
 		}
 	}
-	// Presence updates are bounded and cannot overwrite a concurrently occupied slot.
-	if a.LastSeenAt == nil || *a.LastSeenAt < stamp(s.now().Add(-time.Minute)) {
-		a.LastSeenAt = pointer(stamp(s.now()))
-		a.Version++
-		put, e := s.put(s.Table, a, false)
-		if e != nil {
-			return response, e
-		}
-		user, e := s.userGuard(ctx, a.OwnerID)
-		if e != nil {
-			return response, e
-		}
-		if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), user, put}); e != nil {
-			return response, safeError()
-		}
-	} else {
-		if e = s.coherentAgentRead(ctx, stage, p, a); e != nil {
-			return response, e
-		}
+	if e = s.recordAgentPresence(ctx, stage, p, a); e != nil {
+		return response, e
 	}
 	response.ServerTime = stamp(s.now())
 	return response, nil
@@ -265,7 +276,7 @@ func (s *Service) coherentAgentRead(ctx context.Context, stage, p, a row) error 
 	if e != nil {
 		return e
 	}
-	if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), user, s.rowGuard(a)}); e != nil {
+	if e = s.transact(ctx, agentReadGuards(s, stage, p, user, s.rowGuard(a))); e != nil {
 		return safeError()
 	}
 	return nil
@@ -413,7 +424,7 @@ func (s *Service) recordAgentPresence(ctx context.Context, stage, p, a row) erro
 	if e != nil {
 		return e
 	}
-	if e = s.transact(ctx, []dt.TransactWriteItem{s.stageGuard(stage), s.projectGuard(p, "active"), user, put}); e != nil {
+	if e = s.transact(ctx, agentReadGuards(s, stage, p, user, put)); e != nil {
 		return safeError()
 	}
 	return nil

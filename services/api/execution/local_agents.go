@@ -22,8 +22,10 @@ type Agent = runner.Agent
 type Scope = runner.Scope
 type Destination = runner.Destination
 type PairInput struct {
-	Name   string  `json:"name"`
-	Scopes []Scope `json:"scopes"`
+	ProjectScope string        `json:"projectScope,omitempty"`
+	Destinations []Destination `json:"destinations,omitempty"`
+	Name         string        `json:"name"`
+	Scopes       []Scope       `json:"scopes"`
 }
 type PairResponse struct {
 	Agent Agent   `json:"agent"`
@@ -34,7 +36,7 @@ func tokenHash(v string) string { h := sha256.Sum256([]byte(v)); return hex.Enco
 
 // Future/unknown credential fields cannot be silently discarded by a CAS write.
 func knownAgent(item map[string]dt.AttributeValue, r row) bool {
-	if r.SchemaVersion != 1 || r.Capabilities != nil && !r.Capabilities.Valid() {
+	if (r.SchemaVersion != 1 && !(r.Kind == "localAgentCredential" && r.SchemaVersion == 2 && r.ProjectScope == runner.AllOwnedProjects)) || r.Capabilities != nil && !r.Capabilities.Valid() {
 		return false
 	}
 	encoded, e := attributevalue.MarshalMap(r)
@@ -56,7 +58,22 @@ func knownAgent(item map[string]dt.AttributeValue, r row) bool {
 	case "localAgentIssuance":
 		return strings.HasPrefix(r.PK, "U#") && strings.HasPrefix(r.SK, "AGENTISSUE#") && uuidPattern.MatchString(r.LocalAgentID) && len(r.InputDigest) == 64 && r.ExpiresAt != ""
 	case "localAgentCredential":
-		if r.PK != "U#"+r.OwnerID || r.SK != "CRED#"+r.LocalAgentID || !uuidPattern.MatchString(r.LocalAgentID) || len(r.TokenHash) != 64 || r.RecoveryGeneration == "" || r.ExpiresAt == "" || len(r.Scopes) > 10 || r.State != "active" && r.State != "revoked" || r.State == "active" && len(r.Scopes) == 0 {
+		if r.PK != "U#"+r.OwnerID || r.SK != "CRED#"+r.LocalAgentID || !uuidPattern.MatchString(r.LocalAgentID) || len(r.TokenHash) != 64 || r.RecoveryGeneration == "" || r.ExpiresAt == "" || len(r.Scopes) > 10 || r.State != "active" && r.State != "revoked" || r.State == "active" && len(r.Scopes) == 0 && r.ProjectScope != runner.AllOwnedProjects {
+			return false
+		}
+		if r.ProjectScope != "" || len(r.Destinations) != 0 {
+			if r.SchemaVersion != 2 || r.ProjectScope != runner.AllOwnedProjects || len(r.Scopes) != 0 || len(r.Destinations) < 1 || len(r.Destinations) > 16 {
+				return false
+			}
+			seen := map[string]bool{}
+			for _, d := range r.Destinations {
+				n, e := runner.NormalizeLocalDestination(d)
+				if e != nil || n != d || seen[d.Origin] {
+					return false
+				}
+				seen[d.Origin] = true
+			}
+		} else if r.SchemaVersion != 1 {
 			return false
 		}
 		for _, scope := range r.Scopes {
@@ -85,7 +102,7 @@ func agentView(r row) Agent {
 	if r.Scopes == nil {
 		r.Scopes = []Scope{}
 	}
-	return Agent{LocalAgentID: r.LocalAgentID, Name: r.Name, Scopes: r.Scopes, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, RevokedAt: r.RevokedAt, LastSeenAt: r.LastSeenAt, RecoveryGeneration: r.RecoveryGeneration}
+	return Agent{ProjectScope: r.ProjectScope, Destinations: r.Destinations, LocalAgentID: r.LocalAgentID, Name: r.Name, Scopes: r.Scopes, CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, RevokedAt: r.RevokedAt, LastSeenAt: r.LastSeenAt, RecoveryGeneration: r.RecoveryGeneration}
 }
 func (s *Service) localStage(ctx context.Context) (row, error) {
 	stage, e := s.stage(ctx)
@@ -142,21 +159,33 @@ func (s *Service) CreateAgent(ctx context.Context, owner, key string, input Pair
 		return PairResponse{}, false, failure(400, "invalid_request")
 	}
 	input.Name = strings.TrimSpace(input.Name)
-	if utf8.RuneCountInString(input.Name) < 1 || utf8.RuneCountInString(input.Name) > 100 || strings.IndexFunc(input.Name, unicode.IsControl) >= 0 || len(input.Scopes) < 1 || len(input.Scopes) > 10 {
+	if utf8.RuneCountInString(input.Name) < 1 || utf8.RuneCountInString(input.Name) > 100 || strings.IndexFunc(input.Name, unicode.IsControl) >= 0 {
+		return PairResponse{}, false, failure(400, "invalid_request")
+	}
+	automatic := input.ProjectScope == runner.AllOwnedProjects
+	if automatic {
+		if len(input.Scopes) != 0 || len(input.Destinations) < 1 || len(input.Destinations) > 16 {
+			return PairResponse{}, false, failure(400, "invalid_request")
+		}
+		// Reuse the strict origin validation without manufacturing a project grant.
+		input.Scopes = []Scope{{Destinations: input.Destinations}}
+	} else if input.ProjectScope != "" || len(input.Destinations) != 0 || len(input.Scopes) < 1 || len(input.Scopes) > 10 {
 		return PairResponse{}, false, failure(400, "invalid_request")
 	}
 	guards := []dt.TransactWriteItem{s.stageGuard(stage), user}
 	seen := map[string]bool{}
 	for i, scope := range input.Scopes {
-		if !uuidPattern.MatchString(scope.ProjectID) || seen[scope.ProjectID] {
+		if !automatic && (!uuidPattern.MatchString(scope.ProjectID) || seen[scope.ProjectID]) {
 			return PairResponse{}, false, failure(400, "invalid_request")
 		}
 		seen[scope.ProjectID] = true
-		p, e := s.project(ctx, owner, scope.ProjectID)
-		if e != nil {
-			return PairResponse{}, false, e
+		if !automatic {
+			p, e := s.project(ctx, owner, scope.ProjectID)
+			if e != nil {
+				return PairResponse{}, false, e
+			}
+			guards = append(guards, s.projectGuard(p, "active"))
 		}
-		guards = append(guards, s.projectGuard(p, "active"))
 		if len(scope.Destinations) < 1 || len(scope.Destinations) > 16 {
 			return PairResponse{}, false, failure(400, "invalid_request")
 		}
@@ -173,7 +202,14 @@ func (s *Service) CreateAgent(ctx context.Context, owner, key string, input Pair
 			input.Scopes[i].Destinations[j] = d
 		}
 	}
+	if automatic {
+		input.Destinations = input.Scopes[0].Destinations
+		input.Scopes = nil
+	}
 	raw, _ := json.Marshal(input.Scopes)
+	if automatic {
+		raw, _ = json.Marshal(input.Destinations)
+	}
 	if len(raw) > 16*1024 {
 		return PairResponse{}, false, failure(413, "payload_too_large")
 	}
@@ -216,6 +252,11 @@ func (s *Service) CreateAgent(ctx context.Context, owner, key string, input Pair
 	token := randomToken()
 	aid := id()
 	a := row{PK: "U#" + owner, SK: "CRED#" + aid, Kind: "localAgentCredential", SchemaVersion: 1, OwnerID: owner, LocalAgentID: aid, Name: input.Name, Scopes: input.Scopes, State: "active", CreatedAt: stamp(s.now()), ExpiresAt: stamp(s.now().Add(30 * 24 * time.Hour)), RecoveryGeneration: stage.RecoveryGeneration}
+	if automatic {
+		a.SchemaVersion = 2
+		a.ProjectScope = runner.AllOwnedProjects
+		a.Destinations = input.Destinations
+	}
 	a.TokenHash = tokenHash(token)
 	slot.PK = a.PK
 	slot.SK = "AGENT#CURRENT"
@@ -354,18 +395,23 @@ func (s *Service) AgentSession(ctx context.Context, token string) (Agent, string
 	}
 	return agentView(a), stamp(s.now()), nil
 }
+func agentAllowsProject(a row, project string) bool {
+	if !uuidPattern.MatchString(project) {
+		return false
+	}
+	return len(agentView(a).DestinationsForProject(project)) != 0
+}
 func agentDestination(a row, project, raw string) (Destination, error) {
-	for _, scope := range a.Scopes {
-		if scope.ProjectID == project {
-			for _, d := range scope.Destinations {
-				if _, e := runner.ValidateLocalURL(raw, d); e == nil {
-					return d, nil
-				}
-			}
-			return Destination{}, failure(409, "local_permission_required")
+	destinations := agentView(a).DestinationsForProject(project)
+	if len(destinations) == 0 {
+		return Destination{}, failure(404, "not_found")
+	}
+	for _, d := range destinations {
+		if _, e := runner.ValidateLocalURL(raw, d); e == nil {
+			return d, nil
 		}
 	}
-	return Destination{}, failure(404, "not_found")
+	return Destination{}, failure(409, "local_permission_required")
 }
 func (s *Service) agentByID(ctx context.Context, owner, aid string) (row, error) {
 	a, e := s.get(ctx, s.Table, "U#"+owner, "CRED#"+aid)

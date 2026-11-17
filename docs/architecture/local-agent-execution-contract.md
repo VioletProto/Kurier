@@ -1,5 +1,13 @@
 # Local-agent pairing and single saved-request execution: review packet
 
+## Account-level Settings continuation — 2026-11-16
+
+Davian requested one Settings surface and explicitly chose all current/future
+projects for one paired local agent. The [connection-settings contract](connection-settings-contract.md)
+supersedes the project-tab/default fixed-project pairing behavior below for new
+credentials. Legacy credentials retain fixed scope. [Implementation and validation](../development/connection-settings.md)
+distinguish local verification from hosted deployment.
+
 ## Requested installation continuation — 2026-11-11
 
 Davian requested installation, configuration, launch and pairing after user

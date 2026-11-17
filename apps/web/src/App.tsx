@@ -6,7 +6,13 @@ import { MCPCredentials } from "./MCPCredentials";
 import { flushSync } from "react-dom";
 import { Workflows } from "./Workflows";
 import { Requests } from "./Requests";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import {
   auth,
   authConfigured,
@@ -235,7 +241,7 @@ export function App() {
             <button className="signout" onClick={() => void logout()}>
               Sign out
             </button>
-            <Projects onExpired={() => void logout(true)} />
+            <SignedInWorkspace onExpired={() => void logout(true)} />
           </>
         ) : leaving ? (
           <p role="status">Signing out…</p>
@@ -453,13 +459,96 @@ function validName(value: string) {
   const name = value.trim();
   return name.length > 0 && [...name].length <= 100 && !/\p{Cc}/u.test(value);
 }
-function Projects({ onExpired }: { onExpired: () => void }) {
+function SignedInWorkspace({ onExpired }: { onExpired: () => void }) {
+  const [view, setView] = useState<"projects" | "settings">("projects");
+  const [agent, setAgent] = useState<LocalAgent | null>(null);
+  const agentGeneration = useRef(0);
+  const updateAgent = useCallback((current: LocalAgent | null) => {
+    agentGeneration.current++;
+    setAgent(current);
+  }, []);
+  const destination = useRef<HTMLElement>(null);
+  const previousView = useRef(view);
+  useEffect(() => {
+    if (previousView.current !== view) destination.current?.focus();
+    previousView.current = view;
+  }, [view]);
+  useEffect(() => {
+    const controller = new AbortController();
+    const generation = agentGeneration.current;
+    void api
+      .currentAgent(controller.signal)
+      .then((current) => {
+        if (
+          !controller.signal.aborted &&
+          generation === agentGeneration.current
+        )
+          setAgent(current);
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted && error instanceof SessionExpired)
+          onExpired();
+      });
+    return () => controller.abort();
+    // The workspace is replaced when the authenticated session ends.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <>
+      <nav aria-label="Kurier navigation" className="workspace-tabs">
+        <button
+          aria-current={view === "projects" ? "page" : undefined}
+          onClick={() => setView("projects")}
+        >
+          Projects
+        </button>
+        <button
+          aria-current={view === "settings" ? "page" : undefined}
+          onClick={() => setView("settings")}
+        >
+          Settings
+        </button>
+      </nav>
+      <section
+        hidden={view !== "projects"}
+        aria-label="Projects"
+        tabIndex={-1}
+        ref={view === "projects" ? destination : undefined}
+      >
+        <Projects onExpired={onExpired} agent={agent} />
+      </section>
+      {view === "settings" && (
+        <section aria-label="Kurier settings" tabIndex={-1} ref={destination}>
+          <h2>Kurier settings</h2>
+          <p>
+            Manage your coding-client connection and local execution device
+            across projects.
+          </p>
+          <MCPCredentials disabled={false} onSessionExpired={onExpired} />
+          <LocalAgents
+            agent={agent}
+            disabled={false}
+            onAgent={updateAgent}
+            onSessionExpired={onExpired}
+          />
+        </section>
+      )}
+    </>
+  );
+}
+
+function Projects({
+  onExpired,
+  agent,
+}: {
+  onExpired: () => void;
+  agent: LocalAgent | null;
+}) {
   const mounted = useRef(true);
   const [user, setUser] = useState<User>();
   const [items, setItems] = useState<Project[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [detail, setDetail] = useState<ProjectDetail>();
-  const [agent, setAgent] = useState<LocalAgent | null>(null);
   const [name, setName] = useState("");
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(true);
@@ -535,7 +624,6 @@ function Projects({ onExpired }: { onExpired: () => void }) {
   }
   async function open(id: string) {
     const d = await api.detail(id);
-    setAgent(null);
     setDetail(d);
     setDraft(d.project.name);
     setStale(false);
@@ -552,7 +640,6 @@ function Projects({ onExpired }: { onExpired: () => void }) {
     await run(async () => {
       try {
         const d = await api.create(name.trim());
-        setAgent(null);
         setDetail(d);
         setDraft(d.project.name);
         setName("");
@@ -607,9 +694,6 @@ function Projects({ onExpired }: { onExpired: () => void }) {
       )}
       <p role="status">{busy ? "Loading…" : ""}</p>
       <p role="alert">{error}</p>
-      {!detail && (
-        <MCPCredentials disabled={busy} onSessionExpired={onExpired} />
-      )}
       <div className="columns">
         <section className="panel" aria-label="Project list">
           <button disabled={busy} onClick={() => void run(refreshList)}>
@@ -733,31 +817,6 @@ function Projects({ onExpired }: { onExpired: () => void }) {
                         disabled={busy}
                         onExpired={onExpired}
                         onGateChanged={() => setStale(true)}
-                      />
-                    ),
-                  },
-                  {
-                    id: "local-agent",
-                    label: "Local agent pairing",
-                    content: (
-                      <LocalAgents
-                        projectId={detail.project.projectId}
-                        disabled={busy}
-                        onAgent={setAgent}
-                        onSessionExpired={onExpired}
-                      />
-                    ),
-                  },
-                  {
-                    id: "mcp",
-                    label: "MCP access",
-                    content: (
-                      <MCPCredentials
-                        key={"mcp-" + detail.project.projectId}
-                        projectId={detail.project.projectId}
-                        projectName={detail.project.name}
-                        disabled={busy}
-                        onSessionExpired={onExpired}
                       />
                     ),
                   },

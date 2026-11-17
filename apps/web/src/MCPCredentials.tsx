@@ -122,7 +122,7 @@ export function MCPCredentials({
       options.set(id, id === projectId ? (projectName ?? id) : id);
   return (
     <section className="panel" aria-label="Read-only MCP access">
-      <h4>MCP connection</h4>
+      <h3>MCP connection</h3>
       <p>
         One separate read credential per account, valid for 30 days. Your coding
         clients can inspect sanitized project and execution information. Signing

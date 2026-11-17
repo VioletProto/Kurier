@@ -39,12 +39,15 @@ test("read-only MCP browser consent, one-time credential, scope denial, revoke a
   await page
     .getByRole("button", { name: "MCP browser fixture", exact: true })
     .click();
-  await page.getByRole("tab", { name: "MCP access", exact: true }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
   const panel = page.getByRole("region", { name: "Read-only MCP access" });
   await expect(
     panel.getByRole("button", { name: "Create MCP credential" }),
   ).toBeDisabled();
   await panel.getByRole("button", { name: "Refresh MCP status" }).click();
+  await panel
+    .getByLabel(`MCP browser fixture (${project})`, { exact: true })
+    .check();
   await panel.getByLabel(/^I authorize/).check();
   await panel.getByRole("button", { name: "Create MCP credential" }).click();
   const token = await panel.getByLabel("One-time MCP token").innerText();

@@ -96,7 +96,8 @@ fieldset {
 .workspace-tabs button {
   margin: 0;
 }
-.workspace-tabs [aria-selected="true"] {
+.workspace-tabs [aria-selected="true"],
+.workspace-tabs [aria-current="page"] {
   background: var(--accent);
   color: var(--panel);
   border-color: var(--accent);

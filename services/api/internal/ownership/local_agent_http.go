@@ -175,7 +175,7 @@ func (a *Server) agentProtocol(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		success(w, 200, map[string]any{"agent": agent, "serverTime": serverTime})
-	case "POST /api/v1/projects/{projectId}/local-agent/poll":
+	case "POST /api/v1/local-agent/poll", "POST /api/v1/projects/{projectId}/local-agent/poll":
 		if e := emptyAgentBody(r); e != nil {
 			fail(e)
 			return

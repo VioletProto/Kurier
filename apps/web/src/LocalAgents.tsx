@@ -3,17 +3,16 @@ import { api, ApiError, UncertainWrite, type LocalAgent } from "./api";
 import { SessionExpired } from "./auth";
 
 export function LocalAgents({
-  projectId,
+  agent,
   disabled,
   onAgent,
   onSessionExpired,
 }: {
-  projectId: string;
+  agent: LocalAgent | null;
   disabled: boolean;
   onAgent: (agent: LocalAgent | null) => void;
   onSessionExpired: () => void;
 }) {
-  const [agent, setAgent] = useState<LocalAgent | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [name, setName] = useState("My local agent");
   const [origins, setOrigins] = useState("http://localhost:3000");
@@ -27,7 +26,6 @@ export function LocalAgents({
   const active = useRef<AbortController | null>(null);
   const flight = useRef(false);
   const update = (value: LocalAgent | null) => {
-    setAgent(value);
     onAgent(value);
   };
   const run = async (work: (signal: AbortSignal) => Promise<void>) => {
@@ -62,8 +60,6 @@ export function LocalAgents({
   useEffect(() => {
     active.current = new AbortController();
     flight.current = false;
-    setAgent(null);
-    onAgent(null);
     setToken(null);
     setConsent(false);
     setUnresolved(false);
@@ -72,7 +68,7 @@ export function LocalAgents({
       active.current?.abort();
       active.current = null;
     };
-  }, [projectId, disabled, onAgent]);
+  }, [disabled, onAgent]);
   const serverNow = agent?.serverTime
     ? Date.parse(agent.serverTime)
     : Date.now();
@@ -101,13 +97,14 @@ export function LocalAgents({
         : "Offline / unknown";
   return (
     <section className="panel local-agents" aria-label="Local agent pairing">
-      <h4>Local agent pairing</h4>
+      <h3>Local agent pairing</h3>
       <p>
-        One active agent per account, valid for 30 days. This device receives
-        runtime secrets and may affect every path on the exact services you
-        approve. Revocation denies further work and uploads; already delivered
-        secrets or HTTP cannot be recalled. Signing out does not revoke the
-        agent.
+        Pair one local agent for all your current and future projects, valid for
+        30 days. New projects automatically use this device's approved
+        destinations. This device receives runtime secrets and may affect every
+        path on the exact services you approve. Revocation denies further work
+        and uploads; already delivered secrets or HTTP cannot be recalled.
+        Signing out does not revoke the agent.
       </p>
       <button
         disabled={busy || disabled}
@@ -130,6 +127,20 @@ export function LocalAgents({
             Agent: {agent.name}. Expires: {agent.expiresAt}. {presence}. Last
             seen: {agent.lastSeenAt ?? "Offline / not yet seen"}.
           </p>
+          {agent.projectScope === "all_owned_projects" ? (
+            <p>
+              All current and future projects. Approved services:{" "}
+              {agent.destinations
+                ?.map((d) => `${d.origin} (${d.addressClass})`)
+                .join(", ")}
+            </p>
+          ) : (
+            <p>
+              This existing pairing has fixed project access. To use it with all
+              current and future projects, revoke it and pair once again with
+              the updated agent.
+            </p>
+          )}
           {agent.scopes.map((scope) => (
             <p key={scope.projectId}>
               Project {scope.projectId}:{" "}
@@ -156,7 +167,7 @@ export function LocalAgents({
         </div>
       )}
       <fieldset disabled={busy || disabled || unresolved || activeCredential}>
-        <legend>Pair for this project</legend>
+        <legend>Pair for all projects</legend>
         <label>
           Agent name
           <input
@@ -189,10 +200,11 @@ export function LocalAgents({
           />
         </label>
         <p>
-          No wildcards, port ranges, metadata addresses or implicit access to
-          the whole network. This scope is immutable; revoke and re-pair to
-          change it. The browser's localhost may differ from the agent's
-          machine.
+          Only these exact services are approved across your current and future
+          projects. No wildcards, port ranges, metadata addresses or implicit
+          access to the whole network. Revoke and re-pair to change
+          destinations. Use the updated local-agent executable for all-project
+          pairing. The browser's localhost may differ from the agent's machine.
         </p>
         <label>
           <input
@@ -200,8 +212,8 @@ export function LocalAgents({
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
           />
-          I authorize this project and these exact destinations for the named
-          device.
+          I authorize all my current and future projects to use these exact
+          destinations on the named device.
         </label>
         <button
           disabled={!consent}
@@ -212,16 +224,13 @@ export function LocalAgents({
                 crypto.randomUUID(),
                 {
                   name,
-                  scopes: [
-                    {
-                      projectId,
-                      destinations: origins
-                        .split("\n")
-                        .map((s) => s.trim())
-                        .filter(Boolean)
-                        .map((origin) => ({ origin, addressClass })),
-                    },
-                  ],
+                  projectScope: "all_owned_projects",
+                  scopes: [],
+                  destinations: origins
+                    .split("\n")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                    .map((origin) => ({ origin, addressClass })),
                 },
                 signal,
               );

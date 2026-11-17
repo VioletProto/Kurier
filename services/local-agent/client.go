@@ -106,16 +106,25 @@ func (c *client) session(ctx context.Context) error {
 		return e
 	}
 	a := response.Data.Agent
-	if a.LocalAgentID == "" || a.RecoveryGeneration == "" || len(a.Scopes) < 1 || len(a.Scopes) > 10 {
+	if a.LocalAgentID == "" || a.RecoveryGeneration == "" {
 		return errors.New("invalid agent scope")
 	}
-	for _, scope := range a.Scopes {
-		if scope.ProjectID == "" || len(scope.Destinations) < 1 || len(scope.Destinations) > 16 {
+	scopes := a.Scopes
+	if a.ProjectScope == runner.AllOwnedProjects {
+		if len(a.Scopes) != 0 {
+			return errors.New("invalid agent scope")
+		}
+		scopes = []runner.Scope{{Destinations: a.Destinations}}
+	} else if a.ProjectScope != "" || len(a.Destinations) != 0 || len(a.Scopes) < 1 || len(a.Scopes) > 10 {
+		return errors.New("invalid agent scope")
+	}
+	for _, scope := range scopes {
+		if (a.ProjectScope == "" && scope.ProjectID == "") || len(scope.Destinations) < 1 || len(scope.Destinations) > 16 {
 			return errors.New("invalid agent scope")
 		}
 		for _, d := range scope.Destinations {
-			normalized, e := runner.NormalizeLocalDestination(d)
-			if e != nil || normalized != d {
+			n, e := runner.NormalizeLocalDestination(d)
+			if e != nil || n != d {
 				return errors.New("invalid destination permission")
 			}
 		}
@@ -168,15 +177,12 @@ func (c *client) workAllowed(w runner.Work) bool {
 	if w.Plan.Options.TimeoutSeconds < 1 || w.Plan.Options.TimeoutSeconds > 60 {
 		return false
 	}
-	for _, scope := range c.agent.Scopes {
-		if scope.ProjectID == w.ProjectID {
-			for _, d := range scope.Destinations {
-				if d == w.Destination {
-					return true
-				}
-			}
+	for _, d := range c.agent.DestinationsForProject(w.ProjectID) {
+		if d == w.Destination {
+			return true
 		}
 	}
+
 	return false
 }
 func remaining(server, deadline string, elapsed time.Duration) (time.Duration, error) {
@@ -288,17 +294,24 @@ func wait(ctx context.Context, d time.Duration) error {
 	}
 }
 func (c *client) run(ctx context.Context, report func(string)) error {
-	interval := 10 * time.Second / time.Duration(len(c.agent.Scopes))
+	interval := 10 * time.Second
+	if c.agent.ProjectScope != runner.AllOwnedProjects {
+		interval /= time.Duration(len(c.agent.Scopes))
+	}
 	backoff := interval
 	index := 0
 	for ctx.Err() == nil {
-		project := c.agent.Scopes[index%len(c.agent.Scopes)].ProjectID
-		index++
+		path := "/api/v1/local-agent/poll"
+		if c.agent.ProjectScope != runner.AllOwnedProjects {
+			project := c.agent.Scopes[index%len(c.agent.Scopes)].ProjectID
+			index++
+			path = "/api/v1/projects/" + url.PathEscape(project) + "/local-agent/poll"
+		}
 		sent := c.now()
 		var response struct {
 			Data runner.PollResponse `json:"data"`
 		}
-		e := c.call(ctx, "POST", "/api/v1/projects/"+url.PathEscape(project)+"/local-agent/poll", nil, &response, runner.GrantLimit)
+		e := c.call(ctx, "POST", path, nil, &response, runner.GrantLimit)
 		if e == nil && response.Data.Work != nil {
 			report("Executing authorized local job.")
 			e = c.execute(ctx, *response.Data.Work, response.Data.ServerTime, sent)

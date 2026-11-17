@@ -103,7 +103,7 @@ for (const width of [320, 683, 1366]) {
     await project.press("Enter");
     const requests = page.getByRole("tab", { name: "Requests & evidence" });
     await expect(requests).toBeFocused();
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 5; i++) {
       const selected = page.getByRole("tab", { selected: true });
       await expect(selected).toBeFocused();
       await page.keyboard.press("Tab");

@@ -201,3 +201,41 @@ func TestEnvironmentGrantRequiresNegotiationAndPreservesResultIdentity(t *testin
 		t.Fatal("grant accepted mismatched frozen environment identity")
 	}
 }
+
+func TestAccountAgentUsesOneQueueAndExactOriginConsent(t *testing.T) {
+	work, a := testWork(t, "http://localhost:3000")
+	a.ProjectScope = runner.AllOwnedProjects
+	a.Destinations = a.Scopes[0].Destinations
+	a.Scopes = nil
+	c, _ := newClient("https://api.invalid", "fixture")
+	c.agent = a
+	if !c.workAllowed(work) {
+		t.Fatal("all-project consent did not permit a new project")
+	}
+	work.ProjectID = runner.NewID()
+	if !c.workAllowed(work) {
+		t.Fatal("future project requires repairing")
+	}
+	work.Destination = runner.Destination{Origin: "http://localhost:3001", AddressClass: "loopback"}
+	if c.workAllowed(work) {
+		t.Fatal("account scope expanded destination consent")
+	}
+	var polls atomic.Int32
+	hosted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" || r.URL.Path != "/api/v1/local-agent/poll" {
+			t.Error("account polling used a project-specific route")
+		}
+		polls.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": runner.PollResponse{ServerTime: time.Now().Format(time.RFC3339Nano)}})
+	}))
+	defer hosted.Close()
+	c.origin = hosted.URL
+	c.http = hosted.Client()
+	ctx, cancel := context.WithCancel(context.Background())
+	c.pause = func(context.Context, time.Duration) error { cancel(); return context.Canceled }
+	_ = c.run(ctx, func(string) {})
+	if polls.Load() != 1 {
+		t.Fatal("account queue was not polled once")
+	}
+}

@@ -508,6 +508,12 @@ export async function createDevelopmentApi() {
   }
   if (!openapiIntegration)
     throw new Error("The existing API integration is required.");
+  new aws.apigatewayv2.Route("LocalAgentAccountPoll", {
+    apiId: api.nodes.api.id,
+    routeKey: "POST /api/v1/local-agent/poll",
+    authorizationType: "NONE",
+    target: $interpolate`integrations/${openapiIntegration}`,
+  });
   // Every owner endpoint uses this same Go handler and API-scoped invoke grant.
   // Reuse its existing integration: SST creates one duplicate Lambda permission
   // per route, which exceeds Lambda's 20 KiB policy limit as the API grows.

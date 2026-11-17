@@ -13,8 +13,9 @@ mode permits zero projects; there are no exclusions or additional credential
 slots. Every read checks current ownership, credential/version/expiry/recovery,
 retention and conditioned pre-data audit. Local-agent authority is separate.
 
-Open **MCP access** in a project or use **MCP connection** before selecting a
-project. Refresh status, choose the mode, review access and confirm consent.
+Open Kurier **Settings**, then **MCP connection**. Connection management is
+account-level; the [Settings continuation](connection-settings.md) removes its
+former project-tab and project-list entry points. Refresh status, choose the mode, review access and confirm consent.
 Automatic mode requires a second unchecked future-project confirmation. Create
 a credential, transfer its one-time token through `kurier-mcp pair`'s hidden
 prompt and register the executable once as described in [the setup guide](read-only-mcp.md).
