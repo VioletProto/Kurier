@@ -2,11 +2,12 @@ package execution
 
 import (
 	"context"
-	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	runner "github.com/VioletProto/Kurier/services/request-runtime"
 )
 
 func fixturePlan() Plan {
@@ -17,20 +18,29 @@ func fixturePrepared(t *testing.T, h http.Handler, p Plan, v map[string]string) 
 	t.Helper()
 	server := httptest.NewServer(h)
 	t.Cleanup(server.Close)
-	original, _ := url.Parse(p.Configuration.URL)
-	local, _ := url.Parse(server.URL)
-	original.Host = local.Host
-	original.Scheme = local.Scheme
-	p.Configuration.URL = original.String()
-	dest, e := runner.NormalizeLocalDestination(runner.Destination{Origin: server.URL, AddressClass: "loopback"})
-	if e != nil {
-		t.Fatal(e)
-	}
-	prepared, e := runner.PrepareLocal(context.Background(), p, v, dest)
+	prepared, e := prepareAtFixtureURL(context.Background(), server.URL, p, v)
 	if e != nil {
 		t.Fatal(e)
 	}
 	return prepared
+}
+
+func prepareAtFixtureURL(ctx context.Context, address string, p Plan, v map[string]string) (*Prepared, error) {
+	dest, e := runner.NormalizeLocalDestination(runner.Destination{Origin: address, AddressClass: "loopback"})
+	if e != nil {
+		return nil, e
+	}
+	original, e := url.Parse(p.Configuration.URL)
+	if e != nil {
+		return nil, e
+	}
+	local, e := url.Parse(address)
+	if e != nil {
+		return nil, e
+	}
+	original.Host, original.Scheme = local.Host, local.Scheme
+	p.Configuration.URL = original.String()
+	return runner.PrepareLocal(ctx, p, v, dest)
 }
 
 type auditSanitizer struct{ values map[string]string }

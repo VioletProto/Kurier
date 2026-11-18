@@ -157,15 +157,23 @@ type protocolFixture struct {
 	calls                   atomic.Int32
 }
 
-func newProtocolFixture(t *testing.T) *protocolFixture {
+func openProtocolFixture(t *testing.T, table, protected string, now time.Time) *protocolFixture {
 	t.Helper()
 	endpoint := os.Getenv("KURIER_DYNAMODB_TEST_ENDPOINT")
 	if endpoint != "http://127.0.0.1:8000" {
 		t.Fatal("integration requires explicit controlled DynamoDB Local endpoint")
 	}
 	client := dynamodb.New(dynamodb.Options{Region: "us-east-2", BaseEndpoint: &endpoint, Credentials: credentials.NewStaticCredentialsProvider("local", "local", ""), Retryer: aws.NopRetryer{}})
-	f := &protocolFixture{db: &faultDB{Client: client}, objects: &fixtureObjects{data: map[string][]byte{}}, queue: &fixtureQueue{}, owner: id(), project: id(), request: id(), now: time.Now().UTC()}
-	f.s = &Service{DB: f.db, Objects: f.objects, Queue: f.queue, KMS: fixtureKMS{}, Table: "execution-test-" + id(), Protected: "execution-protected-" + id(), Bucket: "fixture", QueueURL: "fixture", KeyARN: "fixture-key", Stage: "dev-api", SigningKey: bytes.Repeat([]byte{8}, 32), Now: func() time.Time { return f.now }}
+	f := &protocolFixture{db: &faultDB{Client: client}, objects: &fixtureObjects{data: map[string][]byte{}}, queue: &fixtureQueue{}, now: now}
+	f.s = &Service{DB: f.db, Objects: f.objects, Queue: f.queue, KMS: fixtureKMS{}, Table: table, Protected: protected, Bucket: "fixture", QueueURL: "fixture", KeyARN: "fixture-key", Stage: "dev-api", SigningKey: bytes.Repeat([]byte{8}, 32), Now: func() time.Time { return f.now }}
+	return f
+}
+
+func newProtocolFixture(t *testing.T) *protocolFixture {
+	t.Helper()
+	f := openProtocolFixture(t, "execution-test-"+id(), "execution-protected-"+id(), time.Now().UTC())
+	f.owner, f.project, f.request = id(), id(), id()
+	client := f.db.Client
 	for _, table := range []string{f.s.Table, f.s.Protected} {
 		definitions := []dt.AttributeDefinition{{AttributeName: aws.String("PK"), AttributeType: dt.ScalarAttributeTypeS}, {AttributeName: aws.String("SK"), AttributeType: dt.ScalarAttributeTypeS}}
 		var indexes []dt.GlobalSecondaryIndex
