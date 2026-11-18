@@ -3,18 +3,24 @@
 package execution
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
 	runner "github.com/VioletProto/Kurier/services/request-runtime"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dt "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"net/http"
-	"strings"
-	"sync"
-	"testing"
-	"time"
 )
 
 func workflowProtocolFixture(t *testing.T) (*protocolFixture, Workflow) {
@@ -166,6 +172,109 @@ func TestIntegrationWorkflowCrashBeforeFinalizationNoReplay(t *testing.T) {
 	state, e := f.s.RunDetail(ctx, f.owner, f.project, run.WorkflowRunID)
 	if e != nil || state.State != "failed" || state.Steps[1].State != "skipped" || state.Steps[0].Summary.Outcome.Certainty != "unknown" || f.calls.Load() != 1 {
 		t.Fatal("unknown outcome replayed or advanced")
+	}
+}
+
+func TestIntegrationWorkflowWorkerProcessKillNoReplay(t *testing.T) {
+	if details := os.Getenv("KURIER_WORKFLOW_KILL_FIXTURE"); details != "" {
+		runWorkflowKillFixture(t, details)
+		return
+	}
+
+	f, wf := workflowProtocolFixture(t)
+	run := workflowRun(t, f, wf, id())
+	message := workflowMessage(f, run, 0)
+	firstCall := make(chan struct{})
+	var calls atomic.Int32
+	target := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, request *http.Request) {
+		if calls.Add(1) == 1 {
+			close(firstCall)
+			<-request.Context().Done()
+		}
+	}))
+	t.Cleanup(target.Close)
+	f.s.prepare = func(ctx context.Context, plan Plan, values map[string]string) (*Prepared, error) {
+		return prepareAtFixtureURL(ctx, target.URL, plan, values)
+	}
+	details, err := json.Marshal(workflowKillFixture{
+		Control: f.s.Table, Protected: f.s.Protected, Target: target.URL, Now: f.now, Message: message,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dispatchCtx, stopDispatch := context.WithTimeout(context.Background(), 20*time.Second)
+	defer stopDispatch()
+	child := exec.CommandContext(dispatchCtx, os.Args[0], "-test.run=^TestIntegrationWorkflowWorkerProcessKillNoReplay$")
+	child.Env = append(os.Environ(), "KURIER_WORKFLOW_KILL_FIXTURE="+string(details))
+	var output bytes.Buffer
+	child.Stdout, child.Stderr = &output, &output
+	if err = child.Start(); err != nil {
+		t.Fatal(err)
+	}
+	exited := make(chan error, 1)
+	go func() { exited <- child.Wait() }()
+	select {
+	case err = <-exited:
+		t.Fatalf("worker exited before dispatch: %v\n%s", err, &output)
+	case <-dispatchCtx.Done():
+		<-exited
+		t.Fatalf("worker did not dispatch before the deadline\n%s", &output)
+	case <-firstCall:
+		if err = child.Process.Kill(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var exitErr *exec.ExitError
+	if err = <-exited; !errors.As(err, &exitErr) || exitErr.ExitCode() != -1 {
+		t.Fatalf("expected worker process to be killed: %v\n%s", err, &output)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	state, err := f.s.RunDetail(ctx, f.owner, f.project, run.WorkflowRunID)
+	if err != nil || state.Steps[1].State != "pending" {
+		t.Fatalf("successor advanced before recovery: %v", err)
+	}
+	if _, err = f.s.get(ctx, f.s.Protected, "P#"+f.project, outputKey(run.WorkflowRunID, 0)); !missingRow(err) {
+		t.Fatalf("unexpected workflow output after kill: %v", err)
+	}
+
+	f.now = f.now.Add(3 * time.Minute)
+	for range 2 {
+		if err = f.s.Process(ctx, message); err != nil {
+			t.Fatal(err)
+		}
+	}
+	state, err = f.s.RunDetail(ctx, f.owner, f.project, run.WorkflowRunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	first := state.Steps[0]
+	if state.State != "failed" || first.State != "failed" || state.Steps[1].State != "skipped" || calls.Load() != 1 {
+		t.Fatal("worker recovery did not settle the unknown outcome without replay")
+	}
+	if first.Summary == nil || first.Summary.Outcome.Certainty != "unknown" || first.Summary.Outcome.Code == nil || *first.Summary.Outcome.Code != "execution_outcome_unknown" {
+		t.Fatal("interrupted request did not retain an unknown outcome")
+	}
+}
+
+type workflowKillFixture struct {
+	Control, Protected, Target string
+	Now                        time.Time
+	Message                    Message
+}
+
+func runWorkflowKillFixture(t *testing.T, raw string) {
+	t.Helper()
+	var details workflowKillFixture
+	if err := json.Unmarshal([]byte(raw), &details); err != nil {
+		t.Fatal(err)
+	}
+	f := openProtocolFixture(t, details.Control, details.Protected, details.Now)
+	f.s.prepare = func(ctx context.Context, plan Plan, values map[string]string) (*Prepared, error) {
+		return prepareAtFixtureURL(ctx, details.Target, plan, values)
+	}
+	if err := f.s.Process(context.Background(), details.Message); err != nil {
+		t.Fatal(err)
 	}
 }
 func TestIntegrationWorkflowLostFinalACKAndScheduling(t *testing.T) {
