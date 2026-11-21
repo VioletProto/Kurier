@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { once } from "node:events";
+import { setTimeout as delay } from "node:timers/promises";
 
 function artifactFor(platform, architecture) {
   if (architecture !== "x64") throw new Error("Unsupported architecture");
@@ -37,9 +38,9 @@ async function readThroughCodex() {
     env,
     stdio: ["pipe", "pipe", "inherit"],
   });
-  const timeout = setTimeout(() => child.kill(), 20000);
   child.stdin.on("error", () => {});
   const lines = createInterface({ input: child.stdout });
+  const timeout = setTimeout(() => lines.close(), 20000);
   const responses = lines[Symbol.asyncIterator]();
   let id = 0;
   function send(message) {
@@ -97,13 +98,31 @@ async function readThroughCodex() {
     );
   } finally {
     clearTimeout(timeout);
-    lines.close();
-    child.stdin.destroy();
     if (child.exitCode === null && child.signalCode === null) {
-      const exited = once(child, "exit");
-      child.kill();
+      const exited = once(child, "close");
+      child.stdin.end();
+      if (
+        !(await Promise.race([
+          exited.then(() => true),
+          delay(3000, false, { ref: false }),
+        ]))
+      ) {
+        if (platform === "windows") {
+          execFileSync(
+            "taskkill.exe",
+            ["/PID", String(child.pid), "/T", "/F"],
+            {
+              ...options,
+              stdio: "ignore",
+            },
+          );
+        } else {
+          child.kill();
+        }
+      }
       await exited;
     }
+    lines.close();
   }
 }
 
