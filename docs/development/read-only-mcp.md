@@ -170,6 +170,12 @@ symlinks/hardlinks and bounded content; writes are atomic. Windows persistence
 and protocol output remain unsupported and fail closed. There is no background
 installer or auto-update.
 
+The [guided setup spike](../spikes/guided-mcp-connection-setup.md#linux-and-native-windows)
+tracks prebuilt Linux and native Windows bridge feasibility. The released setup
+steps on this page apply to the current POSIX bridge. WSL2 is a Linux target
+when Codex itself runs inside WSL2. Native Windows Codex needs separate
+qualification and a Windows release asset before using the guided setup.
+
 Equivalent user-level `~/.codex/config.toml` entry:
 
 ```toml

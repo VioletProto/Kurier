@@ -86,6 +86,17 @@ discovery, authorization/cursors and MCP client setup. Coordinate with the
 separate stored-contract-results tool extension. Verify new-project discovery,
 scope narrowing, multiple connections, foreign IDs and old-client behavior.
 
+## Guided MCP setup
+
+The [setup spike](../spikes/guided-mcp-connection-setup.md) recommends a verified
+prebuilt bridge and one interactive setup command for Codex. Select the asset
+by the local Codex host's OS and architecture. Start with Linux x64 and native
+Windows x64. Verify WSL2 as a Linux host separately. Native Windows requires
+hidden console entry, private credential persistence and deadline-safe stdio
+before offering its asset in Settings. Preserve browser project consent,
+server-side revocation and the manual POSIX setup path. Track the work in
+[Trello card #51](https://trello.com/c/6zSxoiHw).
+
 ## Guided local-agent setup
 
 The [current agent contract](../architecture/local-agent-execution-contract.md)
