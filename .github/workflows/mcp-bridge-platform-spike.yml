@@ -1,0 +1,51 @@
+name: MCP bridge platform spike
+
+on:
+  push:
+    branches:
+      - spike/guided-mcp-setup
+    paths:
+      - .github/workflows/mcp-bridge-platform-spike.yml
+      - spikes/mcp-bridge-platform/**
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe on ${{ matrix.host }}
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: spikes/mcp-bridge-platform
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          cache-dependency-path: spikes/mcp-bridge-platform/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify and build the host fixture
+        run: |
+          go test ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go vet ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $binary = if ($IsWindows) { "kurier-platform-windows.exe" } else { "kurier-platform-linux" }
+          go build -o $binary .
+          exit $LASTEXITCODE
+      - name: Read the fixture through Codex
+        run: |
+          npm install --global @openai/codex@0.170.0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:KURIER_CODEX_JS = Join-Path (npm root --global) "@openai/codex/bin/codex.js"
+          node probe.mjs
+          exit $LASTEXITCODE
