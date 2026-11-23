@@ -20,6 +20,16 @@ import (
 	"time"
 )
 
+type storedCredential struct {
+	APIOrigin string `json:"apiOrigin"`
+	Token     string `json:"token"`
+}
+
+type deadlinePipe interface {
+	io.WriteCloser
+	SetWriteDeadline(time.Time) error
+}
+
 const protocolVersion = "2025-11-25"
 
 func main() {
@@ -36,6 +46,9 @@ func run(args []string) error {
 	if e != nil {
 		return e
 	}
+	if args[0] == "setup" && len(args) == 4 && args[1] == "codex" && args[2] == "--api-origin" {
+		return setupCodex(args[3], filepath.Join(home, ".config", "kurier-mcp", "credential.json"))
+	}
 	flags := flag.NewFlagSet("kurier-mcp", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("credential-file", filepath.Join(home, ".config", "kurier-mcp", "credential.json"), "private capability file")
@@ -51,13 +64,11 @@ func run(args []string) error {
 		if !validOrigin(*origin) {
 			return errors.New("trusted HTTPS API required")
 		}
-		tty, e := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+		tty, e := os.OpenFile(consoleInput, os.O_RDWR, 0)
 		if e != nil {
 			return errors.New("controlling terminal required")
 		}
-		fmt.Fprintln(tty, "Enter the browser-issued read-only MCP token (hidden):")
-		raw, e := term.ReadPassword(int(tty.Fd()))
-		tty.Close()
+		raw, e := readPairingToken(ctx, tty)
 		if e != nil {
 			return errors.New("credential input unavailable")
 		}
@@ -97,11 +108,78 @@ func run(args []string) error {
 	return serve(ctx, b, os.Stdin, os.Stdout)
 }
 
+// Restore the controlling terminal even when the platform's console read
+// stays blocked after Ctrl-C. The foreground command exits on cancellation.
+func readPairingToken(ctx context.Context, tty *os.File) ([]byte, error) {
+	fd := int(tty.Fd())
+	state, err := term.MakeRaw(fd)
+	if err != nil {
+		tty.Close()
+		return nil, err
+	}
+
+	fmt.Fprint(os.Stderr, "Enter the browser-issued read-only MCP token (hidden):\r\n")
+	type input struct {
+		raw []byte
+		err error
+	}
+	done := make(chan input)
+	go func() {
+		raw, err := readHiddenLine(tty)
+		select {
+		case done <- input{raw, err}:
+		case <-ctx.Done():
+			clear(raw)
+		}
+	}()
+	select {
+	case result := <-done:
+		term.Restore(fd, state)
+		tty.Close()
+		return result.raw, result.err
+	case <-ctx.Done():
+		_ = term.Restore(fd, state)
+		return nil, ctx.Err()
+	}
+}
+
+func readHiddenLine(reader io.Reader) ([]byte, error) {
+	var raw [44]byte
+	defer clear(raw[:])
+	var ch [1]byte
+	defer clear(ch[:])
+	n := 0
+	for {
+		if _, err := io.ReadFull(reader, ch[:]); err != nil {
+			return nil, err
+		}
+		switch ch[0] {
+		case 3, 4, 27:
+			return nil, errors.New("pairing cancelled")
+		case '\r', '\n':
+			if n != 43 {
+				return nil, errors.New("invalid credential length")
+			}
+			return append([]byte(nil), raw[:n]...), nil
+		case 8, 127:
+			if n > 0 && n < len(raw) {
+				n--
+			}
+		default:
+			if n < len(raw) {
+				raw[n] = ch[0]
+				n++
+			}
+		}
+	}
+
+}
+
 // protocolWriter sanitizes SDK diagnostics, enforces framing/ID/response bounds,
 // and observes each data result's monotonic release deadline at actual write.
 type protocolWriter struct {
 	mu        sync.Mutex
-	out       *os.File
+	out       deadlinePipe
 	deadlines map[[32]byte][]time.Time
 }
 
@@ -158,9 +236,10 @@ func (w *protocolWriter) Write(p []byte) (int, error) {
 			return 0, errors.New("output deadline unavailable")
 		}
 	}
-	_, e := w.out.Write(p)
+	n, e := w.out.Write(p)
 	_ = w.out.SetWriteDeadline(time.Time{})
-	if e != nil {
+	if e != nil || n != len(p) {
+		_ = w.out.Close()
 		return 0, errors.New("protocol output unavailable")
 	}
 	return original, nil

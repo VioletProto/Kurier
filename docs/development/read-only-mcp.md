@@ -77,7 +77,29 @@ dependency-error echoes. JSON-RPC framing/control escaping, fixed descriptions
 and closed tool/route allowlists keep upstream strings inert. Already delivered
 client bytes/transcripts cannot be recalled by revocation.
 
-## Pairing and Codex TUI setup
+## Guided setup for Codex CLI
+
+In hosted Settings, open **Connect your coding client once**. Choose the machine
+where Codex runs and copy the setup command into its terminal. Use PowerShell
+on native Windows x64 and Bash on Linux x64. Keep that terminal open while
+selecting projects and issuing a credential in Settings. Paste the token at
+the hidden prompt. Run the printed registration command, then ask a fresh
+Codex session “Which Kurier projects can I see?”
+
+The installer checks the native architecture and verifies the versioned binary
+against GitHub’s SHA-256 release digest before installing it under the current
+user’s account. Linux stores credentials in the existing private file. Native
+Windows stores them in Credential Manager under a Kurier/MCP target derived
+from the absolute profile path. Running setup again checks the saved credential
+and resumes registration. A conflicting launcher requires review in Codex.
+Keep the executable in its installed location.
+
+To disconnect, revoke access in Settings and run `codex mcp remove kurier`.
+Remove the versioned bridge directory and the private credential file or
+corresponding Windows Credential Manager entry if you also want local cleanup.
+Previously delivered evidence stays in existing client sessions.
+
+## Manual pairing and Codex TUI setup
 
 The [accepted hosting continuation](frontend-hosting.md) is deployed for
 development/demo at https://d2kpq905qyh9zg.cloudfront.net. Open that HTTPS UI
@@ -169,6 +191,12 @@ Storage validates descriptor-relative ancestors, ownership, permissions,
 symlinks/hardlinks and bounded content; writes are atomic. Windows persistence
 and protocol output remain unsupported and fail closed. There is no background
 installer or auto-update.
+
+The [guided setup spike](../spikes/guided-mcp-connection-setup.md#linux-and-native-windows)
+tracks prebuilt Linux and native Windows bridge feasibility. The released setup
+steps on this page apply to the current POSIX bridge. WSL2 is a Linux target
+when Codex itself runs inside WSL2. Native Windows Codex needs separate
+qualification and a Windows release asset before using the guided setup.
 
 Equivalent user-level `~/.codex/config.toml` entry:
 

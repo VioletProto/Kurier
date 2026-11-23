@@ -15,10 +15,7 @@ import (
 	"time"
 )
 
-type storedCredential struct {
-	APIOrigin string `json:"apiOrigin"`
-	Token     string `json:"token"`
-}
+const consoleInput = "/dev/tty"
 
 func credentialDir(path string, create bool) (int, error) {
 	bad := errors.New("unsafe credential storage")

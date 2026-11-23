@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
+
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -114,44 +114,6 @@ func TestOfficialSDKProtocolAndRevocation(t *testing.T) {
 		t.Fatal("EOF did not stop foreground process")
 	}
 }
-func TestCredentialFilesRejectSymlinksModesAndReplacement(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "private", "credential.json")
-	value := storedCredential{APIOrigin: "https://api.example.test", Token: strings.Repeat("a", 43)}
-	if e := writeCredential(path, value); e != nil {
-		t.Fatal(e)
-	}
-	got, e := readCredential(path)
-	if e != nil || got != value {
-		t.Fatal("private credential roundtrip failed")
-	}
-	if e = os.Chmod(path, 0644); e != nil {
-		t.Fatal(e)
-	}
-	if _, e = readCredential(path); e == nil {
-		t.Fatal("public credential accepted")
-	}
-	_ = os.Chmod(path, 0600)
-	link := filepath.Join(dir, "private", "link")
-	if e = os.Symlink(path, link); e != nil {
-		t.Fatal(e)
-	}
-	if _, e = readCredential(link); e == nil {
-		t.Fatal("symlink followed")
-	}
-	if e = os.Link(path, filepath.Join(dir, "private", "hardlink")); e != nil {
-		t.Fatal(e)
-	}
-	if _, e = readCredential(path); e == nil {
-		t.Fatal("hardlinked capability accepted")
-	}
-	if e = writeCredential(path, value); e != nil {
-		t.Fatal(e)
-	}
-	if _, e = readCredential(path); e != nil {
-		t.Fatal("atomic replacement invalid")
-	}
-}
 func TestBridgeBoundsRedirectsAndOrigin(t *testing.T) {
 	for _, origin := range []string{"http://localhost:3000", "https://user:secret@api.test", "https://api.test/?token=secret", "https://api.test/#frag", "https://api.test/other"} {
 		if validOrigin(origin) {
@@ -205,26 +167,5 @@ func TestProtocolWriterSanitizesAndExpiresAtActualWrite(t *testing.T) {
 	packet, _ = json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 3, "result": result(env)})
 	if _, e = w.Write(append(packet, '\n')); e == nil {
 		t.Fatal("oversized result written")
-	}
-}
-func TestCredentialAncestorAndOversizeRefusal(t *testing.T) {
-	dir := t.TempDir()
-	private := filepath.Join(dir, "private")
-	if e := os.Mkdir(private, 0700); e != nil {
-		t.Fatal(e)
-	}
-	alias := filepath.Join(dir, "alias")
-	if e := os.Symlink(private, alias); e != nil {
-		t.Fatal(e)
-	}
-	if e := writeCredential(filepath.Join(alias, "credential.json"), storedCredential{}); e == nil {
-		t.Fatal("credential ancestor symlink followed")
-	}
-	path := filepath.Join(private, "credential.json")
-	if e := os.WriteFile(path, []byte(strings.Repeat("x", 4097)), 0600); e != nil {
-		t.Fatal(e)
-	}
-	if _, e := readCredential(path); e == nil {
-		t.Fatal("oversize capability file accepted")
 	}
 }

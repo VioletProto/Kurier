@@ -235,6 +235,34 @@ A same-user coding process can read a user-readable private file; POSIX modes
 protect other users, not a malicious process running as Davian. Stronger local
 isolation/keyring-mediated access would require a separate reviewed design.
 
+### Proposed guided setup for Linux and native Windows
+
+The setup target is the OS and CPU architecture that will launch the stdio
+bridge. Settings can suggest an artifact and must allow manual selection for
+remote hosts. A local bootstrap must match the detected host and architecture
+against the supported release manifest before installing or registering. Codex
+inside WSL2 uses the Linux target. A native Windows Codex host uses the Windows
+target. Unsupported targets should show the existing manual guide where it
+applies. The bootstrap verifies artifact provenance and digest and obtains
+separate approval for local installation and client registration. Scope consent
+and one-time credential issuance remain in Settings.
+
+Use the existing private file on Linux. The proposed native Windows store is
+Credential Manager with a bounded per-user entry keyed by Kurier origin and
+local profile. Register an absolute executable path and nonsecret launch
+arguments. Windows pairing requires a real console, hidden entry and terminal
+restoration after interruption. Startup and frame writes must fail closed when
+the Windows pipe cannot enforce release timing under backpressure. Review
+short-write handling before enabling the Windows bridge for real evidence.
+
+The [platform spike](../spikes/guided-mcp-connection-setup.md#linux-and-native-windows)
+records feasibility and remaining acceptance checks. The implementation uses the profile path to locate its Windows Credential
+Manager entry and validates the stored origin during guided setup. Codex
+receives the launcher and the `serve` argument. The user explicitly runs
+the displayed registration command after pairing. Windows drains synchronous
+byte pipes in bounded nonblocking chunks and closes its writer on failure
+or deadline expiry. The existing API routes and scope checks apply.
+
 ## Proposed minimal tools and schemas
 
 All tool inputs are strict JSON objects with additionalProperties=false at

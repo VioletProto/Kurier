@@ -179,9 +179,11 @@ export function validateApiUrl(base: string): string {
     );
   return url.origin;
 }
-const base = validateApiUrl(
+export const apiOrigin = validateApiUrl(
   import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8080",
 );
+
+const base = apiOrigin;
 
 export type EnvironmentSelection = { environmentId: string; revision: number };
 export type PrimitiveValue =
