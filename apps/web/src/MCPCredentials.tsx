@@ -7,6 +7,7 @@ import {
   type MCPScope,
   type Project,
 } from "./api";
+import { MCPSetup } from "./MCPSetup";
 import { SessionExpired } from "./auth";
 
 export function MCPCredentials({
@@ -123,6 +124,7 @@ export function MCPCredentials({
   return (
     <section className="panel" aria-label="Read-only MCP access">
       <h3>MCP connection</h3>
+      <MCPSetup />
       <p>
         One separate read credential per account, valid for 30 days. Your coding
         clients can inspect sanitized project and execution information. Signing
@@ -339,7 +341,7 @@ export function MCPCredentials({
           <p>
             Shown once. Enter this token into kurier-mcp's hidden terminal
             pairing prompt. Closing this view clears it; a lost token requires
-            revoke and reissue. The private credential file can be read by other
+            revoke and reissue. The stored credential can be read by other
             processes running as you.
           </p>
           <pre aria-label="One-time MCP token">{token}</pre>
@@ -348,33 +350,7 @@ export function MCPCredentials({
           </button>
         </div>
       )}
-      <details>
-        <summary>Connect your coding client once</summary>
-        <p>
-          Use your installed kurier-mcp executable and the trusted API origin
-          shown in your setup guide. Pair using its hidden terminal prompt:
-        </p>
-        <pre>
-          kurier-mcp pair --api-origin &lt;trusted HTTPS API origin&gt;
-          --persist
-        </pre>
-        <p>
-          Inspect an existing registration with{" "}
-          <code>codex mcp get kurier</code>. If none exists, register the
-          executable once with your absolute private credential-file path:
-        </p>
-        <pre>
-          codex mcp add kurier -- /absolute/path/kurier-mcp serve
-          --credential-file /absolute/path/credential.json
-        </pre>
-        <p>
-          Start a fresh client session and call list_projects; follow its cursor
-          until null. Refresh discovery for new projects after index
-          propagation. Scope changes need no restart. Expiry, revocation or
-          token replacement requires reauthorization, pairing and a client
-          restart using the same registration.
-        </p>
-      </details>
+
       {error && <p role="alert">{error}</p>}
     </section>
   );

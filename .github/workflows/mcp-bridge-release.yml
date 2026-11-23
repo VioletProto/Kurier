@@ -1,0 +1,56 @@
+name: MCP bridge release
+
+on:
+  push:
+    branches: [spike/guided-mcp-setup]
+    tags: [mcp-v1.0.0]
+    paths:
+      - "services/mcp/**"
+      - "services/request-runtime/**"
+      - ".github/workflows/mcp-bridge-release.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: kurier-mcp-linux-x64
+          - os: windows-latest
+            asset: kurier-mcp-windows-x64.exe
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/mcp/go.mod
+          cache-dependency-path: services/mcp/go.sum
+      - working-directory: services/mcp
+        run: go test -count=1 -timeout=90s ./...
+      - working-directory: services/mcp
+        run: go vet ./...
+      - working-directory: services/mcp
+        run: go build -trimpath -o ${{ matrix.asset }} .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: services/mcp/${{ matrix.asset }}
+  publish:
+    if: github.ref == 'refs/tags/mcp-v1.0.0'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Publish verified platform builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" artifacts/* --verify-tag --repo "$GITHUB_REPOSITORY" --title "Kurier MCP bridge v1.0.0" --notes "Linux x64 and Windows x64. Use Kurier Settings to verify and pair your download."
