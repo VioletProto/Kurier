@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"io"
+
 	"os"
 	"path/filepath"
 	"runtime"
@@ -103,15 +103,25 @@ type windowsPipe struct {
 
 func (p *windowsPipe) SetWriteDeadline(d time.Time) error { p.deadline = d; return nil }
 func (p *windowsPipe) Write(frame []byte) (int, error) {
-	if !time.Now().Before(p.deadline) {
-		return 0, os.ErrDeadlineExceeded
+	// Anonymous pipes can hold less than the discovery response. PIPE_NOWAIT
+	// lets us recheck the release deadline as the reader drains each chunk.
+	handle := windows.Handle(p.Fd())
+	written := 0
+	for written < len(frame) {
+		if !time.Now().Before(p.deadline) {
+			return written, os.ErrDeadlineExceeded
+		}
+		end := written + min(4096, len(frame)-written)
+		var n uint32
+		if err := windows.WriteFile(handle, frame[written:end], &n, nil); err != nil {
+			return written, err
+		}
+		written += int(n)
+		if n == 0 {
+			time.Sleep(time.Millisecond)
+		}
 	}
-	var written uint32
-	err := windows.WriteFile(windows.Handle(p.Fd()), frame, &written, nil)
-	if err == nil && int(written) != len(frame) {
-		err = io.ErrShortWrite
-	}
-	return int(written), err
+	return written, nil
 }
 
 func deadlineOutput(output *os.File) (deadlinePipe, error) {

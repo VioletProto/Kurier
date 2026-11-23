@@ -27,6 +27,23 @@ type registration struct {
 	}
 }
 
+// npm installs a .cmd shim on Windows. Run its JavaScript entry point
+// directly so launcher arguments never pass through cmd.exe.
+func codexCommand(ctx context.Context, args ...string) (*exec.Cmd, error) {
+	path, err := exec.LookPath("codex")
+	if err != nil {
+		return nil, err
+	}
+	if runtime.GOOS == "windows" && strings.EqualFold(filepath.Ext(path), ".cmd") {
+		entry := filepath.Join(filepath.Dir(path), "node_modules", "@openai", "codex", "bin", "codex.js")
+		if _, err := os.Stat(entry); err != nil {
+			return nil, err
+		}
+		return exec.CommandContext(ctx, "node", append([]string{entry}, args...)...), nil
+	}
+	return exec.CommandContext(ctx, path, args...), nil
+}
+
 // Inspect launcher metadata without printing other servers' configuration.
 func setupCodex(origin, path string) error {
 	if !validOrigin(origin) {
@@ -42,7 +59,11 @@ func setupCodex(origin, path string) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "codex", "mcp", "list", "--json")
+	cmd, err := codexCommand(ctx, "mcp", "list", "--json")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Install Codex CLI on this computer, then run setup again.")
+		return err
+	}
 	raw, err := cmd.Output()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Install Codex CLI and confirm that codex mcp list works in this terminal.")

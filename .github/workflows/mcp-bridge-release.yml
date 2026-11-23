@@ -15,6 +15,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -35,6 +36,14 @@ jobs:
         run: go vet ./...
       - working-directory: services/mcp
         run: go build -trimpath -o ${{ matrix.asset }} .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --global @openai/codex@0.170.0
+      - working-directory: services/mcp
+        env:
+          KURIER_CODEX_INTEGRATION: "1"
+        run: go test -tags codex -run TestInstalledCodexMCPIntegration -count=1 -v .
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset }}

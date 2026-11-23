@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -33,6 +34,9 @@ func TestInstalledCodexMCPIntegration(t *testing.T) {
 	defer cancel()
 	dir := t.TempDir()
 	binary := filepath.Join(dir, "kurier-mcp")
+	if runtime.GOOS == "windows" {
+		binary += ".exe"
+	}
 	if e := exec.CommandContext(ctx, "go", "build", "-o", binary, ".").Run(); e != nil {
 		t.Fatal("server build failed")
 	}
@@ -125,7 +129,11 @@ func TestInstalledCodexMCPIntegration(t *testing.T) {
 		t.Fatal(e)
 	}
 	config := `mcp_servers={kurier={command=` + quoteTOML(binary) + `,args=["serve","--credential-file",` + quoteTOML(credential) + `],env={SSL_CERT_FILE=` + quoteTOML(ca) + `},startup_timeout_sec=10,tool_timeout_sec=15}}`
-	cmd := exec.CommandContext(ctx, "codex", "app-server", "--stdio", "-c", config, "-c", `history.persistence="none"`)
+	cmd, err := codexCommand(ctx, "app-server", "--stdio", "-c", config, "-c", `history.persistence="none"`)
+	if err != nil {
+		t.Fatal("Codex unavailable")
+	}
+	cmd.Env = append(os.Environ(), "CODEX_HOME="+dir)
 	stdin, e := cmd.StdinPipe()
 	if e != nil {
 		t.Fatal(e)
@@ -229,6 +237,14 @@ func TestInstalledCodexMCPIntegration(t *testing.T) {
 			t.Fatal("capability exposed to client")
 		}
 		return env
+	}
+	if runtime.GOOS == "windows" {
+		// Windows uses the OS certificate store. Confirm the native client denies
+		// this untrusted TLS fixture without installing a test CA on the machine.
+		if env := toolCall("list_projects", map[string]any{}); env.Error == nil {
+			t.Fatal("untrusted fixture accepted")
+		}
+		return
 	}
 	for _, name := range wire.Names {
 		args := map[string]any{}
