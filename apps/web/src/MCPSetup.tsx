@@ -86,7 +86,10 @@ export function MCPSetup() {
             Copy setup command
           </button>{" "}
           <span role="status">{copied}</span>
-          <pre>{command}</pre>
+          <details>
+            <summary>View setup command</summary>
+            <pre>{command}</pre>
+          </details>
           <p>
             Refresh MCP status below, choose your projects and create a
             credential. Paste the token into the hidden terminal prompt. Run the

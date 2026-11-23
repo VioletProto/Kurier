@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type registration struct {
@@ -54,7 +55,7 @@ func setupCodex(origin, path string) error {
 		return err
 	}
 	binary, err = filepath.EvalSymlinks(binary)
-	if err != nil || strings.ContainsAny(binary, "\r\n\x1b") {
+	if err != nil || strings.IndexFunc(binary, unicode.IsControl) >= 0 || runtime.GOOS == "windows" && strings.ContainsAny(binary, "‘’‚‛") {
 		return errors.New("invalid executable path")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

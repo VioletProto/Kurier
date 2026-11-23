@@ -256,9 +256,12 @@ the Windows pipe cannot enforce release timing under backpressure. Review
 short-write handling before enabling the Windows bridge for real evidence.
 
 The [platform spike](../spikes/guided-mcp-connection-setup.md#linux-and-native-windows)
-records feasibility and remaining acceptance checks. The running bridge
-currently supports the POSIX pairing contract above. The platform work
-introduces no new API routes, wire credential format or scope policy.
+records feasibility and remaining acceptance checks. The implementation uses the profile path to locate its Windows Credential
+Manager entry and validates the stored origin during guided setup. Codex
+receives the launcher and the `serve` argument. The user explicitly runs
+the displayed registration command after pairing. Windows drains synchronous
+byte pipes in bounded nonblocking chunks and closes its writer on failure
+or deadline expiry. The existing API routes and scope checks apply.
 
 ## Proposed minimal tools and schemas
 
